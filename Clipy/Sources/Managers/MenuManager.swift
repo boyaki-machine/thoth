@@ -37,6 +37,11 @@ final class MenuManager: NSObject {
     fileprivate let realm = try! Realm()
     fileprivate var clipToken: NotificationToken?
     fileprivate var snippetToken: NotificationToken?
+    // Vim key navigation
+    fileprivate var vimKeyEventTap: AnyObject?
+    fileprivate var vimKeyRunLoopSource: AnyObject?
+    // メニューが開いている間だけ true にする（CGEvent tap コールバックから参照）
+    fileprivate static var menuIsOpen = false
 
     // MARK: - Enum Values
     enum StatusType: Int {
@@ -54,6 +59,7 @@ final class MenuManager: NSObject {
 
     func setup() {
         bind()
+        setupVimKeyEventTap()
     }
 
 }
@@ -70,11 +76,17 @@ extension MenuManager {
         case .snippet:
             menu = snippetMenu
         }
+        // アクセシビリティ権限が後から付与された場合に備えてリトライ
+        setupVimKeyEventTap()
+        // popUp() はメニューが閉じるまでブロックするため、前後でフラグを制御する
+        MenuManager.menuIsOpen = true
         menu?.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+        MenuManager.menuIsOpen = false
     }
 
     func popUpSnippetFolder(_ folder: CPYFolder) {
         let folderMenu = NSMenu(title: folder.title)
+        folderMenu.delegate = self
         // Folder title
         let labelItem = NSMenuItem(title: folder.title, action: nil)
         labelItem.isEnabled = false
@@ -89,7 +101,11 @@ extension MenuManager {
                 folderMenu.addItem(subMenuItem)
                 index += 1
             }
+        // アクセシビリティ権限が後から付与された場合に備えてリトライ
+        setupVimKeyEventTap()
+        MenuManager.menuIsOpen = true
         folderMenu.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
+        MenuManager.menuIsOpen = false
     }
 }
 
@@ -176,8 +192,11 @@ private extension MenuManager {
 private extension MenuManager {
      func createClipMenu() {
         clipMenu = NSMenu(title: Constants.Application.name)
+        clipMenu?.delegate = self
         historyMenu = NSMenu(title: Constants.Menu.history)
+        historyMenu?.delegate = self
         snippetMenu = NSMenu(title: Constants.Menu.snippet)
+        snippetMenu?.delegate = self
 
         addHistoryItems(clipMenu!)
         addHistoryItems(historyMenu!)
@@ -257,10 +276,33 @@ private extension MenuManager {
 
 // MARK: - Clips
 private extension MenuManager {
+    /// メニューアイテム描画に必要な設定値をまとめた構造体。
+    /// ループ外で一度だけ UserDefaults を読み込み、N アイテム分の繰り返しアクセスを排除する。
+    struct ClipMenuItemSettings {
+        let isMarkWithNumber: Bool
+        let isShowToolTip: Bool
+        let isShowImage: Bool
+        let isShowColorCode: Bool
+        let addNumericKeyEquivalents: Bool
+        let isStartFromZero: Bool
+        let maxLengthOfToolTip: Int
+
+        init(_ defaults: UserDefaults) {
+            isMarkWithNumber       = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
+            isShowToolTip          = defaults.bool(forKey: Constants.UserDefaults.showToolTipOnMenuItem)
+            isShowImage            = defaults.bool(forKey: Constants.UserDefaults.showImageInTheMenu)
+            isShowColorCode        = defaults.bool(forKey: Constants.UserDefaults.showColorPreviewInTheMenu)
+            addNumericKeyEquivalents = defaults.bool(forKey: Constants.UserDefaults.addNumericKeyEquivalents)
+            isStartFromZero        = defaults.bool(forKey: Constants.UserDefaults.menuItemsTitleStartWithZero)
+            maxLengthOfToolTip     = defaults.integer(forKey: Constants.UserDefaults.maxLengthOfToolTip)
+        }
+    }
+
     func addHistoryItems(_ menu: NSMenu) {
-        let placeInLine = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInline)
-        let placeInsideFolder = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInsideFolder)
-        let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
+        let defaults = AppEnvironment.current.defaults
+        let placeInLine = defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInline)
+        let placeInsideFolder = defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInsideFolder)
+        let maxHistory = defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
 
         // History title
         let labelItem = NSMenuItem(title: L10n.history, action: nil)
@@ -273,9 +315,11 @@ private extension MenuManager {
         var subMenuCount = placeInLine
         var subMenuIndex = 1 + placeInLine
 
-        let ascending = !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
+        let ascending = !defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
         let clipResults = realm.objects(CPYClip.self).sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
         let currentSize = Int(clipResults.count)
+        // 表示設定をループ外で一括取得（N アイテム × 6 回の UserDefaults アクセスを 6 回に削減）
+        let settings = ClipMenuItemSettings(defaults)
         var i = 0
         for clip in clipResults {
             if placeInLine < 1 || placeInLine - 1 < i {
@@ -288,13 +332,13 @@ private extension MenuManager {
 
                 // Clip
                 if let subMenu = menu.item(at: subMenuIndex)?.submenu {
-                    let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber)
+                    let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber, settings: settings)
                     subMenu.addItem(menuItem)
                     listNumber = incrementListNumber(listNumber, max: placeInsideFolder, start: firstIndex)
                 }
             } else {
                 // Clip
-                let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber)
+                let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber, settings: settings)
                 menu.addItem(menuItem)
                 listNumber = incrementListNumber(listNumber, max: placeInLine, start: firstIndex)
             }
@@ -309,19 +353,11 @@ private extension MenuManager {
         }
     }
 
-    func makeClipMenuItem(_ clip: CPYClip, index: Int, listNumber: Int) -> NSMenuItem {
-        let isMarkWithNumber = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
-        let isShowToolTip = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.showToolTipOnMenuItem)
-        let isShowImage = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.showImageInTheMenu)
-        let isShowColorCode = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.showColorPreviewInTheMenu)
-        let addNumbericKeyEquivalents = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.addNumericKeyEquivalents)
-
+    func makeClipMenuItem(_ clip: CPYClip, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
         var keyEquivalent = ""
 
-        if addNumbericKeyEquivalents && (index <= kMaxKeyEquivalents) {
-            let isStartFromZero = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.menuItemsTitleStartWithZero)
-
-            var shortCutNumber = (isStartFromZero) ? index : index + 1
+        if settings.addNumericKeyEquivalents && (index <= kMaxKeyEquivalents) {
+            var shortCutNumber = settings.isStartFromZero ? index : index + 1
             if shortCutNumber == kMaxKeyEquivalents {
                 shortCutNumber = 0
             }
@@ -331,33 +367,32 @@ private extension MenuManager {
         let primaryPboardType = NSPasteboard.PasteboardType(rawValue: clip.primaryType)
         let clipString = clip.title
         let title = trimTitle(clipString)
-        let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
+        let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
 
         let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectClipMenuItem(_:)), keyEquivalent: keyEquivalent)
         menuItem.representedObject = clip.dataHash
 
-        if isShowToolTip {
-            let maxLengthOfToolTip = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxLengthOfToolTip)
-            let toIndex = (clipString.count < maxLengthOfToolTip) ? clipString.count : maxLengthOfToolTip
+        if settings.isShowToolTip {
+            let toIndex = min(clipString.count, settings.maxLengthOfToolTip)
             menuItem.toolTip = (clipString as NSString).substring(to: toIndex)
         }
 
         if primaryPboardType == .deprecatedTIFF {
-            menuItem.title = menuItemTitle("(Image)", listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
+            menuItem.title = menuItemTitle("(Image)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
         } else if primaryPboardType == .deprecatedPDF {
-            menuItem.title = menuItemTitle("(PDF)", listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
+            menuItem.title = menuItemTitle("(PDF)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
         } else if primaryPboardType == .deprecatedFilenames && title.isEmpty {
-            menuItem.title = menuItemTitle("(Filenames)", listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
+            menuItem.title = menuItemTitle("(Filenames)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
         }
 
-        if !clip.thumbnailPath.isEmpty && !clip.isColorCode && isShowImage {
+        if !clip.thumbnailPath.isEmpty && !clip.isColorCode && settings.isShowImage {
             PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
                 DispatchQueue.main.async {
                     menuItem?.image = object as? NSImage
                 }
             }
         }
-        if !clip.thumbnailPath.isEmpty && clip.isColorCode && isShowColorCode {
+        if !clip.thumbnailPath.isEmpty && clip.isColorCode && settings.isShowColorCode {
             PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
                 DispatchQueue.main.async {
                     menuItem?.image = object as? NSImage
@@ -459,5 +494,71 @@ private extension MenuManager {
 private extension MenuManager {
     func firstIndexOfMenuItems() -> NSInteger {
         return AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.menuItemsTitleStartWithZero) ? 0 : 1
+    }
+}
+
+// MARK: - NSMenuDelegate (StatusBar クリックからのメニュー表示用)
+extension MenuManager: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        MenuManager.menuIsOpen = true
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        MenuManager.menuIsOpen = false
+    }
+}
+
+// MARK: - Vim key navigation (CGEvent tap)
+private extension MenuManager {
+    /// アプリ起動時に一度だけ CGEvent tap を設定する。
+    /// NSMenu は NSEventTrackingRunLoopMode で独自イベントループを持つため
+    /// ローカルイベントモニタは機能しない。CGEvent tap は HID レベルでインターセプトし
+    /// run loop mode に依存しないため確実に動作する。
+    /// menuIsOpen フラグが true のときのみ h/j/k/l → 矢印キーに変換する。
+    /// アクセシビリティ権限がない場合は tap の作成が失敗し、何もしない。
+    func setupVimKeyEventTap() {
+        guard vimKeyEventTap == nil else { return }
+
+        let eventMask = CGEventMask(1 << CGEventType.keyDown.rawValue)
+        guard let tap = CGEvent.tapCreate(
+            tap: .cghidEventTap,
+            place: .headInsertEventTap,
+            options: .defaultTap,
+            eventsOfInterest: eventMask,
+            callback: { _, type, event, _ -> Unmanaged<CGEvent>? in
+                guard type == .keyDown else { return Unmanaged.passRetained(event) }
+                guard MenuManager.menuIsOpen else { return Unmanaged.passRetained(event) }
+                let flags = event.flags
+                guard flags.intersection([.maskCommand, .maskAlternate, .maskControl, .maskShift]) == [] else {
+                    return Unmanaged.passRetained(event)
+                }
+                let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+                // h=4, j=38, k=40, l=37 (US キーボードの Virtual Key Code)
+                // NSMenu は characters フィールドでナビゲーションを判断するため
+                // keyCode と unicode 文字列の両方を矢印キーに変換する必要がある
+                let arrowKeyCode: Int64
+                let arrowChar: UniChar
+                switch keyCode {
+                case 4:  arrowKeyCode = 123; arrowChar = 0xF702  // h → Left  (NSLeftArrowFunctionKey)
+                case 38: arrowKeyCode = 125; arrowChar = 0xF701  // j → Down  (NSDownArrowFunctionKey)
+                case 40: arrowKeyCode = 126; arrowChar = 0xF700  // k → Up    (NSUpArrowFunctionKey)
+                case 37: arrowKeyCode = 124; arrowChar = 0xF703  // l → Right (NSRightArrowFunctionKey)
+                default: return Unmanaged.passRetained(event)
+                }
+                event.setIntegerValueField(.keyboardEventKeycode, value: arrowKeyCode)
+                var chars: [UniChar] = [arrowChar]
+                event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &chars)
+                return Unmanaged.passRetained(event)
+            },
+            userInfo: nil
+        ) else {
+            return
+        }
+
+        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
+        CGEvent.tapEnable(tap: tap, enable: true)
+        vimKeyEventTap = tap as AnyObject
+        vimKeyRunLoopSource = source as AnyObject
     }
 }

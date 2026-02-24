@@ -61,7 +61,6 @@ extension HotKeyService {
         if !AppEnvironment.current.defaults.bool(forKey: Constants.HotKey.migrateNewKeyCombo) {
             migrationKeyCombos()
             AppEnvironment.current.defaults.set(true, forKey: Constants.HotKey.migrateNewKeyCombo)
-            AppEnvironment.current.defaults.synchronize()
         }
         // Snippet hotkey
         setupSnippetHotKeys()
@@ -91,7 +90,6 @@ extension HotKeyService {
     func changeClearHistoryKeyCombo(_ keyCombo: KeyCombo?) {
         clearHistoryKeyCombo = keyCombo
         AppEnvironment.current.defaults.set(keyCombo?.archive(), forKey: Constants.HotKey.clearHistoryKeyCombo)
-        AppEnvironment.current.defaults.synchronize()
         // Reset hotkey
         HotKeyCenter.shared.unregisterHotKey(with: "ClearHistory")
         // Register new hotkey
@@ -121,7 +119,6 @@ private extension HotKeyService {
 
     func save(with type: MenuType, keyCombo: KeyCombo?) {
         AppEnvironment.current.defaults.set(keyCombo?.archive(), forKey: type.userDefaultsKey)
-        AppEnvironment.current.defaults.synchronize()
     }
 }
 
@@ -174,7 +171,6 @@ extension HotKeyService {
             } else {
                 AppEnvironment.current.defaults.removeObject(forKey: Constants.HotKey.folderKeyCombos)
             }
-            AppEnvironment.current.defaults.synchronize()
         }
     }
 

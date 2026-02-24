@@ -1,4 +1,4 @@
-platform :osx, '10.10'
+platform :osx, '10.13'
 use_frameworks!
 
 target 'Clipy' do
@@ -25,9 +25,17 @@ target 'Clipy' do
   target 'ClipyTests' do
     inherit! :search_paths
 
-    pod 'Quick'
-    pod 'Nimble'
+    pod 'Quick', '~> 5.0'
+    pod 'Nimble', '~> 10.0'
 
   end
 
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.13'
+    end
+  end
 end

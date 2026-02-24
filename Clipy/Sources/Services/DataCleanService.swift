@@ -37,8 +37,7 @@ final class DataCleanService {
         let realm = try! Realm()
         let flowHistories = overflowingClips(with: realm)
         flowHistories
-            .filter { !$0.isInvalidated && !$0.thumbnailPath.isEmpty }
-            .map { $0.thumbnailPath }
+            .compactMap { !$0.isInvalidated && !$0.thumbnailPath.isEmpty ? $0.thumbnailPath : nil }
             .forEach { PINCache.shared.removeObject(forKey: $0) }
         realm.transaction { realm.delete(flowHistories) }
         cleanFiles(with: realm)
@@ -64,13 +63,13 @@ final class DataCleanService {
         let fileManager = FileManager.default
         guard let paths = try? fileManager.contentsOfDirectory(atPath: CPYUtilities.applicationSupportFolder()) else { return }
 
-        let allClipPaths = Array(realm.objects(CPYClip.self)
+        let allClipPaths = Set(realm.objects(CPYClip.self)
             .filter { !$0.isInvalidated }
             .compactMap { $0.dataPath.components(separatedBy: "/").last })
 
-        // Delete diff datas
-        DispatchQueue.main.async {
-            Set(allClipPaths).symmetricDifference(paths)
+        // Delete diff datas on background thread
+        DispatchQueue.global(qos: .utility).async {
+            allClipPaths.symmetricDifference(paths)
                 .map { CPYUtilities.applicationSupportFolder() + "/" + "\($0)" }
                 .forEach { CPYUtilities.deleteData(at: $0) }
         }
