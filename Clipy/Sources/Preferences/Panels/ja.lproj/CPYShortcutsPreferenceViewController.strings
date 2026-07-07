@@ -16,3 +16,6 @@
 
 /* Class = "NSTextFieldCell"; title = "Clear History:"; ObjectID = "f3b-Ht-X5w"; */
 "f3b-Ht-X5w.title" = "履歴をクリア:";
+
+/* Class = "NSTextFieldCell"; title = "Secure Menu:"; ObjectID = "sCU-re-LBc"; */
+"sCU-re-LBc.title" = "セキュアアイテム:";

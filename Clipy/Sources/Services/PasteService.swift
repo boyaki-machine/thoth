@@ -12,6 +12,7 @@
 
 import Foundation
 import Cocoa
+import RealmSwift
 import Sauce
 
 final class PasteService {
@@ -55,35 +56,52 @@ final class PasteService {
 
 // MARK: - Copy
 extension PasteService {
+    private static func unarchiveClipData(atPath path: String) -> CPYClipData? {
+        guard let fileData = try? Data(contentsOf: URL(fileURLWithPath: path)),
+              let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
+        unarchiver.requiresSecureCoding = false
+        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData
+    }
+
     func paste(with clip: CPYClip) {
         guard !clip.isInvalidated else { return }
-        guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: clip.dataPath) as? CPYClipData else { return }
+        // Realm オブジェクトはスレッドを越えられないため、必要な値を先に読み出しておく
+        let dataPath = clip.dataPath
+        let dataHash = clip.dataHash
 
-        // Handling modifier actions
+        // Handling modifier actions（NSEvent.modifierFlags は呼び出し元スレッドで評価する）
         let isPastePlainText = self.isPastePlainText
         let isPasteAndDeleteHistory = self.isPasteAndDeleteHistory
         let isDeleteHistory = self.isDeleteHistory
-        guard isPastePlainText || isPasteAndDeleteHistory || isDeleteHistory else {
-            copyToPasteboard(with: clip)
-            paste()
-            return
-        }
 
         // Increment change count for don't copy paste item
         if isPasteAndDeleteHistory {
             AppEnvironment.current.clipService.incrementChangeCount()
         }
-        // Paste history
-        if isPastePlainText {
-            copyToPasteboard(with: data.stringValue)
-            paste()
-        } else if isPasteAndDeleteHistory {
-            copyToPasteboard(with: clip)
-            paste()
-        }
-        // Delete clip
-        if isDeleteHistory || isPasteAndDeleteHistory {
-            AppEnvironment.current.clipService.delete(with: clip)
+
+        // 大きなクリップ（画像・RTF 等）のファイル読み込みとアンアーカイブは
+        // 時間がかかるため、バックグラウンドで実行してメニュー選択直後の UI ブロックを避ける
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+
+            // Paste history
+            if isPastePlainText || !isDeleteHistory || isPasteAndDeleteHistory {
+                guard let data = Self.unarchiveClipData(atPath: dataPath) else { return }
+                if isPastePlainText {
+                    self.copyToPasteboard(with: data.stringValue)
+                } else {
+                    self.copyToPasteboard(with: data)
+                }
+                self.paste()
+            }
+            // Delete clip
+            if isDeleteHistory || isPasteAndDeleteHistory {
+                DispatchQueue.main.async {
+                    let realm = try! Realm()
+                    guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: dataHash), !clip.isInvalidated else { return }
+                    AppEnvironment.current.clipService.delete(with: clip)
+                }
+            }
         }
     }
 
@@ -98,12 +116,20 @@ extension PasteService {
     func copyToPasteboard(with clip: CPYClip) {
         lock.lock(); defer { lock.unlock() }
 
-        guard let data = NSKeyedUnarchiver.unarchiveObject(withFile: clip.dataPath) as? CPYClipData else { return }
+        guard let data = Self.unarchiveClipData(atPath: clip.dataPath) else { return }
 
         if isPastePlainText {
             copyToPasteboard(with: data.stringValue)
             return
         }
+
+        copyToPasteboard(with: data)
+    }
+
+    /// アンアーカイブ済みデータを直接ペーストボードへ書き込む。
+    /// 同じファイルを二重にアンアーカイブしないよう、paste(with:) からはこちらを使う。
+    func copyToPasteboard(with data: CPYClipData) {
+        lock.lock(); defer { lock.unlock() }
 
         let pasteboard = NSPasteboard.general
         let types = data.types
@@ -143,7 +169,10 @@ extension PasteService {
         guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else { return }
         // Check Accessibility Permission
         guard AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: false) else {
-            AppEnvironment.current.accessibilityService.showAccessibilityAuthenticationAlert()
+            // バックグラウンドスレッドから呼ばれる場合があるため、アラート表示はメインスレッドで行う
+            DispatchQueue.main.async {
+                AppEnvironment.current.accessibilityService.showAccessibilityAuthenticationAlert()
+            }
             return
         }
 

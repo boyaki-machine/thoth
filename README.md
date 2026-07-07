@@ -13,11 +13,56 @@ Clipy is a Clipboard extension app for macOS.
 
 ---
 
-__Requirement__: macOS 10.10 Yosemite or higher
+__Requirement__: macOS 10.13 High Sierra or later · Apple Silicon (arm64)
 
 __Distribution Site__ : <https://clipy-app.com>
 
 <img src="http://clipy-app.com/img/screenshot1.png" width="400">
+
+### Secure Menu — Credential Paste without Exposing to Clipboard
+
+Secure Menu lets you paste passwords and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the **macOS Keychain** and protected by **Touch ID / password authentication** every time the menu is opened.
+
+#### Features
+
+| Feature | Detail |
+|---------|--------|
+| **Keychain storage** | All values are stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — never synced to iCloud |
+| **Biometric lock** | Touch ID (or login password) is required before the menu appears |
+| **Two-level menu** | Select a parent item (e.g. "GitHub"), then choose a specific field (e.g. "Password") |
+| **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard |
+| **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |
+| **Keyboard navigation** | Arrow keys and vim-style `hjkl` keys work inside the menu |
+
+#### How to use
+
+**Step 1 — Register your credentials**
+
+Open the menu bar icon → **Manage Secure Items…**, or go to **Preferences → Shortcuts** and use the shortcut shown there.
+
+In the management window, click **+** to add a new item:
+
+1. Enter a **Title** (e.g. "GitHub", "AWS Console")
+2. Click **+** in the field list to add a field
+3. Fill in **Label** (e.g. "Password") and **Value**
+4. Check 🔒 if the value should be masked
+5. Click **Save**
+
+**Step 2 — Paste a credential**
+
+1. Click into the password field of the target app
+2. Press the hotkey (default: **⌘⇧-**) — Touch ID / password prompt appears
+3. After authentication, the two-level menu opens
+4. Select the parent item, then select the field to paste
+
+The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**.
+
+#### Security notes
+
+- Values are read from Keychain only at the moment of authentication and are never written to the clipboard
+- The Keychain item is tagged `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, so it is not accessible on a locked screen and is not backed up to iCloud
+
+---
 
 ### Development Environment
 * macOS 10.15 Catalina

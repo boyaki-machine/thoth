@@ -57,3 +57,35 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "この動作を行うためにはシステム環境設定の\"セキュリティとプライバシー\"環境設定で、Clipyへのアクセシビリティのアクセスを許可してください。";
 
 "Open System Preferences" = "\"システム環境設定\"を開く";
+
+"Secure Menu" = "セキュアメニュー";
+
+"Secure Items" = "セキュアアイテム";
+
+"Manage Secure Items" = "セキュアアイテムを管理...";
+
+"Secure Menu Authentication Reason" = "セキュアメニューにアクセス";
+
+"Secure Menu Search Placeholder" = "検索...";
+
+"Secure Menu No Results" = "一致するアイテムがありません";
+
+"Add Secure Item" = "追加";
+
+"Edit Secure Item" = "編集";
+
+"Delete Secure Item" = "削除";
+
+"Are you sure want to delete this secure item?" = "本当に削除してもよろしいですか？";
+
+"Secure Item Title Placeholder" = "タイトル（例: Gmail）";
+
+"Secure Field Label Placeholder" = "ラベル（例: ID）";
+
+"Secure Field Value Placeholder" = "値";
+
+"Add Field" = "フィールドを追加";
+
+"Save" = "保存";
+
+"Close" = "閉じる";

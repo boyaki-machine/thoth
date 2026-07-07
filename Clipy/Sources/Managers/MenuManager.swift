@@ -20,9 +20,15 @@ final class MenuManager: NSObject {
 
     // MARK: - Properties
     // Menus
-    fileprivate var clipMenu: NSMenu?
-    fileprivate var historyMenu: NSMenu?
-    fileprivate var snippetMenu: NSMenu?
+    // インスタンスは固定し、内容だけを表示直前に再構築する（遅延構築）
+    fileprivate let clipMenu = NSMenu(title: Constants.Application.name)
+    fileprivate let historyMenu = NSMenu(title: Constants.Menu.history)
+    fileprivate let snippetMenu = NSMenu(title: Constants.Menu.snippet)
+    // 履歴・スニペット・設定が変わるたびにインクリメントされる世代カウンター。
+    // メニュー表示直前に各メニューの構築済み世代と比較し、古い場合のみ再構築する。
+    // これによりコピーのたびに発生していたメインスレッドでの全メニュー再構築を排除する。
+    fileprivate var menuGeneration = 1
+    fileprivate var builtGenerations = [MenuType: Int]()
     // StatusMenu
     fileprivate var statusItem: NSStatusItem?
     // Icon Cache
@@ -38,10 +44,18 @@ final class MenuManager: NSObject {
     fileprivate var clipToken: NotificationToken?
     fileprivate var snippetToken: NotificationToken?
     // Vim key navigation
-    fileprivate var vimKeyEventTap: AnyObject?
-    fileprivate var vimKeyRunLoopSource: AnyObject?
+    fileprivate var vimKeyEventTap: CFMachPort?
+    fileprivate var vimKeyRunLoopSource: CFRunLoopSource?
     // メニューが開いている間だけ true にする（CGEvent tap コールバックから参照）
     fileprivate static var menuIsOpen = false
+    // ネストしたメニュー（サブメニューなど）の開閉を正確に追跡するカウンター
+    private var openMenuCount = 0
+    // 認証〜パネル表示の間の再入を防ぐフラグ
+    private var isSecureMenuActive = false
+    // セキュアアイテム選択パネル
+    private var securePickerPanel: CPYSecurePickerPanel?
+    // willCloseNotification オブザーバートークン（解放するまで通知を受け取るために保持が必須）
+    private var secureCloseObserver: NSObjectProtocol?
 
     // MARK: - Enum Values
     enum StatusType: Int {
@@ -58,6 +72,9 @@ final class MenuManager: NSObject {
     }
 
     func setup() {
+        clipMenu.delegate = self
+        historyMenu.delegate = self
+        snippetMenu.delegate = self
         bind()
         setupVimKeyEventTap()
     }
@@ -75,13 +92,97 @@ extension MenuManager {
             menu = historyMenu
         case .snippet:
             menu = snippetMenu
+        case .secure:
+            menu = nil
         }
+        // 表示直前に必要なメニューだけ再構築する
+        rebuildMenuIfNeeded(type)
         // アクセシビリティ権限が後から付与された場合に備えてリトライ
         setupVimKeyEventTap()
         // popUp() はメニューが閉じるまでブロックするため、前後でフラグを制御する
         MenuManager.menuIsOpen = true
         menu?.popUp(positioning: nil, at: NSEvent.mouseLocation, in: nil)
         MenuManager.menuIsOpen = false
+    }
+
+    func popUpSecureMenu() {
+        // 認証中・表示中の場合は既存パネルを前面に戻す（または強制リセット）
+        if isSecureMenuActive {
+            if let existing = securePickerPanel, existing.isVisible {
+                // パネルが既に表示中 → 前面に出して再アクティブ化して終了
+                #if DEBUG
+                NSLog("[MenuManager] popUpSecureMenu: panel already visible, re-activating")
+                #endif
+                NSApp.activate(ignoringOtherApps: true)
+                existing.makeKeyAndOrderFront(nil)
+                return
+            } else {
+                // パネルが消えているのにフラグが残っている → 強制リセット
+                #if DEBUG
+                NSLog("[MenuManager] popUpSecureMenu: stale active flag, resetting")
+                #endif
+                if let obs = secureCloseObserver { NotificationCenter.default.removeObserver(obs) }
+                isSecureMenuActive  = false
+                securePickerPanel   = nil
+                secureCloseObserver = nil
+            }
+        }
+        guard !isSecureMenuActive else { return }
+        isSecureMenuActive = true
+        let reason = L10n.secureMenuAuthenticationReason
+        AppEnvironment.current.secureMenuService.authenticate(reason: reason) { [weak self] success in
+            guard let self = self else { return }
+            guard success else {
+                self.isSecureMenuActive = false
+                return
+            }
+            let items   = AppEnvironment.current.secureMenuService.loadAllItems()
+            let context = AppEnvironment.current.secureSelectionContext
+            let panel   = CPYSecurePickerPanel(items: items, context: context)
+
+            panel.onSelect = { [weak self, weak panel] selection in
+                // NSApp.activate でClipyがアクティブになっているため、
+                // パネルを閉じる前にペースト先アプリを取得しておく
+                let callerApp = panel?.callerApp
+                panel?.close()
+                context.record(parentItemId: selection.parentItemId, fieldIndex: selection.fieldIndex)
+                AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
+                self?.isSecureMenuActive  = false
+                self?.securePickerPanel   = nil
+                self?.secureCloseObserver = nil
+                // ペースト先アプリをアクティブ化してからペーストする。
+                // activate は非同期で完了するため少し待ってから Cmd+V を送出する。
+                callerApp?.activate(options: [.activateIgnoringOtherApps])
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    AppEnvironment.current.pasteService.paste()
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
+                    NSPasteboard.general.clearContents()
+                }
+            }
+            panel.onManage = { [weak self, weak panel] in
+                panel?.close()
+                (NSApp.delegate as? AppDelegate)?.showSecureItemsWindow()
+                self?.isSecureMenuActive  = false
+                self?.securePickerPanel   = nil
+                self?.secureCloseObserver = nil
+            }
+
+            // パネルが Esc や外部クリックで閉じられた場合もフラグをリセット
+            // ブロックベース addObserver は戻り値（トークン）を保持しないと即時解放されるため secureCloseObserver に保存する
+            self.secureCloseObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification,
+                object: panel,
+                queue: .main
+            ) { [weak self] _ in
+                self?.isSecureMenuActive = false
+                self?.securePickerPanel  = nil
+                self?.secureCloseObserver = nil
+            }
+
+            self.securePickerPanel = panel
+            panel.show(near: NSEvent.mouseLocation)
+        }
     }
 
     func popUpSnippetFolder(_ folder: CPYFolder) {
@@ -93,11 +194,14 @@ extension MenuManager {
         folderMenu.addItem(labelItem)
         // Snippets
         var index = firstIndexOfMenuItems()
+        let defaults = AppEnvironment.current.defaults
+        let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
+        let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
         folder.snippets
             .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
             .filter { $0.enable }
             .forEach { snippet in
-                let subMenuItem = makeSnippetMenuItem(snippet, listNumber: index)
+                let subMenuItem = makeSnippetMenuItem(snippet, listNumber: index, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)
                 folderMenu.addItem(subMenuItem)
                 index += 1
             }
@@ -113,17 +217,15 @@ extension MenuManager {
 private extension MenuManager {
     func bind() {
         // Realm Notification
+        // 変更のたびに再構築すると履歴数に比例したメインスレッド負荷がコピーごとに発生するため、
+        // ここでは世代カウンターを進めるだけにして、構築はメニュー表示直前まで遅延する
         clipToken = realm.objects(CPYClip.self)
                         .observe { [weak self] _ in
-                            DispatchQueue.main.async { [weak self] in
-                                self?.createClipMenu()
-                            }
+                            self?.setNeedsMenuRebuild()
                         }
         snippetToken = realm.objects(CPYFolder.self)
                         .observe { [weak self] _ in
-                            DispatchQueue.main.async { [weak self] in
-                                self?.createClipMenu()
-                            }
+                            self?.setNeedsMenuRebuild()
                         }
         // Menu icon
         AppEnvironment.current.defaults.rx.observe(Int.self, Constants.UserDefaults.showStatusItem, retainSelf: false)
@@ -138,15 +240,14 @@ private extension MenuManager {
             .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
             .drive(onNext: { [weak self] _ in
-                guard let wSelf = self else { return }
-                wSelf.createClipMenu()
+                self?.setNeedsMenuRebuild()
             })
             .disposed(by: disposeBag)
         // Edit snippets
         notificationCenter.rx.notification(Notification.Name(rawValue: Constants.Notification.closeSnippetEditor))
             .asDriver(onErrorDriveWith: .empty())
             .drive(onNext: { [weak self] _ in
-                self?.createClipMenu()
+                self?.setNeedsMenuRebuild()
             })
             .disposed(by: disposeBag)
         // Observe change preference settings
@@ -179,10 +280,9 @@ private extension MenuManager {
         menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.showColorPreviewInTheMenu, options: [.new], retainSelf: false)
                                         .compactMap { $0 }.distinctUntilChanged().map { _ in })
         Observable.merge(menuChangedObservables)
-            .throttle(.seconds(1), scheduler: MainScheduler.instance)
             .asDriver(onErrorDriveWith: .empty())
             .drive(onNext: { [weak self] in
-                self?.createClipMenu()
+                self?.setNeedsMenuRebuild()
             })
             .disposed(by: disposeBag)
     }
@@ -190,32 +290,45 @@ private extension MenuManager {
 
 // MARK: - Menus
 private extension MenuManager {
-     func createClipMenu() {
-        clipMenu = NSMenu(title: Constants.Application.name)
-        clipMenu?.delegate = self
-        historyMenu = NSMenu(title: Constants.Menu.history)
-        historyMenu?.delegate = self
-        snippetMenu = NSMenu(title: Constants.Menu.snippet)
-        snippetMenu?.delegate = self
+    /// メニューの内容が古くなったことを記録する。実際の構築は表示直前まで行わない。
+    func setNeedsMenuRebuild() {
+        menuGeneration += 1
+    }
 
-        addHistoryItems(clipMenu!)
-        addHistoryItems(historyMenu!)
+    /// 表示対象のメニューが古い世代の場合のみ、その 1 つだけを再構築する
+    func rebuildMenuIfNeeded(_ type: MenuType) {
+        guard builtGenerations[type] != menuGeneration else { return }
+        builtGenerations[type] = menuGeneration
+        switch type {
+        case .main:
+            rebuildClipMenu()
+        case .history:
+            historyMenu.removeAllItems()
+            addHistoryItems(historyMenu)
+        case .snippet:
+            snippetMenu.removeAllItems()
+            addSnippetItems(snippetMenu, separateMenu: false)
+        case .secure:
+            break
+        }
+    }
 
-        addSnippetItems(clipMenu!, separateMenu: true)
-        addSnippetItems(snippetMenu!, separateMenu: false)
+    func rebuildClipMenu() {
+        clipMenu.removeAllItems()
 
-        clipMenu?.addItem(NSMenuItem.separator())
+        addHistoryItems(clipMenu)
+        addSnippetItems(clipMenu, separateMenu: true)
+
+        clipMenu.addItem(NSMenuItem.separator())
 
         if AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.addClearHistoryMenuItem) {
-            clipMenu?.addItem(NSMenuItem(title: L10n.clearHistory, action: #selector(AppDelegate.clearAllHistory)))
+            clipMenu.addItem(NSMenuItem(title: L10n.clearHistory, action: #selector(AppDelegate.clearAllHistory)))
         }
 
-        clipMenu?.addItem(NSMenuItem(title: L10n.editSnippets, action: #selector(AppDelegate.showSnippetEditorWindow)))
-        clipMenu?.addItem(NSMenuItem(title: L10n.preferences, action: #selector(AppDelegate.showPreferenceWindow)))
-        clipMenu?.addItem(NSMenuItem.separator())
-        clipMenu?.addItem(NSMenuItem(title: L10n.quitClipy, action: #selector(AppDelegate.terminate)))
-
-        statusItem?.menu = clipMenu
+        clipMenu.addItem(NSMenuItem(title: L10n.editSnippets, action: #selector(AppDelegate.showSnippetEditorWindow)))
+        clipMenu.addItem(NSMenuItem(title: L10n.preferences, action: #selector(AppDelegate.showPreferenceWindow)))
+        clipMenu.addItem(NSMenuItem.separator())
+        clipMenu.addItem(NSMenuItem(title: L10n.quitClipy, action: #selector(AppDelegate.terminate)))
     }
 
     func menuItemTitle(_ title: String, listNumber: NSInteger, isMarkWithNumber: Bool) -> String {
@@ -420,6 +533,10 @@ private extension MenuManager {
 
         var subMenuIndex = menu.numberOfItems - 1
         let firstIndex = firstIndexOfMenuItems()
+        // 表示設定をループ外で一括取得
+        let defaults = AppEnvironment.current.defaults
+        let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
+        let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
 
         folderResults
             .filter { $0.enable }
@@ -434,7 +551,7 @@ private extension MenuManager {
                     .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
                     .filter { $0.enable }
                     .forEach { snippet in
-                        let subMenuItem = makeSnippetMenuItem(snippet, listNumber: i)
+                        let subMenuItem = makeSnippetMenuItem(snippet, listNumber: i, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)
                         if let subMenu = menu.item(at: subMenuIndex)?.submenu {
                             subMenu.addItem(subMenuItem)
                             i += 1
@@ -443,10 +560,7 @@ private extension MenuManager {
             }
     }
 
-    func makeSnippetMenuItem(_ snippet: CPYSnippet, listNumber: Int) -> NSMenuItem {
-        let isMarkWithNumber = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
-        let isShowIcon = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
-
+    func makeSnippetMenuItem(_ snippet: CPYSnippet, listNumber: Int, isMarkWithNumber: Bool, isShowIcon: Bool) -> NSMenuItem {
         let title = trimTitle(snippet.title)
         let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
 
@@ -499,14 +613,40 @@ private extension MenuManager {
 
 // MARK: - NSMenuDelegate (StatusBar クリックからのメニュー表示用)
 extension MenuManager: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        // ステータスバークリックなど popUpMenu() を経由しない表示経路でも
+        // 表示直前に最新の内容へ再構築する
+        switch menu {
+        case clipMenu:
+            rebuildMenuIfNeeded(.main)
+        case historyMenu:
+            rebuildMenuIfNeeded(.history)
+        case snippetMenu:
+            rebuildMenuIfNeeded(.snippet)
+        default:
+            break
+        }
+    }
+
     func menuWillOpen(_ menu: NSMenu) {
         MenuManager.menuIsOpen = true
+        openMenuCount += 1
+        if openMenuCount == 1, let tap = vimKeyEventTap {
+            CGEvent.tapEnable(tap: tap, enable: true)
+        }
     }
 
     func menuDidClose(_ menu: NSMenu) {
-        MenuManager.menuIsOpen = false
+        openMenuCount = max(0, openMenuCount - 1)
+        if openMenuCount == 0 {
+            MenuManager.menuIsOpen = false
+            if let tap = vimKeyEventTap {
+                CGEvent.tapEnable(tap: tap, enable: false)
+            }
+        }
     }
 }
+
 
 // MARK: - Vim key navigation (CGEvent tap)
 private extension MenuManager {
@@ -528,24 +668,27 @@ private extension MenuManager {
             callback: { _, type, event, _ -> Unmanaged<CGEvent>? in
                 guard type == .keyDown else { return Unmanaged.passRetained(event) }
                 guard MenuManager.menuIsOpen else { return Unmanaged.passRetained(event) }
-                let flags = event.flags
-                guard flags.intersection([.maskCommand, .maskAlternate, .maskControl, .maskShift]) == [] else {
-                    return Unmanaged.passRetained(event)
-                }
                 let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-                // h=4, j=38, k=40, l=37 (US キーボードの Virtual Key Code)
+                let flags = event.flags
+                // Cmd / Alt / Ctrl が押されている場合は hjkl リマッピング不要。
+                // Shift は HJKL をサポートするため修飾キーとして扱わない。
+                let hasModifiers = !flags.intersection([.maskCommand, .maskAlternate, .maskControl]).isEmpty
+                guard !hasModifiers else { return Unmanaged.passRetained(event) }
+                // h=4, j=38, k=40, l=37 / H=4+Shift, J=38+Shift, K=40+Shift, L=37+Shift
                 // NSMenu は characters フィールドでナビゲーションを判断するため
-                // keyCode と unicode 文字列の両方を矢印キーに変換する必要がある
+                // keyCode・unicode 文字列・フラグの 3 つを矢印キーに変換する必要がある
                 let arrowKeyCode: Int64
                 let arrowChar: UniChar
                 switch keyCode {
-                case 4:  arrowKeyCode = 123; arrowChar = 0xF702  // h → Left  (NSLeftArrowFunctionKey)
-                case 38: arrowKeyCode = 125; arrowChar = 0xF701  // j → Down  (NSDownArrowFunctionKey)
-                case 40: arrowKeyCode = 126; arrowChar = 0xF700  // k → Up    (NSUpArrowFunctionKey)
-                case 37: arrowKeyCode = 124; arrowChar = 0xF703  // l → Right (NSRightArrowFunctionKey)
+                case 4:  arrowKeyCode = 123; arrowChar = 0xF702  // h/H → Left
+                case 38: arrowKeyCode = 125; arrowChar = 0xF701  // j/J → Down
+                case 40: arrowKeyCode = 126; arrowChar = 0xF700  // k/K → Up
+                case 37: arrowKeyCode = 124; arrowChar = 0xF703  // l/L → Right
                 default: return Unmanaged.passRetained(event)
                 }
                 event.setIntegerValueField(.keyboardEventKeycode, value: arrowKeyCode)
+                // Shift フラグを除去して純粋な矢印キーとして送出する
+                event.flags = flags.subtracting(.maskShift)
                 var chars: [UniChar] = [arrowChar]
                 event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &chars)
                 return Unmanaged.passRetained(event)
@@ -557,8 +700,8 @@ private extension MenuManager {
 
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
-        vimKeyEventTap = tap as AnyObject
-        vimKeyRunLoopSource = source as AnyObject
+        CGEvent.tapEnable(tap: tap, enable: false)  // メニューが開いた時だけ有効化する
+        vimKeyEventTap = tap
+        vimKeyRunLoopSource = source
     }
 }

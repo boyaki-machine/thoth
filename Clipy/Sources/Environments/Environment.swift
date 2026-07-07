@@ -22,6 +22,8 @@ struct Environment {
     let excludeAppService: ExcludeAppService
     let accessibilityService: AccessibilityService
     let menuManager: MenuManager
+    let secureMenuService: SecureMenuService
+    let secureSelectionContext: SecureSelectionContext
 
     let defaults: UserDefaults
 
@@ -33,6 +35,8 @@ struct Environment {
          excludeAppService: ExcludeAppService = ExcludeAppService(applications: []),
          accessibilityService: AccessibilityService = AccessibilityService(),
          menuManager: MenuManager = MenuManager(),
+         secureMenuService: SecureMenuService = SecureMenuService(),
+         secureSelectionContext: SecureSelectionContext = SecureSelectionContext(),
          defaults: UserDefaults = .standard) {
 
         self.clipService = clipService
@@ -42,6 +46,8 @@ struct Environment {
         self.excludeAppService = excludeAppService
         self.accessibilityService = accessibilityService
         self.menuManager = menuManager
+        self.secureMenuService = secureMenuService
+        self.secureSelectionContext = secureSelectionContext
         self.defaults = defaults
     }
 

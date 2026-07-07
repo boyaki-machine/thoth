@@ -32,7 +32,12 @@ final class CPYClipData: NSObject {
     var PDF: Data?
     var image: NSImage?
 
+    // 画像クリップでは TIFF エンコードを伴う重い計算のため、初回算出後はキャッシュを返す
+    // （プロパティは init 後に変化しないためキャッシュしても安全）
+    fileprivate var cachedHash: Int?
+
     override var hash: Int {
+        if let cachedHash = cachedHash { return cachedHash }
         var hash = types.map { $0.rawValue }.joined().hash
         if let image = self.image, let imageData = image.tiffRepresentation {
             hash ^= imageData.count
@@ -51,6 +56,7 @@ final class CPYClipData: NSObject {
         if let data = RTFData {
             hash ^= data.count
         }
+        cachedHash = hash
         return hash
     }
     var primaryType: NSPasteboard.PasteboardType? {

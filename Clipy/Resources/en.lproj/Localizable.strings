@@ -57,3 +57,35 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.";
 
 "Open System Preferences" = "Open System Preferences";
+
+"Secure Menu" = "Secure Menu";
+
+"Secure Items" = "Secure Items";
+
+"Manage Secure Items" = "Manage Secure Items...";
+
+"Secure Menu Authentication Reason" = "Access Secure Menu";
+
+"Secure Menu Search Placeholder" = "Search...";
+
+"Secure Menu No Results" = "No matching items";
+
+"Add Secure Item" = "Add Item";
+
+"Edit Secure Item" = "Edit Item";
+
+"Delete Secure Item" = "Delete Item";
+
+"Are you sure want to delete this secure item?" = "Are you sure you want to delete this item?";
+
+"Secure Item Title Placeholder" = "Title (e.g. Gmail)";
+
+"Secure Field Label Placeholder" = "Label (e.g. ID)";
+
+"Secure Field Value Placeholder" = "Value";
+
+"Add Field" = "Add Field";
+
+"Save" = "Save";
+
+"Close" = "Close";

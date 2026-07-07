@@ -16,6 +16,7 @@ enum MenuType: String {
     case main       = "ClipMenu"
     case history    = "HistoryMenu"
     case snippet    = "SnippetMenu"
+    case secure     = "SecureMenu"
 
     var userDefaultsKey: String {
         switch self {
@@ -25,6 +26,8 @@ enum MenuType: String {
             return Constants.HotKey.historyKeyCombo
         case .snippet:
             return Constants.HotKey.snippetKeyCombo
+        case .secure:
+            return Constants.HotKey.secureKeyCombo
         }
     }
 
@@ -36,6 +39,8 @@ enum MenuType: String {
             return #selector(HotKeyService.popupHistoryMenu)
         case .snippet:
             return #selector(HotKeyService.popUpSnippetMenu)
+        case .secure:
+            return #selector(HotKeyService.popUpSecureMenu)
         }
     }
 

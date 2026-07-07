@@ -62,6 +62,11 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         CPYSnippetsEditorWindowController.sharedController.showWindow(self)
     }
 
+    @objc func showSecureItemsWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        CPYSecureItemsWindowController.shared.showWindow(self)
+    }
+
     @objc func terminate() {
         terminateApplication()
     }
@@ -122,6 +127,24 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         }
         AppEnvironment.current.pasteService.copyToPasteboard(with: snippet.content)
         AppEnvironment.current.pasteService.paste()
+    }
+
+    @objc func selectSecureMenuItem(_ sender: NSMenuItem) {
+        guard let selection = sender.representedObject as? SecureFieldSelection else {
+            NSSound.beep()
+            return
+        }
+        let context = AppEnvironment.current.secureSelectionContext
+        context.record(parentItemId: selection.parentItemId, fieldIndex: selection.fieldIndex)
+        AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
+        AppEnvironment.current.pasteService.paste()
+        // 30秒後にクリップボードをクリア
+        // ※ context.clear() はここでは呼ばない。複数回選択した場合に古いタイマーが
+        //   新しい選択後の context を消してしまうため。isWithinWindow がタイムスタンプで
+        //   自動的に期限切れを判定するので明示的なクリアは不要。
+        DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
+            NSPasteboard.general.clearContents()
+        }
     }
 
     func terminateApplication() {

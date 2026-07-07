@@ -1,0 +1,978 @@
+//
+//  CPYSecurePickerPanel.swift
+//
+//  Clipy
+//  GitHub: https://github.com/clipy
+//  HP: https://clipy-app.com
+//
+//  Copyright © 2015-2018 Clipy Project.
+//
+
+import Cocoa
+
+// MARK: - CPYSecurePickerPanel
+
+/// Touch ID 認証後に表示するセキュアアイテム選択パネル（メインパネル）。
+/// NSPanel ベースのため日本語など多言語 IME に対応する。
+/// 親アイテムのみを表示し、フィールドは右側のサブパネル（CPYSecureSubPanel）に表示する。
+/// 通常時は pageSize 件ごとにページングし、検索時は全件インクリメンタルサーチを行う。
+final class CPYSecurePickerPanel: NSPanel {
+
+    // MARK: - Row Data Model
+
+    enum Row {
+        case parent(SecureMenuItem)
+        case separator
+        case noResults
+        case manage
+        case pageControl
+
+        var isSelectable: Bool {
+            switch self {
+            case .parent, .manage: return true
+            default: return false
+            }
+        }
+    }
+
+    // MARK: - Cell Reuse Identifiers
+
+    enum CellID {
+        static let parent = NSUserInterfaceItemIdentifier("SecureParent")
+        static let sep    = NSUserInterfaceItemIdentifier("SecureSep")
+        static let info   = NSUserInterfaceItemIdentifier("SecureInfo")
+        static let manage = NSUserInterfaceItemIdentifier("SecureManage")
+        static let page   = PageControlView.cellID
+    }
+
+    // MARK: - Layout
+
+    enum Layout {
+        static let width: CGFloat        = 260
+        static let maxTableH: CGFloat    = 420
+        static let searchH: CGFloat      = 22
+        static let rowH: CGFloat         = 22
+        static let sepRowH: CGFloat      = 8
+        static let pageControlH: CGFloat = 28
+        static let vPad: CGFloat         = 8
+        static let hPad: CGFloat         = 8
+        static let corner: CGFloat       = 8
+        static let fontSize: CGFloat     = NSFont.systemFontSize - 1
+        static let pageSize: Int         = 10
+    }
+
+    // MARK: - UI
+
+    let effectView  = NSVisualEffectView()
+    let searchField = NSSearchField()
+    let divider     = NSBox()
+    let scrollView  = NSScrollView()
+    let tableView   = NSTableView()
+
+    // MARK: - Data
+
+    var allItems: [SecureMenuItem]
+    var allFilteredItems: [SecureMenuItem] = []
+    var rows: [Row] = []
+    var currentPage = 0
+    let context: SecureSelectionContext
+    var isBeingShown = false
+    private(set) var callerApp: NSRunningApplication?
+    var subPanel: CPYSecureSubPanel?
+    var isInSubPanelMode = false
+
+    // MARK: - Callbacks
+
+    var onSelect: ((SecureFieldSelection) -> Void)?
+    var onManage: (() -> Void)?
+
+    // MARK: - Init
+
+    init(items: [SecureMenuItem], context: SecureSelectionContext) {
+        self.allItems = items
+        self.context  = context
+        super.init(contentRect: .zero, styleMask: [.borderless],
+                   backing: .buffered, defer: false)
+        isOpaque                    = false
+        backgroundColor             = .clear
+        hasShadow                   = true
+        level                       = .popUpMenu
+        isMovableByWindowBackground = false
+        animationBehavior           = .utilityWindow
+        collectionBehavior          = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        buildViews()
+        rebuildRows()
+        sizePanel()
+    }
+
+    override var canBecomeKey:  Bool { true }
+    override var canBecomeMain: Bool { false }
+
+    // MARK: - Window Lifecycle
+
+    override func resignKey() {
+        super.resignKey()
+        NSLog("[SecurePickerPanel] resignKey: isBeingShown=\(isBeingShown)")
+        guard !isBeingShown else { return }
+        if isVisible { close() }
+    }
+
+    override func close() {
+        if let sub = subPanel {
+            removeChildWindow(sub)
+            sub.close()
+            subPanel = nil
+        }
+        isInSubPanelMode = false
+        super.close()
+    }
+}
+
+// MARK: - Show
+
+extension CPYSecurePickerPanel {
+    func show(near point: NSPoint) {
+        NSLog("[SecurePickerPanel] show: called")
+        callerApp = NSWorkspace.shared.frontmostApplication
+        let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
+        let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
+        var origin = NSPoint(x: point.x + 15, y: point.y - frame.height + 15)
+        origin.x = max(visible.minX + 4, min(origin.x, visible.maxX - frame.width - 4))
+        origin.y = max(visible.minY + 4, min(origin.y, visible.maxY - frame.height - 4))
+        setFrameOrigin(origin)
+        isBeingShown = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            guard let self = self else { return }
+            NSApp.activate(ignoringOtherApps: true)
+            self.makeKeyAndOrderFront(nil)
+            self.makeFirstResponder(self.tableView)
+            NSLog("[SecurePickerPanel] show: activated, isVisible=\(self.isVisible)")
+            if self.context.isWithinWindow, let pid = self.context.lastParentItemId {
+                self.preselectParent(pid: pid, thenOpenSubWithField: self.context.lastFieldIndex)
+            } else {
+                self.updateSubPanel()
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { [weak self] in
+            self?.isBeingShown = false
+        }
+    }
+}
+
+// MARK: - Build Views
+
+extension CPYSecurePickerPanel {
+    func buildViews() {
+        effectView.material             = .menu
+        effectView.blendingMode         = .behindWindow
+        effectView.state                = .active
+        effectView.wantsLayer           = true
+        effectView.layer?.cornerRadius  = Layout.corner
+        effectView.layer?.masksToBounds = true
+        contentView = effectView
+
+        searchField.placeholderString            = L10n.secureMenuSearchPlaceholder
+        searchField.sendsSearchStringImmediately = true
+        searchField.focusRingType                = .none
+        searchField.delegate                     = self
+        searchField.translatesAutoresizingMaskIntoConstraints = false
+        effectView.addSubview(searchField)
+
+        divider.boxType = .separator
+        divider.translatesAutoresizingMaskIntoConstraints = false
+        effectView.addSubview(divider)
+
+        let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("col"))
+        col.isEditable = false
+        tableView.addTableColumn(col)
+        tableView.headerView              = nil
+        tableView.intercellSpacing        = .zero
+        tableView.backgroundColor         = .clear
+        tableView.focusRingType           = .none
+        tableView.selectionHighlightStyle = .regular
+        if #available(macOS 11.0, *) { tableView.style = .plain }
+        tableView.usesAutomaticRowHeights = false
+        tableView.delegate                = self
+        tableView.dataSource              = self
+        tableView.target                  = self
+        tableView.action                  = #selector(rowClicked)
+
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers  = true
+        scrollView.drawsBackground     = false
+        scrollView.documentView        = tableView
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        effectView.addSubview(scrollView)
+
+        NSLayoutConstraint.activate([
+            searchField.topAnchor.constraint(equalTo: effectView.topAnchor, constant: Layout.vPad),
+            searchField.leadingAnchor.constraint(equalTo: effectView.leadingAnchor, constant: Layout.hPad),
+            searchField.trailingAnchor.constraint(equalTo: effectView.trailingAnchor, constant: -Layout.hPad),
+            searchField.heightAnchor.constraint(equalToConstant: Layout.searchH),
+            divider.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: Layout.vPad - 2),
+            divider.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
+            divider.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
+            scrollView.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 2),
+            scrollView.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor, constant: -4),
+        ])
+    }
+}
+
+// MARK: - Data / Rows
+
+extension CPYSecurePickerPanel {
+    func rebuildRows() {
+        let searching = !searchField.stringValue.isEmpty
+        allFilteredItems = filteredItems()
+        var result: [Row] = []
+
+        if allFilteredItems.isEmpty && searching {
+            result.append(.noResults)
+        } else {
+            // 通常・検索中ともに pageSize 件ごとにページング
+            let totalPages = max(1, (allFilteredItems.count + Layout.pageSize - 1) / Layout.pageSize)
+            currentPage = max(0, min(currentPage, totalPages - 1))
+            let start = currentPage * Layout.pageSize
+            let end   = min(start + Layout.pageSize, allFilteredItems.count)
+            result.append(contentsOf: allFilteredItems[start..<end].map { .parent($0) })
+            if allFilteredItems.count > Layout.pageSize {
+                result.append(.pageControl)
+            }
+        }
+
+        if !result.isEmpty { result.append(.separator) }
+        result.append(.manage)
+
+        rows = result
+        tableView.reloadData()
+        sizePanel()
+        if tableView.selectedRow < 0 { selectFirstSelectable() }
+        if isVisible { updateSubPanel() }
+    }
+
+    func filteredItems() -> [SecureMenuItem] {
+        let query = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return allItems }
+        let terms = query.lowercased().components(separatedBy: .whitespaces).filter { !$0.isEmpty }
+        return allItems.filter { item in
+            if terms.allSatisfy({ item.title.lowercased().contains($0) }) { return true }
+            return item.fields.contains { fld in
+                terms.allSatisfy { fld.label.lowercased().contains($0) }
+            }
+        }
+    }
+
+    func sizePanel() {
+        let tableH = rows.reduce(CGFloat(0)) { acc, row in
+            switch row {
+            case .separator:   return acc + Layout.sepRowH
+            case .pageControl: return acc + Layout.pageControlH
+            default:           return acc + Layout.rowH
+            }
+        }
+        let scrollH = min(tableH, Layout.maxTableH)
+        let totalH  = Layout.vPad + Layout.searchH + (Layout.vPad - 2) + 1 + 2 + scrollH + 4
+        setContentSize(NSSize(width: Layout.width, height: totalH))
+    }
+}
+
+// MARK: - Sub-Panel
+
+extension CPYSecurePickerPanel {
+    func updateSubPanel() {
+        guard isVisible else { return }
+        let idx = tableView.selectedRow
+        guard idx >= 0, idx < rows.count, case .parent(let item) = rows[idx],
+              !item.fields.isEmpty else {
+            closeSubPanel()
+            return
+        }
+        openSubPanel(for: item, atRow: idx)
+    }
+
+    func openSubPanel(for item: SecureMenuItem, atRow rowIndex: Int) {
+        let rowRectInTable  = tableView.rect(ofRow: rowIndex)
+        let rowRectInWindow = tableView.convert(rowRectInTable, to: nil)
+        let rowRectInScreen = convertToScreen(rowRectInWindow)
+
+        let sub: CPYSecureSubPanel
+        if let existing = subPanel {
+            sub = existing
+        } else {
+            sub = CPYSecureSubPanel()
+            sub.onFieldClicked = { [weak self] fieldIndex in
+                self?.confirmField(at: fieldIndex)
+            }
+            subPanel = sub
+            addChildWindow(sub, ordered: .above)
+        }
+
+        sub.setFields(item.fields)
+
+        let mainFrame     = frame
+        let subX          = mainFrame.maxX + 4
+        let targetTopY    = rowRectInScreen.maxY
+        let targetOriginY = targetTopY - sub.frame.height
+        let candidate     = NSRect(x: subX, y: targetOriginY,
+                                   width: sub.frame.width, height: sub.frame.height)
+        let screen  = NSScreen.screens.first { $0.frame.intersects(candidate) } ?? NSScreen.main
+        let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
+        let clampedX = max(visible.minX + 4, min(subX, visible.maxX - sub.frame.width - 4))
+        let clampedY = max(visible.minY + 4, min(targetOriginY, visible.maxY - sub.frame.height - 4))
+        sub.setFrameOrigin(NSPoint(x: clampedX, y: clampedY))
+        sub.orderFront(nil)
+    }
+
+    func closeSubPanel() {
+        guard let sub = subPanel else { return }
+        removeChildWindow(sub)
+        sub.close()
+        subPanel = nil
+        isInSubPanelMode = false
+    }
+}
+
+// MARK: - Selection / Navigation
+
+extension CPYSecurePickerPanel {
+    func selectFirstSelectable() {
+        guard let idx = rows.indices.first(where: { rows[$0].isSelectable }) else { return }
+        tableView.selectRowIndexes(IndexSet(integer: idx), byExtendingSelection: false)
+    }
+
+    /// 現在ページの最後の parent 行を選択する（前ページへ移動した際の末尾選択に使用）
+    func selectLastParent() {
+        guard let idx = rows.indices.last(where: {
+            if case .parent = rows[$0] { return true }; return false
+        }) else { return }
+        tableView.selectRowIndexes(IndexSet(integer: idx), byExtendingSelection: false)
+        tableView.scrollRowToVisible(idx)
+    }
+
+    func selectNext() {
+        let currentIdx = tableView.selectedRow
+        var nextIdx    = currentIdx + 1
+        while nextIdx < rows.count, !rows[nextIdx].isSelectable { nextIdx += 1 }
+        guard nextIdx < rows.count else { return }
+
+        // 最後の parent から manage へ進む直前: 次ページがあれば先に進む（検索中も有効）
+        let atParent: Bool = {
+            guard currentIdx >= 0, currentIdx < rows.count else { return false }
+            if case .parent = rows[currentIdx] { return true }; return false
+        }()
+        let nextIsManage: Bool = {
+            if case .manage = rows[nextIdx] { return true }; return false
+        }()
+        if atParent, nextIsManage {
+            let total = max(1, (allFilteredItems.count + Layout.pageSize - 1) / Layout.pageSize)
+            if currentPage < total - 1 {
+                isInSubPanelMode = false
+                currentPage += 1
+                rebuildRows()
+                return
+            }
+        }
+
+        tableView.selectRowIndexes(IndexSet(integer: nextIdx), byExtendingSelection: false)
+        tableView.scrollRowToVisible(nextIdx)
+        isInSubPanelMode = false
+        updateSubPanel()
+    }
+
+    func selectPrev() {
+        let currentIdx = tableView.selectedRow
+        var prevIdx    = currentIdx - 1
+        while prevIdx >= 0, !rows[prevIdx].isSelectable { prevIdx -= 1 }
+
+        if prevIdx >= 0 {
+            tableView.selectRowIndexes(IndexSet(integer: prevIdx), byExtendingSelection: false)
+            tableView.scrollRowToVisible(prevIdx)
+            isInSubPanelMode = false
+            updateSubPanel()
+        } else {
+            // 先頭の selectable から上: 前ページがあれば戻り、末尾 parent を選択（検索中も有効）
+            guard currentPage > 0 else { return }
+            isInSubPanelMode = false
+            currentPage -= 1
+            rebuildRows()
+            selectLastParent()
+            updateSubPanel()
+        }
+    }
+
+    func enterSubPanel() {
+        guard let sub = subPanel, !sub.currentFields.isEmpty else { return }
+        isInSubPanelMode = true
+        sub.selectFirst()
+    }
+
+    func confirmField(at fieldIndex: Int) {
+        guard let sub = subPanel else { return }
+        let fields = sub.currentFields
+        guard fieldIndex >= 0, fieldIndex < fields.count else { return }
+        let field = fields[fieldIndex]
+        let idx = tableView.selectedRow
+        guard idx >= 0, idx < rows.count, case .parent(let item) = rows[idx] else { return }
+        let sel = SecureFieldSelection(parentItemId: item.id, fieldValue: field.value, fieldIndex: fieldIndex)
+        if isVisible { close() }
+        onSelect?(sel)
+    }
+
+    func confirmCurrentSubPanelSelection() {
+        guard let sub = subPanel else { return }
+        confirmField(at: sub.selectedFieldIndex)
+    }
+
+    /// 継続ペーストモード: 前回選択の親を正しいページで復元してサブパネルを開く
+    func preselectParent(pid: String, thenOpenSubWithField fieldIndex: Int?) {
+        if let allIdx = allFilteredItems.firstIndex(where: { $0.id == pid }) {
+            let targetPage = allIdx / Layout.pageSize
+            if targetPage != currentPage {
+                currentPage = targetPage
+                rebuildRows()
+            }
+        }
+        guard let idx = rows.indices.first(where: {
+            if case .parent(let item) = rows[$0] { return item.id == pid }
+            return false
+        }) else { return }
+        tableView.selectRowIndexes(IndexSet(integer: idx), byExtendingSelection: false)
+        tableView.scrollRowToVisible(idx)
+        updateSubPanel()
+        if let fi = fieldIndex {
+            subPanel?.selectField(at: fi)
+            isInSubPanelMode = true
+        }
+    }
+
+    func handleEsc() {
+        if !searchField.stringValue.isEmpty {
+            searchField.stringValue = ""
+            rebuildRows()
+        } else if searchField.currentEditor() != nil {
+            makeFirstResponder(tableView)
+        } else {
+            close()
+        }
+    }
+}
+
+// MARK: - Page Navigation
+
+extension CPYSecurePickerPanel {
+    func goToPrevPage() {
+        guard currentPage > 0 else { return }
+        isInSubPanelMode = false
+        currentPage -= 1
+        rebuildRows()
+    }
+
+    func goToNextPage() {
+        let total = max(1, (allFilteredItems.count + Layout.pageSize - 1) / Layout.pageSize)
+        guard currentPage < total - 1 else { return }
+        isInSubPanelMode = false
+        currentPage += 1
+        rebuildRows()
+    }
+}
+
+// MARK: - Keyboard (sendEvent override)
+
+extension CPYSecurePickerPanel {
+    override func sendEvent(_ event: NSEvent) {
+        guard event.type == .keyDown else { super.sendEvent(event); return }
+        let searching = searchField.currentEditor() != nil
+
+        // ── グローバルホットキー（サブパネルモード問わず動作）────────────
+        if !searching {
+            let ctrl = event.modifierFlags.contains(.control)
+            switch Int(event.keyCode) {
+            case 37 where ctrl:  goToNextPage(); return   // Ctrl+L → 次ページ
+            case 124 where ctrl: goToNextPage(); return   // Ctrl+→ → 次ページ
+            case 4 where ctrl:   goToPrevPage(); return   // Ctrl+H → 前ページ
+            case 123 where ctrl: goToPrevPage(); return   // Ctrl+← → 前ページ
+            case 35:             if isVisible { close() }; onManage?(); return  // p → 管理
+            default: break
+            }
+        }
+
+        if isInSubPanelMode {
+            switch Int(event.keyCode) {
+            case 125:                       // ↓
+                if !(subPanel?.selectNext() ?? false) {
+                    isInSubPanelMode = false
+                    selectNext()
+                    if subPanel != nil { isInSubPanelMode = true; subPanel?.selectFirst() }
+                }
+                return
+            case 38 where !searching:       // j
+                if !(subPanel?.selectNext() ?? false) {
+                    isInSubPanelMode = false
+                    selectNext()
+                    if subPanel != nil { isInSubPanelMode = true; subPanel?.selectFirst() }
+                }
+                return
+            case 126:                       // ↑
+                if !(subPanel?.selectPrev() ?? false) {
+                    isInSubPanelMode = false
+                    selectPrev()
+                    if subPanel != nil { isInSubPanelMode = true; subPanel?.selectLast() }
+                }
+                return
+            case 40 where !searching:       // k
+                if !(subPanel?.selectPrev() ?? false) {
+                    isInSubPanelMode = false
+                    selectPrev()
+                    if subPanel != nil { isInSubPanelMode = true; subPanel?.selectLast() }
+                }
+                return
+            case 36, 76:                    // Enter / Numpad Enter
+                confirmCurrentSubPanelSelection(); return
+            case 124:                       // →
+                confirmCurrentSubPanelSelection(); return
+            case 37 where !searching:       // l
+                confirmCurrentSubPanelSelection(); return
+            case 123, 4 where !searching:   // ← / h → サブパネルモードを抜ける
+                isInSubPanelMode = false
+                subPanel?.deselect()
+                return
+            case 53:                        // Esc
+                isInSubPanelMode = false
+                subPanel?.deselect()
+                return
+            case 44 where !searching:       // / → 検索ボックスにフォーカス
+                makeFirstResponder(searchField)
+                return
+            default: break
+            }
+        } else {
+            switch Int(event.keyCode) {
+            case 125:                         selectNext();                    return  // ↓
+            case 126:                         selectPrev();                    return  // ↑
+            case 38 where !searching:         selectNext();                    return  // j
+            case 40 where !searching:         selectPrev();                    return  // k
+            case 124, 37 where !searching:    enterSubPanel();                 return  // → / l
+            case 36, 76:                                                               // Enter
+                // search 中は field editor に渡す（日本語 IME の変換確定 Enter を横取りしない）
+                guard !searching else { break }
+                let idx = tableView.selectedRow
+                if idx >= 0, idx < rows.count, case .manage = rows[idx] {
+                    if isVisible { close() }; onManage?()
+                } else {
+                    enterSubPanel()
+                }
+                return
+            case 123, 4 where !searching:                                              // ← / h
+                if subPanel != nil { closeSubPanel() } else { close() }
+                return
+            case 53:                          handleEsc();                     return  // Esc
+            case 44 where !searching:         makeFirstResponder(searchField); return  // /
+            default: break
+            }
+        }
+        super.sendEvent(event)
+    }
+}
+
+// MARK: - Click
+
+extension CPYSecurePickerPanel {
+    @objc func rowClicked() {
+        let clicked = tableView.clickedRow
+        guard clicked >= 0 else { return }
+        tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
+        switch rows[clicked] {
+        case .parent:
+            isInSubPanelMode = false
+            updateSubPanel()
+        case .manage:
+            if isVisible { close() }; onManage?()
+        default: break
+        }
+    }
+
+    func makeTextCell(id: NSUserInterfaceItemIdentifier,
+                      indent: CGFloat = 6) -> NSTableCellView {
+        let cell = NSTableCellView()
+        cell.identifier = id
+        let tf = NSTextField(labelWithString: "")
+        tf.lineBreakMode = .byTruncatingTail
+        tf.translatesAutoresizingMaskIntoConstraints = false
+        cell.addSubview(tf)
+        cell.textField = tf
+        NSLayoutConstraint.activate([
+            tf.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: indent),
+            tf.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -6),
+            tf.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+        ])
+        return cell
+    }
+}
+
+// MARK: - NSTableViewDataSource
+
+extension CPYSecurePickerPanel: NSTableViewDataSource {
+    func numberOfRows(in tableView: NSTableView) -> Int { rows.count }
+}
+
+// MARK: - NSTableViewDelegate
+
+extension CPYSecurePickerPanel: NSTableViewDelegate {
+
+    func tableView(_ tableView: NSTableView,
+                   viewFor tableColumn: NSTableColumn?,
+                   row: Int) -> NSView? {
+        switch rows[row] {
+        case .parent(let item):
+            let cell = (tableView.makeView(withIdentifier: CellID.parent, owner: nil) as? NSTableCellView)
+                       ?? makeTextCell(id: CellID.parent)
+            cell.textField?.stringValue = "▸ \(item.title)"
+            cell.textField?.font = .boldSystemFont(ofSize: Layout.fontSize)
+            return cell
+
+        case .separator:
+            if let existing = tableView.makeView(withIdentifier: CellID.sep, owner: nil) { return existing }
+            let sepView = NSView()
+            sepView.identifier = CellID.sep
+            let box = NSBox()
+            box.boxType = .separator
+            box.translatesAutoresizingMaskIntoConstraints = false
+            sepView.addSubview(box)
+            NSLayoutConstraint.activate([
+                box.leadingAnchor.constraint(equalTo: sepView.leadingAnchor),
+                box.trailingAnchor.constraint(equalTo: sepView.trailingAnchor),
+                box.centerYAnchor.constraint(equalTo: sepView.centerYAnchor),
+            ])
+            return sepView
+
+        case .noResults:
+            let cell = (tableView.makeView(withIdentifier: CellID.info, owner: nil) as? NSTableCellView)
+                       ?? makeTextCell(id: CellID.info, indent: 14)
+            cell.textField?.stringValue = L10n.secureMenuNoResults
+            cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
+            cell.textField?.textColor   = .secondaryLabelColor
+            return cell
+
+        case .manage:
+            let cell = (tableView.makeView(withIdentifier: CellID.manage, owner: nil) as? NSTableCellView)
+                       ?? makeTextCell(id: CellID.manage)
+            cell.textField?.stringValue = "\(L10n.manageSecureItems) (&p)"
+            cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
+            return cell
+
+        case .pageControl:
+            let view: PageControlView
+            if let existing = tableView.makeView(withIdentifier: CellID.page, owner: nil) as? PageControlView {
+                view = existing
+            } else {
+                view = PageControlView()
+                view.onPrev = { [weak self] in self?.goToPrevPage() }
+                view.onNext = { [weak self] in self?.goToNextPage() }
+            }
+            let total = max(1, (allFilteredItems.count + Layout.pageSize - 1) / Layout.pageSize)
+            view.configure(current: currentPage + 1, total: total)
+            return view
+        }
+    }
+
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat {
+        switch rows[row] {
+        case .separator:   return Layout.sepRowH
+        case .pageControl: return Layout.pageControlH
+        default:           return Layout.rowH
+        }
+    }
+
+    func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool {
+        rows[row].isSelectable
+    }
+}
+
+// MARK: - NSSearchFieldDelegate
+
+extension CPYSecurePickerPanel: NSSearchFieldDelegate {
+    func controlTextDidChange(_ obj: Notification) {
+        guard (obj.object as? NSSearchField) === searchField else { return }
+        currentPage = 0  // クエリ変更時は先頭ページに戻す
+        rebuildRows()
+    }
+}
+
+// MARK: - PageControlView
+
+/// ページネーションコントロール（◀ N/M ▶）を表示するテーブル行ビュー。
+final class PageControlView: NSView {
+
+    static let cellID = NSUserInterfaceItemIdentifier("SecurePageCtrl")
+
+    private let prevButton = NSButton()
+    private let nextButton = NSButton()
+    private let pageLabel  = NSTextField(labelWithString: "")
+
+    var onPrev: (() -> Void)?
+    var onNext: (() -> Void)?
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        identifier = Self.cellID
+
+        for btn in [prevButton, nextButton] {
+            btn.isBordered    = false
+            btn.focusRingType = .none
+            btn.font = .systemFont(ofSize: NSFont.systemFontSize - 1)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+        }
+        prevButton.title  = "◀"
+        prevButton.target = self
+        prevButton.action = #selector(prevTapped)
+
+        nextButton.title  = "▶"
+        nextButton.target = self
+        nextButton.action = #selector(nextTapped)
+
+        pageLabel.alignment  = .center
+        pageLabel.font       = .systemFont(ofSize: NSFont.systemFontSize - 2)
+        pageLabel.textColor  = .secondaryLabelColor
+        pageLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(prevButton)
+        addSubview(pageLabel)
+        addSubview(nextButton)
+
+        NSLayoutConstraint.activate([
+            prevButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10),
+            prevButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            prevButton.widthAnchor.constraint(equalToConstant: 28),
+            nextButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -10),
+            nextButton.centerYAnchor.constraint(equalTo: centerYAnchor),
+            nextButton.widthAnchor.constraint(equalToConstant: 28),
+            pageLabel.leadingAnchor.constraint(equalTo: prevButton.trailingAnchor),
+            pageLabel.trailingAnchor.constraint(equalTo: nextButton.leadingAnchor),
+            pageLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func configure(current: Int, total: Int) {
+        pageLabel.stringValue = "\(current) / \(total)"
+        prevButton.isEnabled  = current > 1
+        nextButton.isEnabled  = current < total
+    }
+
+    @objc private func prevTapped() { onPrev?() }
+    @objc private func nextTapped() { onNext?() }
+}
+
+// MARK: - CPYSecureSubPanel
+
+/// 選択された親アイテムのフィールド一覧を右側に表示するサブパネル。
+/// canBecomeKey = false のためフォーカスは常にメインパネルに留まる。
+final class CPYSecureSubPanel: NSPanel {
+
+    // MARK: - Layout
+
+    private enum Layout {
+        static let width: CGFloat     = 220
+        static let maxTableH: CGFloat = 300
+        static let rowH: CGFloat      = 22
+        static let corner: CGFloat    = 8
+        static let vPad: CGFloat      = 4
+        static let fontSize: CGFloat  = NSFont.systemFontSize - 1
+    }
+
+    private static let cellID = NSUserInterfaceItemIdentifier("SubField")
+
+    // MARK: - UI
+
+    private let effectView = NSVisualEffectView()
+    private let scrollView = NSScrollView()
+    private let tableView  = NSTableView()
+
+    // MARK: - Data
+
+    private(set) var currentFields: [SecureMenuItem.Field] = []
+    private(set) var selectedFieldIndex: Int = -1
+
+    // MARK: - Callback
+
+    var onFieldClicked: ((Int) -> Void)?
+
+    // MARK: - Init
+
+    init() {
+        super.init(contentRect: NSRect(x: 0, y: 0, width: Layout.width, height: Layout.rowH + Layout.vPad * 2),
+                   styleMask: [.borderless], backing: .buffered, defer: false)
+        isOpaque           = false
+        backgroundColor    = .clear
+        hasShadow          = true
+        level              = .popUpMenu
+        animationBehavior  = .utilityWindow
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        buildViews()
+    }
+
+    override var canBecomeKey:  Bool { false }
+    override var canBecomeMain: Bool { false }
+
+    // MARK: - Public Interface
+
+    func setFields(_ fields: [SecureMenuItem.Field]) {
+        currentFields      = fields
+        selectedFieldIndex = -1
+        tableView.reloadData()
+        tableView.deselectAll(nil)
+        sizePanel()
+    }
+
+    /// 次フィールドへ移動。最下端では false を返す
+    @discardableResult
+    func selectNext() -> Bool {
+        let next = selectedFieldIndex + 1
+        guard next < currentFields.count else { return false }
+        selectedFieldIndex = next
+        tableView.selectRowIndexes(IndexSet(integer: next), byExtendingSelection: false)
+        tableView.scrollRowToVisible(next)
+        return true
+    }
+
+    /// 前フィールドへ移動。最上端では false を返す
+    @discardableResult
+    func selectPrev() -> Bool {
+        let prev = selectedFieldIndex - 1
+        guard prev >= 0 else { return false }
+        selectedFieldIndex = prev
+        tableView.selectRowIndexes(IndexSet(integer: prev), byExtendingSelection: false)
+        tableView.scrollRowToVisible(prev)
+        return true
+    }
+
+    func selectFirst() {
+        guard !currentFields.isEmpty else { return }
+        selectedFieldIndex = 0
+        tableView.selectRowIndexes(IndexSet(integer: 0), byExtendingSelection: false)
+        tableView.scrollRowToVisible(0)
+    }
+
+    func selectLast() {
+        guard !currentFields.isEmpty else { return }
+        let last = currentFields.count - 1
+        selectedFieldIndex = last
+        tableView.selectRowIndexes(IndexSet(integer: last), byExtendingSelection: false)
+        tableView.scrollRowToVisible(last)
+    }
+
+    func deselect() {
+        selectedFieldIndex = -1
+        tableView.deselectAll(nil)
+    }
+
+    func selectField(at index: Int) {
+        guard index >= 0, index < currentFields.count else { return }
+        selectedFieldIndex = index
+        tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+        tableView.scrollRowToVisible(index)
+    }
+
+    func selectedField() -> SecureMenuItem.Field? {
+        guard selectedFieldIndex >= 0, selectedFieldIndex < currentFields.count else { return nil }
+        return currentFields[selectedFieldIndex]
+    }
+
+    // MARK: - Build Views
+
+    private func buildViews() {
+        effectView.material             = .menu
+        effectView.blendingMode         = .behindWindow
+        effectView.state                = .active
+        effectView.wantsLayer           = true
+        effectView.layer?.cornerRadius  = Layout.corner
+        effectView.layer?.masksToBounds = true
+        contentView = effectView
+
+        let col = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("col"))
+        col.isEditable = false
+        tableView.addTableColumn(col)
+        tableView.headerView              = nil
+        tableView.intercellSpacing        = .zero
+        tableView.backgroundColor         = .clear
+        tableView.focusRingType           = .none
+        tableView.selectionHighlightStyle = .regular
+        if #available(macOS 11.0, *) { tableView.style = .plain }
+        tableView.usesAutomaticRowHeights = false
+        tableView.delegate                = self
+        tableView.dataSource              = self
+        tableView.target                  = self
+        tableView.action                  = #selector(rowClicked)
+
+        scrollView.hasVerticalScroller = true
+        scrollView.autohidesScrollers  = true
+        scrollView.drawsBackground     = false
+        scrollView.documentView        = tableView
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        effectView.addSubview(scrollView)
+
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: effectView.topAnchor, constant: Layout.vPad),
+            scrollView.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor, constant: -Layout.vPad),
+        ])
+    }
+
+    private func sizePanel() {
+        let tableH  = CGFloat(currentFields.count) * Layout.rowH
+        let scrollH = min(tableH, Layout.maxTableH)
+        let totalH  = max(scrollH + Layout.vPad * 2, Layout.rowH + Layout.vPad * 2)
+        setContentSize(NSSize(width: Layout.width, height: totalH))
+    }
+
+    @objc private func rowClicked() {
+        let clicked = tableView.clickedRow
+        guard clicked >= 0 else { return }
+        selectedFieldIndex = clicked
+        tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
+        onFieldClicked?(clicked)
+    }
+}
+
+// MARK: - CPYSecureSubPanel TableView
+
+extension CPYSecureSubPanel: NSTableViewDataSource, NSTableViewDelegate {
+
+    func numberOfRows(in tableView: NSTableView) -> Int { currentFields.count }
+
+    func tableView(_ tableView: NSTableView,
+                   viewFor tableColumn: NSTableColumn?,
+                   row: Int) -> NSView? {
+        let cell = (tableView.makeView(withIdentifier: Self.cellID, owner: nil) as? NSTableCellView)
+                   ?? {
+                        let newCell = NSTableCellView()
+                        newCell.identifier = Self.cellID
+                        let tf = NSTextField(labelWithString: "")
+                        tf.lineBreakMode = .byTruncatingTail
+                        tf.translatesAutoresizingMaskIntoConstraints = false
+                        newCell.addSubview(tf)
+                        newCell.textField = tf
+                        NSLayoutConstraint.activate([
+                            tf.leadingAnchor.constraint(equalTo: newCell.leadingAnchor, constant: 10),
+                            tf.trailingAnchor.constraint(equalTo: newCell.trailingAnchor, constant: -6),
+                            tf.centerYAnchor.constraint(equalTo: newCell.centerYAnchor),
+                        ])
+                        return newCell
+                   }()
+        let field   = currentFields[row]
+        let preview = field.isPassword
+            ? "••••••••"
+            : (field.value.count > 26 ? String(field.value.prefix(26)) + "…" : field.value)
+        cell.textField?.stringValue = "\(field.label): \(preview)"
+        cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
+        return cell
+    }
+
+    func tableView(_ tableView: NSTableView, heightOfRow row: Int) -> CGFloat { Layout.rowH }
+
+    func tableView(_ tableView: NSTableView, shouldSelectRow row: Int) -> Bool { true }
+}

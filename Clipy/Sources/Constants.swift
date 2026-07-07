@@ -27,6 +27,7 @@ struct Constants {
         static let clip = "ClipMenu"
         static let history = "HistoryMenu"
         static let snippet = "SnippetsMenu"
+        static let secure = "SecureMenu"
     }
 
     struct Common {
@@ -104,6 +105,7 @@ struct Constants {
         static let mainKeyCombo = "kCPYHotKeyMainKeyCombo"
         static let historyKeyCombo = "kCPYHotKeyHistoryKeyCombo"
         static let snippetKeyCombo = "kCPYHotKeySnippetKeyCombo"
+        static let secureKeyCombo = "kCPYHotKeySecureKeyCombo"
         static let migrateNewKeyCombo = "kCPYMigrateNewKeyCombo"
         static let folderKeyCombos = "kCPYFolderKeyCombos"
         static let clearHistoryKeyCombo = "kCPYClearHistoryKeyCombo"

@@ -25,6 +25,8 @@ final class ClipService {
     fileprivate let scheduler = SerialDispatchQueueScheduler(qos: .userInteractive)
     fileprivate let lock = NSRecursiveLock(name: "com.clipy-app.Clipy.ClipUpdatable")
     fileprivate var disposeBag = DisposeBag()
+    // アーカイブ・サムネイル生成・ファイル書き込みをメインスレッドから逃すための直列キュー
+    fileprivate let saveQueue = DispatchQueue(label: "com.clipy-app.Clipy.ClipSave", qos: .userInitiated)
 
     // MARK: - Clips
     func startMonitoring() {
@@ -113,18 +115,22 @@ extension ClipService {
 
     fileprivate func save(with data: CPYClipData) {
         let realm = try! Realm()
+        // 画像クリップの場合 hash 計算に TIFF エンコードを伴うため一度だけ計算する
+        let dataHash = data.hash
         // Copy already copied history
         let isCopySameHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.copySameHistory)
-        if realm.object(ofType: CPYClip.self, forPrimaryKey: "\(data.hash)") != nil, !isCopySameHistory { return }
-        // Don't save invalidated clip
-        if let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: "\(data.hash)"), clip.isInvalidated { return }
+        if let existingClip = realm.object(ofType: CPYClip.self, forPrimaryKey: "\(dataHash)") {
+            if !isCopySameHistory { return }
+            // Don't save invalidated clip
+            if existingClip.isInvalidated { return }
+        }
 
         // Don't save empty string history
         if data.isOnlyStringType && data.stringValue.isEmpty { return }
 
         // Overwrite same history
         let isOverwriteHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.overwriteSameHistory)
-        let savedHash = (isOverwriteHistory) ? data.hash : Int(arc4random() % 1000000)
+        let savedHash = (isOverwriteHistory) ? dataHash : Int(arc4random() % 1000000)
 
         // Saved time and path
         let unixTime = Int(Date().timeIntervalSince1970)
@@ -137,7 +143,9 @@ extension ClipService {
         clip.updateTime = unixTime
         clip.primaryType = data.primaryType?.rawValue ?? ""
 
-        DispatchQueue.main.async {
+        // アーカイブ生成（画像だと数 MB 規模）とファイル書き込みは重いので
+        // メインスレッドではなく専用の直列キューで実行する
+        saveQueue.async {
             // Save thumbnail image
             if let thumbnailImage = data.thumbnailImage {
                 PINCache.shared.setObjectAsync(thumbnailImage, forKey: "\(unixTime)", completion: nil)
@@ -151,7 +159,9 @@ extension ClipService {
             // Save Realm and .data file
             let dispatchRealm = try! Realm()
             if CPYUtilities.prepareSaveToPath(CPYUtilities.applicationSupportFolder()) {
-                if NSKeyedArchiver.archiveRootObject(data, toFile: savedPath) {
+                let archiveData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: false)
+                let archived = archiveData.flatMap { try? $0.write(to: URL(fileURLWithPath: savedPath)) } != nil
+                if archived {
                     dispatchRealm.transaction {
                         dispatchRealm.add(clip, update: .all)
                     }

@@ -14,12 +14,12 @@ import Foundation
 
 extension NSCoding {
     func archive() -> Data {
-        return NSKeyedArchiver.archivedData(withRootObject: self)
+        return (try? NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)) ?? Data()
     }
 }
 
 extension Array where Element: NSCoding {
     func archive() -> Data {
-        return NSKeyedArchiver.archivedData(withRootObject: self)
+        return (try? NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)) ?? Data()
     }
 }

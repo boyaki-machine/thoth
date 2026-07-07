@@ -21,15 +21,18 @@ final class HotKeyService: NSObject {
     static var defaultKeyCombos: [String: Any] = {
         // MainMenu:    ⌘ + Shift + V
         // HistoryMenu: ⌘ + Control + V
-        // SnipeetMenu: ⌘ + Shift B
+        // SnipeetMenu: ⌘ + Shift + B
+        // SecureMenu:  ⌘ + Shift + . (keyCode 47 = Period key)
         return [Constants.Menu.clip: ["keyCode": 9, "modifiers": 768],
                 Constants.Menu.history: ["keyCode": 9, "modifiers": 4352],
-                Constants.Menu.snippet: ["keyCode": 11, "modifiers": 768]]
+                Constants.Menu.snippet: ["keyCode": 11, "modifiers": 768],
+                Constants.Menu.secure: ["keyCode": 47, "modifiers": 768]]
     }()
 
     fileprivate(set) var mainKeyCombo: KeyCombo?
     fileprivate(set) var historyKeyCombo: KeyCombo?
     fileprivate(set) var snippetKeyCombo: KeyCombo?
+    fileprivate(set) var secureKeyCombo: KeyCombo?
     fileprivate(set) var clearHistoryKeyCombo: KeyCombo?
 
 }
@@ -46,6 +49,10 @@ extension HotKeyService {
 
     @objc func popUpSnippetMenu() {
         AppEnvironment.current.menuManager.popUpMenu(.snippet)
+    }
+
+    @objc func popUpSecureMenu() {
+        AppEnvironment.current.menuManager.popUpSecureMenu()
     }
 
     @objc func popUpClearHistoryAlert() {
@@ -71,6 +78,16 @@ extension HotKeyService {
         change(with: .history, keyCombo: savedKeyCombo(forKey: Constants.HotKey.historyKeyCombo))
         // Snippet menu
         change(with: .snippet, keyCombo: savedKeyCombo(forKey: Constants.HotKey.snippetKeyCombo))
+        // Secure menu:
+        // 旧デフォルト (keyCode 27 / Minus) は JIS キーボードで動作しないため一度だけリセット
+        let secureKeyResetDone = "kCPYHotKeySecureKeyCodeV47Migrated"
+        if !AppEnvironment.current.defaults.bool(forKey: secureKeyResetDone) {
+            AppEnvironment.current.defaults.removeObject(forKey: Constants.HotKey.secureKeyCombo)
+            AppEnvironment.current.defaults.set(true, forKey: secureKeyResetDone)
+        }
+        let savedSecure = savedKeyCombo(forKey: Constants.HotKey.secureKeyCombo)
+        let secureCombo = savedSecure ?? KeyCombo(QWERTYKeyCode: 47, carbonModifiers: 768)
+        change(with: .secure, keyCombo: secureCombo)
         // Clear History
         changeClearHistoryKeyCombo(savedKeyCombo(forKey: Constants.HotKey.clearHistoryKeyCombo))
     }
@@ -83,6 +100,8 @@ extension HotKeyService {
             historyKeyCombo = keyCombo
         case .snippet:
             snippetKeyCombo = keyCombo
+        case .secure:
+            secureKeyCombo = keyCombo
         }
         register(with: type, keyCombo: keyCombo)
     }
@@ -100,8 +119,9 @@ extension HotKeyService {
 
     private func savedKeyCombo(forKey key: String) -> KeyCombo? {
         guard let data = AppEnvironment.current.defaults.object(forKey: key) as? Data else { return nil }
-        guard let keyCombo = NSKeyedUnarchiver.unarchiveObject(with: data) as? KeyCombo else { return nil }
-        return keyCombo
+        guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
+        unarchiver.requiresSecureCoding = false
+        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? KeyCombo
     }
 }
 
@@ -163,11 +183,14 @@ extension HotKeyService {
     private var folderKeyCombos: [String: KeyCombo]? {
         get {
             guard let data = AppEnvironment.current.defaults.object(forKey: Constants.HotKey.folderKeyCombos) as? Data else { return nil }
-            return NSKeyedUnarchiver.unarchiveObject(with: data) as? [String: KeyCombo]
+            guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
+            unarchiver.requiresSecureCoding = false
+            return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? [String: KeyCombo]
         }
         set {
-            if let value = newValue {
-                AppEnvironment.current.defaults.set(NSKeyedArchiver.archivedData(withRootObject: value), forKey: Constants.HotKey.folderKeyCombos)
+            if let value = newValue,
+               let data = try? NSKeyedArchiver.archivedData(withRootObject: value, requiringSecureCoding: false) {
+                AppEnvironment.current.defaults.set(data, forKey: Constants.HotKey.folderKeyCombos)
             } else {
                 AppEnvironment.current.defaults.removeObject(forKey: Constants.HotKey.folderKeyCombos)
             }

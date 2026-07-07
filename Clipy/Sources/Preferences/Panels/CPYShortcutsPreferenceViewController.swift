@@ -21,6 +21,7 @@ class CPYShortcutsPreferenceViewController: NSViewController {
     @IBOutlet private weak var historyShortcutRecordView: RecordView!
     @IBOutlet private weak var snippetShortcutRecordView: RecordView!
     @IBOutlet private weak var clearHistoryShortcutRecordView: RecordView!
+    @IBOutlet private weak var secureShortcutRecordView: RecordView!
 
     // MARK: - Initialize
     override func loadView() {
@@ -29,6 +30,7 @@ class CPYShortcutsPreferenceViewController: NSViewController {
         historyShortcutRecordView.delegate = self
         snippetShortcutRecordView.delegate = self
         clearHistoryShortcutRecordView.delegate = self
+        secureShortcutRecordView.delegate = self
         prepareHotKeys()
     }
 
@@ -41,6 +43,7 @@ private extension CPYShortcutsPreferenceViewController {
         historyShortcutRecordView.keyCombo = AppEnvironment.current.hotKeyService.historyKeyCombo
         snippetShortcutRecordView.keyCombo = AppEnvironment.current.hotKeyService.snippetKeyCombo
         clearHistoryShortcutRecordView.keyCombo = AppEnvironment.current.hotKeyService.clearHistoryKeyCombo
+        secureShortcutRecordView.keyCombo = AppEnvironment.current.hotKeyService.secureKeyCombo
     }
 }
 
@@ -64,6 +67,8 @@ extension CPYShortcutsPreferenceViewController: RecordViewDelegate {
             AppEnvironment.current.hotKeyService.change(with: .snippet, keyCombo: keyCombo)
         case clearHistoryShortcutRecordView:
             AppEnvironment.current.hotKeyService.changeClearHistoryKeyCombo(keyCombo)
+        case secureShortcutRecordView:
+            AppEnvironment.current.hotKeyService.change(with: .secure, keyCombo: keyCombo)
         default: break
         }
     }
