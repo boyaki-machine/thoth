@@ -51,6 +51,7 @@ final class SecureItemEditViewController: NSViewController {
     private let addFieldBtnRef    = TabCapturingButton()
     private let removeFieldBtnRef = TabCapturingButton()
     private let passwordGeneratorBtnRef = TabCapturingButton()
+    private let totpImportBtnRef = TabCapturingButton()
     private let cancelBtnRef      = TabCapturingButton()
     private let saveBtnRef        = TabCapturingButton()
     /// `viewDidAppear` で登録し、`viewWillDisappear` で解除するローカルイベントモニター。
@@ -58,6 +59,7 @@ final class SecureItemEditViewController: NSViewController {
 
     // NSTableViewDataSource 拡張（別ファイル）から参照するため internal
     enum ColID {
+        static let dragHandle = NSUserInterfaceItemIdentifier("fDragHandle")
         static let label   = NSUserInterfaceItemIdentifier("fLabel")
         static let value   = NSUserInterfaceItemIdentifier("fValue")
         static let pass    = NSUserInterfaceItemIdentifier("fPass")
@@ -163,6 +165,8 @@ final class SecureItemEditViewController: NSViewController {
             removeFieldBtnRef.heightAnchor.constraint(equalToConstant: 22),
             passwordGeneratorBtnRef.leadingAnchor.constraint(equalTo: removeFieldBtnRef.trailingAnchor, constant: 16),
             passwordGeneratorBtnRef.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
+            totpImportBtnRef.leadingAnchor.constraint(equalTo: passwordGeneratorBtnRef.trailingAnchor, constant: 8),
+            totpImportBtnRef.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             saveBtnRef.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             saveBtnRef.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             cancelBtnRef.trailingAnchor.constraint(equalTo: saveBtnRef.leadingAnchor, constant: -8),
@@ -188,6 +192,9 @@ final class SecureItemEditViewController: NSViewController {
 
     /// フィールドテーブル（列定義＋スクロールビュー）を生成してビューに追加する。
     private func makeFieldsTable() {
+        let dragHandleCol = NSTableColumn(identifier: ColID.dragHandle)
+        dragHandleCol.title = ""; dragHandleCol.width = 20; dragHandleCol.minWidth = 20; dragHandleCol.maxWidth = 20
+
         let labelCol = NSTableColumn(identifier: ColID.label)
         labelCol.title = "Label"; labelCol.width = 130; labelCol.minWidth = 60
 
@@ -201,6 +208,7 @@ final class SecureItemEditViewController: NSViewController {
         let historyCol = NSTableColumn(identifier: ColID.history)
         historyCol.title = "🕘"; historyCol.width = 36; historyCol.minWidth = 36; historyCol.maxWidth = 36
 
+        fieldsTable.addTableColumn(dragHandleCol)
         fieldsTable.addTableColumn(labelCol)
         fieldsTable.addTableColumn(valueCol)
         fieldsTable.addTableColumn(passCol)
@@ -210,6 +218,8 @@ final class SecureItemEditViewController: NSViewController {
         fieldsTable.delegate = self
         fieldsTable.usesAlternatingRowBackgroundColors = true
         fieldsTable.rowHeight = 24
+        fieldsTable.registerForDraggedTypes([NSPasteboard.PasteboardType("com.clipy-app.secure-field-row")])
+        fieldsTable.setDraggingSourceOperationMask(.move, forLocal: true)
 
         fieldsScroll.documentView = fieldsTable
         fieldsScroll.hasVerticalScroller = true
@@ -247,6 +257,13 @@ final class SecureItemEditViewController: NSViewController {
         passwordGeneratorBtnRef.action = #selector(openPasswordGenerator)
         passwordGeneratorBtnRef.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(passwordGeneratorBtnRef)
+
+        totpImportBtnRef.title = "TOTP追加..."
+        totpImportBtnRef.bezelStyle = .rounded
+        totpImportBtnRef.target = self
+        totpImportBtnRef.action = #selector(addTOTP)
+        totpImportBtnRef.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(totpImportBtnRef)
 
         cancelBtnRef.title = L10n.cancel
         cancelBtnRef.bezelStyle = .rounded
@@ -296,6 +313,19 @@ final class SecureItemEditViewController: NSViewController {
         CPYPasswordGeneratorWindowController.shared.showWindow(self)
     }
 
+    /// TOTP 取り込みシートを開く
+    @objc private func addTOTP() {
+        let vc = CPYTOTPImportViewController()
+        vc.onImport = { [weak self] (secret: String) in
+            guard let self = self else { return }
+            let field = SecureMenuItem.Field(label: "ワンタイムパスワードTOTP", value: secret,
+                                             isPassword: false, kind: .totp)
+            self.fields.append(field)
+            self.fieldsTable.insertRows(at: IndexSet(integer: self.fields.count - 1), withAnimation: .slideDown)
+        }
+        presentAsSheet(vc)
+    }
+
     @objc private func saveSheet() {
         // フィールドエディタを確定させてから値を収集する
         view.window?.makeFirstResponder(nil)
@@ -311,15 +341,16 @@ final class SecureItemEditViewController: NSViewController {
         // 画面上のセルが保持する最新値を優先し、未生成のセルはモデルの値にフォールバック
         var currentFields: [SecureMenuItem.Field] = []
         for row in 0..<fields.count {
-            let label = (fieldsTable.view(atColumn: 0, row: row, makeIfNecessary: false)
+            let label = (fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false)
                             as? NSTableCellView)?.textField?.stringValue ?? fields[row].label
-            let value = (fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false)
+            let value = (fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: false)
                             as? FieldValueCell)?.currentValue ?? fields[row].value
             guard !label.trimmingCharacters(in: .whitespaces).isEmpty
                     || !value.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
             currentFields.append(SecureMenuItem.Field(fieldID: fields[row].fieldID,
                                                       label: label, value: value,
                                                       isPassword: fields[row].isPassword,
+                                                      kind: fields[row].kind,
                                                       history: fields[row].history))
         }
 
@@ -338,6 +369,7 @@ final class SecureItemEditViewController: NSViewController {
                                            label: sender.stringValue,
                                            value: fields[row].value,
                                            isPassword: fields[row].isPassword,
+                                           kind: fields[row].kind,
                                            history: fields[row].history)
     }
 
@@ -348,6 +380,7 @@ final class SecureItemEditViewController: NSViewController {
                                            label: fields[row].label,
                                            value: sender.stringValue,
                                            isPassword: fields[row].isPassword,
+                                           kind: fields[row].kind,
                                            history: fields[row].history)
     }
 
@@ -361,6 +394,7 @@ final class SecureItemEditViewController: NSViewController {
                                            label: fields[row].label,
                                            value: currentValue,
                                            isPassword: sender.state == .on,
+                                           kind: fields[row].kind,
                                            history: fields[row].history)
         // value 列を再描画してプレーン／セキュアフィールドの表示を切り替える
         fieldsTable.reloadData(forRowIndexes: IndexSet(integer: row),
@@ -438,7 +472,15 @@ extension SecureItemEditViewController {
             if let cell = fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false) as? FieldValueCell,
                cell.plainField.currentEditor() != nil || currentResponder === cell.plainField
                 || cell.secureField.currentEditor() != nil || currentResponder === cell.secureField {
-                if shift { activateLabelField(row: row) } else { activateCheckbox(row: row) }
+                if shift {
+                    activateLabelField(row: row)
+                } else {
+                    if fields[row].isTOTP {
+                        if row < fields.count - 1 { activateLabelField(row: row + 1) } else { view.window?.makeFirstResponder(addFieldBtnRef) }
+                    } else {
+                        activateCheckbox(row: row)
+                    }
+                }
                 return true
             }
             // Checkbox 列
@@ -454,7 +496,19 @@ extension SecureItemEditViewController {
         switch currentResponder {
         case addFieldBtnRef:
             if shift {
-                if fields.isEmpty { window.makeFirstResponder(titleField) } else { activateCheckbox(row: fields.count - 1) }
+                if fields.isEmpty {
+                    window.makeFirstResponder(titleField)
+                } else {
+                    var targetRow = fields.count - 1
+                    while targetRow >= 0 && fields[targetRow].isTOTP {
+                        targetRow -= 1
+                    }
+                    if targetRow >= 0 {
+                        activateCheckbox(row: targetRow)
+                    } else {
+                        window.makeFirstResponder(titleField)
+                    }
+                }
             } else { window.makeFirstResponder(removeFieldBtnRef) }
             return true
         case removeFieldBtnRef:
@@ -488,7 +542,91 @@ extension SecureItemEditViewController {
         let newRow = row + delta
         guard newRow >= 0, newRow < fields.count else { NSSound.beep(); return }
         fields.swapAt(row, newRow)
-        fieldsTable.reloadData(forRowIndexes: IndexSet([row, newRow]), columnIndexes: IndexSet(0..<3))
+        fieldsTable.reloadData(forRowIndexes: IndexSet([row, newRow]), columnIndexes: IndexSet(0..<5))
         fieldsTable.selectRowIndexes(IndexSet(integer: newRow), byExtendingSelection: false)
+    }
+}
+
+// MARK: - Drag & Drop (Row Reordering)
+
+extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination {
+
+    /// ドラッグソースのペーストボード情報を提供する
+    /// NSTableView が自動的にドラッグを開始するために必須
+    func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> (NSPasteboardWriting)? {
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(String(row), forType: NSPasteboard.PasteboardType("com.clipy-app.secure-field-row"))
+        return pasteboardItem
+    }
+
+    /// ドラッグハンドル列からのドラッグ開始を検出し、ペーストボードを準備する
+    func tableView(_ tableView: NSTableView, draggingSession session: NSDraggingSession,
+                   willBeginAt screenPoint: NSPoint, forRowIndexes rowIndexes: IndexSet) {
+        let localPoint = tableView.convert(screenPoint, from: nil)
+        let column = tableView.column(at: localPoint)
+        guard column >= 0, column < tableView.numberOfColumns else { return }
+        let colID = tableView.tableColumns[column].identifier
+
+        // ドラッグハンドル列からのドラッグのみを許可
+        guard colID == ColID.dragHandle else { return }
+
+        // pasteboardWriterForRow で既にペーストボードが設定されているため、ここで追加設定は不要
+    }
+
+    /// ドラッグ中のホバー時に、ドロップが許可されるか判定する
+    /// dropOperation を .above に変更して行間に挿入線を表示する
+    func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo,
+                   proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
+        guard let pboard = info.draggingPasteboard.string(forType: NSPasteboard.PasteboardType("com.clipy-app.secure-field-row")) else {
+            return []
+        }
+        let pboardStr = String(pboard)
+        guard let sourceRow = Int(pboardStr) else { return [] }
+
+        // 同じ行へのドロップは拒否
+        if row == sourceRow || row == sourceRow + 1 { return [] }
+
+        // .on を .above に変更（行間の挿入線を表示）
+        if dropOperation == .on {
+            tableView.setDropRow(row, dropOperation: .above)
+        } else {
+            tableView.setDropRow(row, dropOperation: dropOperation)
+        }
+
+        return .move
+    }
+
+    /// ドロップを受け入れて行の順序を変更する
+    func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
+                   row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
+        guard let pboard = info.draggingPasteboard.string(forType: NSPasteboard.PasteboardType("com.clipy-app.secure-field-row")) else {
+            return false
+        }
+        let pboardStr = String(pboard)
+        guard let sourceRow = Int(pboardStr) else { return false }
+
+        // 境界値チェック（.above では row は 0～count）
+        guard sourceRow >= 0, sourceRow < fields.count, row >= 0, row <= fields.count else { return false }
+
+        // 同じ行へのドロップは無視
+        if dropOperation == .above && (row == sourceRow || row == sourceRow + 1) { return false }
+
+        // 行を移動
+        let field = fields.remove(at: sourceRow)
+        let targetRow = row > sourceRow ? row - 1 : row
+        fields.insert(field, at: targetRow)
+
+        // テーブル再描画
+        let minRow = min(sourceRow, targetRow)
+        let maxRow = max(sourceRow, targetRow)
+        fieldsTable.reloadData(forRowIndexes: IndexSet(integersIn: minRow...maxRow), columnIndexes: IndexSet(0..<5))
+        fieldsTable.selectRowIndexes(IndexSet(integer: targetRow), byExtendingSelection: false)
+
+        return true
+    }
+
+    // NSDraggingSource の必須メソッド
+    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        return .move
     }
 }

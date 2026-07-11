@@ -71,6 +71,12 @@ final class CPYSecureItemsViewController: NSViewController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
 
+        let dragHandleColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("dragHandle"))
+        dragHandleColumn.title = ""
+        dragHandleColumn.width = 20
+        dragHandleColumn.minWidth = 20
+        dragHandleColumn.maxWidth = 20
+
         let titleColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("title"))
         titleColumn.title = "Title"
         titleColumn.width = 280
@@ -79,6 +85,7 @@ final class CPYSecureItemsViewController: NSViewController {
         fieldsColumn.title = "Fields"
         fieldsColumn.width = 100
 
+        tableView.addTableColumn(dragHandleColumn)
         tableView.addTableColumn(titleColumn)
         tableView.addTableColumn(fieldsColumn)
         tableView.dataSource = self
@@ -320,6 +327,7 @@ extension CPYSecureItemsViewController: NSTableViewDataSource, NSTableViewDelega
     func tableView(_ tableView: NSTableView, objectValueFor tableColumn: NSTableColumn?, row: Int) -> Any? {
         guard let item = items[safe: row] else { return nil }
         switch tableColumn?.identifier.rawValue {
+        case "dragHandle": return "≡"
         case "title":  return item.title
         case "fields": return "\(item.fields.count)"
         default:       return nil

@@ -237,13 +237,14 @@ final class SecureMenuService {
                 ?? oldItem.fields.first { $0.label == field.label }
             guard let old = oldField else { return field }
             var history = field.history
-            if old.value != field.value && !old.value.isEmpty {
+            // TOTP は secret を履歴に残さない（極めて機微なため）。それ以外は旧値を追記する
+            if !field.isTOTP, old.value != field.value && !old.value.isEmpty {
                 history.append(SecureMenuItem.FieldHistoryEntry(value: old.value, replacedAt: Date()))
             }
             // 上限を超えた分は古いものから削除する
             history = Array(history.suffix(Self.maxFieldHistoryCount))
             return SecureMenuItem.Field(fieldID: field.fieldID, label: field.label, value: field.value,
-                                        isPassword: field.isPassword, history: history)
+                                        isPassword: field.isPassword, kind: field.kind, history: history)
         }
         return merged
     }

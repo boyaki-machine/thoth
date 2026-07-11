@@ -163,6 +163,40 @@ extension PasteService {
     }
 }
 
+// MARK: - Type (直接キー入力)
+extension PasteService {
+
+    /// クリップボードを一切経由せず、CGEvent で文字列を直接タイプする。
+    /// TOTP など「OS のコピー履歴・Clipy 履歴に残したくない値」の入力に使う。
+    /// `paste()` と同じくアクセシビリティ権限が必要。
+    func typeString(_ string: String) {
+        guard !string.isEmpty else { return }
+        guard AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: false) else {
+            DispatchQueue.main.async {
+                AppEnvironment.current.accessibilityService.showAccessibilityAuthenticationAlert()
+            }
+            return
+        }
+
+        DispatchQueue.main.async {
+            let source = CGEventSource(stateID: .combinedSessionState)
+            source?.setLocalEventsFilterDuringSuppressionState([.permitLocalMouseEvents, .permitSystemDefinedEvents],
+                                                               state: .eventSuppressionStateSuppressionInterval)
+            // 1 文字ずつ keyDown/keyUp を送る。keyboardSetUnicodeString で
+            // 物理キーのレイアウトに依存せず任意の文字を送出できる。
+            for character in string {
+                var utf16 = Array(String(character).utf16)
+                guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: true),
+                      let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: false) else { continue }
+                keyDown.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: &utf16)
+                keyUp.keyboardSetUnicodeString(stringLength: utf16.count, unicodeString: &utf16)
+                keyDown.post(tap: .cgAnnotatedSessionEventTap)
+                keyUp.post(tap: .cgAnnotatedSessionEventTap)
+            }
+        }
+    }
+}
+
 // MARK: - Paste
 extension PasteService {
     func paste() {

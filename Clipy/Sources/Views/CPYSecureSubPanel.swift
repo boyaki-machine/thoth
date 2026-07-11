@@ -106,6 +106,12 @@ final class CPYSecureSubPanel: NSPanel {
     private(set) var currentFields: [SecureMenuItem.Field] = []
     private(set) var selectedFieldIndex: Int = -1
 
+    // MARK: - TOTP
+
+    private let totpService = TOTPService()
+    /// TOTP フィールドの表示（コード・残り秒数）を毎秒更新するタイマー。TOTP を含む間だけ動作する。
+    private var totpTimer: Timer?
+
     // MARK: - Callback
 
     var onFieldClicked: ((Int) -> Void)?
@@ -127,6 +133,10 @@ final class CPYSecureSubPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
+    deinit {
+        stopTOTPTimer()
+    }
+
     // MARK: - Public Interface
 
     func setFields(_ fields: [SecureMenuItem.Field]) {
@@ -135,6 +145,7 @@ final class CPYSecureSubPanel: NSPanel {
         tableView.reloadData()
         tableView.deselectAll(nil)
         sizePanel()
+        startTOTPTimerIfNeeded()
     }
 
     /// 次フィールドへ移動。最下端では false を返す
@@ -189,6 +200,44 @@ final class CPYSecureSubPanel: NSPanel {
     func selectedField() -> SecureMenuItem.Field? {
         guard selectedFieldIndex >= 0, selectedFieldIndex < currentFields.count else { return nil }
         return currentFields[selectedFieldIndex]
+    }
+
+    // MARK: - TOTP Live Update
+
+    /// 現在フィールドに TOTP が含まれる場合のみ、毎秒 TOTP 行を再描画するタイマーを開始する。
+    private func startTOTPTimerIfNeeded() {
+        stopTOTPTimer()
+        guard currentFields.contains(where: { $0.isTOTP }) else { return }
+        // NSPanel は通常の RunLoop で動くため .common モードに追加すれば安定して発火する
+        let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.reloadTOTPRows()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        totpTimer = timer
+    }
+
+    /// タイマーを停止する。パネルを閉じる際に呼ぶ。
+    func stopTOTPTimer() {
+        totpTimer?.invalidate()
+        totpTimer = nil
+    }
+
+    private func reloadTOTPRows() {
+        let totpRows = currentFields.indices.filter { currentFields[$0].isTOTP }
+        guard !totpRows.isEmpty else { return }
+        tableView.reloadData(forRowIndexes: IndexSet(totpRows), columnIndexes: IndexSet(integer: 0))
+    }
+
+    /// TOTP フィールドの表示文字列（`⏱ TOTP: 123 456 · 18s`）を生成する。
+    fileprivate func totpDisplayString(for field: SecureMenuItem.Field) -> String {
+        guard let params = TOTPService.parse(field.value),
+              let code = totpService.code(for: params) else {
+            return "⏱ TOTP: ------"
+        }
+        let remaining = totpService.remainingSeconds(for: params)
+        // 6 桁は 3 桁ずつ区切って見やすくする（例: "123 456"）
+        let grouped = code.count == 6 ? "\(code.prefix(3)) \(code.suffix(3))" : code
+        return "⏱ TOTP: \(grouped) · \(remaining)s"
     }
 
     // MARK: - Build Views
@@ -273,11 +322,16 @@ extension CPYSecureSubPanel: NSTableViewDataSource, NSTableViewDelegate {
                         ])
                         return newCell
                    }()
-        let field   = currentFields[row]
-        let preview = field.isPassword
-            ? "••••••••"
-            : (field.value.count > 26 ? String(field.value.prefix(26)) + "…" : field.value)
-        cell.textField?.stringValue = "\(field.label): \(preview)"
+        let field = currentFields[row]
+        if field.isTOTP {
+            // ⏱ TOTP: 123 456 · 18s（現在コードと残り秒数。Timer で毎秒更新される）
+            cell.textField?.stringValue = totpDisplayString(for: field)
+        } else {
+            let preview = field.isPassword
+                ? "••••••••"
+                : (field.value.count > 26 ? String(field.value.prefix(26)) + "…" : field.value)
+            cell.textField?.stringValue = "\(field.label): \(preview)"
+        }
         cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
         return cell
     }

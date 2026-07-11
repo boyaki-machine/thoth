@@ -335,6 +335,7 @@ extension CPYSecurePickerPanel {
 
     func closeSubPanel() {
         guard let sub = subPanel else { return }
+        sub.stopTOTPTimer()
         removeChildWindow(sub)
         sub.close()
         subPanel = nil
@@ -423,7 +424,8 @@ extension CPYSecurePickerPanel {
         let field = fields[fieldIndex]
         let selectedRow = tableView.selectedRow
         guard selectedRow >= 0, selectedRow < rows.count, case .parent(let item) = rows[selectedRow] else { return }
-        let selection = SecureFieldSelection(parentItemID: item.itemID, fieldValue: field.value, fieldIndex: fieldIndex)
+        let selection = SecureFieldSelection(parentItemID: item.itemID, fieldValue: field.value,
+                                             fieldIndex: fieldIndex, kind: field.kind)
         if isVisible { close() }
         onSelect?(selection)
     }

@@ -148,6 +148,16 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         }
         let context = AppEnvironment.current.secureSelectionContext
         context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
+        if selection.isTOTP {
+            // TOTP はクリップボードを経由せず、その時点のコードを直接タイプする
+            guard let params = TOTPService.parse(selection.fieldValue),
+                  let code = TOTPService().code(for: params) else {
+                NSSound.beep()
+                return
+            }
+            AppEnvironment.current.pasteService.typeString(code)
+            return
+        }
         AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
         AppEnvironment.current.pasteService.paste()
         // 30秒後にクリップボードをクリア

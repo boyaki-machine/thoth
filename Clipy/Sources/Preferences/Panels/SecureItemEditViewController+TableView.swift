@@ -19,6 +19,17 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         let field = fields[row]
         switch tableColumn?.identifier {
 
+        case ColID.dragHandle:
+            let cellID = NSUserInterfaceItemIdentifier("editDragHandleCell")
+            let cell: DragHandleCell
+            if let existingCell = tableView.makeView(withIdentifier: cellID, owner: nil) as? DragHandleCell {
+                cell = existingCell
+            } else {
+                cell = makeDragHandleCell(identifier: cellID)
+            }
+            cell.rowIndex = row
+            return cell
+
         case ColID.label:
             let cellID = NSUserInterfaceItemIdentifier("editLabelCell")
             let cell = (tableView.makeView(withIdentifier: cellID, owner: nil) as? NSTableCellView)
@@ -31,18 +42,23 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         case ColID.value:
             let cell = (tableView.makeView(withIdentifier: ColID.value, owner: nil) as? FieldValueCell)
                        ?? FieldValueCell()
-            cell.configure(value: field.value, isPassword: field.isPassword,
-                           target: self, action: #selector(valueFieldChanged(_:)))
+            cell.configure(value: field.value, isPassword: field.isPassword, isTOTP: field.isTOTP,
+                           createdAt: field.createdAt, target: self, action: #selector(valueFieldChanged(_:)))
             return cell
 
         case ColID.pass:
             let cellID = NSUserInterfaceItemIdentifier("editPassCell")
             let cell = (tableView.makeView(withIdentifier: cellID, owner: nil) as? NSTableCellView)
                        ?? makeCheckboxCell(identifier: cellID)
-            if let button = cell.subviews.first(where: { $0 is TabCapturingButton }) as? TabCapturingButton {
-                button.state = field.isPassword ? .on : .off
-                button.target = self
-                button.action = #selector(passwordCheckboxChanged(_:))
+            if field.isTOTP {
+                cell.subviews.forEach { $0.isHidden = true }
+            } else {
+                if let button = cell.subviews.first(where: { $0 is TabCapturingButton }) as? TabCapturingButton {
+                    button.isHidden = false
+                    button.state = field.isPassword ? .on : .off
+                    button.target = self
+                    button.action = #selector(passwordCheckboxChanged(_:))
+                }
             }
             return cell
 
@@ -50,9 +66,14 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
             let cellID = NSUserInterfaceItemIdentifier("editHistoryCell")
             let cell = (tableView.makeView(withIdentifier: cellID, owner: nil) as? NSTableCellView)
                        ?? makeHistoryButtonCell(identifier: cellID)
-            if let button = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
-                button.target = self
-                button.action = #selector(showValueHistory(_:))
+            if field.isTOTP {
+                cell.subviews.forEach { $0.isHidden = true }
+            } else {
+                if let button = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
+                    button.isHidden = false
+                    button.target = self
+                    button.action = #selector(showValueHistory(_:))
+                }
             }
             return cell
 
@@ -153,7 +174,7 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         history.remove(at: historyIndex)
         fields[row] = SecureMenuItem.Field(fieldID: field.fieldID, label: field.label,
                                            value: field.value, isPassword: field.isPassword,
-                                           history: history)
+                                           kind: field.kind, history: history)
     }
 
     /// Val 変更履歴のポップアップを開くボタンセル
@@ -174,6 +195,59 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         ])
         return cell
     }
+
+    /// ドラッグハンドル列のセル（≡ アイコン）
+    /// テキストフィールドの代わりにカスタムビューを使用して、マウスイベントをテーブルビューに伝播させる
+    private func makeDragHandleCell(identifier: NSUserInterfaceItemIdentifier) -> DragHandleCell {
+        let cell = DragHandleCell()
+        cell.identifier = identifier
+        cell.tableView = fieldsTable
+        let labelView = DragHandleLabel()
+        labelView.translatesAutoresizingMaskIntoConstraints = false
+        cell.addSubview(labelView)
+        NSLayoutConstraint.activate([
+            labelView.leadingAnchor.constraint(equalTo: cell.leadingAnchor),
+            labelView.trailingAnchor.constraint(equalTo: cell.trailingAnchor),
+            labelView.centerYAnchor.constraint(equalTo: cell.centerYAnchor),
+            labelView.heightAnchor.constraint(equalToConstant: 20)
+        ])
+        return cell
+    }
+}
+
+// MARK: - DragHandleLabel
+
+/// ドラッグハンドル列のラベルビュー。
+/// マウスイベントを処理せず、親ビュー（テーブルビュー）に伝播させる。
+final class DragHandleLabel: NSView {
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let string = "≡"
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+            .foregroundColor: NSColor.tertiaryLabelColor
+        ]
+        let attributedString = NSAttributedString(string: string, attributes: attributes)
+        let size = attributedString.size()
+        let point = NSPoint(x: (bounds.width - size.width) / 2, y: (bounds.height - size.height) / 2)
+        attributedString.draw(at: point)
+    }
+
+    /// マウスイベントを受け付けない（hitTest で常に nil を返す）
+    /// これにより、イベントは親ビュー（テーブルビュー）に伝播する
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        return nil
+    }
+}
+
+// MARK: - DragHandleCell
+
+/// ドラッグハンドル列のカスタムセル。
+/// NSTableView が行選択とドラッグ処理を自動的に行うよう、
+/// セル内のビューがマウスイベントを消費しないようにする。
+final class DragHandleCell: NSTableCellView {
+    weak var tableView: NSTableView?
+    var rowIndex: Int = -1
 }
 
 // MARK: - FieldValueCell
@@ -209,23 +283,39 @@ final class FieldValueCell: NSTableCellView {
 
     /// フィールドの表示モードを設定する。
     /// `isPassword` が `true` の場合は secureField を、`false` の場合は plainField を表示する。
+    /// `isTOTP` が `true` の場合は値を表示せず、プレースホルダーに作成日時を表示し、編集不可にする。
     /// `textField` プロパティにアクティブなフィールドを設定することで
     /// Tab ナビゲーションからのフォーカスを可能にする。
-    func configure(value: String, isPassword: Bool, target: AnyObject, action: Selector) {
-        if isPassword {
+    func configure(value: String, isPassword: Bool, isTOTP: Bool = false, createdAt: Date = Date(),
+                   target: AnyObject, action: Selector) {
+        if isTOTP {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            plainField.stringValue = ""
+            plainField.placeholderString = formatter.string(from: createdAt) + " 登録"
+            plainField.isEditable = false
+            plainField.target = nil
+            plainField.action = nil
+            secureField.isHidden = true
+            plainField.isHidden = false
+            textField = plainField
+        } else if isPassword {
             secureField.stringValue = value
             secureField.target = target
             secureField.action = action
+            secureField.isEditable = true
             plainField.isHidden  = true
             secureField.isHidden = false
+            textField = secureField
         } else {
             plainField.stringValue = value
             plainField.target = target
             plainField.action = action
+            plainField.isEditable = true
             secureField.isHidden = true
             plainField.isHidden  = false
+            textField = plainField
         }
-        textField = isPassword ? secureField : plainField
     }
 
     /// 現在表示中のフィールドの入力値を返す。

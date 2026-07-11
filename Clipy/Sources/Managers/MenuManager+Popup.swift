@@ -107,19 +107,13 @@ extension MenuManager {
                 let callerApp = panel?.callerApp
                 panel?.close()
                 context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
-                AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
                 self?.isSecureMenuActive  = false
                 self?.securePickerPanel   = nil
                 self?.secureCloseObserver = nil
-                // ペースト先アプリをアクティブ化してからペーストする。
-                // activate は非同期で完了するため少し待ってから Cmd+V を送出する。
+                // ペースト先アプリをアクティブ化してから出力する。
+                // activate は非同期で完了するため少し待ってから送出する。
                 callerApp?.activate(options: [.activateIgnoringOtherApps])
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    AppEnvironment.current.pasteService.paste()
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
-                    NSPasteboard.general.clearContents()
-                }
+                self?.outputSecureSelection(selection)
             }
             panel.onManage = { [weak self, weak panel] in
                 panel?.close()
@@ -143,6 +137,30 @@ extension MenuManager {
 
             self.securePickerPanel = panel
             panel.show(near: NSEvent.mouseLocation)
+        }
+    }
+
+    /// セキュア選択の出力を行う共通処理。
+    /// TOTP はクリップボードを経由せず直接タイプ（OS/Clipy 履歴に残さない）、
+    /// それ以外は従来どおりクリップボード経由でペーストし、一定時間後にクリアする。
+    func outputSecureSelection(_ selection: SecureFieldSelection) {
+        if selection.isTOTP {
+            guard let params = TOTPService.parse(selection.fieldValue),
+                  let code = TOTPService().code(for: params) else {
+                NSSound.beep()
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                AppEnvironment.current.pasteService.typeString(code)
+            }
+        } else {
+            AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                AppEnvironment.current.pasteService.paste()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
+                NSPasteboard.general.clearContents()
+            }
         }
     }
 
