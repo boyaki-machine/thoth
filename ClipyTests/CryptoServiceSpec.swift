@@ -111,6 +111,143 @@ class CryptoServiceSpec: QuickSpec {
             }
         }
 
+        // MARK: - Integrity (AES-GCM)
+
+        describe("Ciphertext integrity") {
+
+            // GCM の認証タグにより、暗号文の 1 バイト改竄でも復号が失敗することを担保する
+            it("Fails to decrypt tampered ciphertext") {
+                let original = makeFile(named: "secret.txt", contents: "integrity check")
+                let encrypted = workDirectory.appendingPathComponent("secret.enc")
+                let decrypted = workDirectory.appendingPathComponent("out.txt")
+                _ = encryptSync(original, to: encrypted, password: "pw")
+
+                // 暗号文部分（末尾から 20 バイト目 = タグより前）を 1 ビット反転する
+                var data = try! Data(contentsOf: encrypted)
+                data[data.count - 20] ^= 0x01
+                try! data.write(to: encrypted)
+
+                let result = decryptSync(encrypted, to: decrypted, password: "pw")
+                if case .success = result { fail("tampered ciphertext should fail to decrypt") }
+            }
+
+            it("Fails to decrypt tampered header (AAD)") {
+                let original = makeFile(named: "secret.txt", contents: "aad check")
+                let encrypted = workDirectory.appendingPathComponent("secret.enc")
+                let decrypted = workDirectory.appendingPathComponent("out.txt")
+                _ = encryptSync(original, to: encrypted, password: "pw")
+
+                // フラグバイト（オフセット 8）を書き換える → AAD 認証で失敗するべき
+                var data = try! Data(contentsOf: encrypted)
+                data[8] ^= 0x01
+                try! data.write(to: encrypted)
+
+                let result = decryptSync(encrypted, to: decrypted, password: "pw")
+                if case .success = result { fail("tampered header should fail to decrypt") }
+            }
+        }
+
+        // MARK: - Legacy Format Compatibility
+
+        describe("Legacy format decryption") {
+
+            // 旧バージョン（openssl enc -aes-256-cbc -pbkdf2 -iter 100000）で暗号化した
+            // 固定フィクスチャ。パスワード "legacy-pass"、平文 "legacy secret content 日本語"。
+            // このテストが落ちる変更は、過去に暗号化したファイルが開けなくなることを意味する
+            let legacyFileFixture = "AAAAAAAAAABTYWx0ZWRfXzcA2ofErOWPOboodNYd9Zz3NDY2EOUpUGvHM+rgu+cBlvHqHJUQIdE="
+
+            it("Decrypts a fixed legacy file fixture") {
+                let encrypted = workDirectory.appendingPathComponent("legacy.enc")
+                try! Data(base64Encoded: legacyFileFixture)!.write(to: encrypted)
+                let decrypted = workDirectory.appendingPathComponent("legacy-out.txt")
+
+                expect(try? decryptSync(encrypted, to: decrypted, password: "legacy-pass").get()) != nil
+                expect(try? String(contentsOf: decrypted, encoding: .utf8)) == "legacy secret content 日本語"
+            }
+
+            it("Fails to decrypt a legacy fixture with a wrong password") {
+                let encrypted = workDirectory.appendingPathComponent("legacy.enc")
+                try! Data(base64Encoded: legacyFileFixture)!.write(to: encrypted)
+                let decrypted = workDirectory.appendingPathComponent("legacy-out.txt")
+
+                let result = decryptSync(encrypted, to: decrypted, password: "wrong")
+                if case .success = result { fail("wrong password should fail") }
+            }
+
+            // 実際の openssl コマンドで旧形式ファイルを生成し、相互運用性を検証する
+            // （固定フィクスチャと違い、この環境の openssl 実装との互換を直接確認できる）
+            func makeLegacyContainer(of sourceURL: URL, marker: Data, password: String) -> Data? {
+                let encBody = workDirectory.appendingPathComponent("legacy-body-\(UUID().uuidString)")
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
+                process.arguments = ["enc", "-aes-256-cbc", "-pbkdf2", "-iter", "100000", "-salt",
+                                     "-in", sourceURL.path, "-out", encBody.path, "-pass", "pass:\(password)"]
+                try? process.run()
+                process.waitUntilExit()
+                guard process.terminationStatus == 0, let body = try? Data(contentsOf: encBody) else { return nil }
+                return marker + body
+            }
+
+            it("Decrypts a legacy file produced by the openssl command") {
+                let original = makeFile(named: "interop.txt", contents: "openssl interop")
+                guard let container = makeLegacyContainer(of: original,
+                                                          marker: Data(repeating: 0, count: 8),
+                                                          password: "pw123") else {
+                    fail("failed to build legacy container with openssl")
+                    return
+                }
+                let encrypted = workDirectory.appendingPathComponent("interop.enc")
+                try! container.write(to: encrypted)
+                let decrypted = workDirectory.appendingPathComponent("interop-out.txt")
+
+                expect(try? decryptSync(encrypted, to: decrypted, password: "pw123").get()) != nil
+                expect(try? String(contentsOf: decrypted, encoding: .utf8)) == "openssl interop"
+            }
+
+            it("Decrypts a legacy folder produced by tar + openssl") {
+                // 旧形式のフォルダ暗号化を再現: tar でまとめて openssl 暗号化、CLIPYDIR マーカー
+                let folder = workDirectory.appendingPathComponent("legacydir", isDirectory: true)
+                try! FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try! "in folder".write(to: folder.appendingPathComponent("f.txt"), atomically: true, encoding: .utf8)
+
+                let tarURL = workDirectory.appendingPathComponent("legacy.tar")
+                let tar = Process()
+                tar.executableURL = URL(fileURLWithPath: "/usr/bin/tar")
+                tar.arguments = ["-cf", tarURL.path, "-C", workDirectory.path, "legacydir"]
+                try? tar.run()
+                tar.waitUntilExit()
+
+                guard let container = makeLegacyContainer(of: tarURL,
+                                                          marker: Data("CLIPYDIR".utf8),
+                                                          password: "pw123") else {
+                    fail("failed to build legacy folder container with openssl")
+                    return
+                }
+                let encrypted = workDirectory.appendingPathComponent("legacydir.enc")
+                try! container.write(to: encrypted)
+                let restoreRoot = workDirectory.appendingPathComponent("legacy-restored", isDirectory: true)
+
+                expect(try? decryptSync(encrypted, to: restoreRoot, password: "pw123").get()) != nil
+                let restored = restoreRoot.appendingPathComponent("legacydir/f.txt")
+                expect(try? String(contentsOf: restored, encoding: .utf8)) == "in folder"
+            }
+        }
+
+        // MARK: - New Format Layout
+
+        describe("New format layout") {
+
+            it("Writes the CLPYENC magic header") {
+                let original = makeFile(named: "a.txt", contents: "x")
+                let encrypted = workDirectory.appendingPathComponent("a.enc")
+                _ = encryptSync(original, to: encrypted, password: "pw")
+
+                let data = try! Data(contentsOf: encrypted)
+                expect(data.prefix(7)) == Data("CLPYENC".utf8)
+                expect(data[7]) == 1  // バージョン
+            }
+        }
+
         // MARK: - Validation
 
         describe("Validation") {

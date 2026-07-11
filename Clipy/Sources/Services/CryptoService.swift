@@ -9,30 +9,71 @@
 //
 
 import Foundation
+import CryptoKit
+import CommonCrypto
 
-/// ファイル・フォルダを openssl で暗号化・復号化するサービス。
+/// ファイル・フォルダをパスワードで暗号化・復号化するサービス。
 ///
-/// 暗号化強度を高めるため、以下を組み合わせて openssl コマンドをバックグラウンド実行する。
-/// - アルゴリズム: AES-256-CBC
-/// - 鍵導出: PBKDF2（`-pbkdf2`）、ストレッチング回数 100,000 回（`-iter 100000`）
-/// - salt 付き（`-salt`）
+/// 暗号化はすべてインプロセス（CryptoKit / CommonCrypto）で行う。
+/// 以前は openssl コマンドを起動していたが、パスワードを argv で子プロセスに
+/// 渡すと実行中に `ps` で他プロセスから見えてしまうため廃止した。
 ///
-/// フォルダは一旦 tar でまとめてから暗号化し、復号時に tar を展開して元の構造を復元する。
+/// ## 新形式（バージョン 1）
+/// - アルゴリズム: AES-256-GCM（認証付き暗号。改竄・誤パスワードをタグ検証で検知できる）
+/// - 鍵導出: PBKDF2-HMAC-SHA256、200,000 回
+/// - レイアウト:
+///   ```
+///   オフセット サイズ 内容
+///   0          7     マジック "CLPYENC"
+///   7          1     バージョン (0x01)
+///   8          1     フラグ (bit0: フォルダ由来 → 復号後に tar 展開)
+///   9          16    PBKDF2 salt
+///   25         4     PBKDF2 反復回数 (UInt32 ビッグエンディアン)
+///   29         12    AES-GCM nonce
+///   41         N+16  暗号文 + GCM 認証タグ
+///   ```
+///   先頭 29 バイト（マジック〜反復回数）は GCM の AAD に含め、ヘッダー改竄も検知する。
+///
+/// ## レガシー形式（復号のみ対応）
+/// 旧バージョンが生成した `マーカー 8 バイト + openssl enc 出力` の形式。
+/// - マーカー: "CLIPYDIR"（フォルダ）またはゼロ 8 バイト（ファイル）
+/// - openssl enc: `Salted__ + salt 8 バイト + AES-256-CBC 暗号文`、
+///   鍵導出は PBKDF2-HMAC-SHA256 100,000 回で 48 バイト（鍵 32 + IV 16）
+///
+/// フォルダは一旦 tar でまとめてから暗号化し、復号時に tar を展開して元の構造を復元する
+/// （tar の argv に秘密情報は含まれないため外部コマンドのままでよい）。
+///
+/// 注意: 現状は入出力をメモリに全読み込みするため、巨大ファイルはメモリを圧迫する。
+/// ストリーミング暗号化は将来課題。
 final class CryptoService {
 
     // MARK: - Constants
 
-    /// PBKDF2 のストレッチング回数（10 万回以上）
-    static let iterationCount = 100_000
+    /// 新形式の PBKDF2 ストレッチング回数
+    static let iterationCount = 200_000
     /// 暗号化ファイルの拡張子
     static let encryptedExtension = "enc"
-    /// フォルダを暗号化した場合に付与する内部マーカー（復号時に tar 展開すべきか判定する）
-    private static let folderMarkerPrefix = Data("CLIPYDIR".utf8)
+
+    /// 新形式のマジックナンバー
+    private static let magic = Data("CLPYENC".utf8)
+    /// 新形式のバージョン
+    private static let formatVersion: UInt8 = 1
+    /// フラグ: フォルダ由来（復号後に tar 展開する）
+    private static let flagFolder: UInt8 = 0b0000_0001
+
+    /// レガシー形式でフォルダを示す内部マーカー（先頭 8 バイト）
+    private static let legacyFolderMarker = Data("CLIPYDIR".utf8)
+    /// レガシー形式の openssl enc ヘッダー
+    private static let legacySaltHeader = Data("Salted__".utf8)
+    /// レガシー形式の PBKDF2 ストレッチング回数
+    private static let legacyIterationCount = 100_000
 
     enum CryptoError: LocalizedError {
         case emptyPassword
         case inputNotFound
-        case opensslFailed(String)
+        /// 復号失敗（誤パスワード・改竄・形式不正）。詳細はユーザーに区別して見せない
+        case decryptFailed
+        case encryptFailed
         case tarFailed(String)
         case outputExists
 
@@ -40,7 +81,8 @@ final class CryptoService {
             switch self {
             case .emptyPassword:        return L10n.cryptoErrorEmptyPassword
             case .inputNotFound:        return L10n.cryptoErrorInputNotFound
-            case .opensslFailed:        return L10n.cryptoErrorFailed
+            case .decryptFailed:        return L10n.cryptoErrorFailed
+            case .encryptFailed:        return L10n.cryptoErrorFailed
             case .tarFailed:            return L10n.cryptoErrorFailed
             case .outputExists:         return L10n.cryptoErrorOutputExists
             }
@@ -50,6 +92,7 @@ final class CryptoService {
     // MARK: - Public Interface
 
     /// ファイル／フォルダを暗号化する。完了ハンドラはメインスレッドで呼ばれる。
+    /// 出力は常に新形式（AES-256-GCM）。
     /// - Parameters:
     ///   - inputURL: 暗号化対象のファイルまたはフォルダ
     ///   - outputURL: 出力先（暗号化ファイル）
@@ -60,14 +103,15 @@ final class CryptoService {
         }
     }
 
-    /// 暗号化ファイルを復号する。フォルダ由来の場合は tar を展開して復元する。
+    /// 暗号化ファイルを復号する。新形式・レガシー形式の両方を自動判別する。
+    /// フォルダ由来の場合は tar を展開して復元する。
     func decrypt(inputURL: URL, outputURL: URL, password: String, completion: @escaping (Result<URL, Error>) -> Void) {
         runInBackground(completion: completion) {
             try self.performDecrypt(inputURL: inputURL, outputURL: outputURL, password: password)
         }
     }
 
-    // MARK: - Encrypt / Decrypt Implementation
+    // MARK: - Encrypt Implementation
 
     private func performEncrypt(inputURL: URL, outputURL: URL, password: String) throws -> URL {
         guard !password.isEmpty else { throw CryptoError.emptyPassword }
@@ -78,72 +122,194 @@ final class CryptoService {
         }
         guard !fileManager.fileExists(atPath: outputURL.path) else { throw CryptoError.outputExists }
 
-        let workDirectory = try makeWorkDirectory()
-        defer { try? fileManager.removeItem(at: workDirectory) }
-
         // 暗号化の入力（フォルダなら tar にまとめる）
-        let sourceURL: URL
+        let plainData: Data
         if isDirectory.boolValue {
+            let workDirectory = try makeWorkDirectory()
+            defer { try? fileManager.removeItem(at: workDirectory) }
             let tarURL = workDirectory.appendingPathComponent("archive.tar")
             try runTarCreate(folderURL: inputURL, tarURL: tarURL)
-            sourceURL = tarURL
+            plainData = try Data(contentsOf: tarURL)
         } else {
-            sourceURL = inputURL
+            plainData = try Data(contentsOf: inputURL)
         }
 
-        let encryptedURL = workDirectory.appendingPathComponent("payload.enc")
-        try runOpenSSL(encrypt: true, inputURL: sourceURL, outputURL: encryptedURL, password: password)
-
-        // フォルダ由来かどうかを示すマーカー（先頭 8 バイト）を付けて出力する
-        let marker = isDirectory.boolValue ? Self.folderMarkerPrefix : Data(repeating: 0, count: Self.folderMarkerPrefix.count)
-        let encryptedData = try Data(contentsOf: encryptedURL)
-        try (marker + encryptedData).write(to: outputURL, options: .atomic)
+        let container = try seal(plainData, password: password, isFolder: isDirectory.boolValue)
+        try container.write(to: outputURL, options: .atomic)
         return outputURL
     }
+
+    /// 平文を新形式コンテナ（ヘッダー + AES-256-GCM）に封入する
+    private func seal(_ plainData: Data, password: String, isFolder: Bool) throws -> Data {
+        let salt = try randomBytes(count: 16)
+        let nonceBytes = try randomBytes(count: 12)
+
+        // ヘッダー（マジック〜反復回数）を組み立て、AAD として認証対象に含める
+        var header = Data()
+        header.append(Self.magic)
+        header.append(Self.formatVersion)
+        header.append(isFolder ? Self.flagFolder : 0)
+        header.append(salt)
+        var iterBE = UInt32(Self.iterationCount).bigEndian
+        withUnsafeBytes(of: &iterBE) { header.append(contentsOf: $0) }
+
+        let key = try deriveKey(password: password, salt: salt, iterations: Self.iterationCount, length: 32)
+        do {
+            let nonce = try AES.GCM.Nonce(data: nonceBytes)
+            let sealed = try AES.GCM.seal(plainData, using: SymmetricKey(data: key),
+                                          nonce: nonce, authenticating: header)
+            return header + nonceBytes + sealed.ciphertext + sealed.tag
+        } catch {
+            throw CryptoError.encryptFailed
+        }
+    }
+
+    // MARK: - Decrypt Implementation
 
     private func performDecrypt(inputURL: URL, outputURL: URL, password: String) throws -> URL {
         guard !password.isEmpty else { throw CryptoError.emptyPassword }
         let fileManager = FileManager.default
         guard fileManager.fileExists(atPath: inputURL.path) else { throw CryptoError.inputNotFound }
+        guard !fileManager.fileExists(atPath: outputURL.path) else { throw CryptoError.outputExists }
 
         let container = try Data(contentsOf: inputURL)
-        let markerLength = Self.folderMarkerPrefix.count
-        guard container.count > markerLength else { throw CryptoError.opensslFailed("invalid file") }
-        let marker = container.prefix(markerLength)
-        let isFolder = marker == Self.folderMarkerPrefix
-        let payload = container.suffix(from: container.startIndex + markerLength)
-
-        let workDirectory = try makeWorkDirectory()
-        defer { try? fileManager.removeItem(at: workDirectory) }
-
-        let encryptedURL = workDirectory.appendingPathComponent("payload.enc")
-        try payload.write(to: encryptedURL, options: .atomic)
-        let decryptedURL = workDirectory.appendingPathComponent("payload.dec")
-        try runOpenSSL(encrypt: false, inputURL: encryptedURL, outputURL: decryptedURL, password: password)
+        let (plainData, isFolder): (Data, Bool)
+        if container.starts(with: Self.magic) {
+            (plainData, isFolder) = try openSealed(container, password: password)
+        } else {
+            (plainData, isFolder) = try openLegacy(container, password: password)
+        }
 
         if isFolder {
             // tar を出力先（親ディレクトリ）に展開する
-            guard !fileManager.fileExists(atPath: outputURL.path) else { throw CryptoError.outputExists }
+            let workDirectory = try makeWorkDirectory()
+            defer { try? fileManager.removeItem(at: workDirectory) }
+            let tarURL = workDirectory.appendingPathComponent("archive.tar")
+            try plainData.write(to: tarURL, options: .atomic)
             try fileManager.createDirectory(at: outputURL, withIntermediateDirectories: true)
-            try runTarExtract(tarURL: decryptedURL, destinationURL: outputURL)
+            try runTarExtract(tarURL: tarURL, destinationURL: outputURL)
         } else {
-            guard !fileManager.fileExists(atPath: outputURL.path) else { throw CryptoError.outputExists }
-            try fileManager.moveItem(at: decryptedURL, to: outputURL)
+            try plainData.write(to: outputURL, options: .atomic)
         }
         return outputURL
     }
 
-    // MARK: - Command Runners
+    /// 新形式コンテナを開封する。タグ検証（改竄・誤パスワード検知）込み
+    private func openSealed(_ container: Data, password: String) throws -> (Data, Bool) {
+        // ヘッダー 29B + nonce 12B + タグ 16B が最小構成
+        let headerLength = 29
+        guard container.count >= headerLength + 12 + 16 else { throw CryptoError.decryptFailed }
+        let data = Data(container)  // スライスではなく 0 起点のインデックスで扱う
 
-    private func runOpenSSL(encrypt: Bool, inputURL: URL, outputURL: URL, password: String) throws {
-        var arguments = ["enc"]
-        if !encrypt { arguments.append("-d") }
-        arguments += ["-aes-256-cbc", "-pbkdf2", "-iter", String(Self.iterationCount), "-salt",
-                      "-in", inputURL.path, "-out", outputURL.path,
-                      "-pass", "pass:\(password)"]
-        let result = runCommand("/usr/bin/openssl", arguments)
-        guard result.status == 0 else { throw CryptoError.opensslFailed(result.output) }
+        guard data[7] == Self.formatVersion else { throw CryptoError.decryptFailed }
+        let isFolder = (data[8] & Self.flagFolder) != 0
+        let salt = data.subdata(in: 9..<25)
+        let iterations = data.subdata(in: 25..<29).withUnsafeBytes { $0.load(as: UInt32.self).bigEndian }
+        // 反復回数の異常値（DoS を招く巨大値・強度不足の小さい値）を拒否する
+        guard (10_000...10_000_000).contains(Int(iterations)) else { throw CryptoError.decryptFailed }
+
+        let header = data.subdata(in: 0..<headerLength)
+        let nonceBytes = data.subdata(in: headerLength..<headerLength + 12)
+        let ciphertextAndTag = data.subdata(in: headerLength + 12..<data.count)
+        let ciphertext = ciphertextAndTag.dropLast(16)
+        let tag = ciphertextAndTag.suffix(16)
+
+        let key = try deriveKey(password: password, salt: salt, iterations: Int(iterations), length: 32)
+        do {
+            let box = try AES.GCM.SealedBox(nonce: AES.GCM.Nonce(data: nonceBytes),
+                                            ciphertext: ciphertext, tag: tag)
+            let plain = try AES.GCM.open(box, using: SymmetricKey(data: key), authenticating: header)
+            return (plain, isFolder)
+        } catch {
+            throw CryptoError.decryptFailed
+        }
     }
+
+    /// レガシー形式（旧バージョンの openssl enc 出力）を復号する。
+    /// openssl の `-pbkdf2 -iter 100000` は PBKDF2-HMAC-SHA256 で
+    /// 48 バイト（鍵 32 + IV 16）を導出する仕様（LibreSSL / OpenSSL 共通）
+    private func openLegacy(_ container: Data, password: String) throws -> (Data, Bool) {
+        let data = Data(container)
+        let markerLength = Self.legacyFolderMarker.count
+        // マーカー 8B + "Salted__" 8B + salt 8B + 暗号文 16B 以上
+        guard data.count >= markerLength + 16 + kCCBlockSizeAES128 else { throw CryptoError.decryptFailed }
+
+        let marker = data.subdata(in: 0..<markerLength)
+        let isFolder = marker == Self.legacyFolderMarker
+        guard isFolder || marker == Data(repeating: 0, count: markerLength) else { throw CryptoError.decryptFailed }
+        guard data.subdata(in: markerLength..<markerLength + 8) == Self.legacySaltHeader else {
+            throw CryptoError.decryptFailed
+        }
+
+        let salt = data.subdata(in: markerLength + 8..<markerLength + 16)
+        let ciphertext = data.subdata(in: markerLength + 16..<data.count)
+        let keyAndIV = try deriveKey(password: password, salt: salt,
+                                     iterations: Self.legacyIterationCount, length: 48)
+        let key = keyAndIV.prefix(32)
+        let initialVector = keyAndIV.suffix(16)
+
+        // AES-256-CBC で復号（CommonCrypto）。
+        // CCCrypt の PKCS7 オプションは最終バイトの範囲しか検証しないため、
+        // パディングなしで復号してから openssl と同等の厳密な検証を手動で行う
+        guard ciphertext.count % kCCBlockSizeAES128 == 0 else { throw CryptoError.decryptFailed }
+        var plain = Data(count: ciphertext.count)
+        var decryptedLength = 0
+        let status = plain.withUnsafeMutableBytes { plainPtr in
+            ciphertext.withUnsafeBytes { cipherPtr in
+                key.withUnsafeBytes { keyPtr in
+                    initialVector.withUnsafeBytes { ivPtr in
+                        CCCrypt(CCOperation(kCCDecrypt), CCAlgorithm(kCCAlgorithmAES),
+                                CCOptions(0),
+                                keyPtr.baseAddress, 32, ivPtr.baseAddress,
+                                cipherPtr.baseAddress, ciphertext.count,
+                                plainPtr.baseAddress, plainPtr.count, &decryptedLength)
+                    }
+                }
+            }
+        }
+        guard status == kCCSuccess else { throw CryptoError.decryptFailed }
+        plain = plain.prefix(decryptedLength)
+
+        // PKCS7 パディングの厳密検証: 長さ 1〜16、かつ全パディングバイトが同値であること。
+        // CBC には認証タグが無く、誤パスワードでも稀（約 1/2^128）に検証を通る可能性は
+        // 原理上残る（レガシー形式の限界。新形式は GCM タグで確実に検知できる）
+        guard let padLength = plain.last.map(Int.init),
+              (1...kCCBlockSizeAES128).contains(padLength),
+              plain.count >= padLength,
+              plain.suffix(padLength).allSatisfy({ Int($0) == padLength }) else {
+            throw CryptoError.decryptFailed
+        }
+        return (plain.prefix(plain.count - padLength), isFolder)
+    }
+
+    // MARK: - Crypto Primitives
+
+    /// PBKDF2-HMAC-SHA256 で鍵材料を導出する
+    private func deriveKey(password: String, salt: Data, iterations: Int, length: Int) throws -> Data {
+        var derived = Data(count: length)
+        let status = derived.withUnsafeMutableBytes { derivedPtr in
+            salt.withUnsafeBytes { saltPtr in
+                CCKeyDerivationPBKDF(CCPBKDFAlgorithm(kCCPBKDF2),
+                                     password, password.utf8.count,
+                                     saltPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), salt.count,
+                                     CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256), UInt32(iterations),
+                                     derivedPtr.baseAddress?.assumingMemoryBound(to: UInt8.self), length)
+            }
+        }
+        guard status == kCCSuccess else { throw CryptoError.encryptFailed }
+        return derived
+    }
+
+    /// OS の CSPRNG から乱数バイト列を取得する
+    private func randomBytes(count: Int) throws -> Data {
+        var bytes = [UInt8](repeating: 0, count: count)
+        guard SecRandomCopyBytes(kSecRandomDefault, count, &bytes) == errSecSuccess else {
+            throw CryptoError.encryptFailed
+        }
+        return Data(bytes)
+    }
+
+    // MARK: - Command Runners
 
     private func runTarCreate(folderURL: URL, tarURL: URL) throws {
         // 親ディレクトリを基準にフォルダ名だけを相対パスで格納する
