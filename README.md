@@ -75,6 +75,50 @@ The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**.
 2. Open `Clipy.xcworkspace` on Xcode.
 3. build.
 
+### How to Run Tests
+
+#### Run all tests (Debug mode)
+```bash
+SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES
+```
+
+#### Run specific test suite
+```bash
+SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES 2>&1 | grep -E "TestSuite.*passed|failed"
+```
+
+#### View test results summary
+```bash
+SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES 2>&1 | tail -5
+```
+
+#### Test Coverage
+- **Total Tests**: 114
+- **Test Suites**: 15
+  - CryptoServiceSpec
+  - DraggedDataSpec
+  - FolderSpec
+  - HotKeyServiceSpec
+  - PasswordGenerateServiceSpec
+  - PasteServiceTOTPSpec *(TOTP operations)*
+  - SecureItemEditSpec
+  - SecureItemEditTabNavigationSpec *(Tab navigation logic)*
+  - SecureItemFieldReorderingSpec *(Drag & Drop logic)*
+  - SecureMenuItemFieldSpec *(Field CRUD)*
+  - SecureMenuItemSpec
+  - SecureMenuServiceSpec *(Keychain operations & TOTP)*
+  - SnippetSpec
+  - TOTPRegistrationFlowSpec *(TOTP registration flow)*
+  - TOTPServiceSpec *(RFC 6238 TOTP generation)*
+
+#### Key Test Areas
+- **Field Management**: CRUD operations, JSON serialization, history tracking
+- **TOTP Support**: RFC 6238 compliance, URI parsing, Base32 decoding, code generation
+- **Drag & Drop**: Row reordering logic with `.above` dropOperation semantics
+- **Tab Navigation**: Focus order, TOTP field skipping, circular navigation
+- **Keychain Storage**: Encryption/decryption, field persistence, access control
+- **Security**: Biometric authentication, credential masking, clipboard bypass
+
 ### Contributing
 1. Fork it ( https://github.com/Clipy/Clipy/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
