@@ -73,7 +73,6 @@ extension ExcludeAppService {
     private func save() {
         let data = applications.archive()
         AppEnvironment.current.defaults.set(data, forKey: Constants.UserDefaults.excludeApplications)
-        AppEnvironment.current.defaults.synchronize()
     }
 }
 

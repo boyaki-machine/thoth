@@ -57,6 +57,28 @@ class TOTPServiceSpec: QuickSpec {
             it("Returns nil for invalid characters") {
                 expect(TOTPService.base32Decode("0189!")).to(beNil())
             }
+            // RFC 4648 §6: 末尾の残余（パディング）ビットは必ずゼロでなければならない。
+            // 非ゼロを許すと 1 文字違いの秘密鍵が別のバイト列に静かにデコードされてしまう
+            it("Rejects non-zero trailing bits (RFC 4648)") {
+                // "MZXW6===" (fooの正規形) の末尾文字を変えて残余ビットを非ゼロにしたもの
+                expect(TOTPService.base32Decode("MZXW7")).to(beNil())
+                // 正規形はデコードできる
+                let canonical = TOTPService.base32Decode("MZXW6")
+                expect(canonical).toNot(beNil())
+                expect(String(data: canonical!, encoding: .utf8)) == "foo"
+            }
+            it("Rejects impossible remainder lengths (1/3/6 characters)") {
+                // 1文字（5ビット）は1バイトに満たず、正規のエンコード長として存在しない
+                expect(TOTPService.base32Decode("A")).to(beNil())
+                // 9文字 = 8+1 → 残余5ビットのあり得ない長さ
+                expect(TOTPService.base32Decode("GEZDGNBVG")).to(beNil())
+            }
+            it("Accepts canonical padded encodings") {
+                // "fo" → "MZXQ====" 残余2ビット・ゼロ埋め（正規形）
+                let decoded = TOTPService.base32Decode("MZXQ====")
+                expect(decoded).toNot(beNil())
+                expect(String(data: decoded!, encoding: .utf8)) == "fo"
+            }
         }
 
         // MARK: - Parsing

@@ -101,7 +101,6 @@ class AppDelegate: NSObject, NSMenuItemValidation {
             if alert.suppressionButton?.state == NSControl.StateValue.on {
                 AppEnvironment.current.defaults.set(false, forKey: Constants.UserDefaults.showAlertBeforeClearHistory)
             }
-            AppEnvironment.current.defaults.synchronize()
         }
 
         AppEnvironment.current.clipService.clearAll()
@@ -186,13 +185,11 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         //  Launch on system startup
         if alert.runModal() == NSApplication.ModalResponse.alertFirstButtonReturn {
             AppEnvironment.current.defaults.set(true, forKey: Constants.UserDefaults.loginItem)
-            AppEnvironment.current.defaults.synchronize()
             reflectLoginItemState()
         }
         // Do not show this message again
         if alert.suppressionButton?.state == NSControl.StateValue.on {
             AppEnvironment.current.defaults.set(true, forKey: Constants.UserDefaults.suppressAlertForLoginItem)
-            AppEnvironment.current.defaults.synchronize()
         }
     }
 

@@ -71,7 +71,6 @@ final class CPYUtilities {
         defaultValues.updateValue(NSNumber(value: false), forKey: Constants.Beta.observerScreenshot)
 
         AppEnvironment.current.defaults.register(defaults: defaultValues)
-        AppEnvironment.current.defaults.synchronize()
     }
 
     static func applicationSupportFolder() -> String {

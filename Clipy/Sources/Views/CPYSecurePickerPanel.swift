@@ -120,7 +120,9 @@ final class CPYSecurePickerPanel: NSPanel {
 
     override func resignKey() {
         super.resignKey()
+        #if DEBUG
         NSLog("[SecurePickerPanel] resignKey: isBeingShown=\(isBeingShown)")
+        #endif
         guard !isBeingShown else { return }
         if isVisible { close() }
     }
@@ -140,7 +142,9 @@ final class CPYSecurePickerPanel: NSPanel {
 
 extension CPYSecurePickerPanel {
     func show(near point: NSPoint) {
+        #if DEBUG
         NSLog("[SecurePickerPanel] show: called")
+        #endif
         callerApp = NSWorkspace.shared.frontmostApplication
         let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
@@ -154,7 +158,9 @@ extension CPYSecurePickerPanel {
             NSApp.activate(ignoringOtherApps: true)
             self.makeKeyAndOrderFront(nil)
             self.makeFirstResponder(self.tableView)
+            #if DEBUG
             NSLog("[SecurePickerPanel] show: activated, isVisible=\(self.isVisible)")
+            #endif
             if self.context.isWithinWindow, let parentItemID = self.context.lastParentItemID {
                 self.preselectParent(parentItemID: parentItemID, thenOpenSubWithField: self.context.lastFieldIndex)
             } else {

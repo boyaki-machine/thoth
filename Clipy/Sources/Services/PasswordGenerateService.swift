@@ -9,9 +9,11 @@
 //
 
 import Foundation
+import Security
 
 /// 指定条件に基づいてランダムなパスワードを生成するサービス。
-/// 乱数は openssl コマンド（`openssl rand`）をバックグラウンド実行して取得する。
+/// 乱数は OS の CSPRNG（SecRandomCopyBytes）から取得し、剰余バイアスは
+/// RandomByteStream の棄却サンプリングで除去する。
 final class PasswordGenerateService {
 
     // MARK: - Conditions
@@ -176,26 +178,12 @@ final class PasswordGenerateService {
         return result
     }
 
-    /// openssl コマンドで乱数バイト列を取得する
+    /// OS の CSPRNG（SecRandomCopyBytes）で乱数バイト列を取得する。
+    /// 以前は openssl コマンドを起動していたが、鍵材料を子プロセスとの
+    /// パイプ経由でやり取りする必要がなく攻撃面が小さいネイティブ API に置き換えた
     private func generateRandomBytes(count: Int) -> Data? {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
-        process.arguments = ["rand", String(count)]
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = FileHandle.nullDevice
-        do {
-            try process.run()
-        } catch {
-            NSLog("[PasswordGenerateService] failed to run openssl: \(error)")
-            return nil
-        }
-        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        guard process.terminationStatus == 0, data.count >= count else {
-            NSLog("[PasswordGenerateService] openssl rand failed (status \(process.terminationStatus))")
-            return nil
-        }
-        return data
+        var bytes = [UInt8](repeating: 0, count: count)
+        guard SecRandomCopyBytes(kSecRandomDefault, count, &bytes) == errSecSuccess else { return nil }
+        return Data(bytes)
     }
 }

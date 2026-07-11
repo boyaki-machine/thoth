@@ -66,16 +66,30 @@ enum QRDecodeService {
     /// `screencapture -i` で範囲選択キャプチャを行い、その画像から QR をデコードする。
     /// OS 標準の範囲選択 UI を用いるため、アプリ自身に画面収録権限を要求しない。
     /// ユーザーがキャンセルした場合やデコード失敗時は nil を返す（completion はメインスレッド）。
+    ///
+    /// キャプチャ画像には TOTP の秘密鍵（QR）が写っている可能性があるため、
+    /// 一時ファイルは所有者のみアクセス可能な専用ディレクトリ（0o700）に置き、
+    /// デコード後は速やかにディレクトリごと削除する。
     static func captureAndDecode(completion: @escaping (String?) -> Void) {
-        let tmpPath = NSTemporaryDirectory() + "clipy-totp-qr-\(UUID().uuidString).png"
+        let fileManager = FileManager.default
+        let workDirectory = fileManager.temporaryDirectory
+            .appendingPathComponent("clipy-totp-qr-\(UUID().uuidString)", isDirectory: true)
+        do {
+            try fileManager.createDirectory(at: workDirectory, withIntermediateDirectories: true,
+                                            attributes: [.posixPermissions: 0o700])
+        } catch {
+            DispatchQueue.main.async { completion(nil) }
+            return
+        }
+        let tmpPath = workDirectory.appendingPathComponent("capture.png").path
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
         process.arguments = ["-i", "-x", tmpPath]  // -i: 範囲選択, -x: シャッター音なし
         process.terminationHandler = { _ in
             DispatchQueue.main.async {
-                defer { try? FileManager.default.removeItem(atPath: tmpPath) }
+                defer { try? fileManager.removeItem(at: workDirectory) }
                 // ユーザーがキャンセルするとファイルは生成されない
-                guard FileManager.default.fileExists(atPath: tmpPath),
+                guard fileManager.fileExists(atPath: tmpPath),
                       let image = NSImage(contentsOfFile: tmpPath) else {
                     completion(nil)
                     return
@@ -86,6 +100,7 @@ enum QRDecodeService {
         do {
             try process.run()
         } catch {
+            try? fileManager.removeItem(at: workDirectory)
             DispatchQueue.main.async { completion(nil) }
         }
     }

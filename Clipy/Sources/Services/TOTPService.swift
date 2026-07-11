@@ -164,7 +164,8 @@ final class TOTPService {
     // MARK: - Base32 (RFC 4648)
 
     /// RFC 4648 の Base32 文字列をデコードする。大文字小文字・空白・パディング（=）を許容する。
-    /// 不正な文字が含まれる場合は nil。
+    /// 不正な文字が含まれる場合、および末尾の残余ビットが RFC 4648 §6 に
+    /// 違反する場合（あり得ない残余長・非ゼロの残余ビット）は nil。
     static func base32Decode(_ input: String) -> Data? {
         let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
         var lookup = [Character: UInt8]()
@@ -187,6 +188,13 @@ final class TOTPService {
                 output.append(UInt8((value >> bits) & 0xff))
             }
         }
+        // RFC 4648 の正規エンコード長（文字数 mod 8 = 0/2/4/5/7）では
+        // 残余は最大 4 ビット。5 ビット以上残る文字数（mod 8 = 1/3/6）は
+        // エンコード長として成立しないため不正入力として拒否する
+        guard bits < 5 else { return nil }
+        // 残余ビットはパディング分であり、正規エンコードでは必ずゼロ。
+        // 非ゼロは秘密鍵の取り違え（1文字違いなど）を示唆するため拒否する
+        guard value & ((1 << bits) - 1) == 0 else { return nil }
         return Data(output)
     }
 }
