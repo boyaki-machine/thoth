@@ -22,8 +22,8 @@ class SecureItemEditSpec: QuickSpec {
                 let table = viewController.fieldsTable
                 table.reloadData()
 
-                let labelCell = table.view(atColumn: 0, row: 0, makeIfNecessary: true) as? NSTableCellView
-                let valueCell = table.view(atColumn: 1, row: 0, makeIfNecessary: true) as? FieldValueCell
+                let labelCell = table.view(atColumn: 1, row: 0, makeIfNecessary: true) as? NSTableCellView
+                let valueCell = table.view(atColumn: 2, row: 0, makeIfNecessary: true) as? FieldValueCell
                 expect(labelCell?.textField?.stringValue) == "MyLabel"
                 expect(valueCell?.currentValue) == "MyValue"
 
@@ -59,7 +59,7 @@ class SecureItemEditSpec: QuickSpec {
                 let viewController = SecureItemEditViewController(item: loaded)
                 _ = viewController.view
                 viewController.fieldsTable.reloadData()
-                let valueCell = viewController.fieldsTable.view(atColumn: 1, row: 0, makeIfNecessary: true) as? FieldValueCell
+                let valueCell = viewController.fieldsTable.view(atColumn: 2, row: 0, makeIfNecessary: true) as? FieldValueCell
                 valueCell?.plainField.stringValue = "value-2"
                 var saved: SecureMenuItem?
                 viewController.onSave = { saved = $0 }

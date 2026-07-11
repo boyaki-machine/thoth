@@ -26,6 +26,7 @@ class SecureMenuServiceSpec: QuickSpec {
         reorderSpecs()
         accessDeniedGuardSpecs()
         cryptoPasswordSpecs()
+        totpFieldSpecs()
     }
 
     private func cryptoPasswordSpecs() {
@@ -324,6 +325,120 @@ class SecureMenuServiceSpec: QuickSpec {
                 self.service.isKeychainAccessDenied = true
                 _ = self.service.loadAllItems()
                 expect(self.service.isKeychainAccessDenied) == false
+            }
+        }
+    }
+
+    // MARK: - TOTP Field Tests (A-2)
+
+    private func totpFieldSpecs() {
+        describe("TOTP field management") {
+
+            it("Saves and loads a TOTP field correctly") {
+                let otpauthURI = "otpauth://totp/GitHub:user@example.com?secret=GEZDGNBVGY3TQOJQ&issuer=GitHub"
+                let totpField = SecureMenuItem.Field(label: "GitHub TOTP", value: otpauthURI, kind: .totp)
+                let item = SecureMenuItem(itemID: "github-totp", title: "GitHub Account", fields: [totpField])
+
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded.count) == 1
+                expect(loaded[0].fields.count) == 1
+                expect(loaded[0].fields[0].label) == "GitHub TOTP"
+                expect(loaded[0].fields[0].value) == otpauthURI
+                expect(loaded[0].fields[0].isTOTP) == true
+                expect(loaded[0].fields[0].kind) == .totp
+            }
+
+            it("Preserves TOTP createdAt timestamp through save/load cycle") {
+                let fixedDate = Date(timeIntervalSince1970: 1234567890)
+                let totpField = SecureMenuItem.Field(label: "Test TOTP", value: "otpauth://...", kind: .totp, createdAt: fixedDate)
+                let item = SecureMenuItem(itemID: "test-totp", title: "Test", fields: [totpField])
+
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded[0].fields[0].createdAt.timeIntervalSince1970) == fixedDate.timeIntervalSince1970
+            }
+
+            it("Handles multiple TOTP fields in a single item") {
+                let field1 = SecureMenuItem.Field(label: "GitHub", value: "otpauth://totp/GitHub?secret=ABC", kind: .totp)
+                let field2 = SecureMenuItem.Field(label: "AWS", value: "otpauth://totp/AWS?secret=DEF", kind: .totp)
+                let field3 = SecureMenuItem.Field(label: "Password", value: "secret123", isPassword: true)
+                let item = SecureMenuItem(itemID: "multi-totp", title: "Multi Auth", fields: [field1, field2, field3])
+
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                let fields = loaded[0].fields
+                expect(fields.count) == 3
+                expect(fields[0].isTOTP) == true
+                expect(fields[1].isTOTP) == true
+                expect(fields[2].isTOTP) == false
+                expect(fields[2].isPassword) == true
+            }
+
+            it("Preserves TOTP URI parameters through encryption/decryption") {
+                let uriWithAllParams = "otpauth://totp/Example:alice@example.com?secret=JBSWY3DPEHPK3PXP&issuer=Example&algorithm=SHA256&digits=8&period=60"
+                let field = SecureMenuItem.Field(label: "Complex TOTP", value: uriWithAllParams, kind: .totp)
+                let item = SecureMenuItem(itemID: "complex", title: "Complex", fields: [field])
+
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded[0].fields[0].value) == uriWithAllParams
+            }
+
+            it("Updates TOTP field while preserving type") {
+                let field1 = SecureMenuItem.Field(label: "Old TOTP", value: "otpauth://old", kind: .totp)
+                var item = SecureMenuItem(itemID: "update-totp", title: "Test", fields: [field1])
+                _ = self.service.save(item)
+
+                // Update: change value but keep TOTP type
+                let field2 = SecureMenuItem.Field(fieldID: field1.fieldID, label: "Updated TOTP",
+                                                  value: "otpauth://new", isPassword: false, kind: .totp,
+                                                  history: field1.history, createdAt: field1.createdAt)
+                item = SecureMenuItem(itemID: "update-totp", title: "Test", fields: [field2])
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded[0].fields[0].label) == "Updated TOTP"
+                expect(loaded[0].fields[0].value) == "otpauth://new"
+                expect(loaded[0].fields[0].kind) == .totp
+            }
+
+            it("Reorders items containing TOTP fields correctly") {
+                let totpField = SecureMenuItem.Field(label: "TOTP", value: "otpauth://...", kind: .totp)
+                let item1 = SecureMenuItem(itemID: "totp-1", title: "First", fields: [totpField])
+                let item2 = SecureMenuItem(itemID: "other", title: "Second", fields: [])
+
+                _ = self.service.save(item1)
+                _ = self.service.save(item2)
+
+                let items = self.service.loadAllItems()
+                let reordered = [items[1], items[0]]
+                expect(self.service.reorderItems(reordered)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded[0].itemID) == "other"
+                expect(loaded[1].itemID) == "totp-1"
+                expect(loaded[1].fields[0].kind) == .totp
+            }
+
+            it("Deletes TOTP field correctly via item update") {
+                let totpField = SecureMenuItem.Field(label: "TOTP", value: "otpauth://...", kind: .totp)
+                let plainField = SecureMenuItem.Field(label: "Username", value: "alice")
+                var item = SecureMenuItem(itemID: "delete-totp", title: "Test", fields: [totpField, plainField])
+                _ = self.service.save(item)
+
+                // Remove TOTP field, keep plain field
+                item = SecureMenuItem(itemID: "delete-totp", title: "Test", fields: [plainField])
+                expect(self.service.save(item)) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded[0].fields.count) == 1
+                expect(loaded[0].fields[0].label) == "Username"
+                expect(loaded[0].fields[0].isTOTP) == false
             }
         }
     }

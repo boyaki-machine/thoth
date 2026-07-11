@@ -118,7 +118,7 @@ class SecureMenuItemSpec: QuickSpec {
 
                 expect(Set(object.keys)) == Set(["itemID", "title", "fields", "displayOrder"])
                 let fieldObject = (object["fields"] as? [[String: Any]])?.first ?? [:]
-                expect(Set(fieldObject.keys)) == Set(["fieldID", "label", "value", "isPassword", "history"])
+                expect(Set(fieldObject.keys)) == Set(["fieldID", "label", "value", "isPassword", "kind", "history", "createdAt"])
             }
         }
     }
