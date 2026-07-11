@@ -106,7 +106,6 @@ extension MenuManager {
                 // パネルを閉じる前にペースト先アプリを取得しておく
                 let callerApp = panel?.callerApp
                 panel?.close()
-                context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
                 self?.isSecureMenuActive  = false
                 self?.securePickerPanel   = nil
                 self?.secureCloseObserver = nil
@@ -140,10 +139,21 @@ extension MenuManager {
         }
     }
 
-    /// セキュア選択の出力を行う共通処理。
-    /// TOTP はクリップボードを経由せず直接タイプ（OS/Clipy 履歴に残さない）、
-    /// それ以外は従来どおりクリップボード経由でペーストし、一定時間後にクリアする。
+    /// セキュア選択の出力を行う唯一の共通経路（パネル選択・メニュー選択の両方から呼ばれる）。
+    /// 継続ペーストモード用の選択記録もここで行う。
+    ///
+    /// - TOTP: クリップボードを経由せず、その時点のコードを CGEvent で直接タイプする
+    ///   （OS のコピー履歴にも Clipy 履歴にも残らない）
+    /// - それ以外: 秘匿マーカー付きでクリップボードに書き込んでペーストし、
+    ///   一定時間後（その間に別のコピーが無ければ）クリアする。
+    ///   マーカーにより ClipService の履歴保存はスキップされる。
+    ///
+    /// ※ context.clear() はここでは呼ばない。複数回選択した場合に古いタイマーが
+    ///   新しい選択後の context を消してしまうため。isWithinWindow がタイムスタンプで
+    ///   自動的に期限切れを判定するので明示的なクリアは不要。
     func outputSecureSelection(_ selection: SecureFieldSelection) {
+        let context = AppEnvironment.current.secureSelectionContext
+        context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
         if selection.isTOTP {
             guard let params = TOTPService.parse(selection.fieldValue),
                   let code = TOTPService().code(for: params) else {
@@ -154,13 +164,11 @@ extension MenuManager {
                 AppEnvironment.current.pasteService.typeString(code)
             }
         } else {
-            AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
+            AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: selection.fieldValue)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 AppEnvironment.current.pasteService.paste()
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
-                NSPasteboard.general.clearContents()
-            }
+            AppEnvironment.current.pasteService.scheduleConcealedClear()
         }
     }
 

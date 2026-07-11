@@ -145,27 +145,9 @@ class AppDelegate: NSObject, NSMenuItemValidation {
             NSSound.beep()
             return
         }
-        let context = AppEnvironment.current.secureSelectionContext
-        context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
-        if selection.isTOTP {
-            // TOTP はクリップボードを経由せず、その時点のコードを直接タイプする
-            guard let params = TOTPService.parse(selection.fieldValue),
-                  let code = TOTPService().code(for: params) else {
-                NSSound.beep()
-                return
-            }
-            AppEnvironment.current.pasteService.typeString(code)
-            return
-        }
-        AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
-        AppEnvironment.current.pasteService.paste()
-        // 30秒後にクリップボードをクリア
-        // ※ context.clear() はここでは呼ばない。複数回選択した場合に古いタイマーが
-        //   新しい選択後の context を消してしまうため。isWithinWindow がタイムスタンプで
-        //   自動的に期限切れを判定するので明示的なクリアは不要。
-        DispatchQueue.main.asyncAfter(deadline: .now() + SecureSelectionContext.recencyWindow) {
-            NSPasteboard.general.clearContents()
-        }
+        // 出力処理（TOTP 直接タイプ / 秘匿コピー+ペースト+遅延クリア）は
+        // MenuManager.outputSecureSelection に一本化されている
+        AppEnvironment.current.menuManager.outputSecureSelection(selection)
     }
 
     func terminateApplication() {

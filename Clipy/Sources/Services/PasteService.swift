@@ -113,6 +113,36 @@ extension PasteService {
         pasteboard.setString(string, forType: .deprecatedString)
     }
 
+    /// 秘匿マーカー（org.nspasteboard.ConcealedType / TransientType）付きで
+    /// ペーストボードへ書き込む。セキュアメニューの値など「履歴に残してはならない」
+    /// 文字列のコピーには必ずこちらを使うこと。
+    ///
+    /// マーカーにより Clipy 自身のクリップボード監視（ClipService）と、
+    /// 同規約に対応した他のクリップボードマネージャーの双方が履歴保存をスキップする。
+    func copyConcealedToPasteboard(with string: String) {
+        lock.lock(); defer { lock.unlock() }
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.declareTypes([.deprecatedString,
+                                 Constants.Pasteboard.concealedType,
+                                 Constants.Pasteboard.transientType], owner: nil)
+        pasteboard.setString(string, forType: .deprecatedString)
+        // マーカー型は「型が存在すること」自体が意味を持つ。値は空文字でよい
+        pasteboard.setString("", forType: Constants.Pasteboard.concealedType)
+        pasteboard.setString("", forType: Constants.Pasteboard.transientType)
+    }
+
+    /// 一定時間後にペーストボードをクリアする。ただしその間にユーザーが別の内容を
+    /// コピーしていた場合（changeCount が変化していた場合）は何もしない。
+    /// 秘匿コピーの後始末として copyConcealedToPasteboard とセットで使う。
+    func scheduleConcealedClear(after delay: TimeInterval = SecureSelectionContext.recencyWindow) {
+        let changeCountAtWrite = NSPasteboard.general.changeCount
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            guard NSPasteboard.general.changeCount == changeCountAtWrite else { return }
+            NSPasteboard.general.clearContents()
+        }
+    }
+
     func copyToPasteboard(with clip: CPYClip) {
         lock.lock(); defer { lock.unlock() }
 

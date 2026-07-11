@@ -159,7 +159,10 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
 
     @objc private func copyHistoryValue(_ sender: NSMenuItem) {
         guard let value = sender.representedObject as? String else { return }
-        AppEnvironment.current.pasteService.copyToPasteboard(with: value)
+        // 過去のパスワード値のコピーなので秘匿マーカー付きで書き込み、
+        // 一定時間後（他のコピーが無ければ）自動クリアする
+        AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: value)
+        AppEnvironment.current.pasteService.scheduleConcealedClear()
     }
 
     /// 対象の履歴エントリをフィールドから取り除く（Save 押下で保存に反映される）

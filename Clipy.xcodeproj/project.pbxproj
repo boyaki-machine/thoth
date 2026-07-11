@@ -12,6 +12,7 @@
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
 		6F92D63A3002411700478ACF /* QRDecodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6383002411700478ACF /* QRDecodeService.swift */; };
 		6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */; };
+		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
 		AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */; };
@@ -164,6 +165,7 @@
 		6F92D6383002411700478ACF /* QRDecodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QRDecodeService.swift; path = Clipy/Sources/Services/QRDecodeService.swift; sourceTree = "<group>"; };
 		6F92D63B3002417500478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ClipyTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ClipyTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ClipyTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
 		73A92F6DEE6CFF50A567CFEF /* Pods_Clipy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Clipy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		846004961FD5511800BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYPreferencesWindowController.strings; sourceTree = "<group>"; };
 		846004971FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -570,6 +572,7 @@
 			children = (
 				6F92D63B3002417500478ACF /* TOTPServiceSpec.swift */,
 				6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */,
+				6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */,
 				6F92D6383002411700478ACF /* QRDecodeService.swift */,
 				6F92D6373002411700478ACF /* TOTPService.swift */,
 				6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */,
@@ -984,6 +987,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */,
+				6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */,
 				FA6167921D3ABEB10049FA14 /* FolderSpec.swift in Sources */,
 				FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */,
 				FA6167961D3ACDD80049FA14 /* SnippetSpec.swift in Sources */,
