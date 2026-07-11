@@ -84,8 +84,96 @@
 
 "Secure Field Value Placeholder" = "値";
 
+"Import Secure Items" = "インポート...";
+
+"Export Secure Items" = "エクスポート...";
+
+"Secure Items Export Warning" = "エクスポートされるファイルにはすべての値が平文で含まれます。取り扱いには十分注意してください。";
+
+"Imported Secure Items Format" = "%d 件のアイテムをインポートしました。";
+
+"Secure Items Keychain Access Denied" = "キーチェーンからセキュアアイテムを読み出せませんでした。アプリのバイナリが変わった場合（更新・再ビルド後など）に発生することがあります。macOS のキーチェーン許可ダイアログが表示された場合は「常に許可」を選択してください。既存データ保護のため、この状態での保存は無効になっています。";
+
+"Tools" = "ツール";
+
+"Generate New Password" = "新規パスワード生成";
+
+"Password Generator" = "パスワード生成";
+
+"Password Length" = "文字数:";
+
+"Character Types" = "文字種:";
+
+"Password Letters" = "半角英字";
+
+"Password Digits" = "数字";
+
+"Password Symbols" = "記号";
+
+"Password Distinguish Case" = "大文字小文字を区別";
+
+"Easy To Type Password" = "入力しやすいパスワード";
+
+"Value History" = "変更履歴";
+
+"No Value History" = "履歴はありません";
+
+"Generate Password" = "パスワード生成";
+
+"Copy Password" = "コピー";
+
 "Add Field" = "フィールドを追加";
 
 "Save" = "保存";
 
 "Close" = "閉じる";
+
+"Encrypt Decrypt" = "ファイルの暗号化・復号化";
+
+"Crypto Target" = "対象:";
+
+"Crypto Target Placeholder" = "ファイルまたはフォルダを選択";
+
+"Crypto Choose" = "選択...";
+
+"Crypto Output Name" = "出力ファイル名:";
+
+"Crypto Key" = "パスワード:";
+
+"Crypto Key Placeholder" = "暗号化パスワード";
+
+"Crypto Encrypt" = "暗号化";
+
+"Crypto Decrypt" = "復号化";
+
+"Crypto Encrypting" = "暗号化中...";
+
+"Crypto Decrypting" = "復号化中...";
+
+"Crypto Done" = "完了";
+
+"Crypto Error Empty Password" = "パスワードを入力してください。";
+
+"Crypto Error Empty Output Name" = "出力ファイル名を入力してください。";
+
+"Crypto Error Input Not Found" = "ファイルまたはフォルダを選択してください。";
+
+"Crypto Error Output Exists" = "同じ名前のファイルが既に存在します。";
+
+"Crypto Error Failed" = "処理に失敗しました。パスワードやファイルを確認してください。";
+
+"Crypto Fingerprint" = "指紋パスワードを使用";
+
+"Crypto Fingerprint Reason" = "指紋パスワードを使用するために認証してください";
+
+"Crypto Fingerprint Applied" = "指紋パスワードを入力しました。";
+
+"Crypto Fingerprint Failed" = "認証に失敗しました。";
+
+"Crypto No Fingerprint Password" = "指紋パスワードが未登録です。管理画面から登録してください。";
+
+"Crypto Manage Fingerprint Password" = "指紋パスワード管理...";
+
+"Crypto Register Update" = "登録・更新";
+
+"Crypto Fingerprint Password Saved" = "指紋パスワードを保存しました。";

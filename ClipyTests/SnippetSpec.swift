@@ -23,7 +23,7 @@ class SnippetSpec: QuickSpec {
                 snippet2.title = "title"
                 snippet2.content = "content"
                 snippet2.merge()
-                expect(snippet2.realm).to(beNil())
+                expect(snippet2.realm) == nil
 
                 expect(snippet.index) == snippet2.index
                 expect(snippet.title) == snippet2.title

@@ -3,14 +3,17 @@ import Nimble
 import RealmSwift
 @testable import Clipy
 
-// swiftlint:disable function_body_length
 class FolderSpec: QuickSpec {
     override func spec() {
-
         beforeEach {
             Realm.Configuration.defaultConfiguration.inMemoryIdentifier = NSUUID().uuidString
         }
+        createNewSpecs()
+        syncDatabaseSpecs()
+        rearrangeIndexSpecs()
+    }
 
+    private func createNewSpecs() {
         describe("Create new") {
 
             it("deep copy object") {
@@ -29,12 +32,12 @@ class FolderSpec: QuickSpec {
                 realm.transaction { realm.add(savedFolder) }
 
                 // Saved in Realm
-                expect(savedFolder.realm).toNot(beNil())
-                expect(savedSnippet.realm).toNot(beNil())
+                expect(savedFolder.realm) != nil
+                expect(savedSnippet.realm) != nil
 
                 // Deep copy
                 let folder = savedFolder.deepCopy()
-                expect(folder.realm).to(beNil())
+                expect(folder.realm) == nil
                 expect(folder.index) == savedFolder.index
                 expect(folder.enable) == savedFolder.enable
                 expect(folder.title) == savedFolder.title
@@ -42,7 +45,7 @@ class FolderSpec: QuickSpec {
                 expect(folder.snippets.count) == 1
 
                 let snippet = folder.snippets.first!
-                expect(snippet.realm).to(beNil())
+                expect(snippet.realm) == nil
                 expect(snippet.index) == savedSnippet.index
                 expect(snippet.enable) == savedSnippet.enable
                 expect(snippet.title) == savedSnippet.title
@@ -81,7 +84,9 @@ class FolderSpec: QuickSpec {
             }
 
         }
+    }
 
+    private func syncDatabaseSpecs() {
         describe("Sync database") {
 
             it("Merge snippet") {
@@ -95,8 +100,8 @@ class FolderSpec: QuickSpec {
                 copyFolder.mergeSnippet(snippet)
                 copyFolder.mergeSnippet(snippet2)
 
-                expect(snippet.realm).to(beNil())
-                expect(snippet2.realm).to(beNil())
+                expect(snippet.realm) == nil
+                expect(snippet2.realm) == nil
                 expect(folder.snippets.count) == 2
 
                 let savedSnippet = folder.snippets.first!
@@ -147,11 +152,11 @@ class FolderSpec: QuickSpec {
                 folder.title = "title"
                 folder.enable = false
                 folder.merge()
-                expect(folder.realm).to(beNil())
+                expect(folder.realm) == nil
                 expect(realm.objects(CPYFolder.self).count) == 1
 
                 let savedFolder = realm.object(ofType: CPYFolder.self, forPrimaryKey: folder.identifier)
-                expect(savedFolder).toNot(beNil())
+                expect(savedFolder) != nil
                 expect(savedFolder?.index) == folder.index
                 expect(savedFolder?.title) == folder.title
                 expect(savedFolder?.enable) == folder.enable
@@ -178,7 +183,7 @@ class FolderSpec: QuickSpec {
                 expect(realm.objects(CPYSnippet.self).count) == 1
 
                 let copyFolder = folder.deepCopy()
-                expect(copyFolder.realm).to(beNil())
+                expect(copyFolder.realm) == nil
                 copyFolder.remove()
 
                 expect(realm.objects(CPYFolder.self).count) == 0
@@ -191,7 +196,9 @@ class FolderSpec: QuickSpec {
             }
 
         }
+    }
 
+    private func rearrangeIndexSpecs() {
         describe("Rearrange Index") {
 
             it("Rearrange folder index") {

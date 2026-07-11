@@ -84,8 +84,96 @@
 
 "Secure Field Value Placeholder" = "Value";
 
+"Import Secure Items" = "Import...";
+
+"Export Secure Items" = "Export...";
+
+"Secure Items Export Warning" = "The exported file will contain all values in plain text. Handle it with care.";
+
+"Imported Secure Items Format" = "Imported %d item(s).";
+
+"Secure Items Keychain Access Denied" = "Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose \"Always Allow\". Saving is disabled to protect the existing data.";
+
+"Tools" = "Tools";
+
+"Generate New Password" = "Generate New Password";
+
+"Password Generator" = "Password Generator";
+
+"Password Length" = "Length:";
+
+"Character Types" = "Character Types:";
+
+"Password Letters" = "Letters (a-z)";
+
+"Password Digits" = "Digits (0-9)";
+
+"Password Symbols" = "Symbols";
+
+"Password Distinguish Case" = "Distinguish upper/lower case";
+
+"Easy To Type Password" = "Easy-to-type password";
+
+"Value History" = "Value history";
+
+"No Value History" = "No history";
+
+"Generate Password" = "Generate";
+
+"Copy Password" = "Copy";
+
 "Add Field" = "Add Field";
 
 "Save" = "Save";
 
 "Close" = "Close";
+
+"Encrypt Decrypt" = "Encrypt / Decrypt File";
+
+"Crypto Target" = "Target:";
+
+"Crypto Target Placeholder" = "Choose a file or folder";
+
+"Crypto Choose" = "Choose...";
+
+"Crypto Output Name" = "Output name:";
+
+"Crypto Key" = "Password:";
+
+"Crypto Key Placeholder" = "Encryption password";
+
+"Crypto Encrypt" = "Encrypt";
+
+"Crypto Decrypt" = "Decrypt";
+
+"Crypto Encrypting" = "Encrypting...";
+
+"Crypto Decrypting" = "Decrypting...";
+
+"Crypto Done" = "Done";
+
+"Crypto Error Empty Password" = "Please enter a password.";
+
+"Crypto Error Empty Output Name" = "Please enter an output file name.";
+
+"Crypto Error Input Not Found" = "Please choose a file or folder.";
+
+"Crypto Error Output Exists" = "A file with the same name already exists.";
+
+"Crypto Error Failed" = "Operation failed. Check the password or file and try again.";
+
+"Crypto Fingerprint" = "Use fingerprint password";
+
+"Crypto Fingerprint Reason" = "Authenticate to use the fingerprint password";
+
+"Crypto Fingerprint Applied" = "Fingerprint password applied.";
+
+"Crypto Fingerprint Failed" = "Authentication failed.";
+
+"Crypto No Fingerprint Password" = "No fingerprint password is registered. Register one from the manager.";
+
+"Crypto Manage Fingerprint Password" = "Manage Fingerprint Password...";
+
+"Crypto Register Update" = "Register / Update";
+
+"Crypto Fingerprint Password Saved" = "Fingerprint password saved.";

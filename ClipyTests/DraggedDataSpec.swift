@@ -12,10 +12,10 @@ class DraggedDataSpec: QuickSpec {
                 let data = NSKeyedArchiver.archivedData(withRootObject: draggedData)
 
                 let unarchiveData = NSKeyedUnarchiver.unarchiveObject(with: data) as? CPYDraggedData
-                expect(unarchiveData).toNot(beNil())
+                expect(unarchiveData) != nil
                 expect(unarchiveData?.type) == draggedData.type
                 expect(unarchiveData?.folderIdentifier) == draggedData.folderIdentifier
-                expect(unarchiveData?.snippetIdentifier).to(beNil())
+                expect(unarchiveData?.snippetIdentifier) == nil
                 expect(unarchiveData?.index) == draggedData.index
             }
 

@@ -67,6 +67,11 @@
 		FA6167921D3ABEB10049FA14 /* FolderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167911D3ABEB10049FA14 /* FolderSpec.swift */; };
 		FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */; };
 		FA6167961D3ACDD80049FA14 /* SnippetSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167951D3ACDD80049FA14 /* SnippetSpec.swift */; };
+		AA00004900000000ABCDEF01 /* SecureMenuItemSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */; };
+		AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */; };
+		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
+		AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */; };
+		AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */; };
 		FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */; };
@@ -82,8 +87,21 @@
 		FAE911BB1DE054F1008A4BEC /* NSCoding+Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE911BA1DE054F1008A4BEC /* NSCoding+Archive.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
+		AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003800000000ABCDEF01 /* CodeSignService.swift */; };
+		AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */; };
+		AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A100000000ABCDEF01 /* CryptoService.swift */; };
 		AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */; };
 		AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */; };
+		AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */; };
+		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
+		AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */; };
+		AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */; };
+		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
+		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
+		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
+		AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */; };
+		AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */; };
+		AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -202,11 +220,29 @@
 		FA6167911D3ABEB10049FA14 /* FolderSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolderSpec.swift; sourceTree = "<group>"; };
 		FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggedDataSpec.swift; sourceTree = "<group>"; };
 		FA6167951D3ACDD80049FA14 /* SnippetSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetSpec.swift; sourceTree = "<group>"; };
+		AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItemSpec.swift; sourceTree = "<group>"; };
+		AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuServiceSpec.swift; sourceTree = "<group>"; };
+		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
+		AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoServiceSpec.swift; sourceTree = "<group>"; };
+		AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditSpec.swift; sourceTree = "<group>"; };
 		FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		AA00001100000000ABCDEF01 /* SecureMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItem.swift; sourceTree = "<group>"; };
 		AA00001200000000ABCDEF01 /* SecureMenuService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuService.swift; sourceTree = "<group>"; };
+		AA00003800000000ABCDEF01 /* CodeSignService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeSignService.swift; sourceTree = "<group>"; };
+		AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateService.swift; sourceTree = "<group>"; };
+		AA0000A100000000ABCDEF01 /* CryptoService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
 		AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureMenuPreferenceViewController.swift; sourceTree = "<group>"; };
 		AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecurePickerPanel.swift; sourceTree = "<group>"; };
+		AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+MenuBuilding.swift"; sourceTree = "<group>"; };
+		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
+		AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditViewController.swift; sourceTree = "<group>"; };
+		AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+TableView.swift"; sourceTree = "<group>"; };
+		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
+		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
+		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
+		AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYPasswordGeneratorWindowController.swift; sourceTree = "<group>"; };
+		AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoWindowController.swift; sourceTree = "<group>"; };
+		AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoPasswordManagerWindowController.swift; sourceTree = "<group>"; };
 		FAAA885C1E6853B80088FB34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYBetaPreferenceViewController.xib; sourceTree = "<group>"; };
 		FAAA88621E6858030088FB34 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
 		FAAA886C1E685DC70088FB34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYExcludeAppPreferenceViewController.xib; sourceTree = "<group>"; };
@@ -306,6 +342,9 @@
 				FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */,
 				FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */,
 				AA00001200000000ABCDEF01 /* SecureMenuService.swift */,
+				AA00003800000000ABCDEF01 /* CodeSignService.swift */,
+				AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */,
+				AA0000A100000000ABCDEF01 /* CryptoService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -388,6 +427,8 @@
 			isa = PBXGroup;
 			children = (
 				FA1DB4C31DDCB460007F95C8 /* MenuManager.swift */,
+				AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */,
+				AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -422,6 +463,12 @@
 				FA1DB4E11DDCB49C007F95C8 /* TableViewCell */,
 				FA1DB4E31DDCB49C007F95C8 /* TextViews */,
 				AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */,
+				AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */,
+				AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */,
+				AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */,
+				AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */,
+				AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */,
+				AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -476,6 +523,8 @@
 				FA1DB4F31DDCB4C0007F95C8 /* CPYExcludeAppPreferenceViewController.swift */,
 				FA1DB4F41DDCB4C0007F95C8 /* CPYShortcutsPreferenceViewController.swift */,
 				AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */,
+				AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */,
+				AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */,
 				FA1DB4F51DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift */,
 				FA1DB4F61DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift */,
 				FA1DB4F71DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.xib */,
@@ -546,6 +595,11 @@
 				FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */,
 				FA6167911D3ABEB10049FA14 /* FolderSpec.swift */,
 				FA6167951D3ACDD80049FA14 /* SnippetSpec.swift */,
+				AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */,
+				AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */,
+				AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */,
+				AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */,
+				AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */,
 				FAC43DDC1B35D8B100C06102 /* Supporting Files */,
 			);
 			path = ClipyTests;
@@ -832,7 +886,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"";
+			shellScript = "if [ \"${SKIP_SWIFTLINT:-0}\" != \"1\" ]; then if [ -x \"${PODS_ROOT}/SwiftLint/swiftlint\" ]; then \"${PODS_ROOT}/SwiftLint/swiftlint\"; fi; fi";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -883,8 +937,21 @@
 				FA1DB4D71DDCB479007F95C8 /* CPYSnippet.swift in Sources */,
 				AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */,
 				AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */,
+				AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */,
+				AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */,
+				AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */,
 				AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */,
 				AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */,
+				AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */,
+				AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */,
+				AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */,
+				AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */,
+				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
+				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
+				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
+				AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */,
+				AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */,
+				AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */,
 				FA1DB5201DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift in Sources */,
 				FA10897E20EC22E200A3FEFC /* LocalizedStrings.swift in Sources */,
 				FA1DB4EB1DDCB49C007F95C8 /* CPYPlaceHolderTextView.swift in Sources */,
@@ -902,6 +969,11 @@
 				FA6167921D3ABEB10049FA14 /* FolderSpec.swift in Sources */,
 				FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */,
 				FA6167961D3ACDD80049FA14 /* SnippetSpec.swift in Sources */,
+				AA00004900000000ABCDEF01 /* SecureMenuItemSpec.swift in Sources */,
+				AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */,
+				AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */,
+				AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */,
+				AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */,
 				FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

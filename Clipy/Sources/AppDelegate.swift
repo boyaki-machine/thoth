@@ -27,6 +27,8 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     // MARK: - Properties
     let screenshotObserver = ScreenShotObserver()
     let disposeBag = DisposeBag()
+    // 再署名による再起動が予約されている間 true（起動処理をスキップするためのフラグ）
+    fileprivate var isRelaunchPendingForResign = false
 
     // MARK: - Init
     override func awakeFromNib() {
@@ -65,6 +67,16 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     @objc func showSecureItemsWindow() {
         NSApp.activate(ignoringOtherApps: true)
         CPYSecureItemsWindowController.shared.showWindow(self)
+    }
+
+    @objc func showPasswordGeneratorWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        CPYPasswordGeneratorWindowController.shared.showWindow(self)
+    }
+
+    @objc func showCryptoWindow() {
+        NSApp.activate(ignoringOtherApps: true)
+        CPYCryptoWindowController.shared.showWindow(self)
     }
 
     @objc func terminate() {
@@ -135,7 +147,7 @@ class AppDelegate: NSObject, NSMenuItemValidation {
             return
         }
         let context = AppEnvironment.current.secureSelectionContext
-        context.record(parentItemId: selection.parentItemId, fieldIndex: selection.fieldIndex)
+        context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
         AppEnvironment.current.pasteService.copyToPasteboard(with: selection.fieldValue)
         AppEnvironment.current.pasteService.paste()
         // 30秒後にクリップボードをクリア
@@ -191,6 +203,10 @@ class AppDelegate: NSObject, NSMenuItemValidation {
 extension AppDelegate: NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        // 再署名による再起動が予約されている場合は起動処理を行わない。
+        // 再署名前（ad-hoc 署名）のバイナリがアクセシビリティ確認等で TCC に登録されると、
+        // アクセシビリティ設定に重複エントリが増えてしまうため
+        guard !isRelaunchPendingForResign else { return }
         // Environments
         AppEnvironment.replaceCurrent(environment: AppEnvironment.fromStorage())
         // UserDefaults
@@ -225,9 +241,28 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {
+        // ユニットテスト実行時（テストホスト起動時）はスキップする
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+        // 2重起動を禁止する。既に同じアプリが起動している場合は
+        // 先行インスタンスをアクティブ化して自分は終了する
+        terminateIfAlreadyRunning()
+        // 署名をデバイス固有の証明書で安定化する（バージョンをまたいだ
+        // セキュアアイテムの読み出しに必要。再署名した場合は再起動する）
+        isRelaunchPendingForResign = CodeSignService().ensureStableSignatureAtLaunch()
+        guard !isRelaunchPendingForResign else { return }
         #if RELEASE
             PFMoveToApplicationsFolderIfNecessary()
         #endif
+    }
+
+    private func terminateIfAlreadyRunning() {
+        guard let bundleIdentifier = Bundle.main.bundleIdentifier else { return }
+        let currentProcessIdentifier = NSRunningApplication.current.processIdentifier
+        let existingApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
+            .first { $0.processIdentifier != currentProcessIdentifier && !$0.isTerminated }
+        guard let runningApp = existingApp else { return }
+        runningApp.activate(options: [.activateIgnoringOtherApps])
+        NSApp.terminate(nil)
     }
 
 }

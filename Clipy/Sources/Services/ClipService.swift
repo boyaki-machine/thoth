@@ -130,7 +130,7 @@ extension ClipService {
 
         // Overwrite same history
         let isOverwriteHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.overwriteSameHistory)
-        let savedHash = (isOverwriteHistory) ? dataHash : Int(arc4random() % 1000000)
+        let savedHash = isOverwriteHistory ? dataHash : Int.random(in: 0...999_999)
 
         // Saved time and path
         let unixTime = Int(Date().timeIntervalSince1970)
