@@ -185,6 +185,19 @@
 
 "Add TOTP" = "Add TOTP...";
 
+"TOTP Import Title" = "Add One-Time Password (TOTP)";
+"TOTP Import Description" = "Enter an otpauth:// URI or a secret, or read one from the clipboard or a QR code on screen.";
+"TOTP Import Placeholder" = "otpauth://totp/... or Base32 secret";
+"TOTP From Clipboard" = "From Clipboard";
+"TOTP Read QR On Screen" = "Read QR on Screen";
+"TOTP Imported From Clipboard" = "Imported from the clipboard.";
+"TOTP Not Found In Clipboard" = "No valid TOTP / QR code found in the clipboard.";
+"TOTP Read QR Success" = "QR code has been read.";
+"TOTP Read QR Failed" = "Could not read a QR code.";
+"TOTP Invalid Input" = "Enter a valid otpauth:// URI or secret.";
+"TOTP Default Field Label" = "One-Time Password (TOTP)";
+"TOTP Registered At Format" = "Registered %@";
+
 "Crypto Encrypted With Command" = "Encrypted. It can also be decrypted without Clipy using the openssl command below:";
 "Crypto Copy Command" = "Copy Command";
 

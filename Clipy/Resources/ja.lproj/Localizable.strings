@@ -185,6 +185,19 @@
 
 "Add TOTP" = "TOTP追加...";
 
+"TOTP Import Title" = "ワンタイムパスワード（TOTP）を追加";
+"TOTP Import Description" = "otpauth:// URI または secret を入力するか、クリップボード・画面の QR コードから読み取ってください。";
+"TOTP Import Placeholder" = "otpauth://totp/... または Base32 secret";
+"TOTP From Clipboard" = "クリップボードから";
+"TOTP Read QR On Screen" = "画面の QR を読み取る";
+"TOTP Imported From Clipboard" = "クリップボードから取り込みました";
+"TOTP Not Found In Clipboard" = "クリップボードに有効な TOTP / QR が見つかりません";
+"TOTP Read QR Success" = "QR コードを読み取りました";
+"TOTP Read QR Failed" = "QR コードを読み取れませんでした";
+"TOTP Invalid Input" = "有効な otpauth:// URI または secret を入力してください";
+"TOTP Default Field Label" = "ワンタイムパスワードTOTP";
+"TOTP Registered At Format" = "%@ 登録";
+
 "Crypto Encrypted With Command" = "暗号化が完了しました。Clipy が無い環境でも、以下の openssl コマンドで復号できます:";
 "Crypto Copy Command" = "コマンドをコピー";
 

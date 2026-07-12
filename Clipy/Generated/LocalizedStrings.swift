@@ -188,6 +188,32 @@ internal enum L10n {
   internal static let toDoThisActionPleaseAllowAccessibilityInSecurityPrivacyPreferencesLocatedInSystemPreferences = L10n.tr("Localizable", "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences")
   /// Tools
   internal static let tools = L10n.tr("Localizable", "Tools")
+  /// One-Time Password (TOTP)
+  internal static let totpDefaultFieldLabel = L10n.tr("Localizable", "TOTP Default Field Label")
+  /// From Clipboard
+  internal static let totpFromClipboard = L10n.tr("Localizable", "TOTP From Clipboard")
+  /// Enter an otpauth:// URI or a secret, or read one from the clipboard or a QR code on screen.
+  internal static let totpImportDescription = L10n.tr("Localizable", "TOTP Import Description")
+  /// otpauth://totp/... or Base32 secret
+  internal static let totpImportPlaceholder = L10n.tr("Localizable", "TOTP Import Placeholder")
+  /// Add One-Time Password (TOTP)
+  internal static let totpImportTitle = L10n.tr("Localizable", "TOTP Import Title")
+  /// Imported from the clipboard.
+  internal static let totpImportedFromClipboard = L10n.tr("Localizable", "TOTP Imported From Clipboard")
+  /// Enter a valid otpauth:// URI or secret.
+  internal static let totpInvalidInput = L10n.tr("Localizable", "TOTP Invalid Input")
+  /// No valid TOTP / QR code found in the clipboard.
+  internal static let totpNotFoundInClipboard = L10n.tr("Localizable", "TOTP Not Found In Clipboard")
+  /// Could not read a QR code.
+  internal static let totpReadQRFailed = L10n.tr("Localizable", "TOTP Read QR Failed")
+  /// Read QR on Screen
+  internal static let totpReadQROnScreen = L10n.tr("Localizable", "TOTP Read QR On Screen")
+  /// QR code has been read.
+  internal static let totpReadQRSuccess = L10n.tr("Localizable", "TOTP Read QR Success")
+  /// Registered %@
+  internal static func totpRegisteredAtFormat(_ p1: Any) -> String {
+    return L10n.tr("Localizable", "TOTP Registered At Format", String(describing: p1))
+  }
   /// Type
   internal static let type = L10n.tr("Localizable", "Type")
   /// Updates

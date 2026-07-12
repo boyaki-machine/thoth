@@ -295,7 +295,7 @@ final class FieldValueCell: NSTableCellView {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
             plainField.stringValue = ""
-            plainField.placeholderString = formatter.string(from: createdAt) + " 登録"
+            plainField.placeholderString = L10n.totpRegisteredAtFormat(formatter.string(from: createdAt))
             plainField.isEditable = false
             plainField.target = nil
             plainField.action = nil

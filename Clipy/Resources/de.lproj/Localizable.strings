@@ -52,20 +52,153 @@
 
 "Please fill in the contents of the snippet" = "Bitte geben Sie den Inhalt des Snippets ein";
 
-"Please allow Accessibility" = "Please allow Accessibility.";
+"Please allow Accessibility" = "Bitte erlauben Sie den Zugriff auf die Bedienungshilfen.";
 
-"To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.";
+"To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Um diese Aktion auszuführen, erlauben Sie Clipy bitte den Zugriff auf die Bedienungshilfen in den Systemeinstellungen unter „Sicherheit & Datenschutz“.";
 
-"Open System Preferences" = "Open System Preferences";
+"Open System Preferences" = "Systemeinstellungen öffnen";
 
-"Realm Open Failed Title" = "Failed to open the history database";
-"Realm Open Failed Message" = "The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).";
-"Realm Open Failed Quit" = "Quit";
-"Realm Open Failed Reset" = "Reset Database";
+"Secure Menu" = "Sicheres Menü";
 
-"Add TOTP" = "Add TOTP...";
+"Secure Items" = "Sichere Einträge";
 
-"Crypto Encrypted With Command" = "Encrypted. It can also be decrypted without Clipy using the openssl command below:";
-"Crypto Copy Command" = "Copy Command";
+"Manage Secure Items" = "Sichere Einträge verwalten...";
 
-"Copied" = "Copied";
+"Secure Menu Authentication Reason" = "Zugriff auf das sichere Menü";
+
+"Secure Menu Search Placeholder" = "Suchen...";
+
+"Secure Menu No Results" = "Keine passenden Einträge";
+
+"Add Secure Item" = "Eintrag hinzufügen";
+
+"Edit Secure Item" = "Eintrag bearbeiten";
+
+"Delete Secure Item" = "Eintrag löschen";
+
+"Are you sure want to delete this secure item?" = "Möchten Sie diesen Eintrag wirklich löschen?";
+
+"Secure Item Title Placeholder" = "Titel (z. B. Gmail)";
+
+"Secure Field Label Placeholder" = "Bezeichnung (z. B. ID)";
+
+"Secure Field Value Placeholder" = "Wert";
+
+"Import Secure Items" = "Importieren...";
+
+"Export Secure Items" = "Exportieren...";
+
+"Secure Items Export Warning" = "Die exportierte Datei enthält alle Werte im Klartext. Bitte gehen Sie sorgsam damit um.";
+
+"Imported Secure Items Format" = "%d Einträge importiert.";
+
+"Secure Items Keychain Access Denied" = "Sichere Einträge konnten nicht aus dem Schlüsselbund gelesen werden. Dies kann passieren, wenn sich die App-Binärdatei geändert hat (z. B. nach einem Update oder einer Neukompilierung). Wenn macOS einen Schlüsselbund-Dialog anzeigt, wählen Sie „Immer erlauben“. Zum Schutz der vorhandenen Daten ist das Speichern deaktiviert.";
+
+"Tools" = "Werkzeuge";
+
+"Generate New Password" = "Neues Passwort generieren";
+
+"Password Generator" = "Passwortgenerator";
+
+"Password Length" = "Länge:";
+
+"Character Types" = "Zeichentypen:";
+
+"Password Letters" = "Buchstaben (a-z)";
+
+"Password Digits" = "Ziffern (0-9)";
+
+"Password Symbols" = "Symbole";
+
+"Password Distinguish Case" = "Groß-/Kleinschreibung unterscheiden";
+
+"Easy To Type Password" = "Leicht einzugebendes Passwort";
+
+"Value History" = "Wertverlauf";
+
+"No Value History" = "Kein Verlauf";
+
+"Generate Password" = "Generieren";
+
+"Copy Password" = "Kopieren";
+
+"Add Field" = "Feld hinzufügen";
+
+"Save" = "Sichern";
+
+"Close" = "Schließen";
+
+"Encrypt Decrypt" = "Datei verschlüsseln / entschlüsseln";
+
+"Crypto Target" = "Ziel:";
+
+"Crypto Target Placeholder" = "Datei oder Ordner auswählen";
+
+"Crypto Choose" = "Auswählen...";
+
+"Crypto Output Name" = "Ausgabename:";
+
+"Crypto Key" = "Passwort:";
+
+"Crypto Key Placeholder" = "Verschlüsselungspasswort";
+
+"Crypto Encrypt" = "Verschlüsseln";
+
+"Crypto Decrypt" = "Entschlüsseln";
+
+"Crypto Encrypting" = "Wird verschlüsselt...";
+
+"Crypto Decrypting" = "Wird entschlüsselt...";
+
+"Crypto Done" = "Fertig";
+
+"Crypto Error Empty Password" = "Bitte geben Sie ein Passwort ein.";
+
+"Crypto Error Empty Output Name" = "Bitte geben Sie einen Namen für die Ausgabedatei ein.";
+
+"Crypto Error Input Not Found" = "Bitte wählen Sie eine Datei oder einen Ordner aus.";
+
+"Crypto Error Output Exists" = "Eine Datei mit demselben Namen existiert bereits.";
+
+"Crypto Error Failed" = "Vorgang fehlgeschlagen. Bitte prüfen Sie Passwort oder Datei und versuchen Sie es erneut.";
+
+"Crypto Fingerprint" = "Fingerabdruck-Passwort verwenden";
+
+"Crypto Fingerprint Reason" = "Authentifizieren, um das Fingerabdruck-Passwort zu verwenden";
+
+"Crypto Fingerprint Applied" = "Fingerabdruck-Passwort eingesetzt.";
+
+"Crypto Fingerprint Failed" = "Authentifizierung fehlgeschlagen.";
+
+"Crypto No Fingerprint Password" = "Kein Fingerabdruck-Passwort registriert. Bitte registrieren Sie eines in der Verwaltung.";
+
+"Crypto Manage Fingerprint Password" = "Fingerabdruck-Passwort verwalten...";
+
+"Crypto Register Update" = "Registrieren / Aktualisieren";
+
+"Crypto Fingerprint Password Saved" = "Fingerabdruck-Passwort gesichert.";
+
+"Realm Open Failed Title" = "Verlaufsdatenbank konnte nicht geöffnet werden";
+"Realm Open Failed Message" = "Die Datenbank des Zwischenablage-Verlaufs konnte nicht geöffnet werden. Möglicherweise fehlt der Verschlüsselungsschlüssel oder die Datei ist beschädigt. Sie können beenden und es erneut versuchen oder die Datenbank zurücksetzen (dabei werden alle Verläufe und Snippets gelöscht).";
+"Realm Open Failed Quit" = "Beenden";
+"Realm Open Failed Reset" = "Datenbank zurücksetzen";
+
+"Add TOTP" = "TOTP hinzufügen...";
+
+"TOTP Import Title" = "Einmalpasswort (TOTP) hinzufügen";
+"TOTP Import Description" = "Geben Sie eine otpauth://-URI oder ein Secret ein, oder lesen Sie es aus der Zwischenablage bzw. von einem QR-Code auf dem Bildschirm.";
+"TOTP Import Placeholder" = "otpauth://totp/... oder Base32-Secret";
+"TOTP From Clipboard" = "Aus Zwischenablage";
+"TOTP Read QR On Screen" = "QR-Code auf dem Bildschirm lesen";
+"TOTP Imported From Clipboard" = "Aus der Zwischenablage übernommen.";
+"TOTP Not Found In Clipboard" = "Kein gültiger TOTP / QR-Code in der Zwischenablage gefunden.";
+"TOTP Read QR Success" = "QR-Code gelesen.";
+"TOTP Read QR Failed" = "QR-Code konnte nicht gelesen werden.";
+"TOTP Invalid Input" = "Bitte geben Sie eine gültige otpauth://-URI oder ein gültiges Secret ein.";
+"TOTP Default Field Label" = "Einmalpasswort (TOTP)";
+"TOTP Registered At Format" = "Registriert am %@";
+
+"Crypto Encrypted With Command" = "Verschlüsselt. Die Datei kann auch ohne Clipy mit dem folgenden openssl-Befehl entschlüsselt werden:";
+"Crypto Copy Command" = "Befehl kopieren";
+
+"Copied" = "Kopiert";

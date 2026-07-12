@@ -319,7 +319,7 @@ final class SecureItemEditViewController: NSViewController {
         let vc = CPYTOTPImportViewController()
         vc.onImport = { [weak self] (secret: String) in
             guard let self = self else { return }
-            let field = SecureMenuItem.Field(label: "ワンタイムパスワードTOTP", value: secret,
+            let field = SecureMenuItem.Field(label: L10n.totpDefaultFieldLabel, value: secret,
                                              isPassword: false, kind: .totp)
             self.fields.append(field)
             self.fieldsTable.insertRows(at: IndexSet(integer: self.fields.count - 1), withAnimation: .slideDown)

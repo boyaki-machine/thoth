@@ -15,7 +15,7 @@ final class CPYTOTPImportViewController: NSViewController {
         view.window?.makeFirstResponder(inputField)
         if inputField.stringValue.isEmpty, let value = QRDecodeService.otpAuthFromClipboard() {
             inputField.stringValue = value
-            showStatus("クリップボードから取り込みました", isError: false)
+            showStatus(L10n.totpImportedFromClipboard, isError: false)
         }
     }
 
@@ -26,9 +26,9 @@ final class CPYTOTPImportViewController: NSViewController {
     @objc private func pasteFromClipboard() {
         if let value = QRDecodeService.otpAuthFromClipboard() {
             inputField.stringValue = value
-            showStatus("クリップボードから取り込みました", isError: false)
+            showStatus(L10n.totpImportedFromClipboard, isError: false)
         } else {
-            showStatus("クリップボードに有効な TOTP / QR が見つかりません", isError: true)
+            showStatus(L10n.totpNotFoundInClipboard, isError: true)
         }
     }
 
@@ -39,9 +39,9 @@ final class CPYTOTPImportViewController: NSViewController {
             self.view.window?.makeKeyAndOrderFront(nil)
             if let payload = payload {
                 self.inputField.stringValue = payload
-                self.showStatus("QR コードを読み取りました", isError: false)
+                self.showStatus(L10n.totpReadQRSuccess, isError: false)
             } else {
-                self.showStatus("QR コードを読み取れませんでした", isError: true)
+                self.showStatus(L10n.totpReadQRFailed, isError: true)
             }
         }
     }
@@ -49,7 +49,7 @@ final class CPYTOTPImportViewController: NSViewController {
     @objc private func addAction() {
         let input = inputField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard TOTPService.isValid(input) else {
-            showStatus("有効な otpauth:// URI または secret を入力してください", isError: true)
+            showStatus(L10n.totpInvalidInput, isError: true)
             return
         }
         onImport?(input)
@@ -68,26 +68,25 @@ final class CPYTOTPImportViewController: NSViewController {
 
 fileprivate extension CPYTOTPImportViewController {
     func setupUI() {
-        let titleLabel = NSTextField(labelWithString: "ワンタイムパスワード（TOTP）を追加")
+        let titleLabel = NSTextField(labelWithString: L10n.totpImportTitle)
         titleLabel.font = .boldSystemFont(ofSize: NSFont.systemFontSize)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(titleLabel)
 
-        let descLabel = NSTextField(wrappingLabelWithString:
-            "otpauth:// URI または secret を入力するか、クリップボード・画面の QR コードから読み取ってください。")
+        let descLabel = NSTextField(wrappingLabelWithString: L10n.totpImportDescription)
         descLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         descLabel.textColor = .secondaryLabelColor
         descLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(descLabel)
 
-        inputField.placeholderString = "otpauth://totp/... または Base32 secret"
+        inputField.placeholderString = L10n.totpImportPlaceholder
         inputField.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(inputField)
 
-        let pasteButton = NSButton(title: "クリップボードから", target: self, action: #selector(pasteFromClipboard))
-        let captureButton = NSButton(title: "画面の QR を読み取る", target: self, action: #selector(captureQR))
-        let cancelButton = NSButton(title: "キャンセル", target: self, action: #selector(cancelAction))
-        let addButton = NSButton(title: "追加", target: self, action: #selector(addAction))
+        let pasteButton = NSButton(title: L10n.totpFromClipboard, target: self, action: #selector(pasteFromClipboard))
+        let captureButton = NSButton(title: L10n.totpReadQROnScreen, target: self, action: #selector(captureQR))
+        let cancelButton = NSButton(title: L10n.cancel, target: self, action: #selector(cancelAction))
+        let addButton = NSButton(title: L10n.add, target: self, action: #selector(addAction))
         addButton.keyEquivalent = "\r"
         cancelButton.keyEquivalent = "\u{1B}"
         [pasteButton, captureButton, cancelButton, addButton].forEach {
