@@ -69,7 +69,7 @@ final class CPYSnippetsEditorWindowController: NSWindowController {
         }
         // HACK: Copy as an object that does not put under Realm management.
         // https://github.com/realm/realm-cocoa/issues/1734
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         folders = realm.objects(CPYFolder.self)
                     .sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true)
                     .map { $0.deepCopy() }
@@ -169,7 +169,7 @@ extension CPYSnippetsEditorWindowController {
         guard let data = try? Data(contentsOf: url) else { return }
 
         do {
-            let realm = try! Realm()
+            let realm = RealmProvider.defaultRealm()
             let lastFolder = realm.objects(CPYFolder.self).sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true).last
             var folderIndex = (lastFolder?.index ?? -1) + 1
             // Create Document
@@ -215,7 +215,7 @@ extension CPYSnippetsEditorWindowController {
         let xmlDocument = AEXMLDocument()
         let rootElement = xmlDocument.addChild(name: Constants.Xml.rootElement)
 
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         let folders = realm.objects(CPYFolder.self).sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true)
         folders.forEach { folder in
             let folderElement = rootElement.addChild(name: Constants.Xml.folderElement)

@@ -42,7 +42,7 @@ final class CPYSnippet: Object {
 // MARK: - Add Snippet
 extension CPYSnippet {
     func merge() {
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         let copySnippet = CPYSnippet(value: self)
         realm.transaction { realm.add(copySnippet, update: .all) }
     }
@@ -51,7 +51,7 @@ extension CPYSnippet {
 // MARK: - Remove Snippet
 extension CPYSnippet {
     func remove() {
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: identifier) else { return }
         snippet.realm?.transaction { snippet.realm?.delete(snippet) }
     }

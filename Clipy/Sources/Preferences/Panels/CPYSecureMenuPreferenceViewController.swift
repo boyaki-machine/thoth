@@ -215,15 +215,9 @@ final class CPYSecureItemsViewController: NSViewController {
     }
 
     private func showKeychainAccessDeniedAlert() {
-        let alert = NSAlert()
-        alert.messageText = L10n.secureItems
-        alert.informativeText = L10n.secureItemsKeychainAccessDenied
-        alert.alertStyle = .warning
-        if let window = view.window {
-            alert.beginSheetModal(for: window, completionHandler: nil)
-        } else {
-            alert.runModal()
-        }
+        NSAlert.showNotice(message: L10n.secureItems,
+                           informative: L10n.secureItemsKeychainAccessDenied,
+                           for: view.window)
     }
 
     private func selectRow(offset: Int) {
@@ -268,11 +262,8 @@ final class CPYSecureItemsViewController: NSViewController {
     }
 
     private func showSaveError() {
-        let alert = NSAlert()
-        alert.messageText = "Save failed"
-        alert.informativeText = "Failed to save the item to Keychain. Check Console.app for details (filter: SecureMenuService)."
-        alert.alertStyle = .warning
-        alert.runModal()
+        NSAlert.showNotice(message: "Save failed",
+                           informative: "Failed to save the item to Keychain. Check Console.app for details (filter: SecureMenuService).")
     }
 
     @objc private func editItemAction() {
@@ -298,19 +289,14 @@ final class CPYSecureItemsViewController: NSViewController {
             NSSound.beep()
             return
         }
-        let alert = NSAlert()
-        alert.messageText = L10n.deleteSecureItem
         var message = L10n.areYouSureWantToDeleteThisSecureItem
         if selectedItems.count > 1 {
             message += " (\(selectedItems.count))"
         }
-        alert.informativeText = message
-        alert.addButton(withTitle: L10n.deleteSecureItem)
-        alert.addButton(withTitle: L10n.cancel)
-        alert.alertStyle = .warning
         guard let window = view.window else { return }
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard response == .alertFirstButtonReturn else { return }
+        NSAlert.showConfirmation(message: L10n.deleteSecureItem, informative: message,
+                                 confirmTitle: L10n.deleteSecureItem, cancelTitle: L10n.cancel,
+                                 for: window) { [weak self] in
             _ = AppEnvironment.current.secureMenuService.delete(itemIDs: selectedItems.map { $0.itemID })
             self?.reloadItems()
         }
@@ -399,14 +385,10 @@ extension CPYSecureItemsViewController {
     /// エクスポート: 平文で出力される旨を警告してから保存先を選択させる
     @objc fileprivate func exportItemsAction() {
         guard let window = view.window else { return }
-        let alert = NSAlert()
-        alert.messageText = L10n.exportSecureItems
-        alert.informativeText = L10n.secureItemsExportWarning
-        alert.addButton(withTitle: L10n.exportSecureItems)
-        alert.addButton(withTitle: L10n.cancel)
-        alert.alertStyle = .warning
-        alert.beginSheetModal(for: window) { [weak self] response in
-            guard response == .alertFirstButtonReturn else { return }
+        NSAlert.showConfirmation(message: L10n.exportSecureItems,
+                                 informative: L10n.secureItemsExportWarning,
+                                 confirmTitle: L10n.exportSecureItems, cancelTitle: L10n.cancel,
+                                 for: window) { [weak self] in
             self?.showExportPanel()
         }
     }
@@ -454,28 +436,17 @@ extension CPYSecureItemsViewController {
                 savedCount += 1
             }
             reloadItems()
-            let alert = NSAlert()
-            alert.messageText = L10n.importSecureItems
-            alert.informativeText = L10n.importedSecureItemsFormat(savedCount)
-            if let window = view.window {
-                alert.beginSheetModal(for: window, completionHandler: nil)
-            } else {
-                alert.runModal()
-            }
+            NSAlert.showNotice(message: L10n.importSecureItems,
+                               informative: L10n.importedSecureItemsFormat(savedCount),
+                               style: .informational, for: view.window)
         } catch {
             showImportExportError(error)
         }
     }
 
     private func showImportExportError(_ error: Error) {
-        let alert = NSAlert()
-        alert.messageText = L10n.secureItems
-        alert.informativeText = error.localizedDescription
-        alert.alertStyle = .warning
-        if let window = view.window {
-            alert.beginSheetModal(for: window, completionHandler: nil)
-        } else {
-            alert.runModal()
-        }
+        NSAlert.showNotice(message: L10n.secureItems,
+                           informative: error.localizedDescription,
+                           for: view.window)
     }
 }

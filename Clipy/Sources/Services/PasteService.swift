@@ -54,6 +54,31 @@ final class PasteService {
     }
 }
 
+// MARK: - Paste by Primary Key
+extension PasteService {
+    /// 履歴クリップを主キーで取得してペーストする。
+    /// メニュー項目のアクション（AppDelegate）から Realm アクセスを分離するための入口。
+    /// - Returns: クリップが見つからなかった場合 false
+    @discardableResult
+    func pasteClip(withPrimaryKey primaryKey: String) -> Bool {
+        let realm = RealmProvider.defaultRealm()
+        guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: primaryKey) else { return false }
+        paste(with: clip)
+        return true
+    }
+
+    /// スニペットを主キーで取得してペーストする。
+    /// - Returns: スニペットが見つからなかった場合 false
+    @discardableResult
+    func pasteSnippet(withPrimaryKey primaryKey: String) -> Bool {
+        let realm = RealmProvider.defaultRealm()
+        guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: primaryKey) else { return false }
+        copyToPasteboard(with: snippet.content)
+        paste()
+        return true
+    }
+}
+
 // MARK: - Copy
 extension PasteService {
     private static func unarchiveClipData(atPath path: String) -> CPYClipData? {
@@ -101,7 +126,7 @@ extension PasteService {
             // Delete clip
             if isDeleteHistory || isPasteAndDeleteHistory {
                 DispatchQueue.main.async {
-                    let realm = try! Realm()
+                    let realm = RealmProvider.defaultRealm()
                     guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: dataHash), !clip.isInvalidated else { return }
                     AppEnvironment.current.clipService.delete(with: clip)
                 }

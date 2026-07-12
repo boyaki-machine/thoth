@@ -44,16 +44,17 @@ final class SecureItemEditViewController: NSViewController {
     // NSTableViewDataSource 拡張（別ファイル）から参照するため internal
     var fields: [SecureMenuItem.Field]
 
-    private let titleField        = NSTextField()
+    // titleField〜saveBtnRef はキーボード操作拡張（+Keyboard.swift）から参照するため internal
+    let titleField        = NSTextField()
     // NSTableViewDataSource 拡張（別ファイル）から参照するため internal
     let fieldsTable               = NSTableView()
     private let fieldsScroll      = NSScrollView()
-    private let addFieldBtnRef    = TabCapturingButton()
-    private let removeFieldBtnRef = TabCapturingButton()
-    private let passwordGeneratorBtnRef = TabCapturingButton()
-    private let totpImportBtnRef = TabCapturingButton()
-    private let cancelBtnRef      = TabCapturingButton()
-    private let saveBtnRef        = TabCapturingButton()
+    let addFieldBtnRef    = TabCapturingButton()
+    let removeFieldBtnRef = TabCapturingButton()
+    let passwordGeneratorBtnRef = TabCapturingButton()
+    let totpImportBtnRef = TabCapturingButton()
+    let cancelBtnRef      = TabCapturingButton()
+    let saveBtnRef        = TabCapturingButton()
     /// `viewDidAppear` で登録し、`viewWillDisappear` で解除するローカルイベントモニター。
     private var tabEventMonitor: Any?
 
@@ -258,7 +259,7 @@ final class SecureItemEditViewController: NSViewController {
         passwordGeneratorBtnRef.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(passwordGeneratorBtnRef)
 
-        totpImportBtnRef.title = "TOTP追加..."
+        totpImportBtnRef.title = L10n.addTOTP
         totpImportBtnRef.bezelStyle = .rounded
         totpImportBtnRef.target = self
         totpImportBtnRef.action = #selector(addTOTP)
@@ -403,149 +404,7 @@ final class SecureItemEditViewController: NSViewController {
 
 }
 
-// MARK: - Tab Navigation
-extension SecureItemEditViewController {
-
-    /// 指定行の Label 列テキストフィールドにフォーカスを移す。
-    /// `makeIfNecessary: true` でセルビューを強制生成してからフォーカスする
-    /// （`editColumn` はビューが未生成の行では動作しない場合がある）。
-    private func activateLabelField(row: Int) {
-        guard row < fields.count else { return }
-        fieldsTable.scrollRowToVisible(row)
-        if let cell = fieldsTable.view(atColumn: 0, row: row, makeIfNecessary: true) as? NSTableCellView,
-           let textField = cell.textField {
-            view.window?.makeFirstResponder(textField)
-        }
-    }
-
-    /// 指定行の Value 列テキストフィールド（プレーンまたはセキュア）にフォーカスを移す。
-    private func activateValueField(row: Int) {
-        guard row < fields.count else { return }
-        fieldsTable.scrollRowToVisible(row)
-        if let cell = fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: true) as? FieldValueCell,
-           let textField = cell.textField {
-            view.window?.makeFirstResponder(textField)
-        }
-    }
-
-    /// 指定行のパスワードチェックボックスにフォーカスを移す。
-    private func activateCheckbox(row: Int) {
-        guard row < fields.count else { return }
-        fieldsTable.scrollRowToVisible(row)
-        if let cell = fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: true),
-           let button = cell.subviews.first(where: { $0 is TabCapturingButton }) as? TabCapturingButton {
-            view.window?.makeFirstResponder(button)
-        }
-    }
-
-    /// チェックボックスから Tab を押した際のフォーカス先を決定する。
-    /// 次の行があれば Label[row+1]、なければ +ボタン へ移動する。
-    private func tabFromCheckbox(row: Int) {
-        if row < fields.count - 1 { activateLabelField(row: row + 1) } else { view.window?.makeFirstResponder(addFieldBtnRef) }
-    }
-
-    // MARK: - Local Event Monitor (Tab キー全体を一括処理)
-
-    // swiftlint:disable:next cyclomatic_complexity
-    fileprivate func handleTabKey(shift: Bool) -> Bool {
-        guard let window = view.window else { return false }
-        let currentResponder = window.firstResponder
-
-        // ── titleField ────────────────────────────────────────────────────
-        if titleField.currentEditor() != nil || currentResponder === titleField {
-            if shift { window.makeFirstResponder(saveBtnRef) } else if fields.isEmpty { window.makeFirstResponder(addFieldBtnRef) } else { activateLabelField(row: 0) }
-            return true
-        }
-
-        // ── テーブル内の各行 ──────────────────────────────────────────────
-        for row in 0..<fields.count {
-            // Label 列
-            if let cell = fieldsTable.view(atColumn: 0, row: row, makeIfNecessary: false) as? NSTableCellView,
-               let labelTF = cell.textField,
-               labelTF.currentEditor() != nil || currentResponder === labelTF {
-                if shift {
-                    if row > 0 { activateCheckbox(row: row - 1) } else { window.makeFirstResponder(titleField) }
-                } else { activateValueField(row: row) }
-                return true
-            }
-            // Value 列: プレーン／セキュアの両フィールドを確認
-            if let cell = fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false) as? FieldValueCell,
-               cell.plainField.currentEditor() != nil || currentResponder === cell.plainField
-                || cell.secureField.currentEditor() != nil || currentResponder === cell.secureField {
-                if shift {
-                    activateLabelField(row: row)
-                } else {
-                    if fields[row].isTOTP {
-                        if row < fields.count - 1 { activateLabelField(row: row + 1) } else { view.window?.makeFirstResponder(addFieldBtnRef) }
-                    } else {
-                        activateCheckbox(row: row)
-                    }
-                }
-                return true
-            }
-            // Checkbox 列
-            if let cell = fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: false),
-               let button = cell.subviews.first(where: { $0 is TabCapturingButton }) as? TabCapturingButton,
-               currentResponder === button {
-                if shift { activateValueField(row: row) } else { tabFromCheckbox(row: row) }
-                return true
-            }
-        }
-
-        // ── ボトムバーのボタン ────────────────────────────────────────────
-        switch currentResponder {
-        case addFieldBtnRef:
-            if shift {
-                if fields.isEmpty {
-                    window.makeFirstResponder(titleField)
-                } else {
-                    var targetRow = fields.count - 1
-                    while targetRow >= 0 && fields[targetRow].isTOTP {
-                        targetRow -= 1
-                    }
-                    if targetRow >= 0 {
-                        activateCheckbox(row: targetRow)
-                    } else {
-                        window.makeFirstResponder(titleField)
-                    }
-                }
-            } else { window.makeFirstResponder(removeFieldBtnRef) }
-            return true
-        case removeFieldBtnRef:
-            if shift { window.makeFirstResponder(addFieldBtnRef) } else { window.makeFirstResponder(passwordGeneratorBtnRef) }
-            return true
-        case passwordGeneratorBtnRef:
-            if shift { window.makeFirstResponder(removeFieldBtnRef) } else { window.makeFirstResponder(cancelBtnRef) }
-            return true
-        case cancelBtnRef:
-            if shift { window.makeFirstResponder(passwordGeneratorBtnRef) } else { window.makeFirstResponder(saveBtnRef) }
-            return true
-        case saveBtnRef:
-            if shift { window.makeFirstResponder(cancelBtnRef) } else { window.makeFirstResponder(titleField) }
-            return true
-        default:
-            return false
-        }
-    }
-
-    fileprivate func navigateFieldRow(offset: Int) {
-        let current = fieldsTable.selectedRow
-        let next = current < 0 ? (offset > 0 ? 0 : fields.count - 1) : current + offset
-        guard next >= 0, next < fields.count else { return }
-        fieldsTable.selectRowIndexes(IndexSet(integer: next), byExtendingSelection: false)
-        fieldsTable.scrollRowToVisible(next)
-    }
-
-    fileprivate func moveFieldRow(by delta: Int) {
-        let row = fieldsTable.selectedRow
-        guard row >= 0 else { return }
-        let newRow = row + delta
-        guard newRow >= 0, newRow < fields.count else { NSSound.beep(); return }
-        fields.swapAt(row, newRow)
-        fieldsTable.reloadData(forRowIndexes: IndexSet([row, newRow]), columnIndexes: IndexSet(0..<5))
-        fieldsTable.selectRowIndexes(IndexSet(integer: newRow), byExtendingSelection: false)
-    }
-}
+// Tab ナビゲーション・キーボード操作は SecureItemEditViewController+Keyboard.swift を参照
 
 // MARK: - Drag & Drop (Row Reordering)
 

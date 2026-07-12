@@ -42,7 +42,7 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         if menuItem.action == #selector(AppDelegate.clearAllHistory) {
             // Realm 準備前（起動直後の暗号化移行中など）は無効にしておく
             guard RealmProvider.isReady else { return false }
-            let realm = try! Realm()
+            let realm = RealmProvider.defaultRealm()
             return !realm.objects(CPYClip.self).isEmpty
         }
         return true
@@ -110,36 +110,22 @@ class AppDelegate: NSObject, NSMenuItemValidation {
 
     @objc func selectClipMenuItem(_ sender: NSMenuItem) {
         CPYUtilities.sendCustomLog(with: "selectClipMenuItem")
-        guard let primaryKey = sender.representedObject as? String else {
-            CPYUtilities.sendCustomLog(with: "Cannot fetch clip primary key")
-            NSSound.beep()
-            return
-        }
-        let realm = try! Realm()
-        guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: primaryKey) else {
+        guard let primaryKey = sender.representedObject as? String,
+              AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: primaryKey) else {
             CPYUtilities.sendCustomLog(with: "Cannot fetch clip data")
             NSSound.beep()
             return
         }
-
-        AppEnvironment.current.pasteService.paste(with: clip)
     }
 
     @objc func selectSnippetMenuItem(_ sender: AnyObject) {
         CPYUtilities.sendCustomLog(with: "selectSnippetMenuItem")
-        guard let primaryKey = sender.representedObject as? String else {
-            CPYUtilities.sendCustomLog(with: "Cannot fetch snippet primary key")
-            NSSound.beep()
-            return
-        }
-        let realm = try! Realm()
-        guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: primaryKey) else {
+        guard let primaryKey = sender.representedObject as? String,
+              AppEnvironment.current.pasteService.pasteSnippet(withPrimaryKey: primaryKey) else {
             CPYUtilities.sendCustomLog(with: "Cannot fetch snippet data")
             NSSound.beep()
             return
         }
-        AppEnvironment.current.pasteService.copyToPasteboard(with: snippet.content)
-        AppEnvironment.current.pasteService.paste()
     }
 
     @objc func selectSecureMenuItem(_ sender: NSMenuItem) {

@@ -16,6 +16,8 @@ internal enum L10n {
   internal static let addField = L10n.tr("Localizable", "Add Field")
   /// Add Item
   internal static let addSecureItem = L10n.tr("Localizable", "Add Secure Item")
+  /// Add TOTP...
+  internal static let addTOTP = L10n.tr("Localizable", "Add TOTP")
   /// Are you sure want to delete this item?
   internal static let areYouSureWantToDeleteThisItem = L10n.tr("Localizable", "Are you sure want to delete this item?")
   /// Are you sure you want to delete this item?

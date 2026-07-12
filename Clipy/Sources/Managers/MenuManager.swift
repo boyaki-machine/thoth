@@ -44,7 +44,7 @@ final class MenuManager: NSObject {
     // 遅延プロパティにすることで、Realm の構成・移行が完了する前
     // （MenuManager 生成時点）にファイルを開いてしまわないようにする。
     // 初回アクセスは bindRealmNotifications()（RealmProvider.warmUp 完了後）
-    lazy var realm: Realm = try! Realm()
+    lazy var realm: Realm = RealmProvider.defaultRealm()
     fileprivate var clipToken: NotificationToken?
     fileprivate var snippetToken: NotificationToken?
     // Vim key navigation
@@ -129,35 +129,31 @@ private extension MenuManager {
             })
             .disposed(by: disposeBag)
         // Observe change preference settings
+        // メニューの再構築が必要になる設定キーを型別の配列で管理し、
+        // 同型の Observable 生成コードの繰り返しを避ける
         let defaults = AppEnvironment.current.defaults
-        var menuChangedObservables = [Observable<Void>]()
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.addClearHistoryMenuItem, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Int.self, Constants.UserDefaults.maxHistorySize, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.showIconInTheMenu, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Int.self, Constants.UserDefaults.numberOfItemsPlaceInline, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Int.self, Constants.UserDefaults.numberOfItemsPlaceInsideFolder, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Int.self, Constants.UserDefaults.maxMenuItemTitleLength, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.menuItemsTitleStartWithZero, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.menuItemsAreMarkedWithNumbers, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.showToolTipOnMenuItem, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.showImageInTheMenu, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.addNumericKeyEquivalents, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Int.self, Constants.UserDefaults.maxLengthOfToolTip, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        menuChangedObservables.append(defaults.rx.observe(Bool.self, Constants.UserDefaults.showColorPreviewInTheMenu, options: [.new], retainSelf: false)
-                                        .compactMap { $0 }.distinctUntilChanged().map { _ in })
-        Observable.merge(menuChangedObservables)
+        let menuChangedBoolKeys = [Constants.UserDefaults.addClearHistoryMenuItem,
+                                   Constants.UserDefaults.showIconInTheMenu,
+                                   Constants.UserDefaults.menuItemsTitleStartWithZero,
+                                   Constants.UserDefaults.menuItemsAreMarkedWithNumbers,
+                                   Constants.UserDefaults.showToolTipOnMenuItem,
+                                   Constants.UserDefaults.showImageInTheMenu,
+                                   Constants.UserDefaults.addNumericKeyEquivalents,
+                                   Constants.UserDefaults.showColorPreviewInTheMenu]
+        let menuChangedIntKeys = [Constants.UserDefaults.maxHistorySize,
+                                  Constants.UserDefaults.numberOfItemsPlaceInline,
+                                  Constants.UserDefaults.numberOfItemsPlaceInsideFolder,
+                                  Constants.UserDefaults.maxMenuItemTitleLength,
+                                  Constants.UserDefaults.maxLengthOfToolTip]
+        let boolObservables = menuChangedBoolKeys.map { key in
+            defaults.rx.observe(Bool.self, key, options: [.new], retainSelf: false)
+                .compactMap { $0 }.distinctUntilChanged().map { _ in }
+        }
+        let intObservables = menuChangedIntKeys.map { key in
+            defaults.rx.observe(Int.self, key, options: [.new], retainSelf: false)
+                .compactMap { $0 }.distinctUntilChanged().map { _ in }
+        }
+        Observable.merge(boolObservables + intObservables)
             .asDriver(onErrorDriveWith: .empty())
             .drive(onNext: { [weak self] in
                 self?.setNeedsMenuRebuild()

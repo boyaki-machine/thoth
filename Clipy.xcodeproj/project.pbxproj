@@ -25,6 +25,7 @@
 		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
 		AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */; };
 		AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */; };
+		6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */; };
 		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
@@ -57,6 +58,7 @@
 		FA1DB4B31DDCB452007F95C8 /* Array+Remove.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A81DDCB452007F95C8 /* Array+Remove.swift */; };
 		FA1DB4B41DDCB452007F95C8 /* NSBundle+Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A91DDCB452007F95C8 /* NSBundle+Version.swift */; };
 		FA1DB4B71DDCB452007F95C8 /* NSImage+Resize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AC1DDCB452007F95C8 /* NSImage+Resize.swift */; };
+		6FCC01A1B2C3D4E5F607080B /* NSAlert+Clipy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Clipy.swift */; };
 		FA1DB4B81DDCB452007F95C8 /* NSLock+Clipy.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AD1DDCB452007F95C8 /* NSLock+Clipy.swift */; };
 		FA1DB4B91DDCB452007F95C8 /* NSMenuItem+Initialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */; };
 		FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */; };
@@ -194,6 +196,7 @@
 		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
 		AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditViewController.swift; sourceTree = "<group>"; };
 		AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+TableView.swift"; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
@@ -228,6 +231,7 @@
 		FA1DB4A81DDCB452007F95C8 /* Array+Remove.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Array+Remove.swift"; sourceTree = "<group>"; };
 		FA1DB4A91DDCB452007F95C8 /* NSBundle+Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSBundle+Version.swift"; sourceTree = "<group>"; };
 		FA1DB4AC1DDCB452007F95C8 /* NSImage+Resize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImage+Resize.swift"; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F607080C /* NSAlert+Clipy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Clipy.swift"; sourceTree = "<group>"; };
 		FA1DB4AD1DDCB452007F95C8 /* NSLock+Clipy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSLock+Clipy.swift"; sourceTree = "<group>"; };
 		FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSMenuItem+Initialize.swift"; sourceTree = "<group>"; };
 		FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSUserDefaults+ArchiveData.swift"; sourceTree = "<group>"; };
@@ -428,6 +432,7 @@
 				FA1DB4A81DDCB452007F95C8 /* Array+Remove.swift */,
 				FA1DB4A91DDCB452007F95C8 /* NSBundle+Version.swift */,
 				FA1DB4AC1DDCB452007F95C8 /* NSImage+Resize.swift */,
+				6FCC01A1B2C3D4E5F607080C /* NSAlert+Clipy.swift */,
 				FA1DB4AD1DDCB452007F95C8 /* NSLock+Clipy.swift */,
 				FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */,
 				FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */,
@@ -543,6 +548,7 @@
 				AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */,
 				AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */,
 				AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */,
+				6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */,
 				FA1DB4F51DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift */,
 				FA1DB4F61DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift */,
 				FA1DB4F71DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.xib */,
@@ -955,6 +961,7 @@
 				FA1DB5181DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift in Sources */,
 				FA1DB4D41DDCB479007F95C8 /* CPYClipData.swift in Sources */,
 				FA1DB4B71DDCB452007F95C8 /* NSImage+Resize.swift in Sources */,
+				6FCC01A1B2C3D4E5F607080B /* NSAlert+Clipy.swift in Sources */,
 				FA1DB4D51DDCB479007F95C8 /* CPYDraggedData.swift in Sources */,
 				FA1DB5151DDCB4C0007F95C8 /* CPYExcludeAppPreferenceViewController.swift in Sources */,
 				FA1DB4EA1DDCB49C007F95C8 /* CPYSnippetsEditorCell.swift in Sources */,
@@ -977,6 +984,7 @@
 				AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */,
 				AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */,
 				AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */,
+				6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */,
 				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,

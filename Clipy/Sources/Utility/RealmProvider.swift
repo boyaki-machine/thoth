@@ -97,6 +97,13 @@ enum RealmProvider {
         }
     }
 
+    /// 既定構成の Realm を返す（Realm はスレッド毎にインスタンスをキャッシュする）。
+    /// 構成（暗号鍵・スキーマ・テスト時の in-memory 差し替え）は defaultConfiguration で
+    /// 一元管理されているため、アプリ内の Realm 取得はこのアクセサ経由に統一する
+    static func defaultRealm() -> Realm {
+        return try! Realm()
+    }
+
     /// スキーマバージョンと移行ブロックのみを持つ基本構成を返す（暗号鍵なし）
     static func makeBaseConfiguration() -> Realm.Configuration {
         return Realm.Configuration(schemaVersion: 7, migrationBlock: { migration, oldSchemaVersion in

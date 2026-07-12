@@ -34,7 +34,7 @@ final class DataCleanService {
 
     // MARK: - Delete Data
     func cleanDatas() {
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         let flowHistories = overflowingClips(with: realm)
         flowHistories
             .compactMap { !$0.isInvalidated && !$0.thumbnailPath.isEmpty ? $0.thumbnailPath : nil }

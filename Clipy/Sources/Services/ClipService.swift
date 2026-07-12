@@ -55,7 +55,7 @@ final class ClipService {
     }
 
     func clearAll() {
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         let clips = realm.objects(CPYClip.self)
 
         // Delete saved images
@@ -69,7 +69,7 @@ final class ClipService {
     }
 
     func delete(with clip: CPYClip) {
-        let realm = try! Realm()
+        let realm = RealmProvider.defaultRealm()
         // Delete saved images
         let path = clip.thumbnailPath
         if !path.isEmpty {
@@ -132,7 +132,7 @@ extension ClipService {
         // まとめて逃がす。Realm のオープンがスレッド毎に 1 回で済み、
         // ポーリングスレッドを重い処理でブロックしない
         saveQueue.async {
-            let realm = try! Realm()
+            let realm = RealmProvider.defaultRealm()
             // 画像クリップの場合 hash 計算に TIFF エンコードを伴うため一度だけ計算する
             let dataHash = data.hash
             // Copy already copied history

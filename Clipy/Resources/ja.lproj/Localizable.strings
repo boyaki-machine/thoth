@@ -182,3 +182,5 @@
 "Realm Open Failed Message" = "クリップボード履歴データベースを開けませんでした。暗号鍵が見つからないか、ファイルが破損している可能性があります。終了して再試行するか、データベースをリセットしてください（履歴とスニペットはすべて削除されます）。";
 "Realm Open Failed Quit" = "終了";
 "Realm Open Failed Reset" = "データベースをリセット";
+
+"Add TOTP" = "TOTP追加...";
