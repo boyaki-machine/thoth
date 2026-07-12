@@ -15,6 +15,17 @@ import Cocoa
 import RealmSwift
 import Sauce
 
+/// ペースト操作全般を担うサービス。
+///
+/// 出力経路は 3 種類:
+/// - **クリップボード経由ペースト**: copyToPasteboard → CGEvent で Cmd+V 送出（paste()）
+/// - **秘匿コピー**: copyConcealedToPasteboard。秘匿マーカー付きで書き込み、
+///   Clipy 自身と対応クリップボードマネージャーの履歴保存を抑止。遅延クリアとセットで使う
+/// - **直接タイプ**: typeString。クリップボードを一切経由せず CGEvent で 1 文字ずつ送出
+///   （TOTP コードなど、いかなる履歴にも残したくない値に使用）
+///
+/// Cmd+V 送出と直接タイプにはアクセシビリティ権限が必要。
+/// 修飾キーによる動作分岐（プレーンテキストペースト・ペースト後削除）にも対応する。
 final class PasteService {
 
     // MARK: - Properties
@@ -92,6 +103,9 @@ extension PasteService {
         return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData
     }
 
+    /// クリップをクリップボードへ書き込んでペーストする。
+    /// アンアーカイブ（画像等は数 MB 規模）はバックグラウンドで行い UI をブロックしない。
+    /// 修飾キーの押下状態に応じてプレーンテキスト化・履歴削除も行う
     func paste(with clip: CPYClip) {
         guard !clip.isInvalidated else { return }
         // Realm オブジェクトはスレッドを越えられないため、必要な値を先に読み出しておく
@@ -134,6 +148,8 @@ extension PasteService {
         }
     }
 
+    /// 文字列を通常のコピーとしてクリップボードへ書き込む（履歴にも保存される）。
+    /// 秘匿情報には copyConcealedToPasteboard を使うこと
     func copyToPasteboard(with string: String) {
         lock.lock(); defer { lock.unlock() }
 
@@ -258,6 +274,8 @@ extension PasteService {
 
 // MARK: - Paste
 extension PasteService {
+    /// CGEvent で Cmd+V を送出し、最前面アプリにペーストさせる。
+    /// 「ペーストコマンドを入力する」設定が無効の場合は何もしない
     func paste() {
         guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else { return }
         // Check Accessibility Permission

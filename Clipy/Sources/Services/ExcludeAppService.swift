@@ -14,6 +14,10 @@ import Foundation
 import RxSwift
 import RxCocoa
 
+/// 「除外アプリケーション」設定を管理するサービス。
+/// 除外に登録されたアプリが最前面のときのコピーは履歴に保存されない
+/// （パスワードマネージャー等の機微なコピーを履歴に残さないための機能）。
+/// 除外リストは NSKeyedArchiver 形式で UserDefaults に永続化される。
 final class ExcludeAppService {
 
     // MARK: - Properties
@@ -30,6 +34,7 @@ final class ExcludeAppService {
 
 // MARK: - Monitor Applications
 extension ExcludeAppService {
+    /// 最前面アプリケーションの追跡を開始する（除外判定に使用）
     func startMonitoring() {
         disposeBag = DisposeBag()
         // Monitoring top active application
@@ -42,6 +47,7 @@ extension ExcludeAppService {
 
 // MARK: - Exclude
 extension ExcludeAppService {
+    /// 現在の最前面アプリが除外リストに含まれるか
     func frontProcessIsExcludedApplication() -> Bool {
         if applications.isEmpty { return false }
         guard let frontApplicationIdentifier = frontApplication.value?.bundleIdentifier else { return false }

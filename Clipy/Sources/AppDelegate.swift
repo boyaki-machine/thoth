@@ -21,6 +21,10 @@ import RxScreeen
 import RealmSwift
 import LetsMove
 
+/// アプリのエントリポイント。起動シーケンスの統括・メニュー項目のアクション受け口・
+/// ログイン項目の管理を担う。
+/// ビジネスロジックは持たず、AppEnvironment のサービス層へ委譲する方針
+/// （起動シーケンスの詳細は下部 NSApplicationDelegate 拡張のコメントを参照）。
 @NSApplicationMain
 class AppDelegate: NSObject, NSMenuItemValidation {
 

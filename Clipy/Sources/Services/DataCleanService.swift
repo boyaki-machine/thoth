@@ -15,6 +15,10 @@ import RxSwift
 import RealmSwift
 import PINCache
 
+/// クリップボード履歴の定期クリーンアップを行うサービス。
+/// 最大履歴数（maxHistorySize）を超えた古いクリップの削除と、
+/// Realm に参照が無くなった孤児 .data ファイルの削除を 30 分間隔で実行する。
+/// すべて .utility QoS のバックグラウンドで動作し、メインスレッドには影響しない。
 final class DataCleanService {
 
     // MARK: - Properties
@@ -22,6 +26,7 @@ final class DataCleanService {
     fileprivate let scheduler = SerialDispatchQueueScheduler(qos: .utility)
 
     // MARK: - Monitoring
+    /// 30 分間隔の定期クリーンアップを開始する
     func startMonitoring() {
         disposeBag = DisposeBag()
         // Clean datas every 30 minutes
@@ -33,6 +38,7 @@ final class DataCleanService {
     }
 
     // MARK: - Delete Data
+    /// 上限超過クリップの削除（サムネイルキャッシュ含む）と孤児ファイルの掃除を即時実行する
     func cleanDatas() {
         let realm = RealmProvider.defaultRealm()
         let flowHistories = overflowingClips(with: realm)
@@ -43,6 +49,7 @@ final class DataCleanService {
         cleanFiles(with: realm)
     }
 
+    /// 最大履歴数を超えた（= 削除対象の）古いクリップを返す
     private func overflowingClips(with realm: Realm) -> Results<CPYClip> {
         let clips = realm.objects(CPYClip.self).sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: false)
         let maxHistorySize = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
@@ -59,6 +66,7 @@ final class DataCleanService {
         return targetClips
     }
 
+    /// Realm 上のどのクリップからも参照されていない .data ファイルを削除する
     private func cleanFiles(with realm: Realm) {
         let fileManager = FileManager.default
         guard let paths = try? fileManager.contentsOfDirectory(atPath: CPYUtilities.applicationSupportFolder()) else { return }

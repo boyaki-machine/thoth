@@ -16,6 +16,18 @@ import RealmSwift
 import RxCocoa
 import RxSwift
 
+/// ステータスバーメニュー（履歴・スニペット・ツール）とセキュアメニューの
+/// 表示・構築を統括するマネージャ。
+///
+/// ## 遅延再構築の設計
+/// メニューは NSMenu インスタンスを固定し、内容だけを表示直前に再構築する。
+/// 履歴・スニペット・設定の変更は世代カウンター（menuGeneration）を進めるのみで、
+/// 実際の構築コスト（履歴数に比例）はメニューを開く瞬間まで支払わない。
+///
+/// ## 構成ファイル
+/// - MenuManager.swift: 状態・バインディング・共通ヘルパー
+/// - MenuManager+MenuBuilding.swift: メニュー項目の構築・vim キー CGEvent tap
+/// - MenuManager+Popup.swift: ポップアップ表示・セキュアメニュー・セキュア出力
 final class MenuManager: NSObject {
 
     // MARK: - Properties

@@ -17,6 +17,22 @@ import PINCache
 import RxSwift
 import RxCocoa
 
+/// クリップボードの監視と履歴の保存・削除を担うサービス。
+///
+/// ## 監視方式
+/// NSPasteboard には変更通知 API が無いため、changeCount を 100ms 間隔で
+/// ポーリングして変化を検出する（.utility QoS の直列スケジューラ上）。
+///
+/// ## 保存の流れ
+/// changeCount 変化 → create()（除外判定・型フィルタ）→ save()：
+/// 重複判定・サムネイル生成・NSKeyedArchiver シリアライズ・ファイル書き込み・
+/// Realm 追加のすべてを専用直列キュー（saveQueue）で行い、メインスレッドを塞がない。
+/// クリップ本体（.data）は ClipDataStore が AES-GCM で暗号化して保存する。
+///
+/// ## 履歴に保存しないもの
+/// - 秘匿マーカー（org.nspasteboard.ConcealedType 等）付きのコピー
+/// - 除外アプリが最前面のときのコピー
+/// - 保存対象外の型のみのコピー・空文字列
 final class ClipService {
 
     // MARK: - Properties
@@ -31,6 +47,7 @@ final class ClipService {
     fileprivate let saveQueue = DispatchQueue(label: "com.clipy-app.Clipy.ClipSave", qos: .userInitiated)
 
     // MARK: - Clips
+    /// クリップボードのポーリング監視と保存対象型の設定監視を開始する
     func startMonitoring() {
         disposeBag = DisposeBag()
         // Pasteboard observe timer
@@ -54,6 +71,7 @@ final class ClipService {
             .disposed(by: disposeBag)
     }
 
+    /// 全履歴を削除する（サムネイルキャッシュ・.data ファイル含む）
     func clearAll() {
         let realm = RealmProvider.defaultRealm()
         let clips = realm.objects(CPYClip.self)
@@ -68,6 +86,7 @@ final class ClipService {
         AppEnvironment.current.dataCleanService.cleanDatas()
     }
 
+    /// 指定クリップを履歴から削除する
     func delete(with clip: CPYClip) {
         let realm = RealmProvider.defaultRealm()
         // Delete saved images
@@ -79,6 +98,8 @@ final class ClipService {
         realm.transaction { realm.delete(clip) }
     }
 
+    /// キャッシュ済み changeCount を進めて「次のクリップボード変化を 1 回無視」する。
+    /// 自分自身の書き込みを履歴に再取り込みしないためのフック
     func incrementChangeCount() {
         cachedChangeCount.accept(cachedChangeCount.value + 1)
     }

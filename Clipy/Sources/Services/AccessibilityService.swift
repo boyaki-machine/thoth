@@ -13,10 +13,14 @@
 import Foundation
 import Cocoa
 
+/// アクセシビリティ権限（CGEvent によるペースト・直接タイプ・vim キー変換に必須）の
+/// 確認と、設定画面への誘導を行うサービス。
 final class AccessibilityService {}
 
 // MARK: - Permission
 extension AccessibilityService {
+    /// アクセシビリティ権限が付与されているかを返す。
+    /// - Parameter isPrompt: true の場合、未付与なら OS の許可ダイアログを表示する
     @discardableResult
     func isAccessibilityEnabled(isPrompt: Bool) -> Bool {
         // Accessibility permission is required for paste command from macOS 10.14 Mojave.
@@ -28,6 +32,7 @@ extension AccessibilityService {
         return AXIsProcessTrustedWithOptions(opts)
     }
 
+    /// 権限が無い場合の説明アラートを表示し、システム設定への誘導を行う
     func showAccessibilityAuthenticationAlert() {
         let alert = NSAlert()
         alert.messageText = L10n.pleaseAllowAccessibility

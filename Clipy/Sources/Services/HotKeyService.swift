@@ -15,9 +15,13 @@ import Cocoa
 import Magnet
 import RealmSwift
 
+/// グローバルホットキー（メニュー呼び出し・履歴クリア・スニペットフォルダ表示）を
+/// Magnet フレームワーク経由で登録・管理するサービス。
+/// キーコンボは NSKeyedArchiver 形式で UserDefaults に永続化される。
 final class HotKeyService: NSObject {
 
     // MARK: - Properties
+    /// 既定のホットキー割り当て
     static var defaultKeyCombos: [String: Any] = {
         // MainMenu:    ⌘ + Shift + V
         // HistoryMenu: ⌘ + Control + V

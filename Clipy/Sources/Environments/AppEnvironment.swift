@@ -12,6 +12,10 @@
 
 import Foundation
 
+/// アプリ全体の依存性注入（DI）コンテナ。
+/// サービス群をまとめた Environment をスタックで管理し、
+/// `AppEnvironment.current` から常に最新の環境を参照する。
+/// テストでは push/popLast で一時的にモック環境へ差し替えられる。
 struct AppEnvironment {
 
     // MARK: - Properties

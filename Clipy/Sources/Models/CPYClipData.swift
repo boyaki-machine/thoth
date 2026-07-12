@@ -13,6 +13,13 @@
 import Cocoa
 import SwiftHEXColors
 
+/// クリップの実データ（全ペーストボード型の内容）を保持するシリアライズ用モデル。
+/// NSKeyedArchiver でアーカイブして .data ファイルに保存される（NSCoding 準拠）。
+///
+/// 注意: 旧式 NSCoding（encodeWithCoder）のまま維持している。NSSecureCoding 化は
+/// 既存の全履歴ファイルとの互換を壊すため行わず、改竄検知は保存側
+/// （ClipDataStore の AES-GCM 認証タグ）が担う設計とする。
+/// キー名（"types" 等）も保存済みデータとの互換のため変更してはならない。
 final class CPYClipData: NSObject {
 
     // MARK: - Properties

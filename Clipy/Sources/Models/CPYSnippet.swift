@@ -13,6 +13,7 @@
 import Cocoa
 import RealmSwift
 
+/// スニペット（定型文）1 件を表す Realm モデル。CPYFolder に属する。
 final class CPYSnippet: Object {
 
     // MARK: - Properties

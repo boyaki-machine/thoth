@@ -12,6 +12,9 @@
 
 import Foundation
 
+/// アプリを構成するサービス群の集合（DI コンテナの中身）。
+/// 各サービスの init は軽量（Realm オープン等の重い処理は遅延化済み）のため、
+/// 起動時にまとめて生成しても起動時間には影響しない。
 struct Environment {
 
     // MARK: - Properties

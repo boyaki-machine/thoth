@@ -13,6 +13,8 @@
 import Cocoa
 import RealmSwift
 
+/// スニペットを束ねるフォルダを表す Realm モデル。
+/// メニューでは 1 フォルダ = 1 サブメニューとして表示される。
 final class CPYFolder: Object {
 
     // MARK: - Properties
