@@ -24,6 +24,18 @@ internal enum L10n {
   internal static let areYouSureWantToDeleteThisSecureItem = L10n.tr("Localizable", "Are you sure want to delete this secure item?")
   /// Are you sure you want to clear your clipboard history?
   internal static let areYouSureYouWantToClearYourClipboardHistory = L10n.tr("Localizable", "Are you sure you want to clear your clipboard history?")
+  /// Language:
+  internal static let betaLanguage = L10n.tr("Localizable", "Beta Language")
+  /// 𓂀 Hieroglyphs
+  internal static let betaLanguageHieroglyphs = L10n.tr("Localizable", "Beta Language Hieroglyphs")
+  /// Lingua Latina (Latin)
+  internal static let betaLanguageLatin = L10n.tr("Localizable", "Beta Language Latin")
+  /// The language change will take effect after restarting Clipy.
+  internal static let betaLanguageRestartMessage = L10n.tr("Localizable", "Beta Language Restart Message")
+  /// Restart Now
+  internal static let betaLanguageRestartNow = L10n.tr("Localizable", "Beta Language Restart Now")
+  /// System Default
+  internal static let betaLanguageSystemDefault = L10n.tr("Localizable", "Beta Language System Default")
   /// Cancel
   internal static let cancel = L10n.tr("Localizable", "Cancel")
   /// Character Types:

@@ -202,3 +202,10 @@
 "Crypto Copy Command" = "拷贝命令";
 
 "Copied" = "已拷贝";
+
+"Beta Language" = "语言：";
+"Beta Language System Default" = "系统默认";
+"Beta Language Latin" = "Lingua Latina（拉丁语）";
+"Beta Language Hieroglyphs" = "𓂀 圣书体";
+"Beta Language Restart Message" = "语言更改将在重新启动 Clipy 后生效。";
+"Beta Language Restart Now" = "立即重新启动";

@@ -81,7 +81,7 @@ final class CodeSignService {
             NSLog("[CodeSignService] re-signed successfully, relaunching")
             // NSApp.terminate を伴うためメインスレッドで再起動する
             DispatchQueue.main.async {
-                self.relaunch(bundlePath: bundlePath)
+                Self.relaunch(bundlePath: bundlePath, launchArguments: Self.resignedArgument)
             }
         }
         return true
@@ -205,12 +205,13 @@ final class CodeSignService {
                           ["--force", "--deep", "--sign", Self.certificateCommonName, bundlePath])
     }
 
-    /// 自身を終了して再署名済みのバンドルを起動し直す。
+    /// 自身を終了してバンドルを起動し直す（再署名後の再起動や言語切替の反映に使用）。
     /// 旧インスタンスの終了を待ってから起動するため、シェル経由で遅延実行する。
-    private func relaunch(bundlePath: String) {
+    static func relaunch(bundlePath: String = Bundle.main.bundlePath, launchArguments: String = "") {
         let process = Process()
+        let argsSuffix = launchArguments.isEmpty ? "" : " --args \(launchArguments)"
+        process.arguments = ["-c", "sleep 1; /usr/bin/open -n \"\(bundlePath)\"\(argsSuffix)"]
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
-        process.arguments = ["-c", "sleep 1; /usr/bin/open -n \"\(bundlePath)\" --args \(Self.resignedArgument)"]
         do {
             try process.run()
         } catch {
