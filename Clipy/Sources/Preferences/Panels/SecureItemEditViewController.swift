@@ -344,8 +344,16 @@ final class SecureItemEditViewController: NSViewController {
         for row in 0..<fields.count {
             let label = (fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false)
                             as? NSTableCellView)?.textField?.stringValue ?? fields[row].label
-            let value = (fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: false)
+            // TOTP の Value（otpauth URI / secret）はセルに表示しない設計で、
+            // セルの入力値は常に空文字になる。セルから読むと保存のたびに
+            // 秘密鍵を空文字で消してしまうため、必ずモデルの値を使う
+            let value: String
+            if fields[row].isTOTP {
+                value = fields[row].value
+            } else {
+                value = (fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: false)
                             as? FieldValueCell)?.currentValue ?? fields[row].value
+            }
             guard !label.trimmingCharacters(in: .whitespaces).isEmpty
                     || !value.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
             currentFields.append(SecureMenuItem.Field(fieldID: fields[row].fieldID,

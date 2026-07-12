@@ -36,6 +36,33 @@ class SecureItemEditSpec: QuickSpec {
                 expect(saved?.fields.first?.value) == "NewValue"
                 expect(saved?.fields.first?.fieldID) == "f1"
             }
+
+            // TOTP の Value はセルに表示されない（セルの入力値は常に空）ため、
+            // 保存時にセルから読むと秘密鍵が空文字で消えるリグレッションがあった。
+            // 編集シート経由の保存で TOTP の value が無傷であることを担保する
+            it("Preserves the TOTP value through the edit sheet save") {
+                let uri = "otpauth://totp/GitHub:user?secret=GEZDGNBVGY3TQOJQ&issuer=GitHub"
+                let totpField = SecureMenuItem.Field(fieldID: "t1", label: "GitHub 2FA", value: uri,
+                                                     isPassword: false, kind: .totp)
+                let plainField = SecureMenuItem.Field(fieldID: "p1", label: "ID", value: "user")
+                let item = SecureMenuItem(itemID: "totp-save", title: "GitHub", fields: [totpField, plainField])
+                let viewController = SecureItemEditViewController(item: item)
+                _ = viewController.view
+                viewController.fieldsTable.reloadData()
+                // TOTP セルを生成させる（表示上は空・編集不可であることも確認）
+                let totpCell = viewController.fieldsTable.view(atColumn: 2, row: 0, makeIfNecessary: true) as? FieldValueCell
+                expect(totpCell?.currentValue) == ""
+
+                var saved: SecureMenuItem?
+                viewController.onSave = { saved = $0 }
+                viewController.perform(NSSelectorFromString("saveSheet"))
+
+                // TOTP の value はセルではなくモデルの値が保存される
+                expect(saved?.fields.first?.value) == uri
+                expect(saved?.fields.first?.kind) == .totp
+                // 通常フィールドは従来どおりセルの値が保存される
+                expect(saved?.fields.last?.value) == "user"
+            }
         }
     }
 
