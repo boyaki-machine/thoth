@@ -28,7 +28,7 @@ Secure Menu lets you paste passwords and other sensitive values directly into an
 | Feature | Detail |
 |---------|--------|
 | **Keychain storage** | All values are stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — never synced to iCloud |
-| **Biometric lock** | Touch ID (or login password) is required before the menu appears |
+| **Biometric lock** | Touch ID (or login password) is required before the menu appears. Within 30 seconds of a successful authentication, re-authentication is skipped so you can pick ID / password / TOTP in a row |
 | **Two-level menu** | Select a parent item (e.g. "GitHub"), then choose a specific field (e.g. "Password") |
 | **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard |
 | **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |

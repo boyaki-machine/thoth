@@ -28,8 +28,8 @@ final class CPYPasswordGeneratorWindowController: NSWindowController {
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
         window?.makeKeyAndOrderFront(self)
-        // 表示のたびに条件に基づいた新しいパスワードを生成する
-        (contentViewController as? CPYPasswordGeneratorViewController)?.generateAction()
+        // 新規パスワードの生成は VC の viewDidAppear で行われる
+        // （シート表示と独立ウィンドウ表示の両方で同じ挙動にするため）
     }
 }
 
@@ -69,9 +69,24 @@ final class CPYPasswordGeneratorViewController: NSViewController {
         setupUI()
     }
 
-    /// Esc キーでウィンドウを閉じる
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        // 表示のたびに条件に基づいた新しいパスワードを生成する
+        generateAction()
+    }
+
+    /// Esc キーで閉じる
     override func cancelOperation(_ sender: Any?) {
-        view.window?.performClose(sender)
+        closeSelf()
+    }
+
+    /// シート（presentAsSheet）の場合は dismiss、独立ウィンドウの場合は close する
+    private func closeSelf() {
+        if presentingViewController != nil {
+            presentingViewController?.dismiss(self)
+        } else {
+            view.window?.performClose(self)
+        }
     }
 
     // MARK: - Actions
@@ -95,18 +110,21 @@ final class CPYPasswordGeneratorViewController: NSViewController {
         }
     }
 
-    /// 現在表示中のパスワードをクリップボードにコピーする
+    /// 現在表示中のパスワードをクリップボードにコピーする。
+    /// 生成物はパスワードなので秘匿マーカー付きでコピーし（履歴に残さない）、
+    /// 一定時間後に自動クリアする
     @objc private func copyAction() {
         let password = passwordField.stringValue
         guard !password.isEmpty else {
             NSSound.beep()
             return
         }
-        AppEnvironment.current.pasteService.copyToPasteboard(with: password)
+        AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: password)
+        AppEnvironment.current.pasteService.scheduleConcealedClear()
     }
 
     @objc private func closeWindow() {
-        view.window?.performClose(self)
+        closeSelf()
     }
 
     @objc private func lettersCheckboxChanged() {

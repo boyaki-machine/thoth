@@ -441,5 +441,27 @@ class SecureMenuServiceSpec: QuickSpec {
                 expect(loaded[0].fields[0].isTOTP) == false
             }
         }
+
+        // ※ 猶予期間「外」の経路は実際の Touch ID / パスワードプロンプトが
+        //   表示されてしまうため、ここでは猶予期間「内」の省略動作のみを検証する
+        describe("Authentication grace period") {
+
+            it("Skips re-authentication within the grace period") {
+                self.service.lastAuthenticatedDate = Date()
+                var result: Bool?
+                waitUntil { done in
+                    self.service.authenticate(reason: "test") { success in
+                        result = success
+                        done()
+                    }
+                }
+                expect(result) == true
+            }
+
+            it("Grace period is 30 seconds") {
+                // 仕様値。変更時は README / ドックコメントも更新すること
+                expect(SecureMenuService.authenticationGracePeriod) == 30
+            }
+        }
     }
 }

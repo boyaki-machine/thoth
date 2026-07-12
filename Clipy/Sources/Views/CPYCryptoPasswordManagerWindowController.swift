@@ -10,34 +10,14 @@
 
 import Cocoa
 
-// MARK: - Window Controller
-
-/// 指紋パスワード（暗号化・復号化の固定パスワード）を管理するウィンドウ。
-/// 表示時に Touch ID 認証を行い、成功した場合のみ現在のパスワードを表示・編集できる。
-final class CPYCryptoPasswordManagerWindowController: NSWindowController {
-
-    static let shared: CPYCryptoPasswordManagerWindowController = {
-        let viewController = CPYCryptoPasswordManagerViewController()
-        let window = NSWindow(contentViewController: viewController)
-        window.title = L10n.cryptoManageFingerprintPassword
-        window.styleMask = [.titled, .closable]
-        // 別のデスクトップスペースへ移動していても、表示時は現在のスペースに出す
-        window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
-        window.center()
-        return CPYCryptoPasswordManagerWindowController(window: window)
-    }()
-
-    override func showWindow(_ sender: Any?) {
-        super.showWindow(sender)
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(self)
-        (contentViewController as? CPYCryptoPasswordManagerViewController)?.authenticateAndLoad()
-    }
-}
-
 // MARK: - View Controller
 
-/// 現在の指紋パスワードの表示と、登録・更新を行うダイアログ。
+/// 現在の指紋パスワード（暗号化・復号化の固定パスワード）の表示と登録・更新を行うダイアログ。
+/// 表示時に Touch ID 認証を行い、成功した場合のみ現在のパスワードを表示・編集できる。
+///
+/// 呼び出し元（ファイル暗号化ウィンドウ）が明確なため、独立ウィンドウではなく
+/// `presentAsSheet` によるシート（モーダル）として表示する。
+/// シートの間は親ウィンドウが操作不能になり、閉じると自動的に親へフォーカスが戻る。
 final class CPYCryptoPasswordManagerViewController: NSViewController {
 
     private let passwordField = NSTextField()
@@ -53,12 +33,26 @@ final class CPYCryptoPasswordManagerViewController: NSViewController {
         setupUI()
     }
 
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        authenticateAndLoad()
+    }
+
     override func cancelOperation(_ sender: Any?) {
-        view.window?.performClose(sender)
+        closeSelf()
+    }
+
+    /// シート（presentAsSheet）の場合は dismiss、独立ウィンドウの場合は close する
+    private func closeSelf() {
+        if presentingViewController != nil {
+            presentingViewController?.dismiss(self)
+        } else {
+            view.window?.performClose(self)
+        }
     }
 
     /// Touch ID 認証を行い、成功したら現在のパスワードを表示する
-    func authenticateAndLoad() {
+    private func authenticateAndLoad() {
         isAuthenticated = false
         passwordField.stringValue = ""
         passwordField.isEnabled = false
@@ -96,9 +90,9 @@ final class CPYCryptoPasswordManagerViewController: NSViewController {
             statusLabel.textColor = .systemRed
             return
         }
-        // 登録処理を行い、成功したらウィンドウを閉じる
+        // 登録処理を行い、成功したらシートを閉じる
         if AppEnvironment.current.secureMenuService.saveCryptoPassword(password) {
-            view.window?.performClose(self)
+            closeSelf()
         } else {
             statusLabel.stringValue = L10n.cryptoErrorFailed
             statusLabel.textColor = .systemRed
@@ -106,12 +100,12 @@ final class CPYCryptoPasswordManagerViewController: NSViewController {
     }
 
     @objc private func closeWindow() {
-        view.window?.performClose(self)
+        closeSelf()
     }
 
-    /// 新規パスワード生成ウィンドウを表示する
+    /// パスワード生成ダイアログをシートとして表示する（呼び出し元が明確なためモーダル）
     @objc private func openPasswordGenerator() {
-        CPYPasswordGeneratorWindowController.shared.showWindow(self)
+        presentAsSheet(CPYPasswordGeneratorViewController())
     }
 }
 

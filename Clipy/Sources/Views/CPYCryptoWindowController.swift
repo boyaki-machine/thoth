@@ -286,9 +286,10 @@ final class CPYCryptoViewController: NSViewController {
         }
     }
 
-    /// 指紋パスワード管理ウィンドウを開く
+    /// 指紋パスワード管理をシートとして表示する（呼び出し元が明確なためモーダル。
+    /// シートの間はこのウィンドウは操作不能になり、閉じるとフォーカスが戻る）
     @objc private func openFingerprintPasswordManager() {
-        CPYCryptoPasswordManagerWindowController.shared.showWindow(self)
+        presentAsSheet(CPYCryptoPasswordManagerViewController())
     }
 
     private func setControlsEnabled(_ enabled: Bool) {

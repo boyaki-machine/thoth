@@ -308,10 +308,10 @@ final class SecureItemEditViewController: NSViewController {
         presentingViewController?.dismiss(self)
     }
 
-    /// パスワード生成ダイアログを開く（生成したパスワードはコピーして Value 欄に貼り付ける）
+    /// パスワード生成ダイアログを開く（生成したパスワードはコピーして Value 欄に貼り付ける）。
+    /// 呼び出し元（この編集シート）が明確なため、シートとして表示する
     @objc private func openPasswordGenerator() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYPasswordGeneratorWindowController.shared.showWindow(self)
+        presentAsSheet(CPYPasswordGeneratorViewController())
     }
 
     /// TOTP 取り込みシートを開く

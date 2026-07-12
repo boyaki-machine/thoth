@@ -55,6 +55,16 @@ final class SecureMenuService {
     /// 読み出し時に OS が再認証を要求する＝アプリのロジックを迂回しても値を取れない。
     private var authenticatedContext: LAContext?
 
+    /// 認証成功からこの秒数以内の再認証は省略する（猶予期間）。
+    /// ID → パスワード → TOTP のように短時間に連続してセキュアアイテムを
+    /// 選択するユースケースで、選択のたびに Touch ID を要求しないための UX 措置。
+    /// 猶予は「実際に認証が成功した時刻」から固定で、省略のたびに延長はしない
+    /// （延長型にすると使い続ける限り無期限に認証が省略されてしまうため）。
+    static let authenticationGracePeriod: TimeInterval = 30
+
+    /// 直近で認証が成功した時刻（テストから注入できるよう internal）
+    var lastAuthenticatedDate: Date?
+
     // MARK: - Initialize
 
     init(keychainService: String = SecureMenuService.defaultKeychainService) {
@@ -64,6 +74,13 @@ final class SecureMenuService {
     // MARK: - Authentication
 
     func authenticate(reason: String, completion: @escaping (Bool) -> Void) {
+        // 猶予期間内は再認証を省略する（completion は他の経路と同様に非同期で呼ぶ）
+        if let lastAuthenticated = lastAuthenticatedDate,
+           Date().timeIntervalSince(lastAuthenticated) < Self.authenticationGracePeriod {
+            DispatchQueue.main.async { completion(true) }
+            return
+        }
+
         let context = LAContext()
         var error: NSError?
         let policy = LAPolicy.deviceOwnerAuthentication
@@ -88,6 +105,8 @@ final class SecureMenuService {
             DispatchQueue.main.async {
                 // 評価済みコンテキストを保持し、以降の Keychain 読み出しに紐付ける
                 self.authenticatedContext = success ? context : nil
+                // 猶予期間の起点を記録する（失敗時はクリア）
+                self.lastAuthenticatedDate = success ? Date() : nil
                 completion(success)
             }
         }
