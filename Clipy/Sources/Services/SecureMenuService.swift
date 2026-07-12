@@ -12,6 +12,21 @@ import Foundation
 import LocalAuthentication
 import Security
 
+/// セキュアメニューのアイテム（パスワード等の機微情報）と指紋パスワードを
+/// macOS Keychain で管理し、Touch ID / パスワード認証を提供するサービス。
+///
+/// ## 認証と Keychain 保護の設計（トレードオフ）
+/// - 認証（LAContext.evaluatePolicy）に成功したコンテキストは保持され、
+///   以降の Keychain 読み出しに `kSecUseAuthenticationContext` で紐付けられる。
+/// - エントリの新規作成時は `.userPresence` ACL 付き（data protection keychain）での
+///   保存をプローブする。成功した環境では **OS が読み出しごとに在席確認を強制** し、
+///   アプリコードの改変では迂回できない保護になる。
+/// - ただし data protection keychain は application-identifier エンタイトルメントを要求し、
+///   本アプリの ad-hoc / 自己署名（CodeSignService による署名安定化）では
+///   `errSecMissingEntitlement` で失敗するため、従来のファイルベース Keychain に
+///   自動フォールバックする。この場合の実効的な保護は
+///   「CodeSignService による署名の安定化 + アプリ内の LAContext 認証ゲート」となる。
+///   Developer ID 署名へ移行すれば ACL 保護が自動的に有効になる。
 final class SecureMenuService {
 
     // MARK: - Constants
@@ -33,6 +48,12 @@ final class SecureMenuService {
     /// この状態のまま保存すると既存データを上書き消去してしまうため、`saveAllItems` はガードする。
     /// （テストから拒否状態を再現できるよう setter は internal にしている）
     var isKeychainAccessDenied = false
+
+    /// 直近に成功した認証のコンテキスト。Keychain クエリに `kSecUseAuthenticationContext` で
+    /// 引き渡し、認証結果と Keychain 読み出しを OS レベルで紐付ける。
+    /// ACL 付きエントリ（後述のプローブが成功した環境）では、このコンテキストが無いと
+    /// 読み出し時に OS が再認証を要求する＝アプリのロジックを迂回しても値を取れない。
+    private var authenticatedContext: LAContext?
 
     // MARK: - Initialize
 
@@ -64,22 +85,133 @@ final class SecureMenuService {
                 NSLog("[SecureMenuService] authenticate: evaluatePolicy error: \(authError)")
             }
             #endif
-            DispatchQueue.main.async { completion(success) }
+            DispatchQueue.main.async {
+                // 評価済みコンテキストを保持し、以降の Keychain 読み出しに紐付ける
+                self.authenticatedContext = success ? context : nil
+                completion(success)
+            }
         }
+    }
+
+    // MARK: - Keychain Primitives
+
+    /// Keychain クエリの共通部分を組み立てる。
+    /// - Parameter dataProtection: true の場合 data protection keychain
+    ///   （ACL 付きエントリの保存先）を対象にする
+    private func keychainQuery(account: String, dataProtection: Bool = false) -> [String: Any] {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: account
+        ]
+        if dataProtection {
+            query[kSecUseDataProtectionKeychain as String] = true
+        }
+        return query
+    }
+
+    /// エントリを読み出す。従来のファイルベース Keychain → data protection keychain
+    /// （ACL 付き）の順に検索し、評価済み LAContext があれば認証コンテキストとして引き渡す
+    private func readEntry(account: String) -> (status: OSStatus, data: Data?) {
+        var fileBasedStatus: OSStatus = errSecItemNotFound
+        for dataProtection in [false, true] {
+            var query = keychainQuery(account: account, dataProtection: dataProtection)
+            query[kSecMatchLimit as String] = kSecMatchLimitOne
+            query[kSecReturnData as String] = true
+            if let context = authenticatedContext {
+                query[kSecUseAuthenticationContext as String] = context
+            }
+            var result: AnyObject?
+            let status = SecItemCopyMatching(query as CFDictionary, &result)
+            if status == errSecSuccess {
+                return (status, result as? Data)
+            }
+            if !dataProtection {
+                fileBasedStatus = status
+                // ファイルベース側でアクセス拒否等が起きた場合はそのまま返す
+                // （data protection 側の探索で notFound に化けさせない）
+                if status != errSecItemNotFound { return (status, nil) }
+            }
+        }
+        // data protection 側の失敗（errSecMissingEntitlement 等）は「存在しない」と同義に扱う
+        return (fileBasedStatus, nil)
+    }
+
+    /// エントリを保存する（既存があれば更新、無ければ新規作成）。
+    ///
+    /// 新規作成時はまず `.userPresence` ACL 付きで data protection keychain への保存を試みる
+    /// （プローブ）。成功すれば以降の読み出しに OS レベルの認証が要求される。
+    /// ad-hoc / 自己署名ビルドは application-identifier エンタイトルメントを持たないため
+    /// `errSecMissingEntitlement` で失敗する——その場合は従来のファイルベース Keychain に
+    /// 自動フォールバックする（Developer ID 署名へ移行すれば ACL が自動的に有効になる）
+    private func writeEntry(account: String, label: String, data: Data) -> Bool {
+        // 既存エントリの更新（保存先はエントリ作成時の場所を維持する）
+        for dataProtection in [false, true] {
+            var existsQuery = keychainQuery(account: account, dataProtection: dataProtection)
+            existsQuery[kSecMatchLimit as String] = kSecMatchLimitOne
+            guard SecItemCopyMatching(existsQuery as CFDictionary, nil) == errSecSuccess else { continue }
+
+            var query = keychainQuery(account: account, dataProtection: dataProtection)
+            if dataProtection, let context = authenticatedContext {
+                query[kSecUseAuthenticationContext as String] = context
+            }
+            let attributes: [String: Any] = [
+                kSecValueData as String: data,
+                kSecAttrLabel as String: label
+            ]
+            return SecItemUpdate(query as CFDictionary, attributes as CFDictionary) == errSecSuccess
+        }
+        // 新規作成: ACL 付き保存をプローブし、失敗したら従来方式にフォールバック
+        if addProtectedEntry(account: account, label: label, data: data) { return true }
+        var addQuery = keychainQuery(account: account)
+        addQuery[kSecAttrLabel as String] = label
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        addQuery[kSecValueData as String] = data
+        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+    }
+
+    /// `.userPresence` ACL 付きエントリの作成を試みる。
+    /// 成功すると、読み出し時に OS が Touch ID / パスワードによる在席確認を強制する
+    /// （アプリのコードが改変されても Keychain 側で認証が要求される）
+    private func addProtectedEntry(account: String, label: String, data: Data) -> Bool {
+        // テスト実行時はプローブしない（成功する環境だと読み出しで認証プロンプトが出て
+        // テストが停止してしまうため、常にファイルベース側を使う）
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return false }
+        guard let accessControl = SecAccessControlCreateWithFlags(nil,
+                                                                  kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                                                                  .userPresence, nil) else { return false }
+        var addQuery = keychainQuery(account: account, dataProtection: true)
+        addQuery[kSecAttrLabel as String] = label
+        addQuery[kSecAttrAccessControl as String] = accessControl
+        addQuery[kSecValueData as String] = data
+        if let context = authenticatedContext {
+            addQuery[kSecUseAuthenticationContext as String] = context
+        }
+        let status = SecItemAdd(addQuery as CFDictionary, nil)
+        #if DEBUG
+        if status != errSecSuccess {
+            NSLog("[SecureMenuService] protected add failed (status \(status)); falling back to file-based keychain")
+        }
+        #endif
+        return status == errSecSuccess
+    }
+
+    /// エントリを削除する（ファイルベース・data protection の両方から）
+    private func removeEntry(account: String) -> Bool {
+        var success = true
+        for dataProtection in [false, true] {
+            let status = SecItemDelete(keychainQuery(account: account, dataProtection: dataProtection) as CFDictionary)
+            if !dataProtection {
+                success = (status == errSecSuccess || status == errSecItemNotFound)
+            }
+        }
+        return success
     }
 
     // MARK: - Keychain CRUD
 
     func loadAllItems() -> [SecureMenuItem] {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.itemsKey,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnData as String: true
-        ]
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        let (status, resultData) = readEntry(account: Self.itemsKey)
         #if DEBUG
         NSLog("[SecureMenuService] loadAllItems: status=\(status)")
         #endif
@@ -87,7 +219,7 @@ final class SecureMenuService {
         // （バイナリ更新により Keychain ACL の照合に失敗した場合など）
         isKeychainAccessDenied = (status != errSecSuccess && status != errSecItemNotFound)
 
-        guard status == errSecSuccess, let data = result as? Data else {
+        guard status == errSecSuccess, let data = resultData else {
             if isKeychainAccessDenied {
                 NSLog("[SecureMenuService] loadAllItems: keychain access failed with status \(status)")
             }
@@ -149,13 +281,7 @@ final class SecureMenuService {
     /// Keychain のエントリ自体を削除する（全アイテムの削除・テストのクリーンアップ用）
     @discardableResult
     func deleteAllItems() -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.itemsKey
-        ]
-        let status = SecItemDelete(query as CFDictionary)
-        return status == errSecSuccess || status == errSecItemNotFound
+        return removeEntry(account: Self.itemsKey)
     }
 
     // MARK: - Crypto Password (指紋パスワード)
@@ -165,59 +291,32 @@ final class SecureMenuService {
     @discardableResult
     func saveCryptoPassword(_ password: String) -> Bool {
         guard let data = password.data(using: .utf8) else { return false }
-        let baseQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.cryptoPasswordKey
-        ]
-        if SecItemCopyMatching(baseQuery as CFDictionary, nil) == errSecSuccess {
-            let attributes: [String: Any] = [kSecValueData as String: data]
-            return SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary) == errSecSuccess
-        } else {
-            var addQuery = baseQuery
-            addQuery[kSecAttrLabel as String] = "Clipy Crypto Password"
-            addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-            addQuery[kSecValueData as String] = data
-            return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
-        }
+        return writeEntry(account: Self.cryptoPasswordKey, label: "Clipy Crypto Password", data: data)
     }
 
     /// 保存済みの指紋パスワードを読み出す。未登録の場合は nil を返す。
+    /// ACL 付きエントリの場合、authenticate() 済みのコンテキストが紐付いていないと
+    /// OS が追加の認証を要求する
     func loadCryptoPassword() -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.cryptoPasswordKey,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecReturnData as String: true
-        ]
-        var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
+        let (status, data) = readEntry(account: Self.cryptoPasswordKey)
+        guard status == errSecSuccess, let data = data else { return nil }
         return String(data: data, encoding: .utf8)
     }
 
     /// 指紋パスワードが登録済みか
     func hasCryptoPassword() -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.cryptoPasswordKey,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+        for dataProtection in [false, true] {
+            var query = keychainQuery(account: Self.cryptoPasswordKey, dataProtection: dataProtection)
+            query[kSecMatchLimit as String] = kSecMatchLimitOne
+            if SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess { return true }
+        }
+        return false
     }
 
     /// 指紋パスワードの Keychain エントリを削除する（テストのクリーンアップ用）
     @discardableResult
     func deleteCryptoPassword() -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.cryptoPasswordKey
-        ]
-        let status = SecItemDelete(query as CFDictionary)
-        return status == errSecSuccess || status == errSecItemNotFound
+        return removeEntry(account: Self.cryptoPasswordKey)
     }
 
     // MARK: - Private Helpers
@@ -257,44 +356,6 @@ final class SecureMenuService {
             return false
         }
         guard let data = try? JSONEncoder().encode(items) else { return false }
-
-        // 既存エントリが存在するか確認
-        let existsQuery: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: Self.itemsKey,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ]
-
-        if SecItemCopyMatching(existsQuery as CFDictionary, nil) == errSecSuccess {
-            let updateQuery: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: keychainService,
-                kSecAttrAccount as String: Self.itemsKey
-            ]
-            let attributes: [String: Any] = [
-                kSecValueData as String: data,
-                kSecAttrLabel as String: "Clipy Secure Items"
-            ]
-            let status = SecItemUpdate(updateQuery as CFDictionary, attributes as CFDictionary)
-            #if DEBUG
-            NSLog("[SecureMenuService] saveAllItems: update status=\(status)")
-            #endif
-            return status == errSecSuccess
-        } else {
-            let addQuery: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: keychainService,
-                kSecAttrAccount as String: Self.itemsKey,
-                kSecAttrLabel as String: "Clipy Secure Items",
-                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-                kSecValueData as String: data
-            ]
-            let status = SecItemAdd(addQuery as CFDictionary, nil)
-            #if DEBUG
-            NSLog("[SecureMenuService] saveAllItems: add status=\(status)")
-            #endif
-            return status == errSecSuccess
-        }
+        return writeEntry(account: Self.itemsKey, label: "Clipy Secure Items", data: data)
     }
 }
