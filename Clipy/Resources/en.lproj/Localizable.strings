@@ -177,3 +177,8 @@
 "Crypto Register Update" = "Register / Update";
 
 "Crypto Fingerprint Password Saved" = "Fingerprint password saved.";
+
+"Realm Open Failed Title" = "Failed to open the history database";
+"Realm Open Failed Message" = "The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).";
+"Realm Open Failed Quit" = "Quit";
+"Realm Open Failed Reset" = "Reset Database";

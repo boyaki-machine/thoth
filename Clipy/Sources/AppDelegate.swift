@@ -31,11 +31,9 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     fileprivate var isRelaunchPendingForResign = false
 
     // MARK: - Init
-    override func awakeFromNib() {
-        super.awakeFromNib()
-        // Migrate Realm
-        Realm.migration()
-    }
+    // 注意: Realm の初期化はここ（awakeFromNib）では行わない。
+    // Realm 暗号鍵の作成は安定署名を前提とするため、applicationDidFinishLaunching で
+    // 再署名判定（isRelaunchPendingForResign）を通過した後に RealmProvider.setup() を呼ぶ。
 
     // MARK: - NSMenuItem Validation
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
@@ -196,6 +194,9 @@ extension AppDelegate: NSApplicationDelegate {
         // 再署名前（ad-hoc 署名）のバイナリがアクセシビリティ確認等で TCC に登録されると、
         // アクセシビリティ設定に重複エントリが増えてしまうため
         guard !isRelaunchPendingForResign else { return }
+        // Realm（スキーマ移行 + 保存時暗号化）。
+        // AppEnvironment のサービスが Realm に触れる前に必ず構成しておく
+        RealmProvider.setup()
         // Environments
         AppEnvironment.replaceCurrent(environment: AppEnvironment.fromStorage())
         // UserDefaults

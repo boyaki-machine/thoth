@@ -142,6 +142,14 @@ internal enum L10n {
   internal static let preferences = L10n.tr("Localizable", "Preferences")
   /// Quit Clipy
   internal static let quitClipy = L10n.tr("Localizable", "Quit Clipy")
+  /// The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).
+  internal static let realmOpenFailedMessage = L10n.tr("Localizable", "Realm Open Failed Message")
+  /// Quit
+  internal static let realmOpenFailedQuit = L10n.tr("Localizable", "Realm Open Failed Quit")
+  /// Reset Database
+  internal static let realmOpenFailedReset = L10n.tr("Localizable", "Realm Open Failed Reset")
+  /// Failed to open the history database
+  internal static let realmOpenFailedTitle = L10n.tr("Localizable", "Realm Open Failed Title")
   /// Save
   internal static let save = L10n.tr("Localizable", "Save")
   /// Label (e.g. ID)

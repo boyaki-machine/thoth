@@ -75,6 +75,14 @@ final class CodeSignService {
 
     // MARK: - Signing Information
 
+    /// 現在のバイナリが安定署名（Clipy Local Signing）で署名されているか。
+    /// Keychain 項目（セキュアアイテム・DB 暗号鍵）は署名に紐づくため、
+    /// ad-hoc 署名のまま Keychain に鍵を作成すると再署名後に読めなくなる。
+    /// 鍵を新規作成する側はこのフラグで安定署名を確認すること。
+    var isStablySigned: Bool {
+        return currentSigningCommonName() == Self.certificateCommonName
+    }
+
     /// 現在実行中のバイナリの署名証明書（リーフ）の Common Name を返す。ad-hoc 署名の場合は nil。
     private func currentSigningCommonName() -> String? {
         var codeRef: SecCode?

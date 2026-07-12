@@ -177,3 +177,8 @@
 "Crypto Register Update" = "登録・更新";
 
 "Crypto Fingerprint Password Saved" = "指紋パスワードを保存しました。";
+
+"Realm Open Failed Title" = "履歴データベースを開けません";
+"Realm Open Failed Message" = "クリップボード履歴データベースを開けませんでした。暗号鍵が見つからないか、ファイルが破損している可能性があります。終了して再試行するか、データベースをリセットしてください（履歴とスニペットはすべて削除されます）。";
+"Realm Open Failed Quit" = "終了";
+"Realm Open Failed Reset" = "データベースをリセット";
