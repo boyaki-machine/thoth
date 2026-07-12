@@ -64,6 +64,28 @@ The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**.
 
 ---
 
+### Encrypted Files — Recovery without Clipy
+
+Files encrypted by Clipy (`.enc`) use an **openssl-compatible container**, so they can be decrypted on any Mac using only the pre-installed `openssl` command — Clipy itself is not required.
+
+The file layout is a 45-byte Clipy header (magic + flags + PBKDF2 iteration count + HMAC-SHA256 tag) followed by a standard `openssl enc` body (`Salted__` + salt + AES-256-CBC ciphertext, key derived with PBKDF2-HMAC-SHA256).
+
+```sh
+# Strip the 45-byte header and decrypt with openssl (iteration count is 200000 by default)
+tail -c +46 secret.txt.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass pass:YOUR_PASSWORD -out secret.txt
+
+# If the file was an encrypted folder, the output is a tar archive:
+tail -c +46 myfolder.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass pass:YOUR_PASSWORD -out myfolder.tar && tar -xf myfolder.tar
+```
+
+Notes:
+- Inside Clipy, the header's HMAC-SHA256 tag is verified before decryption (Encrypt-then-MAC), so tampering and wrong passwords are detected reliably. The openssl CLI path skips this verification (CBC padding errors still catch most wrong passwords).
+- Files encrypted by older Clipy versions (legacy `openssl enc` output with an 8-byte marker prefix, iteration count 100000) can also be decrypted the same way with `tail -c +9` and `-iter 100000`.
+
+---
+
 ### Development Environment
 * macOS 10.15 Catalina
 * Xcode 12.2

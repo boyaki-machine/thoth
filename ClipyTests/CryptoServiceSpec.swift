@@ -111,11 +111,11 @@ class CryptoServiceSpec: QuickSpec {
             }
         }
 
-        // MARK: - Integrity (AES-GCM)
+        // MARK: - Integrity (Encrypt-then-MAC)
 
         describe("Ciphertext integrity") {
 
-            // GCM の認証タグにより、暗号文の 1 バイト改竄でも復号が失敗することを担保する
+            // HMAC-SHA256 の検証により、暗号文の 1 バイト改竄でも復号が失敗することを担保する
             it("Fails to decrypt tampered ciphertext") {
                 let original = makeFile(named: "secret.txt", contents: "integrity check")
                 let encrypted = workDirectory.appendingPathComponent("secret.enc")
@@ -131,13 +131,13 @@ class CryptoServiceSpec: QuickSpec {
                 if case .success = result { fail("tampered ciphertext should fail to decrypt") }
             }
 
-            it("Fails to decrypt tampered header (AAD)") {
-                let original = makeFile(named: "secret.txt", contents: "aad check")
+            it("Fails to decrypt tampered header") {
+                let original = makeFile(named: "secret.txt", contents: "header check")
                 let encrypted = workDirectory.appendingPathComponent("secret.enc")
                 let decrypted = workDirectory.appendingPathComponent("out.txt")
                 _ = encryptSync(original, to: encrypted, password: "pw")
 
-                // フラグバイト（オフセット 8）を書き換える → AAD 認証で失敗するべき
+                // フラグバイト（オフセット 8）を書き換える → HMAC がヘッダーも認証しているため失敗するべき
                 var data = try! Data(contentsOf: encrypted)
                 data[8] ^= 0x01
                 try! data.write(to: encrypted)
@@ -233,18 +233,72 @@ class CryptoServiceSpec: QuickSpec {
             }
         }
 
-        // MARK: - New Format Layout
+        // MARK: - New Format Layout & openssl CLI Interop
 
         describe("New format layout") {
 
-            it("Writes the CLPYENC magic header") {
+            it("Writes the CLPYENC v2 header with an openssl-compatible body") {
                 let original = makeFile(named: "a.txt", contents: "x")
                 let encrypted = workDirectory.appendingPathComponent("a.enc")
                 _ = encryptSync(original, to: encrypted, password: "pw")
 
                 let data = try! Data(contentsOf: encrypted)
                 expect(data.prefix(7)) == Data("CLPYENC".utf8)
-                expect(data[7]) == 1  // バージョン
+                expect(data[7]) == 2  // バージョン
+                // オフセット 45 以降は openssl enc がそのまま読める "Salted__" 形式
+                expect(data.subdata(in: CryptoService.bodyOffset..<CryptoService.bodyOffset + 8)) == Data("Salted__".utf8)
+            }
+
+            // 「アプリが無い端末でも openssl コマンドだけで復号できる」要件の end-to-end 検証。
+            // README に記載している復旧手順そのものを実行する
+            it("Can be decrypted by the openssl CLI after stripping the header") {
+                let original = makeFile(named: "interop-out.txt", contents: "openssl CLI recovery 日本語")
+                let encrypted = workDirectory.appendingPathComponent("cli.enc")
+                _ = encryptSync(original, to: encrypted, password: "cli-pass")
+
+                // ヘッダー 45 バイトを取り除いた本体を openssl enc -d に渡す
+                let container = try! Data(contentsOf: encrypted)
+                let bodyURL = workDirectory.appendingPathComponent("cli.body")
+                try! container.suffix(from: CryptoService.bodyOffset).write(to: bodyURL)
+
+                let restored = workDirectory.appendingPathComponent("cli-restored.txt")
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/usr/bin/openssl")
+                process.arguments = ["enc", "-d", "-aes-256-cbc", "-pbkdf2",
+                                     "-iter", String(CryptoService.iterationCount),
+                                     "-in", bodyURL.path, "-out", restored.path, "-pass", "pass:cli-pass"]
+                try? process.run()
+                process.waitUntilExit()
+
+                expect(process.terminationStatus) == 0
+                expect(try? String(contentsOf: restored, encoding: .utf8)) == "openssl CLI recovery 日本語"
+            }
+        }
+
+        // MARK: - V1 (GCM) Format Compatibility
+
+        describe("V1 format decryption") {
+
+            // 旧バージョン 1（AES-256-GCM）で暗号化した固定フィクスチャ。
+            // パスワード "v1-pass"、平文 "v1 gcm secret 日本語"
+            let v1Fixture = "Q0xQWUVOQwEAAAECAwQFBgcICQoLDA0ODwADDUBkZWZnaGlqa2xtbm9C0V2PI2ldqIGqguUhXWxmmoMOVWau3xXelU9DiZybTMjik7zt6es="
+
+            it("Decrypts a fixed v1 (GCM) fixture") {
+                let encrypted = workDirectory.appendingPathComponent("v1.enc")
+                try! Data(base64Encoded: v1Fixture)!.write(to: encrypted)
+                let decrypted = workDirectory.appendingPathComponent("v1-out.txt")
+
+                expect(try? decryptSync(encrypted, to: decrypted, password: "v1-pass").get()) != nil
+                expect(try? String(contentsOf: decrypted, encoding: .utf8)) == "v1 gcm secret 日本語"
+            }
+
+            it("Fails to decrypt a v1 fixture with a wrong password") {
+                let encrypted = workDirectory.appendingPathComponent("v1.enc")
+                try! Data(base64Encoded: v1Fixture)!.write(to: encrypted)
+                let decrypted = workDirectory.appendingPathComponent("v1-out.txt")
+
+                let result = decryptSync(encrypted, to: decrypted, password: "wrong")
+                if case .success = result { fail("wrong password should fail") }
             }
         }
 
