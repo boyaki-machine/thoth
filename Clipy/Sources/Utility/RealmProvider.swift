@@ -40,15 +40,68 @@ enum RealmProvider {
 
     // MARK: - Constants
 
-    /// データベース暗号鍵専用の Keychain サービス名
+    /// アプリ生成鍵専用の Keychain サービス名
     static let keychainServiceName = "com.clipy-app.Clipy.Database"
-    /// Realm 暗号鍵の Keychain アカウント名
-    static let realmKeyAccount = "realm-encryption-key"
-    /// クリップ .data ファイル暗号鍵の Keychain アカウント名
-    static let clipDataKeyAccount = "clipdata-encryption-key"
+    /// アプリ生成鍵（AppGeneratedKeys の JSON）を集約する Keychain アカウント名
+    static let appKeysAccount = "app-keys"
+    /// 旧形式: Realm 暗号鍵の Keychain アカウント名。移行元として参照する
+    static let legacyRealmKeyAccount = "realm-encryption-key"
+    /// 旧形式: クリップ .data ファイル暗号鍵の Keychain アカウント名。移行元として参照する
+    static let legacyClipDataKeyAccount = "clipdata-encryption-key"
 
     /// Realm が要求する暗号鍵の長さ（バイト）
     static let realmKeyLength = 64
+    /// クリップ .data ファイル暗号鍵（AES-256）の長さ（バイト）
+    static let clipDataKeyLength = 32
+
+    /// アプリの動作用に自動生成する鍵（アプリ生成情報）の集合。
+    /// Keychain の 1 エントリ（account: app-keys）に JSON で集約して保存する。
+    ///
+    /// ユーザー由来の機微情報（SecureUserData / user-data エントリ）と対になる概念で、
+    /// こちらは**環境固有**（インストールごとに生成・エクスポート対象外）。
+    /// エクスポートに含めても他環境では意味を持たない（暗号化された DB ファイルごと
+    /// 移さない限り復号対象が存在しない）ため、明確に分離している。
+    struct AppGeneratedKeys: Codable {
+        var version: Int
+        /// Realm データベースの暗号鍵（64 バイト）
+        var realmEncryptionKey: Data?
+        /// クリップ .data ファイルの暗号鍵（32 バイト）
+        var clipDataEncryptionKey: Data?
+
+        init(version: Int = 1, realmEncryptionKey: Data? = nil, clipDataEncryptionKey: Data? = nil) {
+            self.version = version
+            self.realmEncryptionKey = realmEncryptionKey
+            self.clipDataEncryptionKey = clipDataEncryptionKey
+        }
+
+        // キーが欠けていても読めるように寛容にデコードする（前方互換）
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
+            realmEncryptionKey = try container.decodeIfPresent(Data.self, forKey: .realmEncryptionKey)
+            clipDataEncryptionKey = try container.decodeIfPresent(Data.self, forKey: .clipDataEncryptionKey)
+        }
+    }
+
+    /// アプリ生成鍵の用途
+    enum AppKeyRole {
+        case realmDatabase
+        case clipData
+
+        var keyLength: Int {
+            switch self {
+            case .realmDatabase: return RealmProvider.realmKeyLength
+            case .clipData:      return RealmProvider.clipDataKeyLength
+            }
+        }
+
+        var legacyAccount: String {
+            switch self {
+            case .realmDatabase: return RealmProvider.legacyRealmKeyAccount
+            case .clipData:      return RealmProvider.legacyClipDataKeyAccount
+            }
+        }
+    }
 
     // MARK: - Setup (起動時に一度だけ呼ぶ)
 
@@ -67,8 +120,7 @@ enum RealmProvider {
 
         // テスト実行時は暗号化しない（各 spec が in-memory Realm に差し替えるため）
         let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        if !isTesting, let key = loadOrCreateEncryptionKey(account: Self.realmKeyAccount,
-                                                           length: Self.realmKeyLength) {
+        if !isTesting, let key = appEncryptionKey(for: .realmDatabase) {
             config.encryptionKey = key
         }
 
@@ -152,9 +204,103 @@ enum RealmProvider {
 
     // MARK: - Encryption Key Management
 
-    /// Keychain から暗号鍵を読み出す。無ければ（安定署名時のみ）新規作成する。
-    /// `errSecItemNotFound` 以外の読み出し失敗時は nil を返し、鍵は作成しない。
-    static func loadOrCreateEncryptionKey(account: String, length: Int) -> Data? {
+    /// app-keys の解決を直列化するロック（setupConfiguration はメイン、
+    /// ClipDataStore.shared の初期化は保存キューから呼ばれ得るため）
+    private static let appKeysLock = NSLock()
+
+    /// 指定用途のアプリ生成鍵を返す。
+    ///
+    /// 解決順序:
+    /// 1. app-keys エントリ（集約 JSON）に鍵があればそれを返す
+    /// 2. 無ければ旧形式の個別エントリから移行する
+    ///    （app-keys への書き込み + 読み戻し検証に成功した場合のみ旧エントリを削除）
+    /// 3. どこにも無ければ（安定署名時のみ）新規作成して app-keys に保存する
+    ///
+    /// フェイルセーフ: `errSecItemNotFound` 以外の読み出し失敗時は nil を返し、
+    /// 鍵は絶対に作成しない（既存の暗号化データを永久に開けなくする事故の防止）。
+    /// 新規作成時は読み戻し検証に成功するまで鍵を使用しない。
+    static func appEncryptionKey(for role: AppKeyRole) -> Data? {
+        appKeysLock.lock(); defer { appKeysLock.unlock() }
+
+        // 1. 集約エントリから読む
+        let (status, raw) = readKeychainData(account: Self.appKeysAccount)
+        var appKeys: AppGeneratedKeys
+        switch status {
+        case errSecSuccess:
+            guard let raw = raw, let decoded = try? JSONDecoder().decode(AppGeneratedKeys.self, from: raw) else {
+                NSLog("[RealmProvider] app-keys decode failed; encryption disabled this launch")
+                return nil
+            }
+            appKeys = decoded
+        case errSecItemNotFound:
+            appKeys = AppGeneratedKeys()
+        default:
+            NSLog("[RealmProvider] keychain read failed with status \(status); encryption disabled this launch")
+            return nil
+        }
+        if let key = existingKey(in: appKeys, for: role), key.count == role.keyLength {
+            return key
+        }
+
+        // 2. 旧形式の個別エントリから移行する
+        let (legacyStatus, legacyKey) = readKeychainData(account: role.legacyAccount)
+        if legacyStatus != errSecSuccess && legacyStatus != errSecItemNotFound {
+            NSLog("[RealmProvider] legacy key read failed with status \(legacyStatus); encryption disabled this launch")
+            return nil
+        }
+        if let legacyKey = legacyKey, legacyKey.count == role.keyLength {
+            setKey(legacyKey, in: &appKeys, for: role)
+            // 集約エントリへの反映と検証に成功した場合のみ旧エントリを削除する。
+            // 失敗しても鍵自体は旧エントリに残っているためそのまま使える（次回再試行）
+            if storeAppKeysVerified(appKeys) {
+                deleteKeychainEntry(account: role.legacyAccount)
+                NSLog("[RealmProvider] migrated legacy key (\(role.legacyAccount)) into app-keys")
+            }
+            return legacyKey
+        }
+
+        // 3. 新規作成（ad-hoc 署名のまま作ると再署名後に読めなくなるため、安定署名時のみ）
+        guard CodeSignService().isStablySigned else {
+            NSLog("[RealmProvider] not stably signed yet; postpone encryption key creation")
+            return nil
+        }
+        var bytes = [UInt8](repeating: 0, count: role.keyLength)
+        guard SecRandomCopyBytes(kSecRandomDefault, role.keyLength, &bytes) == errSecSuccess else { return nil }
+        let key = Data(bytes)
+        setKey(key, in: &appKeys, for: role)
+        guard storeAppKeysVerified(appKeys) else {
+            NSLog("[RealmProvider] failed to persist new key; encryption disabled this launch")
+            return nil
+        }
+        return key
+    }
+
+    private static func existingKey(in appKeys: AppGeneratedKeys, for role: AppKeyRole) -> Data? {
+        switch role {
+        case .realmDatabase: return appKeys.realmEncryptionKey
+        case .clipData:      return appKeys.clipDataEncryptionKey
+        }
+    }
+
+    private static func setKey(_ key: Data, in appKeys: inout AppGeneratedKeys, for role: AppKeyRole) {
+        switch role {
+        case .realmDatabase: appKeys.realmEncryptionKey = key
+        case .clipData:      appKeys.clipDataEncryptionKey = key
+        }
+    }
+
+    /// app-keys エントリを書き込み、読み戻して内容一致を検証する。
+    /// 「書けたつもりで読めない」まま鍵を使い始める事故を防ぐ
+    private static func storeAppKeysVerified(_ appKeys: AppGeneratedKeys) -> Bool {
+        guard let data = try? JSONEncoder().encode(appKeys) else { return false }
+        guard writeKeychainData(account: Self.appKeysAccount, data: data) else { return false }
+        let (status, raw) = readKeychainData(account: Self.appKeysAccount)
+        return status == errSecSuccess && raw == data
+    }
+
+    // MARK: - Keychain Primitives
+
+    private static func readKeychainData(account: String) -> (status: OSStatus, data: Data?) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainServiceName,
@@ -164,49 +310,30 @@ enum RealmProvider {
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
-        if status == errSecSuccess, let key = result as? Data, key.count == length {
-            return key
-        }
-        guard status == errSecItemNotFound else {
-            // 鍵が存在するのに読めない可能性（ACL 拒否等）。
-            // ここで新規作成すると既存の暗号化 DB を永久に開けなくするため何もしない
-            NSLog("[RealmProvider] keychain read failed with status \(status); encryption disabled this launch")
-            return nil
-        }
+        return (status, result as? Data)
+    }
 
-        // ad-hoc 署名のまま鍵を作ると再署名後に読めなくなるため、安定署名時のみ作成する
-        guard CodeSignService().isStablySigned else {
-            NSLog("[RealmProvider] not stably signed yet; postpone encryption key creation")
-            return nil
-        }
-
-        var bytes = [UInt8](repeating: 0, count: length)
-        guard SecRandomCopyBytes(kSecRandomDefault, length, &bytes) == errSecSuccess else { return nil }
-        let key = Data(bytes)
-
-        let addQuery: [String: Any] = [
+    private static func writeKeychainData(account: String, data: Data) -> Bool {
+        let baseQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainServiceName,
-            kSecAttrAccount as String: account,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            kSecValueData as String: key
+            kSecAttrAccount as String: account
         ]
-        guard SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess else {
-            NSLog("[RealmProvider] failed to store encryption key; encryption disabled this launch")
-            return nil
+        if SecItemCopyMatching(baseQuery as CFDictionary, nil) == errSecSuccess {
+            let attributes: [String: Any] = [kSecValueData as String: data]
+            return SecItemUpdate(baseQuery as CFDictionary, attributes as CFDictionary) == errSecSuccess
         }
+        var addQuery = baseQuery
+        addQuery[kSecAttrLabel as String] = "Clipy App Generated Keys"
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        addQuery[kSecValueData as String] = data
+        return SecItemAdd(addQuery as CFDictionary, nil) == errSecSuccess
+    }
 
-        // 「書けたつもりで読めない」事故を防ぐため、必ず読み戻して一致を検証してから使う
-        var verifyResult: AnyObject?
-        let verifyStatus = SecItemCopyMatching(query as CFDictionary, &verifyResult)
-        guard verifyStatus == errSecSuccess, let verified = verifyResult as? Data, verified == key else {
-            NSLog("[RealmProvider] key readback verification failed; encryption disabled this launch")
-            SecItemDelete([kSecClass as String: kSecClassGenericPassword,
-                           kSecAttrService as String: keychainServiceName,
-                           kSecAttrAccount as String: account] as CFDictionary)
-            return nil
-        }
-        return key
+    private static func deleteKeychainEntry(account: String) {
+        SecItemDelete([kSecClass as String: kSecClassGenericPassword,
+                       kSecAttrService as String: keychainServiceName,
+                       kSecAttrAccount as String: account] as CFDictionary)
     }
 
     // MARK: - Plaintext → Encrypted Migration

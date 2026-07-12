@@ -53,11 +53,11 @@ final class ClipDataStore {
         self.key = key.map { SymmetricKey(data: $0) }
     }
 
-    /// 本番用の鍵を Keychain から取得する（無ければ安定署名時のみ作成）。
+    /// 本番用の鍵を Keychain（app-keys エントリ）から取得する（無ければ安定署名時のみ作成）。
     /// テスト実行時は nil（各テストが専用インスタンスに鍵を注入する）
     private static func defaultKey() -> Data? {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return nil }
-        return RealmProvider.loadOrCreateEncryptionKey(account: RealmProvider.clipDataKeyAccount, length: 32)
+        return RealmProvider.appEncryptionKey(for: .clipData)
     }
 
     // MARK: - Read / Write

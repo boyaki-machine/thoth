@@ -12,6 +12,38 @@ import Foundation
 import LocalAuthentication
 import Security
 
+/// 「ユーザー自身が設定する機微情報」の集合。Keychain の 1 エントリ（account: user-data）に
+/// JSON で集約して保存する。エクスポート／インポートの対象はこの単位。
+///
+/// 対になる概念として「アプリが動作のために自動生成する情報」（DB 暗号鍵等）があり、
+/// そちらは環境固有のため RealmProvider の app-keys エントリで別管理される
+/// （エクスポート対象外・インストールごとに生成）。
+struct SecureUserData: Codable {
+    /// スキーマバージョン（将来の形式変更用）
+    var version: Int
+    /// セキュアアイテム全件
+    var items: [SecureMenuItem]
+    /// ファイル暗号化の指紋パスワード（未登録なら nil）
+    var cryptoPassword: String?
+
+    init(version: Int = SecureUserData.currentVersion, items: [SecureMenuItem] = [], cryptoPassword: String? = nil) {
+        self.version = version
+        self.items = items
+        self.cryptoPassword = cryptoPassword
+    }
+
+    /// 現在のスキーマバージョン
+    static let currentVersion = 2
+
+    // キーが欠けていても読めるように寛容にデコードする（前方互換）
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        version = try container.decodeIfPresent(Int.self, forKey: .version) ?? SecureUserData.currentVersion
+        items = try container.decodeIfPresent([SecureMenuItem].self, forKey: .items) ?? []
+        cryptoPassword = try container.decodeIfPresent(String.self, forKey: .cryptoPassword)
+    }
+}
+
 /// セキュアメニューのアイテム（パスワード等の機微情報）と指紋パスワードを
 /// macOS Keychain で管理し、Touch ID / パスワード認証を提供するサービス。
 ///
@@ -32,12 +64,14 @@ final class SecureMenuService {
     // MARK: - Constants
 
     private static let defaultKeychainService = "com.clipy-app.Clipy.SecureMenu"
-    /// 全アイテムをひとつの Keychain エントリにまとめるためのキー。
+    /// ユーザー由来の機微情報（セキュアアイテム + 指紋パスワード）を
+    /// SecureUserData としてひとつにまとめた Keychain エントリのキー。
     /// 1エントリ = 1回の "Allow" ダイアログで済む。
-    private static let itemsKey = "all-items"
-    /// 暗号化・復号化の指紋パスワード（固定パスワード）を保存するためのキー。
-    /// セキュアアイテムと同じ Keychain サービス内に別エントリとして保存する。
-    private static let cryptoPasswordKey = "crypto-password"
+    private static let userDataKey = "user-data"
+    /// 旧形式（〜v1）: セキュアアイテムのみを保存していたエントリのキー。移行元として参照する
+    private static let legacyItemsKey = "all-items"
+    /// 旧形式（〜v1）: 指紋パスワードを保存していたエントリのキー。移行元として参照する
+    private static let legacyCryptoPasswordKey = "crypto-password"
 
     /// Keychain エントリの service 名。テストでは専用の名前を注入して本番データと分離する。
     private let keychainService: String
@@ -227,10 +261,68 @@ final class SecureMenuService {
         return success
     }
 
+    // MARK: - User Data (user-data エントリの読み書き)
+
+    /// user-data エントリを読み込む。存在しない場合は旧 2 エントリ
+    /// （all-items / crypto-password）からの移行を試みる
+    private func loadUserData() -> (status: OSStatus, userData: SecureUserData?) {
+        let (status, raw) = readEntry(account: Self.userDataKey)
+        if status == errSecSuccess, let raw = raw {
+            let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw)
+            #if DEBUG
+            if decoded == nil { NSLog("[SecureMenuService] loadUserData: decode failed") }
+            #endif
+            return (status, decoded)
+        }
+        guard status == errSecItemNotFound else { return (status, nil) }
+        return migrateLegacyUserData()
+    }
+
+    /// 旧形式（all-items / crypto-password の 2 エントリ）から user-data へ移行する。
+    /// 新エントリの読み戻し検証に成功した場合のみ旧エントリを削除する
+    /// （検証前に消すと、書き込み失敗時にデータを失うため）
+    private func migrateLegacyUserData() -> (status: OSStatus, userData: SecureUserData?) {
+        let (itemsStatus, itemsData) = readEntry(account: Self.legacyItemsKey)
+        let (passwordStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey)
+        // どちらかがアクセス拒否なら移行しない（読めないデータを上書き・削除しないため）
+        if itemsStatus != errSecSuccess && itemsStatus != errSecItemNotFound { return (itemsStatus, nil) }
+        if passwordStatus != errSecSuccess && passwordStatus != errSecItemNotFound { return (passwordStatus, nil) }
+        // 旧エントリも無い = 新規インストール
+        if itemsStatus == errSecItemNotFound && passwordStatus == errSecItemNotFound {
+            return (errSecItemNotFound, nil)
+        }
+
+        var userData = SecureUserData()
+        if let itemsData = itemsData {
+            userData.items = (try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData)) ?? []
+        }
+        if let passwordData = passwordData {
+            userData.cryptoPassword = String(data: passwordData, encoding: .utf8)
+        }
+
+        // 新エントリへ書き込み → 読み戻し検証 → 成功時のみ旧エントリを削除。
+        // 書き込みに失敗しても、読めた内容はそのまま返す（旧エントリは残っており次回再試行される）
+        if writeUserData(userData) {
+            let (verifyStatus, verifyRaw) = readEntry(account: Self.userDataKey)
+            if verifyStatus == errSecSuccess, let verifyRaw = verifyRaw,
+               (try? JSONDecoder().decode(SecureUserData.self, from: verifyRaw)) != nil {
+                _ = removeEntry(account: Self.legacyItemsKey)
+                _ = removeEntry(account: Self.legacyCryptoPasswordKey)
+                NSLog("[SecureMenuService] migrated legacy keychain entries to user-data")
+            }
+        }
+        return (errSecSuccess, userData)
+    }
+
+    private func writeUserData(_ userData: SecureUserData) -> Bool {
+        guard let data = try? JSONEncoder().encode(userData) else { return false }
+        return writeEntry(account: Self.userDataKey, label: "Clipy Secure User Data", data: data)
+    }
+
     // MARK: - Keychain CRUD
 
     func loadAllItems() -> [SecureMenuItem] {
-        let (status, resultData) = readEntry(account: Self.itemsKey)
+        let (status, userData) = loadUserData()
         #if DEBUG
         NSLog("[SecureMenuService] loadAllItems: status=\(status)")
         #endif
@@ -238,26 +330,13 @@ final class SecureMenuService {
         // （バイナリ更新により Keychain ACL の照合に失敗した場合など）
         isKeychainAccessDenied = (status != errSecSuccess && status != errSecItemNotFound)
 
-        guard status == errSecSuccess, let data = resultData else {
+        guard let userData = userData else {
             if isKeychainAccessDenied {
                 NSLog("[SecureMenuService] loadAllItems: keychain access failed with status \(status)")
             }
             return []
         }
-
-        do {
-            var items = try JSONDecoder().decode([SecureMenuItem].self, from: data)
-            items.sort { $0.displayOrder < $1.displayOrder }
-            #if DEBUG
-            NSLog("[SecureMenuService] loadAllItems: returning \(items.count) item(s)")
-            #endif
-            return items
-        } catch {
-            #if DEBUG
-            NSLog("[SecureMenuService] loadAllItems: decode failed: \(error)")
-            #endif
-            return []
-        }
+        return userData.items.sorted { $0.displayOrder < $1.displayOrder }
     }
 
     func save(_ item: SecureMenuItem) -> Bool {
@@ -297,45 +376,61 @@ final class SecureMenuService {
         return saveAllItems(reordered)
     }
 
-    /// Keychain のエントリ自体を削除する（全アイテムの削除・テストのクリーンアップ用）
+    /// 全アイテムを削除する（テストのクリーンアップ用）。
+    /// 指紋パスワードも未登録ならエントリごと削除し、旧形式のエントリ残骸も掃除する
     @discardableResult
     func deleteAllItems() -> Bool {
-        return removeEntry(account: Self.itemsKey)
+        _ = removeEntry(account: Self.legacyItemsKey)
+        let (status, existing) = loadUserData()
+        if status == errSecItemNotFound { return true }
+        guard status == errSecSuccess else { return false }
+        var userData = existing ?? SecureUserData()
+        userData.items = []
+        if (userData.cryptoPassword ?? "").isEmpty {
+            return removeEntry(account: Self.userDataKey)
+        }
+        return writeUserData(userData)
     }
 
     // MARK: - Crypto Password (指紋パスワード)
 
-    /// 暗号化・復号化の指紋パスワード（固定パスワード）を Keychain に保存する。
-    /// セキュアアイテムと同じ Keychain サービス内の別エントリに保存する。
+    /// 暗号化・復号化の指紋パスワード（固定パスワード）を保存する。
+    /// user-data エントリ（セキュアアイテムと同一）の cryptoPassword に格納される
     @discardableResult
     func saveCryptoPassword(_ password: String) -> Bool {
-        guard let data = password.data(using: .utf8) else { return false }
-        return writeEntry(account: Self.cryptoPasswordKey, label: "Clipy Crypto Password", data: data)
+        let (status, existing) = loadUserData()
+        guard status == errSecSuccess || status == errSecItemNotFound else { return false }
+        var userData = existing ?? SecureUserData()
+        userData.cryptoPassword = password
+        return writeUserData(userData)
     }
 
     /// 保存済みの指紋パスワードを読み出す。未登録の場合は nil を返す。
     /// ACL 付きエントリの場合、authenticate() 済みのコンテキストが紐付いていないと
     /// OS が追加の認証を要求する
     func loadCryptoPassword() -> String? {
-        let (status, data) = readEntry(account: Self.cryptoPasswordKey)
-        guard status == errSecSuccess, let data = data else { return nil }
-        return String(data: data, encoding: .utf8)
+        return loadUserData().userData?.cryptoPassword
     }
 
     /// 指紋パスワードが登録済みか
     func hasCryptoPassword() -> Bool {
-        for dataProtection in [false, true] {
-            var query = keychainQuery(account: Self.cryptoPasswordKey, dataProtection: dataProtection)
-            query[kSecMatchLimit as String] = kSecMatchLimitOne
-            if SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess { return true }
-        }
-        return false
+        let password = loadCryptoPassword() ?? ""
+        return !password.isEmpty
     }
 
-    /// 指紋パスワードの Keychain エントリを削除する（テストのクリーンアップ用）
+    /// 指紋パスワードを削除する（テストのクリーンアップ用）。
+    /// アイテムも無ければエントリごと削除し、旧形式のエントリ残骸も掃除する
     @discardableResult
     func deleteCryptoPassword() -> Bool {
-        return removeEntry(account: Self.cryptoPasswordKey)
+        _ = removeEntry(account: Self.legacyCryptoPasswordKey)
+        let (status, existing) = loadUserData()
+        if status == errSecItemNotFound { return true }
+        guard status == errSecSuccess, var userData = existing else { return false }
+        userData.cryptoPassword = nil
+        if userData.items.isEmpty {
+            return removeEntry(account: Self.userDataKey)
+        }
+        return writeUserData(userData)
     }
 
     // MARK: - Private Helpers
@@ -374,7 +469,11 @@ final class SecureMenuService {
             NSLog("[SecureMenuService] saveAllItems: rejected to prevent overwriting unreadable keychain data")
             return false
         }
-        guard let data = try? JSONEncoder().encode(items) else { return false }
-        return writeEntry(account: Self.itemsKey, label: "Clipy Secure Items", data: data)
+        // cryptoPassword を保持したまま items だけ差し替える（read-modify-write）
+        let (status, existing) = loadUserData()
+        guard status == errSecSuccess || status == errSecItemNotFound else { return false }
+        var userData = existing ?? SecureUserData()
+        userData.items = items
+        return writeUserData(userData)
     }
 }

@@ -27,6 +27,74 @@ class SecureMenuServiceSpec: QuickSpec {
         accessDeniedGuardSpecs()
         cryptoPasswordSpecs()
         totpFieldSpecs()
+        legacyMigrationSpecs()
+    }
+
+    /// 旧形式（all-items / crypto-password の 2 エントリ）を直接 Keychain に書き込むヘルパー
+    private func addLegacyEntry(account: String, data: Data) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            kSecValueData as String: data
+        ]
+        SecItemDelete(query as CFDictionary)
+        expect(SecItemAdd(query as CFDictionary, nil)) == errSecSuccess
+    }
+
+    private func legacyEntryExists(account: String) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
+    }
+
+    private func legacyMigrationSpecs() {
+        describe("Legacy entry migration") {
+
+            // 旧形式（all-items + crypto-password の 2 エントリ）から
+            // user-data（1 エントリ）への遅延移行を担保する
+            it("Migrates legacy all-items and crypto-password entries into user-data") {
+                let items = [SecureMenuItem(itemID: "legacy-1", title: "Legacy Item",
+                                            fields: [SecureMenuItem.Field(label: "PW", value: "s3cr3t", isPassword: true)])]
+                self.addLegacyEntry(account: "all-items", data: try! JSONEncoder().encode(items))
+                self.addLegacyEntry(account: "crypto-password", data: Data("legacy-crypto-pass".utf8))
+
+                // 初回アクセスで移行され、内容が無傷であること
+                let loaded = self.service.loadAllItems()
+                expect(loaded.count) == 1
+                expect(loaded.first?.title) == "Legacy Item"
+                expect(loaded.first?.fields.first?.value) == "s3cr3t"
+                expect(self.service.loadCryptoPassword()) == "legacy-crypto-pass"
+
+                // 検証済み移行が完了し、旧エントリは削除されている
+                expect(self.legacyEntryExists(account: "all-items")) == false
+                expect(self.legacyEntryExists(account: "crypto-password")) == false
+            }
+
+            it("Migrates items-only legacy entry (no crypto password)") {
+                let items = [SecureMenuItem(itemID: "legacy-2", title: "Items Only")]
+                self.addLegacyEntry(account: "all-items", data: try! JSONEncoder().encode(items))
+
+                expect(self.service.loadAllItems().first?.title) == "Items Only"
+                expect(self.service.hasCryptoPassword()) == false
+                expect(self.legacyEntryExists(account: "all-items")) == false
+            }
+
+            it("Preserves crypto password when saving items and vice versa (single entry)") {
+                _ = self.service.saveCryptoPassword("keep-me")
+                _ = self.service.save(SecureMenuItem(title: "Item A"))
+                expect(self.service.loadCryptoPassword()) == "keep-me"
+
+                _ = self.service.saveCryptoPassword("updated")
+                expect(self.service.loadAllItems().count) == 1
+                expect(self.service.loadCryptoPassword()) == "updated"
+            }
+        }
     }
 
     private func cryptoPasswordSpecs() {

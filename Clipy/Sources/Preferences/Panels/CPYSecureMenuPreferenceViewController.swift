@@ -404,11 +404,17 @@ extension CPYSecureItemsViewController {
         }
     }
 
+    /// エクスポートの単位は「ユーザー自身が設定した機微情報」（SecureUserData）。
+    /// セキュアアイテムに加えて指紋パスワードも含まれる。
+    /// アプリが自動生成する環境固有の情報（DB 暗号鍵等）は対象外
     private func exportItems(to url: URL) {
         do {
+            let service = AppEnvironment.current.secureMenuService
+            let userData = SecureUserData(items: service.loadAllItems(),
+                                          cryptoPassword: service.loadCryptoPassword())
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(AppEnvironment.current.secureMenuService.loadAllItems())
+            let data = try encoder.encode(userData)
             try data.write(to: url, options: .atomic)
         } catch {
             showImportExportError(error)
@@ -430,9 +436,21 @@ extension CPYSecureItemsViewController {
     private func importItems(from url: URL) {
         do {
             let data = try Data(contentsOf: url)
-            let importedItems = try JSONDecoder().decode([SecureMenuItem].self, from: data)
+            let service = AppEnvironment.current.secureMenuService
+            // 現行形式（SecureUserData オブジェクト）を優先し、
+            // 旧形式（アイテムの配列のみ）もフォールバックで読み込める
+            let importedItems: [SecureMenuItem]
+            if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
+                importedItems = userData.items
+                // 指紋パスワードが含まれていれば取り込む（既存の登録は上書きされる）
+                if let password = userData.cryptoPassword, !password.isEmpty {
+                    _ = service.saveCryptoPassword(password)
+                }
+            } else {
+                importedItems = try JSONDecoder().decode([SecureMenuItem].self, from: data)
+            }
             var savedCount = 0
-            for item in importedItems where AppEnvironment.current.secureMenuService.save(item) {
+            for item in importedItems where service.save(item) {
                 savedCount += 1
             }
             reloadItems()
