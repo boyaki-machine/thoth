@@ -1,0 +1,209 @@
+# Design Notes
+
+This document describes the data formats (Export/Import, encryption container), cryptographic specifications, interoperability conventions for other platforms, and the performance/design policy. Use it to get an overview before reading the source code.
+
+For a user-facing overview see [../README.md](../README.md); for environment and build steps see [DEVELOPMENT.md](DEVELOPMENT.md).
+
+> 日本語版は [DESIGN_JP.md](DESIGN_JP.md) を参照してください。
+
+---
+
+## 1. Export / Import File Schema
+
+The JSON produced by Export in the Manage Secure Items window is the **user-configured sensitive information** (`SecureUserData`). Import reads this file. Information the app generates automatically (encryption keys, etc.) is not included in the Export (see [4. Classification of Information](#4-classification-of-information-user-configured--app-generated)).
+
+> **Note:** The Export file is plaintext JSON. Handle it with care.
+
+### `SecureUserData` (Export/Import root)
+
+| Key | Type | Description |
+|---|---|---|
+| `version` | Int | Schema version (currently `2`) |
+| `items` | `SecureMenuItem[]` | Array of secure items |
+| `cryptoPassword` | String? (optional) | The fixed file-encryption password (fingerprint password). Omitted if unregistered |
+
+### `SecureMenuItem`
+
+| Key | Type | Description |
+|---|---|---|
+| `itemID` | String | Stable item ID (UUID) |
+| `title` | String | Display name (e.g. "GitHub") |
+| `fields` | `Field[]` | Array of fields |
+| `displayOrder` | Int | Display order in the menu |
+
+### `SecureMenuItem.Field`
+
+| Key | Type | Description |
+|---|---|---|
+| `fieldID` | String | Stable field ID (UUID). Used so history follows the field even after a label change |
+| `label` | String | Field name (e.g. "Password") |
+| `value` | String | The value. For TOTP, an otpauth URI / Base32 secret |
+| `isPassword` | Bool | Whether to mask the value |
+| `kind` | String | `"plain"` or `"totp"` |
+| `history` | `FieldHistoryEntry[]` | Value change history (TOTP keeps no history) |
+| `createdAt` | Date | Creation timestamp |
+
+### `FieldHistoryEntry`
+
+| Key | Type | Description |
+|---|---|---|
+| `value` | String | The previous value |
+| `replacedAt` | Date | When it was replaced |
+
+### Backward Compatibility
+
+- Decoding is lenient; missing keys are filled with defaults (current version if `version` is missing, `plain` if `kind` is missing, empty if `history` is missing, etc.).
+- Import prefers the current format (`SecureUserData` object), and **also reads the legacy format (an array of `SecureMenuItem` only)** as a fallback. Files exported by older versions can be imported as-is.
+
+---
+
+## 2. Encryption / Decryption Specification
+
+### 2-1. File Encryption Container (current: version 2)
+
+**Design requirement:** files must be decryptable with only the `openssl` command even on a machine without the app. Therefore the encrypted body is fully compatible with `openssl enc` output, and an HMAC-SHA256 authentication (Encrypt-then-MAC) is added around it.
+
+**Byte layout:**
+
+| Offset | Size | Content |
+|---|---|---|
+| 0 | 7 | Magic `"CLPYENC"` (ASCII) |
+| 7 | 1 | Version `0x02` |
+| 8 | 1 | Flags (bit0: folder-derived → untar after decryption) |
+| 9 | 4 | PBKDF2 iteration count (UInt32 big-endian, default 200000) |
+| 13 | 32 | HMAC-SHA256 tag (authenticates the first 13 bytes + the entire body) |
+| 45 | variable | Body = fully `openssl enc`-compatible:<br>`"Salted__"(8B) + salt(8B) + AES-256-CBC ciphertext (PKCS7 padding)` |
+
+**Key derivation:** PBKDF2-HMAC-SHA256 derives **80 bytes** at once, split as follows.
+
+- Encryption key: first 32 bytes
+- IV: next 16 bytes
+- HMAC key: next 32 bytes
+
+The first 48 bytes (encryption key + IV) match the key derivation of `openssl enc -pbkdf2` (PBKDF2 output is block-independent, so the prefix does not change when deriving more). This is the basis of openssl compatibility.
+
+**Authentication:** the header (first 13 bytes) and the entire body are authenticated with HMAC-SHA256. In-app decryption **verifies this HMAC tag before decrypting**, reliably detecting tampering and wrong passwords. The openssl CLI path does not perform this verification (most wrong passwords are still caught by CBC PKCS7 padding errors).
+
+**Decryption with openssl:**
+
+```sh
+# Strip the 45-byte header before passing to openssl enc
+tail -c +46 file.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass pass:PASSWORD -out restored
+# If folder-derived (bit0 of the flag at offset 8 is 1), untar with tar -xf restored
+```
+
+### 2-2. Formats Supported for Decryption Only
+
+The app's decryption also auto-detects and reads these past formats (encryption always outputs the current version 2).
+
+| Format | Detection | Specification |
+|---|---|---|
+| Version 1 | `"CLPYENC" + 0x01` | AES-256-GCM format (old implementation, briefly used). 29B header + 12B nonce + ciphertext + 16B tag |
+| Legacy | Does not start with the magic | `8B marker + openssl enc output`. Marker is `"CLIPYDIR"` (folder) or 8 zero bytes (file). Key derivation is PBKDF2-HMAC-SHA256, 100000 iterations |
+
+A standard file produced by `openssl enc -aes-256-cbc -pbkdf2` (without a marker) can also be decrypted as the file variant of the legacy format.
+
+### 2-3. Clipboard History Encryption (encryption at rest)
+
+Clipboard history is stored in two places — a Realm database and individual `.data` files (clip payloads) — and both are encrypted. These are encrypted with app-internal keys and are **device-specific** (not included in Export, not interoperable across machines).
+
+| Target | Method |
+|---|---|
+| Realm database | Realm's built-in encryption (AES-256, 64-byte key) |
+| Clip `.data` files | AES-256-GCM. Format: `"CLPYDAT"(7B) + version 0x01(1B) + AES-GCM combined (12B nonce + ciphertext + 16B tag)` |
+
+- Existing plaintext databases / plaintext `.data` files are migrated to the encrypted format at first launch and by background processing after launch (backward compatibility with pre-migration files is retained).
+- Keys are stored in the macOS Keychain (see [4. Classification of Information](#4-classification-of-information-user-configured--app-generated)).
+
+### 2-4. TOTP
+
+Conforms to RFC 6238.
+
+| Item | Value |
+|---|---|
+| Algorithm | HMAC-SHA1 / SHA256 / SHA512 (from the otpauth URI `algorithm`, default SHA1) |
+| Digits | Default 6 (`digits`) |
+| Period | Default 30 seconds (`period`) |
+| Input format | `otpauth://totp/...` URI, or a raw Base32 secret |
+
+Base32 decoding does not perform RFC 4648 strict trailing-bit validation, so it accepts random secrets issued by real services (whose trailing bits may be non-zero) — matching the lenient behavior of major authenticator apps.
+
+---
+
+## 3. Interoperability Conventions for Other Platforms
+
+If you later implement an app on another OS (e.g. Windows) that interoperates with this one, the following are the platform-independent compatibility points. Conversely, everything else (the Realm DB, `.data` files, the Keychain) is device-specific and out of scope for porting/sharing.
+
+### Interoperable Items
+
+| Target | Format | Notes |
+|---|---|---|
+| **Encrypted files** (`.enc`) | The container format in 2-1 | Built only from standard primitives (PBKDF2-HMAC-SHA256 + AES-256-CBC + HMAC-SHA256). Re-implementable with any language's standard library. Encrypt on Mac → decrypt elsewhere is possible |
+| **Secure info Export/Import** | The `SecureUserData` JSON in 1 | Plain JSON. The `version` field accommodates future format changes. Shareable across machines via a file |
+| **TOTP** | RFC 6238 + otpauth URI | Fully standard-compliant |
+
+### Implementation Guidance
+
+- When re-implementing the encryption container, strictly follow the 45-byte header layout and the 80-byte PBKDF2 derivation (32+16+32 split). The HMAC covers "the first 13 bytes + the entire body".
+- When changing the JSON schema, bump `version` and decode leniently so old versions remain readable (this app's existing decoding follows the same policy).
+- To prevent interoperability regressions, it is recommended to prepare test vectors (fixed ciphertext / fixed JSON) shared by both implementations. See the fixed fixtures in `CryptoServiceSpec` / `SecureMenuItemSpec` in this repository.
+
+---
+
+## 4. Classification of Information (User-configured / App-generated)
+
+The information this app stores in the Keychain is consolidated into **two entries** based on its nature. This classification coincides with the boundary of "included in Export or not" and "shareable across devices or not".
+
+| Classification | Keychain entry | Content (JSON schema) | Export | Cross-device |
+|---|---|---|---|---|
+| **User-configured** | service: `com.clipy-app.Clipy.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | Included | Possible |
+| **App-generated** | service: `com.clipy-app.Clipy.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | Excluded | Not possible (device-specific) |
+
+In addition, a self-signed certificate for code-signature stabilization (`kSecClassIdentity`, CN: `Clipy Local Signing`) is stored in the Keychain (see "Code Signing" in [DEVELOPMENT.md](DEVELOPMENT.md)).
+
+### Key Management Fail-safes
+
+The handling of app-generated keys (DB / `.data` encryption keys) includes safeguards to prevent data loss.
+
+- If a Keychain read fails with anything **other than** `errSecItemNotFound`, the key is **not** created anew (creating a new key while an existing one is present-but-unreadable would make existing encrypted data permanently unopenable).
+- A new key is created **only while running stably-signed (Clipy Local Signing)** (creating it while ad-hoc-signed would make it unreadable after re-signing). Otherwise, encryption is deferred and the app runs in plaintext, retrying on a later launch.
+- A newly created key is used only after being **read back and verified** to match.
+- Migration from a legacy format (separate entries) deletes the legacy entry only after a successful write and read-back verification of the new entry.
+
+---
+
+## 5. Performance and Design Policy
+
+This section summarizes the overall design policy that speeds up understanding before reading the code.
+
+### 5-1. Launch Sequence (minimizing time to menu-bar display)
+
+The launch process is split into phases, prioritizing display of the menu-bar icon (see the sequence diagram comment in `AppDelegate.swift` for details).
+
+- **Lightweight synchronous work** (Realm configuration, DI, icon display) is done first so the menu-bar icon appears immediately.
+- **Heavy initialization** (schema migration, encryption migration, first open) runs in the background (`RealmProvider.warmUp`). Completion is tracked by the `RealmProvider.isReady` flag, guarding against menu rebuilds and the like touching a mid-migration Realm before it is ready.
+- **Self re-signing** (external commands like `codesign --deep` that take seconds) runs in the background and falls back to normal launch only on failure.
+- **The login-item confirmation dialog** (modal) is shown deferred, after service startup completes.
+
+### 5-2. Clipboard Monitoring and Threads
+
+- Since NSPasteboard has no change-notification API, `changeCount` is **polled at 100 ms intervals** to detect changes. This resident work runs at `.utility` QoS (reading `changeCount` is extremely lightweight, so efficiency cores suffice; the upper bound of perceived latency is the 100 ms polling interval and does not depend on core speed).
+- Save processing (dedup check, thumbnail generation, archiving, file write, Realm insertion) is offloaded onto a dedicated serial queue (`.userInitiated`) so it does not block the main thread.
+- Work the user is waiting on, such as pasting and clip loading, runs at `.userInitiated`; menu display/building runs on the main thread (`.userInteractive` equivalent).
+
+> macOS has no API to pin a specific CPU core. The use of P cores / E cores is delegated to the OS scheduler via QoS classes. The intent is "quiet on efficiency cores while idle, responsive on performance cores when operated".
+
+### 5-3. Lazy Menu Rebuilding
+
+Menus (NSMenu) keep a fixed instance and rebuild only their content just before display. Changes to history, snippets, and settings only advance a **generation counter**; the actual build cost (proportional to history size) is not paid until the moment the menu is opened. This eliminates rebuilding all menus on every copy (see `MenuManager`).
+
+### 5-4. Clipboard Concealment
+
+- Regular secure-menu items and password-generation results are written with `org.nspasteboard.ConcealedType` / `TransientType` markers, and `ClipService` excludes copies carrying these markers from history. This keeps both the app's own concealed copies and copies from other password managers that support the same convention out of history.
+- TOTP never touches the clipboard; it is pasted by direct keystroke injection via `CGEvent` (leaving no trace in the OS copy history or the app's history).
+- Concealed copies auto-clear the clipboard after a set time following the paste (checking the `changeCount` change so as not to clear content the user copied in the meantime).
+
+### 5-5. Code-Signature Stabilization
+
+As noted above, to cope with the macOS behavior of binding keychain ACLs to code signatures, `CodeSignService` self-re-signs with a device-specific certificate at launch. This lets you keep reading secure items across repeated local builds (see [DEVELOPMENT.md](DEVELOPMENT.md)).

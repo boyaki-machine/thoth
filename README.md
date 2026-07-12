@@ -4,236 +4,196 @@
 
 <br>
 
-![CI](https://github.com/Clipy/Clipy/workflows/CI/badge.svg)
-[![Release version](https://img.shields.io/github/release/Clipy/Clipy.svg)](https://github.com/Clipy/Clipy/releases/latest)
-[![OpenCollective](https://opencollective.com/clipy/backers/badge.svg)](#backers)
-[![OpenCollective](https://opencollective.com/clipy/sponsors/badge.svg)](#sponsors)
+A clipboard extension app for macOS. This is a personal, feature-extended fork of the original [Clipy](https://github.com/Clipy/Clipy), adding secure item management, password generation, and file encryption.
 
-Clipy is a Clipboard extension app for macOS.
+> 日本語版は [README_JP.md](README_JP.md) を参照してください。
 
 ---
 
-__Requirement__: macOS 10.13 High Sierra or later · Apple Silicon (arm64)
+## 1. About This App
 
-__Distribution Site__ : <https://clipy-app.com>
+This project is a fork of **[Clipy](https://github.com/Clipy/Clipy)** (MIT licensed), an open-source clipboard extension app for macOS, extended with additional features.
 
-<img src="http://clipy-app.com/img/screenshot1.png" width="400">
+It keeps the clipboard history and snippet features of the original Clipy, and adds:
 
-### Secure Menu — Credential Paste without Exposing to Clipboard
+- **Secure item management** — paste passwords, TOTP, and other sensitive values directly without leaving them on the clipboard
+- **Password generation** — generate random passwords with configurable rules
+- **File encryption / decryption** — encrypt files and folders in an openssl-compatible format
 
-Secure Menu lets you paste passwords and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the **macOS Keychain** and protected by **Touch ID / password authentication** every time the menu is opened.
+### Acknowledgements
 
-#### Features
+Deep thanks to the developers of Clipy for publishing such a great app as open source, and to [@naotaka](https://github.com/naotaka) who published its origin, [ClipMenu](https://github.com/naotaka/ClipMenu). This project stands on the shoulders of these predecessors.
+
+This app is provided under the MIT license. The attribution and original developers' credits are preserved as-is in the source code and commit history.
+
+> For developer information (environment, build steps), see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+> For data formats, cryptographic specifications, and design policy, see [docs/DESIGN.md](docs/DESIGN.md).
+
+---
+
+## 2. Features
+
+### 2-1. Clipboard History & Snippets (from the original Clipy)
+
+Keeps a history of copied content that you can re-paste from a menu. Frequently used boilerplate text can be registered as snippets.
+
+**How to use:**
+
+- Content you copy (⌘C) is automatically accumulated in the history
+- Open a menu with a hotkey and select an item to paste it into the frontmost app
+
+| Menu | Default hotkey |
+|---|---|
+| Main menu (history + snippets + tools) | **⌘⇧V** |
+| History menu | **⌘⌃V** |
+| Snippet menu | **⌘⇧B** |
+
+- Inside menus you can navigate with arrow keys or vim-style `hjkl` keys
+- The maximum history size, display format, excluded apps, etc. can be adjusted in Preferences (see [4. Settings](#4-settings))
+
+### 2-2. Secure Items
+
+Paste passwords, TOTP, and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
 
 | Feature | Detail |
-|---------|--------|
+|---|---|
 | **Keychain storage** | All values are stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — never synced to iCloud |
 | **Biometric lock** | Touch ID (or login password) is required before the menu appears. Within 30 seconds of a successful authentication, re-authentication is skipped so you can pick ID / password / TOTP in a row |
-| **Two-level menu** | Select a parent item (e.g. "GitHub"), then choose a specific field (e.g. "Password") |
-| **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard |
+| **Two-level menu** | Select a parent item (e.g. "GitHub"), then a specific field (e.g. "Password") |
+| **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard. TOTP is typed as keystrokes directly, leaving no trace in any history |
 | **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |
-| **Keyboard navigation** | Arrow keys and vim-style `hjkl` keys work inside the menu |
-
-#### How to use
+| **TOTP support** | Register from an otpauth URI / QR code; a one-time code is generated and typed at selection time |
 
 **Step 1 — Register your credentials**
 
-Open the menu bar icon → **Manage Secure Items…**, or go to **Preferences → Shortcuts** and use the shortcut shown there.
-
-In the management window, click **+** to add a new item:
+Open the menu bar icon → **Manage Secure Items…**, then click **+** to add a new item.
 
 1. Enter a **Title** (e.g. "GitHub", "AWS Console")
 2. Click **+** in the field list to add a field
 3. Fill in **Label** (e.g. "Password") and **Value**
 4. Check 🔒 if the value should be masked
-5. Click **Save**
+5. To add TOTP, use the **Add TOTP...** button to import an otpauth URI / QR code
+6. Click **Save**
 
 **Step 2 — Paste a credential**
 
-1. Click into the password field of the target app
-2. Press the hotkey (default: **⌘⇧-**) — Touch ID / password prompt appears
+1. Click into the input field of the target app
+2. Press the hotkey (default: **⌘⇧.**) — a Touch ID / password prompt appears
 3. After authentication, the two-level menu opens
-4. Select the parent item, then select the field to paste
+4. Select the parent item, then the field to paste
 
 The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**.
 
-#### Security notes
+**Security characteristics:**
 
-- Values are read from Keychain only at the moment of authentication and are never written to the clipboard
-- The Keychain item is tagged `kSecAttrAccessibleWhenUnlockedThisDeviceOnly`, so it is not accessible on a locked screen and is not backed up to iCloud
+- Values are read from Keychain only at the moment of authentication
+- Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and it is cleared automatically after pasting
+- TOTP never touches the clipboard; it is typed as keystrokes directly
 
----
+### 2-3. Password Generation
 
-### Encrypted Files — Recovery without Clipy
+Generates a random password with configurable rules. Randomness comes from the OS CSPRNG (`SecRandomCopyBytes`).
 
-Files encrypted by Clipy (`.enc`) use an **openssl-compatible container**, so they can be decrypted on any Mac using only the pre-installed `openssl` command — Clipy itself is not required.
+**How to use:**
 
-The file layout is a 45-byte Clipy header (magic + flags + PBKDF2 iteration count + HMAC-SHA256 tag) followed by a standard `openssl enc` body (`Salted__` + salt + AES-256-CBC ciphertext, key derived with PBKDF2-HMAC-SHA256).
+Choose **Generate New Password** from the main menu (also launchable with the `p` key while the menu is open) to open the generator window.
+
+- **Length**: set with a slider or a numeric field
+- **Character types**: any combination of letters / digits / symbols / distinguish upper and lower case
+- **Easy-to-type password**: a mode that groups characters by type to reduce keyboard-type switching (e.g. on smartphones)
+- **Copy** puts the result on the clipboard (with a concealed marker; auto-cleared after a while)
+
+Password generation can also be invoked from the secure item edit sheet and the fingerprint-password management window.
+
+### 2-4. File Encryption / Decryption
+
+Encrypts and decrypts files and folders with a password. Encryption is done entirely in-process (passwords are never passed to an external command), and uses an **openssl-compatible container format**, so files can be decrypted with only the `openssl` command even on a machine where Clipy is not installed.
+
+**How to use:**
+
+Choose **Encrypt / Decrypt** from the main menu (also launchable with the `e` key while the menu is open) to open the window.
+
+1. Choose a target file / folder with the "Choose..." button
+2. Enter a password (you can also recall a registered fixed password via Touch ID using the fingerprint icon)
+3. Run **Encrypt** (⌘E) or **Decrypt** (⌘D)
+4. After encryption, an example openssl decryption command is shown in the window ("Copy Command" to grab it)
+
+- Encrypted files use the `.enc` extension
+- Folders are packed into a tar archive before encryption and unpacked automatically on decryption
+
+#### Decrypting with openssl (recovery without Clipy)
+
+An encrypted file is a 45-byte custom header followed by a standard `openssl enc` body. **Strip the 45-byte header first** before passing it to openssl (passing it directly causes a `bad magic number` error).
 
 ```sh
-# Strip the 45-byte header and decrypt with openssl (iteration count is 200000 by default)
+# Decrypt a file (default iteration count is 200000)
 tail -c +46 secret.txt.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
   -pass pass:YOUR_PASSWORD -out secret.txt
 
-# If the file was an encrypted folder, the output is a tar archive:
+# For a folder, the output is a tar archive
 tail -c +46 myfolder.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
   -pass pass:YOUR_PASSWORD -out myfolder.tar && tar -xf myfolder.tar
 ```
 
-Notes:
-- Inside Clipy, the header's HMAC-SHA256 tag is verified before decryption (Encrypt-then-MAC), so tampering and wrong passwords are detected reliably. The openssl CLI path skips this verification (CBC padding errors still catch most wrong passwords).
-- Files encrypted by older Clipy versions (legacy `openssl enc` output with an 8-byte marker prefix, iteration count 100000) can also be decrypted the same way with `tail -c +9` and `-iter 100000`.
+#### Decrypting an openssl-encrypted file in this app
+
+This app can also read standard files produced by `openssl enc` (it auto-detects them as a legacy format even without the app's custom header). A file encrypted with openssl as below can be opened via "Decrypt".
+
+```sh
+# Encrypt with openssl (a format this app can decrypt)
+openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
+  -in secret.txt -out secret.txt.enc -pass pass:YOUR_PASSWORD
+```
+
+> **Notes:**
+> - In-app decryption verifies the header's HMAC-SHA256 tag before decrypting (Encrypt-then-MAC), reliably detecting tampering and wrong passwords. The openssl CLI path skips this verification (most wrong passwords are still caught by CBC padding errors).
+> - The detailed encryption container specification is in [docs/DESIGN.md](docs/DESIGN.md).
 
 ---
 
-### Development Environment
-* macOS 10.15 Catalina
-* Xcode 12.2
-* Swift 5.3
+## 3. Installation & Running
 
-### How to Build
-0. Move to the project root directory
-1. `bundle install --path=vendor/bundle && bundle exec pod install`
-2. Open `Clipy.xcworkspace` on Xcode.
-3. build.
+No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed build steps.
 
-### How to Run Tests
+**Requirements:** macOS 11.0 or later · Apple Silicon (arm64)
 
-#### Run all tests (Debug mode)
-```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES
-```
+**Outline:**
 
-#### Run specific test suite
-```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES 2>&1 | grep -E "TestSuite.*passed|failed"
-```
+1. Clone the repository
+2. Install dependencies (`bundle exec pod install`)
+3. Build (open `Clipy.xcworkspace` in Xcode, or use `xcodebuild` from the CLI)
+4. Place the built `Clipy.app` in `/Applications` and launch it
 
-#### View test results summary
-```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES 2>&1 | tail -5
-```
+**First-launch notes:**
 
-#### Test Coverage
-- **Total Tests**: 114
-- **Test Suites**: 15
-  - CryptoServiceSpec
-  - DraggedDataSpec
-  - FolderSpec
-  - HotKeyServiceSpec
-  - PasswordGenerateServiceSpec
-  - PasteServiceTOTPSpec *(TOTP operations)*
-  - SecureItemEditSpec
-  - SecureItemEditTabNavigationSpec *(Tab navigation logic)*
-  - SecureItemFieldReorderingSpec *(Drag & Drop logic)*
-  - SecureMenuItemFieldSpec *(Field CRUD)*
-  - SecureMenuItemSpec
-  - SecureMenuServiceSpec *(Keychain operations & TOTP)*
-  - SnippetSpec
-  - TOTPRegistrationFlowSpec *(TOTP registration flow)*
-  - TOTPServiceSpec *(RFC 6238 TOTP generation)*
+- On launch, the app re-signs itself with a device-specific certificate and then relaunches (so that secure items remain readable across versions). A macOS confirmation dialog may appear on the first launch only — choose "Always Allow".
+- After re-signing, you must grant **Accessibility permission** (required for the paste feature; no need to re-grant on later version updates).
+- See "Code Signing and Accessibility Permission" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for details.
 
-#### Key Test Areas
-- **Field Management**: CRUD operations, JSON serialization, history tracking
-- **TOTP Support**: RFC 6238 compliance, URI parsing, Base32 decoding, code generation
-- **Drag & Drop**: Row reordering logic with `.above` dropOperation semantics
-- **Tab Navigation**: Focus order, TOTP field skipping, circular navigation
-- **Keychain Storage**: Encryption/decryption, field persistence, access control
-- **Security**: Biometric authentication, credential masking, clipboard bypass
+---
 
-### Contributing
-1. Fork it ( https://github.com/Clipy/Clipy/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+## 4. Settings
 
-### Localization Contributors
-Clipy is looking for localization contributors.  
-If you can contribute, please see [CONTRIBUTING.md](https://github.com/Clipy/Clipy/blob/master/.github/CONTRIBUTING.md)
+The Preferences window (menu bar icon → "Preferences") lets you adjust:
 
-### Distribution
-If you distribute derived work, especially in the Mac App Store, I ask you to follow two rules:
+| Category | Main settings |
+|---|---|
+| **General** | Launch at login, maximum history size, behavior after pasting, etc. |
+| **Menu** | Number of items shown (inline / inside folders), numbering, icon/image/tooltip/color-preview display, maximum title length, etc. |
+| **Type** | Which data types (string / RTF / PDF / image / filenames / URL, etc.) are saved to history |
+| **Shortcuts** | Hotkey assignments for each menu (main / history / snippet / secure menu) |
+| **Update** | Enable automatic update checks and set the check interval |
+| **Excluded** | Register apps to exclude from clipboard-history capture |
 
-1. Don't use `Clipy` and `ClipMenu` as your product name.
-2. Follow the MIT license terms.
+- **Excluded apps**: register apps whose content you don't want in history (e.g. password managers). Also, copies carrying a concealed marker such as `org.nspasteboard.ConcealedType` (e.g. copies from other password managers) are automatically kept out of history regardless of the exclude list.
+- **Secure item Export / Import**: from the Manage Secure Items window, you can export/import secure items and the fingerprint password as a JSON file. This is useful for using the same information across multiple machines (**the exported file is plaintext — handle with care**). The exported file schema is described in [docs/DESIGN.md](docs/DESIGN.md).
 
-Thank you for your cooperation.
+---
 
-### Backers
+## License
 
-Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/clipy#backer)]
+This app is provided under the MIT license. See the LICENSE file for details. Icons are copyrighted by their respective authors.
 
-<a href="https://opencollective.com/clipy/backer/0/website" target="_blank"><img src="https://opencollective.com/clipy/backer/0/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/1/website" target="_blank"><img src="https://opencollective.com/clipy/backer/1/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/2/website" target="_blank"><img src="https://opencollective.com/clipy/backer/2/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/3/website" target="_blank"><img src="https://opencollective.com/clipy/backer/3/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/4/website" target="_blank"><img src="https://opencollective.com/clipy/backer/4/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/5/website" target="_blank"><img src="https://opencollective.com/clipy/backer/5/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/6/website" target="_blank"><img src="https://opencollective.com/clipy/backer/6/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/7/website" target="_blank"><img src="https://opencollective.com/clipy/backer/7/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/8/website" target="_blank"><img src="https://opencollective.com/clipy/backer/8/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/9/website" target="_blank"><img src="https://opencollective.com/clipy/backer/9/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/10/website" target="_blank"><img src="https://opencollective.com/clipy/backer/10/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/11/website" target="_blank"><img src="https://opencollective.com/clipy/backer/11/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/12/website" target="_blank"><img src="https://opencollective.com/clipy/backer/12/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/13/website" target="_blank"><img src="https://opencollective.com/clipy/backer/13/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/14/website" target="_blank"><img src="https://opencollective.com/clipy/backer/14/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/15/website" target="_blank"><img src="https://opencollective.com/clipy/backer/15/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/16/website" target="_blank"><img src="https://opencollective.com/clipy/backer/16/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/17/website" target="_blank"><img src="https://opencollective.com/clipy/backer/17/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/18/website" target="_blank"><img src="https://opencollective.com/clipy/backer/18/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/19/website" target="_blank"><img src="https://opencollective.com/clipy/backer/19/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/20/website" target="_blank"><img src="https://opencollective.com/clipy/backer/20/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/21/website" target="_blank"><img src="https://opencollective.com/clipy/backer/21/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/22/website" target="_blank"><img src="https://opencollective.com/clipy/backer/22/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/23/website" target="_blank"><img src="https://opencollective.com/clipy/backer/23/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/24/website" target="_blank"><img src="https://opencollective.com/clipy/backer/24/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/25/website" target="_blank"><img src="https://opencollective.com/clipy/backer/25/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/26/website" target="_blank"><img src="https://opencollective.com/clipy/backer/26/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/27/website" target="_blank"><img src="https://opencollective.com/clipy/backer/27/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/28/website" target="_blank"><img src="https://opencollective.com/clipy/backer/28/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/backer/29/website" target="_blank"><img src="https://opencollective.com/clipy/backer/29/avatar.svg"></a>
+## Special Thanks
 
-### Sponsors
-
-Become a sponsor and get your logo on our README on Github with a link to your site. [[Become a sponsor](https://opencollective.com/clipy#sponsor)]
-
-<a href="https://opencollective.com/clipy/sponsor/0/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/0/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/1/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/2/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/3/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/4/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/5/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/6/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/7/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/8/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/9/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/9/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/10/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/10/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/11/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/11/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/12/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/12/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/13/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/13/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/14/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/14/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/15/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/15/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/16/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/16/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/17/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/17/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/18/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/18/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/19/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/19/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/20/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/20/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/21/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/21/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/22/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/22/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/23/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/23/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/24/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/24/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/25/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/25/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/26/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/26/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/27/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/27/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/28/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/28/avatar.svg"></a>
-<a href="https://opencollective.com/clipy/sponsor/29/website" target="_blank"><img src="https://opencollective.com/clipy/sponsor/29/avatar.svg"></a>
-
-### Licence
-Clipy is available under the MIT license. See the LICENSE file for more info.
-
-Icons are copyrighted by their respective authors.
-
-### Special Thanks
-__Thank you for [@naotaka](https://github.com/naotaka) who have published [ClipMenu](https://github.com/naotaka/ClipMenu) as OSS.__
+**Thanks to [@naotaka](https://github.com/naotaka) for publishing [ClipMenu](https://github.com/naotaka/ClipMenu) as open source, and to the developers of [Clipy](https://github.com/Clipy/Clipy).**
