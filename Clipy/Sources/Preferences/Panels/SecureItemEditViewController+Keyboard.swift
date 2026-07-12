@@ -80,14 +80,28 @@ extension SecureItemEditViewController {
         }
 
         // ── テーブル内の各行 ──────────────────────────────────────────────
+        // TOTP 行の Value は編集不可（フォーカス不可）のため、フォーカス対象は Label のみ。
+        // Label → 次の行、前の行 ← Label の両方向で TOTP 行の Value/Checkbox を飛ばす
         for row in 0..<fields.count {
             // Label 列
             if let cell = fieldsTable.view(atColumn: labelColumnIndex, row: row, makeIfNecessary: false) as? NSTableCellView,
                let labelTF = cell.textField,
                labelTF.currentEditor() != nil || currentResponder === labelTF {
                 if shift {
-                    if row > 0 { activateCheckbox(row: row - 1) } else { window.makeFirstResponder(titleField) }
-                } else { activateValueField(row: row) }
+                    if row > 0 {
+                        // 前の行の最後のフォーカス対象へ（TOTP 行は Label のみ）
+                        if fields[row - 1].isTOTP { activateLabelField(row: row - 1) } else { activateCheckbox(row: row - 1) }
+                    } else {
+                        window.makeFirstResponder(titleField)
+                    }
+                } else {
+                    if fields[row].isTOTP {
+                        // TOTP 行: Value は編集不可なので次の行（または +ボタン）へ
+                        if row < fields.count - 1 { activateLabelField(row: row + 1) } else { window.makeFirstResponder(addFieldBtnRef) }
+                    } else {
+                        activateValueField(row: row)
+                    }
+                }
                 return true
             }
             // Value 列: プレーン／セキュアの両フィールドを確認
@@ -122,16 +136,9 @@ extension SecureItemEditViewController {
                 if fields.isEmpty {
                     window.makeFirstResponder(titleField)
                 } else {
-                    // 逆方向: 最後の「チェックボックスを持つ」（= TOTP でない）行へ戻る
-                    var targetRow = fields.count - 1
-                    while targetRow >= 0 && fields[targetRow].isTOTP {
-                        targetRow -= 1
-                    }
-                    if targetRow >= 0 {
-                        activateCheckbox(row: targetRow)
-                    } else {
-                        window.makeFirstResponder(titleField)
-                    }
+                    // 逆方向: 最終行の最後のフォーカス対象へ（TOTP 行は Label のみ）
+                    let lastRow = fields.count - 1
+                    if fields[lastRow].isTOTP { activateLabelField(row: lastRow) } else { activateCheckbox(row: lastRow) }
                 }
             } else { window.makeFirstResponder(removeFieldBtnRef) }
             return true

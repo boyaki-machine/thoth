@@ -64,6 +64,32 @@ Secure Menu を使うと、パスワードやその他の機密情報を、ク�
 
 ---
 
+### 暗号化ファイルの復旧 — Clipy が無い環境での復号
+
+Clipy で暗号化したファイル（`.enc`）は **openssl 互換コンテナ**を採用しているため、Clipy がインストールされていない Mac でも、標準搭載の `openssl` コマンドだけで復号できます。
+
+ファイル構造は「45 バイトの Clipy ヘッダー（マジック + フラグ + PBKDF2 反復回数 + HMAC-SHA256 タグ）」+「標準の `openssl enc` 出力（`Salted__` + salt + AES-256-CBC 暗号文、鍵導出は PBKDF2-HMAC-SHA256）」です。
+
+**重要: ファイルをそのまま `openssl enc -d` に渡すと `bad magic number` エラーになります。先頭 45 バイトのヘッダーを `tail -c +46` で取り除いてから渡してください。**
+
+```sh
+# 先頭 45 バイトのヘッダーを取り除いて openssl で復号（反復回数の既定値は 200000）
+tail -c +46 secret.txt.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass pass:パスワード -out secret.txt
+
+# フォルダを暗号化したファイルの場合、出力は tar アーカイブになる:
+tail -c +46 myfolder.enc | openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+  -pass pass:パスワード -out myfolder.tar && tar -xf myfolder.tar
+```
+
+補足:
+
+- Clipy 内での復号は、ヘッダー内の HMAC-SHA256 タグを事前検証（Encrypt-then-MAC）するため、改竄や誤パスワードを確実に検知します。openssl CLI での復号はこの検証を通りません（誤パスワードの大半は CBC パディングエラーで検出されます）
+- 旧バージョンの Clipy で暗号化したファイル（8 バイトのマーカー + openssl enc 出力、反復回数 100000）も同様に `tail -c +9` と `-iter 100000` で復号できます
+- 暗号化完了時にウィンドウに表示される復号コマンド例をそのままコピーして使えます
+
+---
+
 ### 開発環境
 * macOS 26 (Apple Silicon)
 * Xcode 26 系（26.6 で動作確認済み）

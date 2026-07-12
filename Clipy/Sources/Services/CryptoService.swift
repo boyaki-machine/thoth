@@ -112,6 +112,22 @@ final class CryptoService {
 
     // MARK: - Public Interface
 
+    /// アプリが無い環境でも復号できる openssl コマンド例を返す（README 記載の手順と同一）。
+    /// パスワード部分は実値を埋め込まずプレースホルダーにする（画面表示・コピーされるため）。
+    /// - Parameters:
+    ///   - encryptedPath: 暗号化ファイルのパス
+    ///   - outputName: 復号後のファイル名
+    ///   - isFolder: フォルダ由来の場合 true（tar 展開の手順を付け加える）
+    static func opensslDecryptCommand(encryptedPath: String, outputName: String, isFolder: Bool) -> String {
+        let output = isFolder ? "\(outputName).tar" : outputName
+        var command = "tail -c +\(bodyOffset + 1) '\(encryptedPath)' | "
+            + "openssl enc -d -aes-256-cbc -pbkdf2 -iter \(iterationCount) -pass pass:PASSWORD -out '\(output)'"
+        if isFolder {
+            command += " && tar -xf '\(output)'"
+        }
+        return command
+    }
+
     /// ファイル／フォルダを暗号化する。完了ハンドラはメインスレッドで呼ばれる。
     /// 出力は常に現行形式（openssl 互換 CBC + HMAC 認証）。
     /// - Parameters:

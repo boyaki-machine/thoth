@@ -184,3 +184,8 @@
 "Realm Open Failed Reset" = "データベースをリセット";
 
 "Add TOTP" = "TOTP追加...";
+
+"Crypto Encrypted With Command" = "暗号化が完了しました。Clipy が無い環境でも、以下の openssl コマンドで復号できます:";
+"Crypto Copy Command" = "コマンドをコピー";
+
+"Copied" = "コピーしました";

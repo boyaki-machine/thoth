@@ -32,10 +32,14 @@ internal enum L10n {
   internal static let clearHistory = L10n.tr("Localizable", "Clear History")
   /// Close
   internal static let close = L10n.tr("Localizable", "Close")
+  /// Copied
+  internal static let copied = L10n.tr("Localizable", "Copied")
   /// Copy
   internal static let copyPassword = L10n.tr("Localizable", "Copy Password")
   /// Choose...
   internal static let cryptoChoose = L10n.tr("Localizable", "Crypto Choose")
+  /// Copy Command
+  internal static let cryptoCopyCommand = L10n.tr("Localizable", "Crypto Copy Command")
   /// Decrypt
   internal static let cryptoDecrypt = L10n.tr("Localizable", "Crypto Decrypt")
   /// Decrypting...
@@ -44,6 +48,8 @@ internal enum L10n {
   internal static let cryptoDone = L10n.tr("Localizable", "Crypto Done")
   /// Encrypt
   internal static let cryptoEncrypt = L10n.tr("Localizable", "Crypto Encrypt")
+  /// Encrypted. It can also be decrypted without Clipy using the openssl command below:
+  internal static let cryptoEncryptedWithCommand = L10n.tr("Localizable", "Crypto Encrypted With Command")
   /// Encrypting...
   internal static let cryptoEncrypting = L10n.tr("Localizable", "Crypto Encrypting")
   /// Please enter an output file name.

@@ -60,29 +60,37 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     }
 
     // MARK: - Menu Actions
+
+    /// ウィンドウをアクティブ化して前面に出す共通処理。
+    /// メニュー項目から呼ばれた直後は、メニュー閉鎖に伴う「元のアプリへの
+    /// アクティベーション返却」と競合してフォーカスを奪われることがあるため、
+    /// 次のランループまで遅延してから activate → makeKey する
+    private func presentWindow(of controller: NSWindowController) {
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            controller.showWindow(self)
+            controller.window?.makeKeyAndOrderFront(nil)
+        }
+    }
+
     @objc func showPreferenceWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYPreferencesWindowController.sharedController.showWindow(self)
+        presentWindow(of: CPYPreferencesWindowController.sharedController)
     }
 
     @objc func showSnippetEditorWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYSnippetsEditorWindowController.sharedController.showWindow(self)
+        presentWindow(of: CPYSnippetsEditorWindowController.sharedController)
     }
 
     @objc func showSecureItemsWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYSecureItemsWindowController.shared.showWindow(self)
+        presentWindow(of: CPYSecureItemsWindowController.shared)
     }
 
     @objc func showPasswordGeneratorWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYPasswordGeneratorWindowController.shared.showWindow(self)
+        presentWindow(of: CPYPasswordGeneratorWindowController.shared)
     }
 
     @objc func showCryptoWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        CPYCryptoWindowController.shared.showWindow(self)
+        presentWindow(of: CPYCryptoWindowController.shared)
     }
 
     @objc func terminate() {

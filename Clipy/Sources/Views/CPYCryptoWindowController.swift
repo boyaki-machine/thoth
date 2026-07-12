@@ -61,6 +61,9 @@ final class CPYCryptoViewController: NSViewController {
     private let passwordField     = NSSecureTextField()
     private let fingerprintButton = TabCapturingButton()
     private let statusLabel       = NSTextField(labelWithString: "")
+    /// 暗号化成功後に表示する openssl 復号コマンド例（選択・コピー可能）
+    private let recoveryCommandField = NSTextField(wrappingLabelWithString: "")
+    private let copyCommandButton = TabCapturingButton()
     private let manageButton      = TabCapturingButton()
     private let encryptButton     = TabCapturingButton()
     private let decryptButton     = TabCapturingButton()
@@ -87,7 +90,8 @@ final class CPYCryptoViewController: NSViewController {
     }()
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 240))
+        // 高さは復号コマンド例（3 行程度）の表示領域を含む
+        view = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 320))
         setupUI()
     }
 
@@ -145,6 +149,7 @@ final class CPYCryptoViewController: NSViewController {
         outputNameField.stringValue = ""
         passwordField.stringValue = ""
         statusLabel.stringValue = ""
+        showRecoveryCommand(nil)
         setControlsEnabled(true)
         // ファイル選択パネルを事前生成してウォームアップし、初回表示の遅延を抑える
         _ = openPanel
@@ -211,16 +216,32 @@ final class CPYCryptoViewController: NSViewController {
         }
         let outputURL = inputURL.deletingLastPathComponent().appendingPathComponent(outputName)
 
+        // フォルダ暗号化かどうか（復号コマンド例に tar 展開を含めるかの判定）
+        var isDirectory: ObjCBool = false
+        FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory)
+        let isFolder = isDirectory.boolValue
+
         setControlsEnabled(false)
+        showRecoveryCommand(nil)
         showStatus(isEncrypt ? L10n.cryptoEncrypting : L10n.cryptoDecrypting, isError: false)
         let completion: (Result<URL, Error>) -> Void = { [weak self] result in
             guard let self = self else { return }
             self.setControlsEnabled(true)
             switch result {
             case .success(let url):
-                // 完了したらウィンドウを閉じ、生成物を Finder で選択表示する
-                self.view.window?.performClose(self)
-                NSWorkspace.shared.activateFileViewerSelecting([url])
+                if isEncrypt {
+                    // ウィンドウは閉じず、openssl での復号コマンド例を表示する
+                    // （アプリが無い環境での復旧手順をその場で確認・コピーできるように）
+                    self.showStatus(L10n.cryptoEncryptedWithCommand, isError: false)
+                    self.showRecoveryCommand(CryptoService.opensslDecryptCommand(
+                        encryptedPath: url.path,
+                        outputName: inputURL.lastPathComponent,
+                        isFolder: isFolder))
+                } else {
+                    // 復号はウィンドウを閉じ、生成物を Finder で選択表示する
+                    self.view.window?.performClose(self)
+                    NSWorkspace.shared.activateFileViewerSelecting([url])
+                }
             case .failure(let error):
                 self.showStatus(error.localizedDescription, isError: true)
             }
@@ -277,6 +298,20 @@ final class CPYCryptoViewController: NSViewController {
     private func showStatus(_ message: String, isError: Bool) {
         statusLabel.stringValue = message
         statusLabel.textColor = isError ? .systemRed : .secondaryLabelColor
+    }
+
+    /// openssl 復号コマンド例の表示／非表示を切り替える（nil で非表示）
+    private func showRecoveryCommand(_ command: String?) {
+        recoveryCommandField.stringValue = command ?? ""
+        recoveryCommandField.isHidden = (command == nil)
+        copyCommandButton.isHidden = (command == nil)
+    }
+
+    /// 復号コマンド例をクリップボードにコピーする
+    /// （パスワードはプレースホルダーのため秘匿情報は含まれず、通常コピーでよい）
+    @objc private func copyRecoveryCommand() {
+        AppEnvironment.current.pasteService.copyToPasteboard(with: recoveryCommandField.stringValue)
+        showStatus(L10n.copied, isError: false)
     }
 }
 
@@ -336,6 +371,23 @@ fileprivate extension CPYCryptoViewController {
         statusLabel.lineBreakMode = .byTruncatingMiddle
         statusLabel.textColor = .secondaryLabelColor
         view.addSubview(statusLabel)
+
+        // openssl 復号コマンド例（暗号化成功後のみ表示。選択してコピー可能）
+        recoveryCommandField.font = NSFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+        recoveryCommandField.textColor = .secondaryLabelColor
+        recoveryCommandField.isSelectable = true
+        recoveryCommandField.isHidden = true
+        recoveryCommandField.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(recoveryCommandField)
+
+        copyCommandButton.title = L10n.cryptoCopyCommand
+        copyCommandButton.bezelStyle = .rounded
+        copyCommandButton.controlSize = .small
+        copyCommandButton.isHidden = true
+        copyCommandButton.target = self
+        copyCommandButton.action = #selector(copyRecoveryCommand)
+        copyCommandButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(copyCommandButton)
 
         // 左下: 指紋パスワード管理
         manageButton.title = L10n.cryptoManageFingerprintPassword
@@ -405,6 +457,12 @@ fileprivate extension CPYCryptoViewController {
             statusLabel.topAnchor.constraint(equalTo: passwordLabel.bottomAnchor, constant: 16),
             statusLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             statusLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+
+            recoveryCommandField.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 8),
+            recoveryCommandField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            recoveryCommandField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            copyCommandButton.topAnchor.constraint(equalTo: recoveryCommandField.bottomAnchor, constant: 6),
+            copyCommandButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
 
             manageButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             manageButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16),

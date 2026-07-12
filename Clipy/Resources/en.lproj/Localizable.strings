@@ -184,3 +184,8 @@
 "Realm Open Failed Reset" = "Reset Database";
 
 "Add TOTP" = "Add TOTP...";
+
+"Crypto Encrypted With Command" = "Encrypted. It can also be decrypted without Clipy using the openssl command below:";
+"Crypto Copy Command" = "Copy Command";
+
+"Copied" = "Copied";
