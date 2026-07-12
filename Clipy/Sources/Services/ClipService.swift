@@ -22,7 +22,9 @@ final class ClipService {
     // MARK: - Properties
     fileprivate var cachedChangeCount = BehaviorRelay<Int>(value: 0)
     fileprivate var storeTypes = [String: NSNumber]()
-    fileprivate let scheduler = SerialDispatchQueueScheduler(qos: .userInteractive)
+    // changeCount の読み取りは極めて軽量なため、常駐ポーリングは .utility で十分
+    // （体感遅延は最大でもポーリング間隔の 100ms のまま）
+    fileprivate let scheduler = SerialDispatchQueueScheduler(qos: .utility)
     fileprivate let lock = NSRecursiveLock(name: "com.clipy-app.Clipy.ClipUpdatable")
     fileprivate var disposeBag = DisposeBag()
     // アーカイブ・サムネイル生成・ファイル書き込みをメインスレッドから逃すための直列キュー
@@ -126,38 +128,39 @@ extension ClipService {
     }
 
     fileprivate func save(with data: CPYClipData) {
-        let realm = try! Realm()
-        // 画像クリップの場合 hash 計算に TIFF エンコードを伴うため一度だけ計算する
-        let dataHash = data.hash
-        // Copy already copied history
-        let isCopySameHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.copySameHistory)
-        if let existingClip = realm.object(ofType: CPYClip.self, forPrimaryKey: "\(dataHash)") {
-            if !isCopySameHistory { return }
-            // Don't save invalidated clip
-            if existingClip.isInvalidated { return }
-        }
-
-        // Don't save empty string history
-        if data.isOnlyStringType && data.stringValue.isEmpty { return }
-
-        // Overwrite same history
-        let isOverwriteHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.overwriteSameHistory)
-        let savedHash = isOverwriteHistory ? dataHash : Int.random(in: 0...999_999)
-
-        // Saved time and path
-        let unixTime = Int(Date().timeIntervalSince1970)
-        let savedPath = CPYUtilities.applicationSupportFolder() + "/\(NSUUID().uuidString).data"
-        // Create Realm object
-        let clip = CPYClip()
-        clip.dataPath = savedPath
-        clip.title = data.stringValue[0...10000]
-        clip.dataHash = "\(savedHash)"
-        clip.updateTime = unixTime
-        clip.primaryType = data.primaryType?.rawValue ?? ""
-
-        // アーカイブ生成（画像だと数 MB 規模）とファイル書き込みは重いので
-        // メインスレッドではなく専用の直列キューで実行する
+        // 重複判定からアーカイブ生成・ファイル書き込みまでを専用の直列キューに
+        // まとめて逃がす。Realm のオープンがスレッド毎に 1 回で済み、
+        // ポーリングスレッドを重い処理でブロックしない
         saveQueue.async {
+            let realm = try! Realm()
+            // 画像クリップの場合 hash 計算に TIFF エンコードを伴うため一度だけ計算する
+            let dataHash = data.hash
+            // Copy already copied history
+            let isCopySameHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.copySameHistory)
+            if let existingClip = realm.object(ofType: CPYClip.self, forPrimaryKey: "\(dataHash)") {
+                if !isCopySameHistory { return }
+                // Don't save invalidated clip
+                if existingClip.isInvalidated { return }
+            }
+
+            // Don't save empty string history
+            if data.isOnlyStringType && data.stringValue.isEmpty { return }
+
+            // Overwrite same history
+            let isOverwriteHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.overwriteSameHistory)
+            let savedHash = isOverwriteHistory ? dataHash : Int.random(in: 0...999_999)
+
+            // Saved time and path
+            let unixTime = Int(Date().timeIntervalSince1970)
+            let savedPath = CPYUtilities.applicationSupportFolder() + "/\(NSUUID().uuidString).data"
+            // Create Realm object
+            let clip = CPYClip()
+            clip.dataPath = savedPath
+            clip.title = data.stringValue[0...10000]
+            clip.dataHash = "\(savedHash)"
+            clip.updateTime = unixTime
+            clip.primaryType = data.primaryType?.rawValue ?? ""
+
             // Save thumbnail image
             if let thumbnailImage = data.thumbnailImage {
                 PINCache.shared.setObjectAsync(thumbnailImage, forKey: "\(unixTime)", completion: nil)
@@ -169,13 +172,12 @@ extension ClipService {
                 clip.isColorCode = true
             }
             // Save Realm and .data file（.data は ClipDataStore が AES-GCM で暗号化する）
-            let dispatchRealm = try! Realm()
             if CPYUtilities.prepareSaveToPath(CPYUtilities.applicationSupportFolder()) {
                 let archiveData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: false)
                 let archived = archiveData.map { ClipDataStore.shared.write($0, toPath: savedPath) } ?? false
                 if archived {
-                    dispatchRealm.transaction {
-                        dispatchRealm.add(clip, update: .all)
+                    realm.transaction {
+                        realm.add(clip, update: .all)
                     }
                 }
             }

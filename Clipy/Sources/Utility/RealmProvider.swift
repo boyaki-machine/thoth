@@ -52,29 +52,48 @@ enum RealmProvider {
 
     // MARK: - Setup (起動時に一度だけ呼ぶ)
 
-    /// デフォルト Realm 構成（スキーマバージョン・移行ブロック・暗号鍵）を設定し、
-    /// 必要なら平文データベースの暗号化移行を行う。
+    /// Realm の準備（warmUp）が完了したか。
+    /// 完了前にメニュー再構築などのコードが Realm に触れて
+    /// 「暗号鍵つき構成で移行前の平文ファイルを開く」事故を防ぐためのガード。
+    /// テスト実行時は各 spec が in-memory Realm を自前で用意するため常に true。
+    /// メインスレッドからのみ読み書きすること。
+    private(set) static var isReady = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+
+    /// デフォルト Realm 構成（スキーマバージョン・移行ブロック・暗号鍵）を設定する。
+    /// Keychain の鍵取得のみで数 ms で完了する軽量な同期処理。
     /// AppEnvironment 経由で Realm に触れる前（起動処理の最初）に呼ぶこと。
-    static func setup() {
+    static func setupConfiguration() {
         var config = makeBaseConfiguration()
 
         // テスト実行時は暗号化しない（各 spec が in-memory Realm に差し替えるため）
         let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if !isTesting, let key = loadOrCreateEncryptionKey(account: Self.realmKeyAccount,
                                                            length: Self.realmKeyLength) {
-            if let fileURL = config.fileURL {
-                migrateToEncryptedIfNeeded(at: fileURL, key: key)
-            }
             config.encryptionKey = key
         }
 
         Realm.Configuration.defaultConfiguration = config
+    }
 
-        // ここで一度開いてスキーマ移行を確定させる（従来 Realm.migration() が行っていた処理）
-        do {
-            _ = try Realm()
-        } catch {
-            handleUnopenableDatabase(config: config, error: error)
+    /// 重い初期化（平文→暗号化移行・スキーマ移行・初回オープン）をバックグラウンドで行い、
+    /// 完了後にメインスレッドで completion を呼ぶ。
+    /// Realm に依存するサービスの起動は completion の中で行うこと。
+    static func warmUp(completion: @escaping () -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let config = Realm.Configuration.defaultConfiguration
+            if let key = config.encryptionKey, let fileURL = config.fileURL {
+                migrateToEncryptedIfNeeded(at: fileURL, key: key)
+            }
+            // ここで一度開いてスキーマ移行を確定させる（従来 Realm.migration() が行っていた処理）
+            let opened = autoreleasepool { (try? Realm(configuration: config)) != nil }
+            DispatchQueue.main.async {
+                if opened {
+                    isReady = true
+                    completion()
+                } else {
+                    handleUnopenableDatabase(config: config, completion: completion)
+                }
+            }
         }
     }
 
@@ -257,8 +276,9 @@ enum RealmProvider {
 
     /// 暗号化データベースを開けない場合（鍵消失・破損等）の最終手段。
     /// ユーザーに「終了して再試行」か「履歴・スニペットをリセット」を選ばせる。
-    private static func handleUnopenableDatabase(config: Realm.Configuration, error: Error) {
-        NSLog("[RealmProvider] failed to open database: \(error)")
+    /// リセットに成功した場合は completion を呼んで起動を続行する。
+    private static func handleUnopenableDatabase(config: Realm.Configuration, completion: @escaping () -> Void) {
+        NSLog("[RealmProvider] failed to open database")
         let alert = NSAlert()
         alert.messageText = L10n.realmOpenFailedTitle
         alert.informativeText = L10n.realmOpenFailedMessage
@@ -272,7 +292,11 @@ enum RealmProvider {
             for suffix in ["lock", "management", "note"] {
                 try? fileManager.removeItem(at: fileURL.appendingPathExtension(suffix))
             }
-            if (try? Realm()) != nil { return }
+            if (try? Realm()) != nil {
+                isReady = true
+                completion()
+                return
+            }
         }
         NSApp.terminate(nil)
     }

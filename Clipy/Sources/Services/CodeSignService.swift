@@ -39,20 +39,26 @@ final class CodeSignService {
 
     // MARK: - Public Interface
 
-    /// 起動時に呼び出す。再署名を行った場合はアプリを再起動する。
+    /// 起動時に呼び出す。再署名が必要な場合は true を返し、重い処理
+    /// （identity 生成・codesign --deep・再起動）を**バックグラウンドで**実行する。
+    /// これらは数秒かかる外部コマンド実行のため、メインスレッドで行うと
+    /// 起動を大きくブロックしてしまう。
+    ///
+    /// - Parameter onFailure: 再署名に失敗した場合にメインスレッドで呼ばれる。
+    ///   呼び出し側はここで通常の起動処理を続行すること（現状の署名のまま動作する）。
     /// - Returns: 再署名して再起動を予約した場合 true。
     ///   呼び出し側は true の場合、以降の起動処理（特にアクセシビリティ確認などの
     ///   TCC 登録を伴う処理）をスキップすること。再署名前の ad-hoc バイナリが
     ///   TCC に登録されると、アクセシビリティ設定に重複エントリが増えてしまう。
     @discardableResult
-    func ensureStableSignatureAtLaunch() -> Bool {
+    func ensureStableSignatureAtLaunch(onFailure: @escaping () -> Void) -> Bool {
         let processInfo = ProcessInfo.processInfo
         // ユニットテスト実行時はスキップする（再起動するとテストホストが終了してしまう）
         guard processInfo.environment["XCTestConfigurationFilePath"] == nil else { return false }
         let arguments = processInfo.arguments
         // 再起動後は成否に関わらず再試行しない（ループ防止）
         guard !arguments.contains(Self.resignedArgument), !arguments.contains(Self.skipResignArgument) else { return false }
-        // 既に安定署名済みなら何もしない
+        // 既に安定署名済みなら何もしない（SecCode API によるインプロセス確認・軽量）
         guard currentSigningCommonName() != Self.certificateCommonName else { return false }
 
         let bundlePath = Bundle.main.bundlePath
@@ -60,16 +66,24 @@ final class CodeSignService {
             NSLog("[CodeSignService] bundle is not writable, skip re-signing: \(bundlePath)")
             return false
         }
-        guard ensureSigningIdentity() else {
-            NSLog("[CodeSignService] failed to prepare signing identity, continue with current signature")
-            return false
+
+        DispatchQueue.global(qos: .userInitiated).async { [self] in
+            guard ensureSigningIdentity() else {
+                NSLog("[CodeSignService] failed to prepare signing identity, continue with current signature")
+                DispatchQueue.main.async(execute: onFailure)
+                return
+            }
+            guard resignBundle(at: bundlePath) else {
+                NSLog("[CodeSignService] failed to re-sign bundle, continue with current signature")
+                DispatchQueue.main.async(execute: onFailure)
+                return
+            }
+            NSLog("[CodeSignService] re-signed successfully, relaunching")
+            // NSApp.terminate を伴うためメインスレッドで再起動する
+            DispatchQueue.main.async {
+                self.relaunch(bundlePath: bundlePath)
+            }
         }
-        guard resignBundle(at: bundlePath) else {
-            NSLog("[CodeSignService] failed to re-sign bundle, continue with current signature")
-            return false
-        }
-        NSLog("[CodeSignService] re-signed successfully, relaunching")
-        relaunch(bundlePath: bundlePath)
         return true
     }
 

@@ -29,6 +29,8 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     let disposeBag = DisposeBag()
     // 再署名による再起動が予約されている間 true（起動処理をスキップするためのフラグ）
     fileprivate var isRelaunchPendingForResign = false
+    // startApplication() の二重実行防止フラグ
+    fileprivate var hasStartedApplication = false
 
     // MARK: - Init
     // 注意: Realm の初期化はここ（awakeFromNib）では行わない。
@@ -38,6 +40,8 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     // MARK: - NSMenuItem Validation
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         if menuItem.action == #selector(AppDelegate.clearAllHistory) {
+            // Realm 準備前（起動直後の暗号化移行中など）は無効にしておく
+            guard RealmProvider.isReady else { return false }
             let realm = try! Realm()
             return !realm.objects(CPYClip.self).isEmpty
         }
@@ -189,35 +193,65 @@ class AppDelegate: NSObject, NSMenuItemValidation {
 // MARK: - NSApplication Delegate
 extension AppDelegate: NSApplicationDelegate {
 
+    // 起動シーケンス（フェーズ分割によりメニューバーアイコン表示までを最短化する）:
+    //
+    //   willFinishLaunching [main]
+    //    ├─ terminateIfAlreadyRunning()              … 軽量・同期
+    //    ├─ 署名確認（SecCode API・軽量・同期）
+    //    │   └─ 未署名時のみ [bg] identity 生成 → codesign --deep → relaunch
+    //    │        └─ 失敗時は [main] で startApplication() を続行
+    //    └─ (RELEASE) PFMoveToApplicationsFolder
+    //   didFinishLaunching [main] → startApplication()
+    //    ├─ RealmProvider.setupConfiguration()       … 鍵取得 + 構成のみ（数 ms）
+    //    ├─ DI・UserDefaults・メニューバーアイコン表示・アクセシビリティ確認
+    //    └─ [bg] RealmProvider.warmUp()              … スキーマ移行 + 暗号化移行
+    //         └─ [main] startServices():
+    //              Realm 通知・各サービス開始・Sparkle・ログイン項目アラート・.data スイープ
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // 再署名による再起動が予約されている場合は起動処理を行わない。
         // 再署名前（ad-hoc 署名）のバイナリがアクセシビリティ確認等で TCC に登録されると、
         // アクセシビリティ設定に重複エントリが増えてしまうため
         guard !isRelaunchPendingForResign else { return }
-        // Realm（スキーマ移行 + 保存時暗号化）。
+        startApplication()
+    }
+
+    /// 通常の起動処理。二重呼び出しは無視する
+    /// （再署名失敗時のフォールバックと didFinishLaunching の両方から呼ばれ得るため）
+    private func startApplication() {
+        guard !hasStartedApplication else { return }
+        hasStartedApplication = true
+
+        // --- 軽量な同期処理: メニューバーアイコン表示までを最短にする ---
+        // Realm 構成（鍵取得 + defaultConfiguration 設定のみ）。
         // AppEnvironment のサービスが Realm に触れる前に必ず構成しておく
-        RealmProvider.setup()
+        RealmProvider.setupConfiguration()
         // Environments
         AppEnvironment.replaceCurrent(environment: AppEnvironment.fromStorage())
         // UserDefaults
         CPYUtilities.registerUserDefaultKeys()
         // SDKs
         CPYUtilities.initSDKs()
+        // ステータスバーアイコンの表示（Realm には触れない）
+        AppEnvironment.current.menuManager.setup()
         // Check Accessibility Permission
         AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: true)
 
-        // Show Login Item
-        if !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.loginItem) && !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.suppressAlertForLoginItem) {
-            promptToAddLoginItems()
+        // ユニットテスト実行時はここまで。サービス起動（ポーリング・ホットキー・
+        // modal ダイアログ等）はテストの実行を妨げるため行わない
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+
+        // --- 重い初期化（スキーマ移行・暗号化移行）はバックグラウンドで ---
+        RealmProvider.warmUp { [weak self] in
+            self?.startServices()
         }
+    }
 
-        // Sparkle
-        let updater = SUUpdater.shared()
-        updater?.feedURL = Constants.Application.appcastURL
-        updater?.automaticallyChecksForUpdates = AppEnvironment.current.defaults.bool(forKey: Constants.Update.enableAutomaticCheck)
-        updater?.updateCheckInterval = TimeInterval(AppEnvironment.current.defaults.integer(forKey: Constants.Update.checkInterval))
+    /// Realm 準備完了後に呼ばれる。Realm に依存するサービスの起動と残りの初期化を行う
+    private func startServices() {
+        // 履歴・スニペットの変更監視（メニュー再構築のトリガー）
+        AppEnvironment.current.menuManager.bindRealmNotifications()
 
-        // Binding Events
+        // Binding Events（スクリーンショット監視は clipService 経由で Realm に触れる）
         bind()
 
         // Services
@@ -226,13 +260,24 @@ extension AppDelegate: NSApplicationDelegate {
         AppEnvironment.current.excludeAppService.startMonitoring()
         AppEnvironment.current.hotKeyService.setupDefaultHotKeys()
 
-        // Managers
-        AppEnvironment.current.menuManager.setup()
+        // Sparkle
+        let updater = SUUpdater.shared()
+        updater?.feedURL = Constants.Application.appcastURL
+        updater?.automaticallyChecksForUpdates = AppEnvironment.current.defaults.bool(forKey: Constants.Update.enableAutomaticCheck)
+        updater?.updateCheckInterval = TimeInterval(AppEnvironment.current.defaults.integer(forKey: Constants.Update.checkInterval))
 
         // 旧バージョンが平文で保存したクリップ .data ファイルを
         // バックグラウンドで暗号化形式へ変換する（冪等・失敗分は次回再試行）
         DispatchQueue.global(qos: .utility).async {
             ClipDataStore.shared.encryptPlaintextFiles(inDirectory: CPYUtilities.applicationSupportFolder())
+        }
+
+        // Show Login Item（modal ダイアログのため、起動処理がすべて終わった後に表示する）
+        let defaults = AppEnvironment.current.defaults
+        if !defaults.bool(forKey: Constants.UserDefaults.loginItem) && !defaults.bool(forKey: Constants.UserDefaults.suppressAlertForLoginItem) {
+            DispatchQueue.main.async { [weak self] in
+                self?.promptToAddLoginItems()
+            }
         }
     }
 
@@ -243,8 +288,14 @@ extension AppDelegate: NSApplicationDelegate {
         // 先行インスタンスをアクティブ化して自分は終了する
         terminateIfAlreadyRunning()
         // 署名をデバイス固有の証明書で安定化する（バージョンをまたいだ
-        // セキュアアイテムの読み出しに必要。再署名した場合は再起動する）
-        isRelaunchPendingForResign = CodeSignService().ensureStableSignatureAtLaunch()
+        // セキュアアイテムの読み出しに必要。再署名した場合は再起動する）。
+        // 重い処理（identity 生成・codesign --deep）はバックグラウンドで実行され、
+        // 失敗した場合のみコールバックで通常起動にフォールバックする
+        isRelaunchPendingForResign = CodeSignService().ensureStableSignatureAtLaunch { [weak self] in
+            guard let self = self, self.isRelaunchPendingForResign else { return }
+            self.isRelaunchPendingForResign = false
+            self.startApplication()
+        }
         guard !isRelaunchPendingForResign else { return }
         #if RELEASE
             PFMoveToApplicationsFolderIfNecessary()

@@ -41,7 +41,10 @@ final class MenuManager: NSObject {
     let kMaxKeyEquivalents = 10
     fileprivate let shortenSymbol = "..."
     // Realm
-    let realm = try! Realm()
+    // 遅延プロパティにすることで、Realm の構成・移行が完了する前
+    // （MenuManager 生成時点）にファイルを開いてしまわないようにする。
+    // 初回アクセスは bindRealmNotifications()（RealmProvider.warmUp 完了後）
+    lazy var realm: Realm = try! Realm()
     fileprivate var clipToken: NotificationToken?
     fileprivate var snippetToken: NotificationToken?
     // Vim key navigation
@@ -72,6 +75,8 @@ final class MenuManager: NSObject {
         snippetIcon.size = NSSize(width: 12, height: 13)
     }
 
+    /// ステータスアイコンの表示と設定の監視を開始する（Realm には触れない軽量処理）。
+    /// 起動直後に呼んでメニューバーへのアイコン表示を最速にする
     func setup() {
         clipMenu.delegate = self
         historyMenu.delegate = self
@@ -80,12 +85,9 @@ final class MenuManager: NSObject {
         setupVimKeyEventTap()
     }
 
-}
-
-// MARK: - Binding
-private extension MenuManager {
-    func bind() {
-        // Realm Notification
+    /// Realm の変更通知（履歴・スニペット）の監視を開始する。
+    /// Realm 初期化（RealmProvider.warmUp）完了後に呼ぶこと
+    func bindRealmNotifications() {
         // 変更のたびに再構築すると履歴数に比例したメインスレッド負荷がコピーごとに発生するため、
         // ここでは世代カウンターを進めるだけにして、構築はメニュー表示直前まで遅延する
         clipToken = realm.objects(CPYClip.self)
@@ -96,6 +98,13 @@ private extension MenuManager {
                         .observe { [weak self] _ in
                             self?.setNeedsMenuRebuild()
                         }
+    }
+
+}
+
+// MARK: - Binding
+private extension MenuManager {
+    func bind() {
         // Menu icon
         AppEnvironment.current.defaults.rx.observe(Int.self, Constants.UserDefaults.showStatusItem, retainSelf: false)
             .compactMap { $0 }
@@ -167,6 +176,9 @@ extension MenuManager {
 
     /// 表示対象のメニューが古い世代の場合のみ、その 1 つだけを再構築する
     func rebuildMenuIfNeeded(_ type: MenuType) {
+        // Realm の準備前（起動直後の暗号化移行中など）は構築しない。
+        // 準備完了時に Realm 通知が世代を進めるため、次回表示時に構築される
+        guard RealmProvider.isReady else { return }
         guard builtGenerations[type] != menuGeneration else { return }
         builtGenerations[type] = menuGeneration
         switch type {
