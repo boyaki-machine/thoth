@@ -79,16 +79,22 @@ final class CPYUtilities {
         return (basePath as NSString).appendingPathComponent(Constants.Application.name)
     }
 
+    /// 保存先ディレクトリを用意する。クリップボード履歴を含むため、
+    /// 所有者のみアクセス可能（0o700）とし、既存ディレクトリにも権限を適用する
     static func prepareSaveToPath(_ path: String) -> Bool {
         let fileManager = FileManager.default
         var isDir: ObjCBool = false
 
         if (fileManager.fileExists(atPath: path, isDirectory: &isDir) && isDir.boolValue) == false {
             do {
-                try fileManager.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
+                try fileManager.createDirectory(atPath: path, withIntermediateDirectories: true,
+                                                attributes: [.posixPermissions: 0o700])
             } catch {
                 return false
             }
+        } else {
+            // 旧バージョンがデフォルト権限で作成したディレクトリを引き締める
+            try? fileManager.setAttributes([.posixPermissions: 0o700], ofItemAtPath: path)
         }
         return true
     }

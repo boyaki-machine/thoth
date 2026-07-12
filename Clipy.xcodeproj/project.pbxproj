@@ -15,6 +15,8 @@
 		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */; };
+		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
+		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
 		AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */; };
@@ -169,6 +171,8 @@
 		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ClipyTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ClipyTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmProvider.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ClipyTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
 		73A92F6DEE6CFF50A567CFEF /* Pods_Clipy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Clipy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		846004961FD5511800BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYPreferencesWindowController.strings; sourceTree = "<group>"; };
 		846004971FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -464,6 +468,7 @@
 			children = (
 				FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */,
 				6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */,
+				6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -576,6 +581,7 @@
 				6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */,
 				6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */,
 				6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */,
+				6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */,
 				6F92D6383002411700478ACF /* QRDecodeService.swift */,
 				6F92D6373002411700478ACF /* TOTPService.swift */,
 				6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */,
@@ -925,6 +931,7 @@
 				FAC0DCF11DE576F300309C49 /* PasteService.swift in Sources */,
 				FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */,
+				6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */,
 				FA1DB4B81DDCB452007F95C8 /* NSLock+Clipy.swift in Sources */,
 				FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */,
 				FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */,
@@ -992,6 +999,7 @@
 				6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */,
+				6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */,
 				FA6167921D3ABEB10049FA14 /* FolderSpec.swift in Sources */,
 				FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */,
 				FA6167961D3ACDD80049FA14 /* SnippetSpec.swift in Sources */,

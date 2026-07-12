@@ -228,6 +228,12 @@ extension AppDelegate: NSApplicationDelegate {
 
         // Managers
         AppEnvironment.current.menuManager.setup()
+
+        // 旧バージョンが平文で保存したクリップ .data ファイルを
+        // バックグラウンドで暗号化形式へ変換する（冪等・失敗分は次回再試行）
+        DispatchQueue.global(qos: .utility).async {
+            ClipDataStore.shared.encryptPlaintextFiles(inDirectory: CPYUtilities.applicationSupportFolder())
+        }
     }
 
     func applicationWillFinishLaunching(_ notification: Notification) {

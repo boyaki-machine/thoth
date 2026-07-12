@@ -168,11 +168,11 @@ extension ClipService {
                 clip.thumbnailPath = "\(unixTime)"
                 clip.isColorCode = true
             }
-            // Save Realm and .data file
+            // Save Realm and .data file（.data は ClipDataStore が AES-GCM で暗号化する）
             let dispatchRealm = try! Realm()
             if CPYUtilities.prepareSaveToPath(CPYUtilities.applicationSupportFolder()) {
                 let archiveData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: false)
-                let archived = archiveData.flatMap { try? $0.write(to: URL(fileURLWithPath: savedPath)) } != nil
+                let archived = archiveData.map { ClipDataStore.shared.write($0, toPath: savedPath) } ?? false
                 if archived {
                     dispatchRealm.transaction {
                         dispatchRealm.add(clip, update: .all)
