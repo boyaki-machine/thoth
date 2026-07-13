@@ -11,7 +11,6 @@
 //
 
 import Cocoa
-import Sparkle
 import RxCocoa
 import RxSwift
 import LoginServiceKit
@@ -204,7 +203,7 @@ extension AppDelegate: NSApplicationDelegate {
     //    ├─ DI・UserDefaults・メニューバーアイコン表示・アクセシビリティ確認
     //    └─ [bg] RealmProvider.warmUp()              … スキーマ移行 + 暗号化移行
     //         └─ [main] startServices():
-    //              Realm 通知・各サービス開始・Sparkle・ログイン項目アラート・.data スイープ
+    //              Realm 通知・各サービス開始・ログイン項目アラート・.data スイープ
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // 再署名による再起動が予約されている場合は起動処理を行わない。
         // 再署名前（ad-hoc 署名）のバイナリがアクセシビリティ確認等で TCC に登録されると、
@@ -257,12 +256,6 @@ extension AppDelegate: NSApplicationDelegate {
         AppEnvironment.current.dataCleanService.startMonitoring()
         AppEnvironment.current.excludeAppService.startMonitoring()
         AppEnvironment.current.hotKeyService.setupDefaultHotKeys()
-
-        // Sparkle
-        let updater = SUUpdater.shared()
-        updater?.feedURL = Constants.Application.appcastURL
-        updater?.automaticallyChecksForUpdates = AppEnvironment.current.defaults.bool(forKey: Constants.Update.enableAutomaticCheck)
-        updater?.updateCheckInterval = TimeInterval(AppEnvironment.current.defaults.integer(forKey: Constants.Update.checkInterval))
 
         // 旧バージョンが平文で保存したクリップ .data ファイルを
         // バックグラウンドで暗号化形式へ変換する（冪等・失敗分は次回再試行）

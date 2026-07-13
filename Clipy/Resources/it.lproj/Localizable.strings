@@ -209,3 +209,7 @@
 "Beta Language Hieroglyphs" = "𓂀 Geroglifici";
 "Beta Language Restart Message" = "Il cambio di lingua avrà effetto dopo il riavvio di Clipy.";
 "Beta Language Restart Now" = "Riavvia ora";
+
+"Updates Respect Message" = "Questa applicazione è un fork di Clipy, l'estensione open source degli appunti per macOS. Profondo rispetto e gratitudine vanno agli sviluppatori del Clipy originale e a naotaka, autore del predecessore ClipMenu. Questo progetto si fonda sul loro grande lavoro.";
+
+"Updates Original Repository Link" = "Link al repository originale di Clipy";

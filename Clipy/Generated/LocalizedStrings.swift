@@ -230,6 +230,10 @@ internal enum L10n {
   internal static let type = L10n.tr("Localizable", "Type")
   /// Updates
   internal static let updates = L10n.tr("Localizable", "Updates")
+  /// Link to the original Clipy repository
+  internal static let updatesOriginalRepositoryLink = L10n.tr("Localizable", "Updates Original Repository Link")
+  /// This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.
+  internal static let updatesRespectMessage = L10n.tr("Localizable", "Updates Respect Message")
   /// Value history
   internal static let valueHistory = L10n.tr("Localizable", "Value History")
   /// You can change this setting in the Preferences if you want.

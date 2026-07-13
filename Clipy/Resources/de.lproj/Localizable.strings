@@ -209,3 +209,7 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphen";
 "Beta Language Restart Message" = "Die Sprachänderung wird nach einem Neustart von Clipy wirksam.";
 "Beta Language Restart Now" = "Jetzt neu starten";
+
+"Updates Respect Message" = "Diese Anwendung ist ein Fork von Clipy, der Open-Source-Zwischenablage-Erweiterung für macOS. Tiefer Respekt und Dank gebühren den Entwicklern des ursprünglichen Clipy sowie naotaka, dem Autor des Vorgängers ClipMenu. Dieses Projekt steht auf ihrer großartigen Arbeit.";
+
+"Updates Original Repository Link" = "Link zum ursprünglichen Clipy-Repository";

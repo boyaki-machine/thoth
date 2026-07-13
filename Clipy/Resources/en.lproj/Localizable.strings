@@ -209,3 +209,7 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphs";
 "Beta Language Restart Message" = "The language change will take effect after restarting Clipy.";
 "Beta Language Restart Now" = "Restart Now";
+
+"Updates Respect Message" = "This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.";
+
+"Updates Original Repository Link" = "Link to the original Clipy repository";
