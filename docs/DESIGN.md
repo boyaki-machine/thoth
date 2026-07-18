@@ -157,17 +157,17 @@ The information this app stores in the Keychain is consolidated into **two entri
 
 | Classification | Keychain entry | Content (JSON schema) | Export | Cross-device |
 |---|---|---|---|---|
-| **User-configured** | service: `com.clipy-app.Clipy.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | Included | Possible |
-| **App-generated** | service: `com.clipy-app.Clipy.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | Excluded | Not possible (device-specific) |
+| **User-configured** | service: `io.github.boyaki-machine.Thoth.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | Included | Possible |
+| **App-generated** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | Excluded | Not possible (device-specific) |
 
-In addition, a self-signed certificate for code-signature stabilization (`kSecClassIdentity`, CN: `Clipy Local Signing`) is stored in the Keychain (see "Code Signing" in [DEVELOPMENT.md](DEVELOPMENT.md)).
+In addition, a self-signed certificate for code-signature stabilization (`kSecClassIdentity`, CN: `Thoth Local Signing`) is stored in the Keychain (see "Code Signing" in [DEVELOPMENT.md](DEVELOPMENT.md)).
 
 ### Key Management Fail-safes
 
 The handling of app-generated keys (DB / `.data` encryption keys) includes safeguards to prevent data loss.
 
 - If a Keychain read fails with anything **other than** `errSecItemNotFound`, the key is **not** created anew (creating a new key while an existing one is present-but-unreadable would make existing encrypted data permanently unopenable).
-- A new key is created **only while running stably-signed (Clipy Local Signing)** (creating it while ad-hoc-signed would make it unreadable after re-signing). Otherwise, encryption is deferred and the app runs in plaintext, retrying on a later launch.
+- A new key is created **only while running stably-signed (Thoth Local Signing)** (creating it while ad-hoc-signed would make it unreadable after re-signing). Otherwise, encryption is deferred and the app runs in plaintext, retrying on a later launch.
 - A newly created key is used only after being **read back and verified** to match.
 - Migration from a legacy format (separate entries) deletes the legacy entry only after a successful write and read-back verification of the new entry.
 

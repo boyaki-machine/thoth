@@ -17,15 +17,15 @@ platform :mac do
   lane :setup_release_id do
     # Update Project Team
     update_project_team(
-      path: "Clipy.xcodeproj",
+      path: "Thoth.xcodeproj",
       teamid: "BBCHAJ584H"
     )
     # Update Provisioning Profile
     update_provisioning_profile_specifier(
-      xcodeproj: "Clipy.xcodeproj",
-      new_specifier: "ClipyDistribution",
+      xcodeproj: "Thoth.xcodeproj",
+      new_specifier: "ThothDistribution",
       configuration: "Release",
-      target: "^Clipy$"
+      target: "^Thoth$"
     )
   end
 
@@ -46,8 +46,8 @@ platform :mac do
 
   private_lane :scan_clipy do
     scan(
-      workspace: "Clipy.xcworkspace",
-      scheme: "Clipy",
+      workspace: "Thoth.xcworkspace",
+      scheme: "Thoth",
       skip_build: true,
       verbose: true,
       clean: true

@@ -1,0 +1,211 @@
+//
+//  Localizable.strings (Lingua Latina)
+//
+//  Clipy
+//
+//  ジョーク・ローカライズ: ラテン語
+//
+
+"Launch Thoth on system startup?" = "Visne Thoth in initio systematis aperire?";
+
+"You can change this setting in the Preferences if you want" = "Hanc optionem in Praeferentiis mutare potes.";
+
+"Launch on system startup" = "In initio systematis aperire";
+
+"Don't Launch" = "Noli aperire";
+
+"Clear History" = "Historiam purgare";
+
+"Are you sure you want to clear your clipboard history?" = "Visne vere historiam tabulae affixae purgare?";
+
+"Cancel" = "Abrogare";
+
+"Edit Snippets" = "Fragmenta recensere...";
+
+"Preferences" = "Praeferentiae...";
+
+"Quit Thoth" = "Thoth relinquere";
+
+"History" = "Historia";
+
+"Snippet" = "Fragmentum";
+
+"General" = "Generalia";
+
+"Menu" = "Index";
+
+"Type" = "Genera";
+
+"Shortcuts" = "Claves compendiariae";
+
+"Updates" = "Renovationes";
+
+"Delete Item" = "Fragmentum delere";
+
+"Are you sure want to delete this item?" = "Visne vere hoc delere?";
+
+"Add" = "Addere";
+
+"Please fill in the contents of the snippet" = "Quaeso contenta fragmenti comple";
+
+"Please allow Accessibility" = "Quaeso Accessibilitatem permitte.";
+
+"To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Ut haec actio fiat, Accessibilitatem in optionibus Securitatis et Secreti in Praeferentiis Systematis permitte.";
+
+"Open System Preferences" = "Praeferentias Systematis aperire";
+
+"Secure Menu" = "Index securus";
+
+"Secure Items" = "Res securae";
+
+"Manage Secure Items" = "Res securas administrare...";
+
+"Secure Menu Authentication Reason" = "Ad indicem securum accedere";
+
+"Secure Menu Search Placeholder" = "Quaerere...";
+
+"Secure Menu No Results" = "Nihil congruens inventum";
+
+"Add Secure Item" = "Rem addere";
+
+"Edit Secure Item" = "Rem recensere";
+
+"Delete Secure Item" = "Rem delere";
+
+"Are you sure want to delete this secure item?" = "Visne vere hanc rem delere?";
+
+"Secure Item Title Placeholder" = "Titulus (ex. Gmail)";
+
+"Secure Field Label Placeholder" = "Titulus agri (ex. ID)";
+
+"Secure Field Value Placeholder" = "Valor";
+
+"Import Secure Items" = "Importare...";
+
+"Export Secure Items" = "Exportare...";
+
+"Secure Items Export Warning" = "Plica exportata omnes valores aperte continebit. Caute tracta.";
+
+"Imported Secure Items Format" = "%d res importatae.";
+
+"Secure Items Keychain Access Denied" = "Res securae e catena clavium legi non potuerunt. Hoc fieri potest cum binarium applicationis mutatum est (ex. post renovationem). Si macOS dialogum permissionis catenae clavium ostendit, elige \"Semper permittere\". Ad data exsistentia servanda, conservatio prohibita est.";
+
+"Tools" = "Instrumenta";
+
+"Generate New Password" = "Novum signum arcanum generare";
+
+"Password Generator" = "Generator signorum arcanorum";
+
+"Password Length" = "Longitudo:";
+
+"Character Types" = "Genera litterarum:";
+
+"Password Letters" = "Litterae (a-z)";
+
+"Password Digits" = "Numeri (0-9)";
+
+"Password Symbols" = "Signa";
+
+"Password Distinguish Case" = "Maiusculas et minusculas distinguere";
+
+"Easy To Type Password" = "Signum arcanum facile scribendum";
+
+"Value History" = "Historia valorum";
+
+"No Value History" = "Nulla historia";
+
+"Generate Password" = "Generare";
+
+"Copy Password" = "Exscribere";
+
+"Add Field" = "Agrum addere";
+
+"Save" = "Servare";
+
+"Close" = "Claudere";
+
+"Encrypt Decrypt" = "Plicam occultare / revelare";
+
+"Crypto Target" = "Obiectum:";
+
+"Crypto Target Placeholder" = "Plicam aut thecam elige";
+
+"Crypto Choose" = "Eligere...";
+
+"Crypto Output Name" = "Nomen exitus:";
+
+"Crypto Key" = "Signum arcanum:";
+
+"Crypto Key Placeholder" = "Signum arcanum occultationis";
+
+"Crypto Encrypt" = "Occultare";
+
+"Crypto Decrypt" = "Revelare";
+
+"Crypto Encrypting" = "Occultatur...";
+
+"Crypto Decrypting" = "Revelatur...";
+
+"Crypto Done" = "Factum";
+
+"Crypto Error Empty Password" = "Quaeso signum arcanum scribe.";
+
+"Crypto Error Empty Output Name" = "Quaeso nomen plicae exitus scribe.";
+
+"Crypto Error Input Not Found" = "Quaeso plicam aut thecam elige.";
+
+"Crypto Error Output Exists" = "Plica eiusdem nominis iam est.";
+
+"Crypto Error Failed" = "Actio defecit. Signum arcanum aut plicam proba et iterum tempta.";
+
+"Crypto Fingerprint" = "Signo arcano digiti uti";
+
+"Crypto Fingerprint Reason" = "Authentica ut signo arcano digiti utaris";
+
+"Crypto Fingerprint Applied" = "Signum arcanum digiti impositum.";
+
+"Crypto Fingerprint Failed" = "Authenticatio defecit.";
+
+"Crypto No Fingerprint Password" = "Nullum signum arcanum digiti registratum. In administratione registra.";
+
+"Crypto Manage Fingerprint Password" = "Signum arcanum digiti administrare...";
+
+"Crypto Register Update" = "Registrare / Renovare";
+
+"Crypto Fingerprint Password Saved" = "Signum arcanum digiti servatum.";
+
+"Realm Open Failed Title" = "Basis datorum historiae aperiri non potuit";
+"Realm Open Failed Message" = "Basis datorum historiae tabulae affixae aperiri non potuit. Clavis occultationis fortasse deest aut plica corrupta est. Exire et iterum temptare potes, aut basim datorum restituere (omnis historia et fragmenta delebuntur).";
+"Realm Open Failed Quit" = "Exire";
+"Realm Open Failed Reset" = "Basim datorum restituere";
+
+"Add TOTP" = "TOTP addere...";
+
+"TOTP Import Title" = "Signum arcanum unius temporis (TOTP) addere";
+"TOTP Import Description" = "Scribe otpauth:// URI aut secretum, aut e tabula affixa vel codice QR in scrinio lege.";
+"TOTP Import Placeholder" = "otpauth://totp/... aut secretum Base32";
+"TOTP From Clipboard" = "E tabula affixa";
+"TOTP Read QR On Screen" = "QR in scrinio legere";
+"TOTP Imported From Clipboard" = "E tabula affixa importatum.";
+"TOTP Not Found In Clipboard" = "Nullum TOTP / QR validum in tabula affixa inventum.";
+"TOTP Read QR Success" = "Codex QR lectus.";
+"TOTP Read QR Failed" = "Codex QR legi non potuit.";
+"TOTP Invalid Input" = "Scribe otpauth:// URI aut secretum validum.";
+"TOTP Default Field Label" = "Signum arcanum unius temporis (TOTP)";
+"TOTP Registered At Format" = "Registratum %@";
+
+"Crypto Encrypted With Command" = "Occultatum. Sine Thoth quoque hoc mandato openssl revelari potest:";
+"Crypto Copy Command" = "Mandatum exscribere";
+
+"Copied" = "Exscriptum";
+
+"Beta Language" = "Lingua:";
+"Beta Language System Default" = "Systematis praedefinita";
+"Beta Language Latin" = "Lingua Latina";
+"Beta Language Hieroglyphs" = "𓂀 Hieroglyphica";
+"Beta Language Restart Message" = "Mutatio linguae post Thoth renovatum valebit.";
+"Beta Language Restart Now" = "Nunc renovare";
+
+"Updates Respect Message" = "Haec applicatio est propago Clipy, extensionis tabulae affixae fontis aperti pro macOS. Summa reverentia et gratia debentur creatoribus Clipy originalis atque naotaka, auctori praecursoris ClipMenu. Hoc opus in magnis eorum operibus stat.";
+
+"Updates Original Repository Link" = "Nexus ad repositorium Clipy originale";

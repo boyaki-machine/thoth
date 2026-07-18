@@ -1,15 +1,15 @@
 strings:
-  inputs: Clipy/Resources/en.lproj/Localizable.strings
+  inputs: Thoth/Resources/en.lproj/Localizable.strings
   outputs:
     templateName: structured-swift4
-    output: Clipy/Generated/LocalizedStrings.swift
+    output: Thoth/Generated/LocalizedStrings.swift
 xcassets:
-  inputs: Clipy/Resources/Images.xcassets
+  inputs: Thoth/Resources/Images.xcassets
   outputs:
     templateName: swift4
-    output: Clipy/Generated/AssetsImages.swift
+    output: Thoth/Generated/AssetsImages.swift
 colors:
-  inputs: Clipy/Resources/colors.txt
+  inputs: Thoth/Resources/colors.txt
   outputs:
     templateName: swift4
-    output: Clipy/Generated/Colors.swift
+    output: Thoth/Generated/Colors.swift

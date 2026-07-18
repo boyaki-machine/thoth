@@ -1,6 +1,6 @@
 included:
-  - Clipy/Sources
-  - ClipyTests
+  - Thoth/Sources
+  - ThothTests
 excluded:
   - Pods
 opt_in_rules:

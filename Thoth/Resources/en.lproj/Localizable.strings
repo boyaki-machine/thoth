@@ -1,0 +1,215 @@
+//
+//  Localizable.strings
+//
+//  Clipy
+//  GitHub: https://github.com/clipy
+//  HP: https://clipy-app.com
+//
+//  Created by Econa77 on 2015/06/21.
+//
+//  Copyright © 2015-2018 Clipy Project.
+//
+
+"Launch Thoth on system startup?" = "Launch Thoth on system startup?";
+
+"You can change this setting in the Preferences if you want" = "You can change this setting in the Preferences if you want.";
+
+"Launch on system startup" = "Launch on system startup";
+
+"Don't Launch" = "Don't Launch";
+
+"Clear History" = "Clear History";
+
+"Are you sure you want to clear your clipboard history?" = "Are you sure you want to clear your clipboard history?";
+
+"Cancel" = "Cancel";
+
+"Edit Snippets" = "Edit Snippets...";
+
+"Preferences" = "Preferences...";
+
+"Quit Thoth" = "Quit Thoth";
+
+"History" = "History";
+
+"Snippet" = "Snippet";
+
+"General" = "General";
+
+"Menu" = "Menu";
+
+"Type" = "Type";
+
+"Shortcuts" = "Shortcuts";
+
+"Updates" = "Updates";
+
+"Delete Item" = "Delete Item";
+
+"Are you sure want to delete this item?" = "Are you sure want to delete this item?";
+
+"Add" = "Add";
+
+"Please fill in the contents of the snippet" = "Please fill in the contents of the snippet";
+
+"Please allow Accessibility" = "Please allow Accessibility.";
+
+"To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.";
+
+"Open System Preferences" = "Open System Preferences";
+
+"Secure Menu" = "Secure Menu";
+
+"Secure Items" = "Secure Items";
+
+"Manage Secure Items" = "Manage Secure Items...";
+
+"Secure Menu Authentication Reason" = "Access Secure Menu";
+
+"Secure Menu Search Placeholder" = "Search...";
+
+"Secure Menu No Results" = "No matching items";
+
+"Add Secure Item" = "Add Item";
+
+"Edit Secure Item" = "Edit Item";
+
+"Delete Secure Item" = "Delete Item";
+
+"Are you sure want to delete this secure item?" = "Are you sure you want to delete this item?";
+
+"Secure Item Title Placeholder" = "Title (e.g. Gmail)";
+
+"Secure Field Label Placeholder" = "Label (e.g. ID)";
+
+"Secure Field Value Placeholder" = "Value";
+
+"Import Secure Items" = "Import...";
+
+"Export Secure Items" = "Export...";
+
+"Secure Items Export Warning" = "The exported file will contain all values in plain text. Handle it with care.";
+
+"Imported Secure Items Format" = "Imported %d item(s).";
+
+"Secure Items Keychain Access Denied" = "Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose \"Always Allow\". Saving is disabled to protect the existing data.";
+
+"Tools" = "Tools";
+
+"Generate New Password" = "Generate New Password";
+
+"Password Generator" = "Password Generator";
+
+"Password Length" = "Length:";
+
+"Character Types" = "Character Types:";
+
+"Password Letters" = "Letters (a-z)";
+
+"Password Digits" = "Digits (0-9)";
+
+"Password Symbols" = "Symbols";
+
+"Password Distinguish Case" = "Distinguish upper/lower case";
+
+"Easy To Type Password" = "Easy-to-type password";
+
+"Value History" = "Value history";
+
+"No Value History" = "No history";
+
+"Generate Password" = "Generate";
+
+"Copy Password" = "Copy";
+
+"Add Field" = "Add Field";
+
+"Save" = "Save";
+
+"Close" = "Close";
+
+"Encrypt Decrypt" = "Encrypt / Decrypt File";
+
+"Crypto Target" = "Target:";
+
+"Crypto Target Placeholder" = "Choose a file or folder";
+
+"Crypto Choose" = "Choose...";
+
+"Crypto Output Name" = "Output name:";
+
+"Crypto Key" = "Password:";
+
+"Crypto Key Placeholder" = "Encryption password";
+
+"Crypto Encrypt" = "Encrypt";
+
+"Crypto Decrypt" = "Decrypt";
+
+"Crypto Encrypting" = "Encrypting...";
+
+"Crypto Decrypting" = "Decrypting...";
+
+"Crypto Done" = "Done";
+
+"Crypto Error Empty Password" = "Please enter a password.";
+
+"Crypto Error Empty Output Name" = "Please enter an output file name.";
+
+"Crypto Error Input Not Found" = "Please choose a file or folder.";
+
+"Crypto Error Output Exists" = "A file with the same name already exists.";
+
+"Crypto Error Failed" = "Operation failed. Check the password or file and try again.";
+
+"Crypto Fingerprint" = "Use fingerprint password";
+
+"Crypto Fingerprint Reason" = "Authenticate to use the fingerprint password";
+
+"Crypto Fingerprint Applied" = "Fingerprint password applied.";
+
+"Crypto Fingerprint Failed" = "Authentication failed.";
+
+"Crypto No Fingerprint Password" = "No fingerprint password is registered. Register one from the manager.";
+
+"Crypto Manage Fingerprint Password" = "Manage Fingerprint Password...";
+
+"Crypto Register Update" = "Register / Update";
+
+"Crypto Fingerprint Password Saved" = "Fingerprint password saved.";
+
+"Realm Open Failed Title" = "Failed to open the history database";
+"Realm Open Failed Message" = "The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).";
+"Realm Open Failed Quit" = "Quit";
+"Realm Open Failed Reset" = "Reset Database";
+
+"Add TOTP" = "Add TOTP...";
+
+"TOTP Import Title" = "Add One-Time Password (TOTP)";
+"TOTP Import Description" = "Enter an otpauth:// URI or a secret, or read one from the clipboard or a QR code on screen.";
+"TOTP Import Placeholder" = "otpauth://totp/... or Base32 secret";
+"TOTP From Clipboard" = "From Clipboard";
+"TOTP Read QR On Screen" = "Read QR on Screen";
+"TOTP Imported From Clipboard" = "Imported from the clipboard.";
+"TOTP Not Found In Clipboard" = "No valid TOTP / QR code found in the clipboard.";
+"TOTP Read QR Success" = "QR code has been read.";
+"TOTP Read QR Failed" = "Could not read a QR code.";
+"TOTP Invalid Input" = "Enter a valid otpauth:// URI or secret.";
+"TOTP Default Field Label" = "One-Time Password (TOTP)";
+"TOTP Registered At Format" = "Registered %@";
+
+"Crypto Encrypted With Command" = "Encrypted. It can also be decrypted without Thoth using the openssl command below:";
+"Crypto Copy Command" = "Copy Command";
+
+"Copied" = "Copied";
+
+"Beta Language" = "Language:";
+"Beta Language System Default" = "System Default";
+"Beta Language Latin" = "Lingua Latina (Latin)";
+"Beta Language Hieroglyphs" = "𓂀 Hieroglyphs";
+"Beta Language Restart Message" = "The language change will take effect after restarting Thoth.";
+"Beta Language Restart Now" = "Restart Now";
+
+"Updates Respect Message" = "This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.";
+
+"Updates Original Repository Link" = "Link to the original Clipy repository";

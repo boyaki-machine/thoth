@@ -37,7 +37,7 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 | RxSwift / RxCocoa | リアクティブなイベント処理・設定監視 |
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
-| Sparkle | 自動アップデート |
+| Sparkle | 自動アップデート（機能撤去済み・現在は未使用の依存のみ残存） |
 | PINCache | サムネイル画像のキャッシュ |
 | LoginServiceKit | ログイン時の自動起動 |
 | RxScreeen | スクリーンショット監視 |
@@ -50,21 +50,21 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 ### アーキテクチャの前提
 
 - **依存性注入**: `AppEnvironment.current` を通じてサービス群（`Environment`）へアクセスします。テストでは `AppEnvironment.push/popLast` でモック環境に差し替えられます。
-- **コード生成**: `L10n.*`（ローカライズ文字列）と `Asset.*`（画像）は SwiftGen がビルド時に自動生成します。文言・アセットを追加する場合は `Clipy/Resources/*.lproj/Localizable.strings` などの元ファイルを編集すれば、ビルド時に `Clipy/Generated/` 以下が再生成されます（生成ファイルの手編集は不要）。
+- **コード生成**: `L10n.*`（ローカライズ文字列）と `Asset.*`（画像）は SwiftGen がビルド時に自動生成します。文言・アセットを追加する場合は `Thoth/Resources/*.lproj/Localizable.strings` などの元ファイルを編集すれば、ビルド時に `Thoth/Generated/` 以下が再生成されます（生成ファイルの手編集は不要）。
 
 ---
 
 ## 2. プロジェクトのファイル・フォルダ構成
 
 ```
-Clipy/
-├── Clipy/
+（リポジトリルート）
+├── Thoth/
 │   ├── Sources/
 │   │   ├── AppDelegate.swift        アプリのエントリポイント・起動シーケンス統括
 │   │   ├── Constants.swift          UserDefaults キー・ペーストボード型などの定数
 │   │   ├── Enums/                   MenuType など
 │   │   ├── Environments/            DI コンテナ（Environment / AppEnvironment）
-│   │   ├── Extensions/              Swift/Cocoa 拡張（NSAlert+Clipy 等）
+│   │   ├── Extensions/              Swift/Cocoa 拡張（NSAlert+Thoth 等）
 │   │   ├── Managers/                MenuManager（+MenuBuilding / +Popup に分割）
 │   │   ├── Models/                  Realm モデル（CPYClip/CPYSnippet/CPYFolder）、
 │   │   │                            CPYClipData、SecureMenuItem
@@ -77,7 +77,7 @@ Clipy/
 │   ├── Resources/                   *.lproj（ローカライズ）、画像アセット
 │   ├── Generated/                   SwiftGen 生成ファイル（L10n / Asset / Colors）
 │   └── Supporting Files/            Info.plist など
-├── ClipyTests/                      ユニットテスト（Quick + Nimble）
+├── ThothTests/                      ユニットテスト（Quick + Nimble）
 ├── Podfile                          CocoaPods 依存定義
 ├── .swiftlint.yml                   コード規約設定
 ├── README_JP.md                     利用者向け説明
@@ -86,7 +86,7 @@ Clipy/
     └── DESIGN_JP.md                 データ形式・暗号仕様・設計方針
 ```
 
-### Services レイヤー（`Clipy/Sources/Services/`）
+### Services レイヤー（`Thoth/Sources/Services/`）
 
 ビジネスロジックはサービス層に集約され、`AppEnvironment.current.xxxService` でアクセスします。
 
@@ -105,7 +105,7 @@ Clipy/
 | `AccessibilityService` | アクセシビリティ権限の確認・誘導 |
 | `CodeSignService` | 起動時の自己署名安定化（後述） |
 
-補助的な永続化ユーティリティ（`Clipy/Sources/Utility/`）:
+補助的な永続化ユーティリティ（`Thoth/Sources/Utility/`）:
 
 - `RealmProvider` — Realm 構成・スキーマ移行・暗号化・アプリ生成鍵の管理
 - `ClipDataStore` — クリップ実データ（`.data` ファイル）の暗号化読み書き
@@ -114,10 +114,10 @@ Clipy/
 
 ## 3. 試験方法（CLI）
 
-ユニットテスト（`ClipyTests` ターゲット / Quick + Nimble）はスキームの Test アクション（Debug 構成）で実行します。
+ユニットテスト（`ThothTests` ターゲット / Quick + Nimble）はスキームの Test アクション（Debug 構成）で実行します。
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy \
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
   -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES
 ```
 
@@ -125,11 +125,11 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy \
 
 ### テストの前提
 
-- テストは Realm のインメモリ DB・UserDefaults・キーチェーン（テスト専用 service `com.clipy-app.ClipyTests.SecureMenu` を使用し本番データには触れない）を使うため、追加のセットアップは不要です。
-- `ClipyTests` は `@testable import Clipy` を使うため、Test アクション（Debug 構成）以外で実行する場合は `ENABLE_TESTABILITY=YES` が必要です。
+- テストは Realm のインメモリ DB・UserDefaults・キーチェーン（テスト専用 service `io.github.boyaki-machine.ThothTests.SecureMenu` を使用し本番データには触れない）を使うため、追加のセットアップは不要です。
+- `ThothTests` は `@testable import Thoth` を使うため、Test アクション（Debug 構成）以外で実行する場合は `ENABLE_TESTABILITY=YES` が必要です。
 - 暗号化・クリップデータ暗号化のテストは、テスト実行時（`XCTestConfigurationFilePath` 環境変数が存在する場合）にキーチェーン鍵の生成をスキップし、インメモリ Realm と併用できるよう設計されています。
 
-### 主なテストスペック（`ClipyTests/`）
+### 主なテストスペック（`ThothTests/`）
 
 | 分類 | スペック |
 |---|---|
@@ -140,7 +140,7 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy \
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec` |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |
 
-特定スペックだけ実行する場合は `-only-testing:ClipyTests/CryptoServiceSpec` のように指定できます。
+特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 
 ---
 
@@ -173,7 +173,7 @@ bundle exec pod install
 
 ### 4-2. コード規約チェック
 
-SwiftLint（設定: `.swiftlint.yml`、対象: `Clipy/Sources` と `ClipyTests`）を実行します。
+SwiftLint（設定: `.swiftlint.yml`、対象: `Thoth/Sources` と `ThothTests`）を実行します。
 
 ```bash
 swiftlint   # プロジェクトのルートで実行
@@ -198,32 +198,32 @@ swiftlint   # プロジェクトのルートで実行
 
 ```bash
 # クリーン（必要に応じて）
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug clean
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Release clean
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug clean
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release clean
 # 完全にクリーンな状態から始めたい場合は DerivedData も削除
-rm -rf ~/Library/Developer/Xcode/DerivedData/Clipy-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/Thoth-*
 
 # デバッグビルド
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Debug build
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug build
 
 # リリースビルド
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy -configuration Release build
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release build
 ```
 
 成果物の出力先を明示する場合:
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Clipy.xcworkspace -scheme Clipy \
+SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
   -configuration Release build -derivedDataPath build/DerivedData
-# → build/DerivedData/Build/Products/Release/Clipy.app に生成される
+# → build/DerivedData/Build/Products/Release/Thoth.app に生成される
 ```
 
 生成アプリの起動 / 配置:
 
 ```bash
-open build/DerivedData/Build/Products/Release/Clipy.app
+open build/DerivedData/Build/Products/Release/Thoth.app
 # または Applications へ配置
-cp -R build/DerivedData/Build/Products/Release/Clipy.app /Applications/
+cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
 
 ---
@@ -234,7 +234,7 @@ cp -R build/DerivedData/Build/Products/Release/Clipy.app /Applications/
 
 セキュアアイテムは macOS のログインキーチェーンに保存され、キーチェーン項目の ACL は「作成したアプリのコード署名」に紐付きます。ad-hoc 署名（証明書なしのローカルビルド）では再ビルドのたびにバイナリのハッシュが変わり、キーチェーンから「別アプリ」と判定されて既存アイテムを読めなくなります。
 
-これを避けるため、アプリは起動時に自身の署名を確認し、デバイス固有の証明書「**Clipy Local Signing**」で自動的に再署名します。
+これを避けるため、アプリは起動時に自身の署名を確認し、デバイス固有の証明書「**Thoth Local Signing**」で自動的に再署名します。
 
 1. 起動時、自身がこの証明書で署名済みかを確認（署名済みなら何もしない）
 2. 未署名（ad-hoc）なら、ログインキーチェーンから証明書を探す（過去に生成済みなら再利用、なければ自己署名証明書を生成して保存。デバイスごとに一度だけ）
@@ -246,19 +246,19 @@ cp -R build/DerivedData/Build/Products/Release/Clipy.app /Applications/
 
 - デバイスで**初回のみ** macOS の確認ダイアログ（証明書の信頼・署名鍵の使用許可）が出ることがあります。「常に許可」を選択してください。
 - 署名変更に伴い、初回の再署名後は**アクセシビリティ権限の再付与**が必要です（以後のバージョンアップでは不要）。
-- 再署名を無効化するには `--clipy-skip-resign` 引数を付けて起動します。
+- 再署名を無効化するには `--thoth-skip-resign` 引数を付けて起動します。
 - いずれかの手順が失敗した場合は ad-hoc 署名のまま起動を続けます（ログは Console.app で `CodeSignService` を検索）。この場合、データベース・クリップの暗号化鍵の生成は次回の安定署名時まで保留されます（詳細は [DESIGN_JP.md](DESIGN_JP.md)）。
 
 ### アクセシビリティ権限のエントリ増殖について
 
-macOS のアクセシビリティ（TCC）はアプリを「バンドル ID + 署名要件」で識別するため、ad-hoc 署名のままビルドを重ねると、システム設定の一覧に Clipy のエントリが増えます。
+macOS のアクセシビリティ（TCC）はアプリを「バンドル ID + 署名要件」で識別するため、ad-hoc 署名のままビルドを重ねると、システム設定の一覧に Thoth のエントリが増えます。
 
-本アプリは再署名が**完了してから**アクセシビリティ確認を行うため（再署名前の ad-hoc バイナリは TCC に登録されない）、「Clipy Local Signing」で署名された状態で一度権限を許可すれば、以後のバージョンでも同じエントリが再利用されます。
+本アプリは再署名が**完了してから**アクセシビリティ確認を行うため（再署名前の ad-hoc バイナリは TCC に登録されない）、「Thoth Local Signing」で署名された状態で一度権限を許可すれば、以後のバージョンでも同じエントリが再利用されます。
 
-過去のビルドで増えた古いエントリは自動では消せないため、一度だけ以下でリセットしてから、新しく起動した Clipy に権限を付与し直してください。
+過去のビルドで増えた古いエントリは自動では消せないため、一度だけ以下でリセットしてから、新しく起動した Thoth に権限を付与し直してください。
 
 ```bash
-tccutil reset Accessibility com.clipy-app.Clipy
+tccutil reset Accessibility io.github.boyaki-machine.Thoth
 ```
 
 また、起動場所（パス）が変わるとエントリが分かれて見えることがあるため、アプリは毎回同じ場所（例: `/Applications` または `~/Applications`）に配置して起動することを推奨します。

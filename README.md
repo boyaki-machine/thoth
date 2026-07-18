@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="./Resources/clipy_logo.png" width="400">
+  <img src="./Resources/thoth_logo.png" width="400">
 </div>
 
 <br>
 
-A clipboard extension app for macOS. This is a personal, feature-extended fork of the original [Clipy](https://github.com/Clipy/Clipy), adding secure item management, password generation, and file encryption.
+**Thoth** is a clipboard extension app for macOS. It is a personal, feature-extended fork of the original [Clipy](https://github.com/Clipy/Clipy), adding secure item management, password generation, and file encryption.
 
 > 日本語版は [README_JP.md](README_JP.md) を参照してください。
 
@@ -19,6 +19,12 @@ It keeps the clipboard history and snippet features of the original Clipy, and a
 - **Secure item management** — paste passwords, TOTP, and other sensitive values directly without leaving them on the clipboard
 - **Password generation** — generate random passwords with configurable rules
 - **File encryption / decryption** — encrypt files and folders in an openssl-compatible format
+
+### About the Name "Thoth"
+
+This app started as a fork of Clipy, but as its own features grew and the differences became substantial — and out of respect for the original developers' wish that derivatives not use the Clipy name — it was renamed **Thoth**.
+
+Thoth is the ancient Egyptian god of **scribes, records, and wisdom**. The name of the god who writes down every word and guards secret knowledge felt fitting for an app that records your clipboard and manages your secrets. In Japanese, "Thoth" also happens to sound exactly like "tote (bag)" — a bag you can toss anything into. In the hieroglyph display mode (a joke feature), the app name is written as 𓍹𓆓𓎛𓅱𓏏𓇋𓍺, the spelling of Djehuty, Thoth's ancient Egyptian name.
 
 ### Acknowledgements
 
@@ -107,7 +113,7 @@ Password generation can also be invoked from the secure item edit sheet and the 
 
 ### 2-4. File Encryption / Decryption
 
-Encrypts and decrypts files and folders with a password. Encryption is done entirely in-process (passwords are never passed to an external command), and uses an **openssl-compatible container format**, so files can be decrypted with only the `openssl` command even on a machine where Clipy is not installed.
+Encrypts and decrypts files and folders with a password. Encryption is done entirely in-process (passwords are never passed to an external command), and uses an **openssl-compatible container format**, so files can be decrypted with only the `openssl` command even on a machine where Thoth is not installed.
 
 **How to use:**
 
@@ -121,7 +127,7 @@ Choose **Encrypt / Decrypt** from the main menu (also launchable with the `e` ke
 - Encrypted files use the `.enc` extension
 - Folders are packed into a tar archive before encryption and unpacked automatically on decryption
 
-#### Decrypting with openssl (recovery without Clipy)
+#### Decrypting with openssl (recovery without Thoth)
 
 An encrypted file is a 45-byte custom header followed by a standard `openssl enc` body. **Strip the 45-byte header first** before passing it to openssl (passing it directly causes a `bad magic number` error).
 
@@ -161,8 +167,8 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 
 1. Clone the repository
 2. Install dependencies (`bundle exec pod install`)
-3. Build (open `Clipy.xcworkspace` in Xcode, or use `xcodebuild` from the CLI)
-4. Place the built `Clipy.app` in `/Applications` and launch it
+3. Build (open `Thoth.xcworkspace` in Xcode, or use `xcodebuild` from the CLI)
+4. Place the built `Thoth.app` in `/Applications` and launch it
 
 **First-launch notes:**
 
@@ -182,7 +188,7 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 | **Menu** | Number of items shown (inline / inside folders), numbering, icon/image/tooltip/color-preview display, maximum title length, etc. |
 | **Type** | Which data types (string / RTF / PDF / image / filenames / URL, etc.) are saved to history |
 | **Shortcuts** | Hotkey assignments for each menu (main / history / snippet / secure menu) |
-| **Update** | Enable automatic update checks and set the check interval |
+| **Original** | Tribute to the original Clipy project, with a link to its repository and the app version |
 | **Excluded** | Register apps to exclude from clipboard-history capture |
 
 - **Excluded apps**: register apps whose content you don't want in history (e.g. password managers). Also, copies carrying a concealed marker such as `org.nspasteboard.ConcealedType` (e.g. copies from other password managers) are automatically kept out of history regardless of the exclude list.

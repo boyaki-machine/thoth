@@ -157,17 +157,17 @@ Base32 デコードは、実在サービスが発行するランダムな secret
 
 | 分類 | キーチェーンエントリ | 内容（JSON スキーマ） | Export | 端末間共有 |
 |---|---|---|---|---|
-| **ユーザー設定情報** | service: `com.clipy-app.Clipy.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | 対象 | 可能 |
-| **アプリ生成情報** | service: `com.clipy-app.Clipy.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | 対象外 | 不可（端末固有） |
+| **ユーザー設定情報** | service: `io.github.boyaki-machine.Thoth.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | 対象 | 可能 |
+| **アプリ生成情報** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | 対象外 | 不可（端末固有） |
 
-このほか、コード署名の安定化に使う自己署名証明書（`kSecClassIdentity`、CN: `Clipy Local Signing`）がキーチェーンに保存されます（[DEVELOPMENT_JP.md](DEVELOPMENT_JP.md) の「コード署名」参照）。
+このほか、コード署名の安定化に使う自己署名証明書（`kSecClassIdentity`、CN: `Thoth Local Signing`）がキーチェーンに保存されます（[DEVELOPMENT_JP.md](DEVELOPMENT_JP.md) の「コード署名」参照）。
 
 ### 鍵管理のフェイルセーフ
 
 アプリ生成鍵（DB / `.data` 暗号鍵）の扱いには、データ消失を防ぐための安全策があります。
 
 - キーチェーン読み出しが `errSecItemNotFound` **以外**で失敗した場合、鍵は**新規作成しない**（鍵が存在するのに読めない状況で新しい鍵を作ると、既存の暗号化データを永久に開けなくなるため）。
-- 鍵の新規作成は**安定署名（Clipy Local Signing）で動作中の場合のみ**行う（ad-hoc 署名のまま作成すると、再署名後に読めなくなるため）。それ以外では暗号化を保留し、平文のまま起動して次回以降に再試行する。
+- 鍵の新規作成は**安定署名（Thoth Local Signing）で動作中の場合のみ**行う（ad-hoc 署名のまま作成すると、再署名後に読めなくなるため）。それ以外では暗号化を保留し、平文のまま起動して次回以降に再試行する。
 - 新規作成した鍵は、書き込み後に**読み戻して一致を検証**してから使用する。
 - 旧形式（個別エントリ）からの移行は、新エントリへの書き込みと読み戻し検証に成功した場合のみ旧エントリを削除する。
 

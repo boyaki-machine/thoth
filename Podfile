@@ -1,7 +1,7 @@
 platform :osx, '11.0'
 use_frameworks!
 
-target 'Clipy' do
+target 'Thoth' do
 
   # Application
   pod 'PINCache'
@@ -22,7 +22,7 @@ target 'Clipy' do
   pod 'SwiftLint'
   pod 'SwiftGen'
 
-  target 'ClipyTests' do
+  target 'ThothTests' do
     inherit! :search_paths
 
     pod 'Quick', '~> 5.0'

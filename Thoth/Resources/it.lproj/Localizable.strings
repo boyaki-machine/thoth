@@ -1,0 +1,215 @@
+//
+//  Localizable.strings
+//
+//  Clipy
+//  GitHub: https://github.com/clipy
+//  HP: https://clipy-app.com
+//
+//  Created by Econa77 on 2015/06/21.
+//
+//  Copyright © 2015-2018 Clipy Project.
+//
+
+"Launch Thoth on system startup?" = "Vuoi avviare Thoth al login?";
+
+"You can change this setting in the Preferences if you want" = "Puoi modificare questa impostazione nelle Preferenze.";
+
+"Launch on system startup" = "Avvia Thoth al login";
+
+"Don't Launch" = "Non avviare";
+
+"Clear History" = "Svuota la Cronologia";
+
+"Are you sure you want to clear your clipboard history?" = "Vuoi davvero cancellare tutte le voci della Cronologia?";
+
+"Cancel" = "Annulla";
+
+"Edit Snippets" = "Modifica snippet...";
+
+"Preferences" = "Preferenze...";
+
+"Quit Thoth" = "Esci da Thoth";
+
+"History" = "Cronologia";
+
+"Snippet" = "Snippet";
+
+"General" = "Generali";
+
+"Menu" = "Menu";
+
+"Type" = "Appunti";
+
+"Shortcuts" = "Scorciatoie";
+
+"Updates" = "Aggiornamenti";
+
+"Delete Item" = "Elimina";
+
+"Are you sure want to delete this item?" = "Vuoi davvero eliminare questo elemento?";
+
+"Add" = "Aggiungi";
+
+"Please fill in the contents of the snippet" = "Si prega di compilare il contenuto dello snippet";
+
+"Please allow Accessibility" = "Consenti l'accesso ad Accessibilità.";
+
+"To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Per eseguire questa azione, consenti a Thoth l'accesso ad Accessibilità in Preferenze di Sistema > Sicurezza e Privacy.";
+
+"Open System Preferences" = "Apri Preferenze di Sistema";
+
+"Secure Menu" = "Menu sicuro";
+
+"Secure Items" = "Elementi sicuri";
+
+"Manage Secure Items" = "Gestisci elementi sicuri...";
+
+"Secure Menu Authentication Reason" = "Accedere al menu sicuro";
+
+"Secure Menu Search Placeholder" = "Cerca...";
+
+"Secure Menu No Results" = "Nessun elemento corrispondente";
+
+"Add Secure Item" = "Aggiungi elemento";
+
+"Edit Secure Item" = "Modifica elemento";
+
+"Delete Secure Item" = "Elimina elemento";
+
+"Are you sure want to delete this secure item?" = "Vuoi davvero eliminare questo elemento?";
+
+"Secure Item Title Placeholder" = "Titolo (es. Gmail)";
+
+"Secure Field Label Placeholder" = "Etichetta (es. ID)";
+
+"Secure Field Value Placeholder" = "Valore";
+
+"Import Secure Items" = "Importa...";
+
+"Export Secure Items" = "Esporta...";
+
+"Secure Items Export Warning" = "Il file esportato conterrà tutti i valori in chiaro. Maneggialo con cura.";
+
+"Imported Secure Items Format" = "%d elementi importati.";
+
+"Secure Items Keychain Access Denied" = "Impossibile leggere gli elementi sicuri dal portachiavi. Può accadere quando il binario dell'app è cambiato (ad es. dopo un aggiornamento o una ricompilazione). Se macOS mostra una finestra di autorizzazione del portachiavi, scegli \"Consenti sempre\". Il salvataggio è disabilitato per proteggere i dati esistenti.";
+
+"Tools" = "Strumenti";
+
+"Generate New Password" = "Genera nuova password";
+
+"Password Generator" = "Generatore di password";
+
+"Password Length" = "Lunghezza:";
+
+"Character Types" = "Tipi di caratteri:";
+
+"Password Letters" = "Lettere (a-z)";
+
+"Password Digits" = "Cifre (0-9)";
+
+"Password Symbols" = "Simboli";
+
+"Password Distinguish Case" = "Distingui maiuscole/minuscole";
+
+"Easy To Type Password" = "Password facile da digitare";
+
+"Value History" = "Cronologia dei valori";
+
+"No Value History" = "Nessuna cronologia";
+
+"Generate Password" = "Genera";
+
+"Copy Password" = "Copia";
+
+"Add Field" = "Aggiungi campo";
+
+"Save" = "Salva";
+
+"Close" = "Chiudi";
+
+"Encrypt Decrypt" = "Cifra / Decifra file";
+
+"Crypto Target" = "Oggetto:";
+
+"Crypto Target Placeholder" = "Scegli un file o una cartella";
+
+"Crypto Choose" = "Scegli...";
+
+"Crypto Output Name" = "Nome di output:";
+
+"Crypto Key" = "Password:";
+
+"Crypto Key Placeholder" = "Password di cifratura";
+
+"Crypto Encrypt" = "Cifra";
+
+"Crypto Decrypt" = "Decifra";
+
+"Crypto Encrypting" = "Cifratura in corso...";
+
+"Crypto Decrypting" = "Decifratura in corso...";
+
+"Crypto Done" = "Fatto";
+
+"Crypto Error Empty Password" = "Inserisci una password.";
+
+"Crypto Error Empty Output Name" = "Inserisci un nome per il file di output.";
+
+"Crypto Error Input Not Found" = "Scegli un file o una cartella.";
+
+"Crypto Error Output Exists" = "Esiste già un file con lo stesso nome.";
+
+"Crypto Error Failed" = "Operazione non riuscita. Controlla la password o il file e riprova.";
+
+"Crypto Fingerprint" = "Usa la password con impronta digitale";
+
+"Crypto Fingerprint Reason" = "Autenticati per usare la password con impronta digitale";
+
+"Crypto Fingerprint Applied" = "Password con impronta digitale applicata.";
+
+"Crypto Fingerprint Failed" = "Autenticazione non riuscita.";
+
+"Crypto No Fingerprint Password" = "Nessuna password con impronta digitale registrata. Registrane una dal gestore.";
+
+"Crypto Manage Fingerprint Password" = "Gestisci password con impronta digitale...";
+
+"Crypto Register Update" = "Registra / Aggiorna";
+
+"Crypto Fingerprint Password Saved" = "Password con impronta digitale salvata.";
+
+"Realm Open Failed Title" = "Impossibile aprire il database della cronologia";
+"Realm Open Failed Message" = "Impossibile aprire il database della cronologia degli appunti. La chiave di cifratura potrebbe mancare o il file potrebbe essere danneggiato. Puoi uscire e riprovare, oppure ripristinare il database (questa operazione elimina tutta la cronologia e gli snippet).";
+"Realm Open Failed Quit" = "Esci";
+"Realm Open Failed Reset" = "Ripristina database";
+
+"Add TOTP" = "Aggiungi TOTP...";
+
+"TOTP Import Title" = "Aggiungi password monouso (TOTP)";
+"TOTP Import Description" = "Inserisci un URI otpauth:// o un secret, oppure leggilo dagli appunti o da un codice QR sullo schermo.";
+"TOTP Import Placeholder" = "otpauth://totp/... o secret Base32";
+"TOTP From Clipboard" = "Dagli appunti";
+"TOTP Read QR On Screen" = "Leggi QR sullo schermo";
+"TOTP Imported From Clipboard" = "Importato dagli appunti.";
+"TOTP Not Found In Clipboard" = "Nessun TOTP / codice QR valido trovato negli appunti.";
+"TOTP Read QR Success" = "Codice QR letto.";
+"TOTP Read QR Failed" = "Impossibile leggere il codice QR.";
+"TOTP Invalid Input" = "Inserisci un URI otpauth:// o un secret valido.";
+"TOTP Default Field Label" = "Password monouso (TOTP)";
+"TOTP Registered At Format" = "Registrato il %@";
+
+"Crypto Encrypted With Command" = "Cifratura completata. Il file può essere decifrato anche senza Thoth con il seguente comando openssl:";
+"Crypto Copy Command" = "Copia comando";
+
+"Copied" = "Copiato";
+
+"Beta Language" = "Lingua:";
+"Beta Language System Default" = "Predefinita di sistema";
+"Beta Language Latin" = "Lingua Latina (Latino)";
+"Beta Language Hieroglyphs" = "𓂀 Geroglifici";
+"Beta Language Restart Message" = "Il cambio di lingua avrà effetto dopo il riavvio di Thoth.";
+"Beta Language Restart Now" = "Riavvia ora";
+
+"Updates Respect Message" = "Questa applicazione è un fork di Clipy, l'estensione open source degli appunti per macOS. Profondo rispetto e gratitudine vanno agli sviluppatori del Clipy originale e a naotaka, autore del predecessore ClipMenu. Questo progetto si fonda sul loro grande lavoro.";
+
+"Updates Original Repository Link" = "Link al repository originale di Clipy";
