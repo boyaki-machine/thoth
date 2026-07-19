@@ -14,18 +14,14 @@ import Cocoa
 import RealmSwift
 
 /// アプリ全体で使う雑多なユーティリティ（UserDefaults 既定値の登録・
-/// 保存ディレクトリの用意・ファイル削除・ログ送信）。
+/// 保存ディレクトリの用意・ファイル削除）。
 final class CPYUtilities {
 
-    static func initSDKs() {
-        // Fabric
-        AppEnvironment.current.defaults.register(defaults: ["NSApplicationCrashOnExceptions": true])
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.collectCrashReport) else { return }
-        // TODO: - Migrate Firebase Crashlytics
-        CPYUtilities.sendCustomLog(with: "applicationDidFinishLaunching")
-    }
-
     static func registerUserDefaultKeys() {
+        // 未捕捉の ObjC 例外は握り潰さずクラッシュさせ、不整合な状態での続行を防ぐ
+        // （クラッシュ内容は macOS 標準の DiagnosticReports にローカル保存される）
+        AppEnvironment.current.defaults.register(defaults: ["NSApplicationCrashOnExceptions": true])
+
         var defaultValues = [String: Any]()
 
         defaultValues.updateValue(HotKeyService.defaultKeyCombos, forKey: Constants.UserDefaults.hotKeys)
@@ -37,7 +33,6 @@ final class CPYUtilities {
         defaultValues.updateValue(AppDelegate.storeTypesDictinary(), forKey: Constants.UserDefaults.storeTypes)
         defaultValues.updateValue(NSNumber(value: true), forKey: Constants.UserDefaults.inputPasteCommand)
         defaultValues.updateValue(NSNumber(value: true), forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        defaultValues.updateValue(NSNumber(value: true), forKey: Constants.UserDefaults.collectCrashReport)
 
         /* Menu */
         defaultValues.updateValue(NSNumber(value: 16), forKey: Constants.UserDefaults.menuIconSize)
@@ -106,8 +101,4 @@ final class CPYUtilities {
         }
     }
 
-    static func sendCustomLog(with name: String) {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.collectCrashReport) else { return }
-        // TODO: - Migrate Firebase Crashlytics
-    }
 }

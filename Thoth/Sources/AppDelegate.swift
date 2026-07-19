@@ -130,20 +130,16 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     }
 
     @objc func selectClipMenuItem(_ sender: NSMenuItem) {
-        CPYUtilities.sendCustomLog(with: "selectClipMenuItem")
         guard let primaryKey = sender.representedObject as? String,
               AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: primaryKey) else {
-            CPYUtilities.sendCustomLog(with: "Cannot fetch clip data")
             NSSound.beep()
             return
         }
     }
 
     @objc func selectSnippetMenuItem(_ sender: AnyObject) {
-        CPYUtilities.sendCustomLog(with: "selectSnippetMenuItem")
         guard let primaryKey = sender.representedObject as? String,
               AppEnvironment.current.pasteService.pasteSnippet(withPrimaryKey: primaryKey) else {
-            CPYUtilities.sendCustomLog(with: "Cannot fetch snippet data")
             NSSound.beep()
             return
         }
@@ -236,8 +232,6 @@ extension AppDelegate: NSApplicationDelegate {
         AppEnvironment.replaceCurrent(environment: AppEnvironment.fromStorage())
         // UserDefaults
         CPYUtilities.registerUserDefaultKeys()
-        // SDKs
-        CPYUtilities.initSDKs()
         // ステータスバーアイコンの表示（Realm には触れない）
         AppEnvironment.current.menuManager.setup()
         // Check Accessibility Permission

@@ -38,17 +38,6 @@
                         <binding destination="Rq0-bo-cst" name="value" keyPath="values.kCPYPrefInputPasteCommandKey" id="8bQ-Th-8DI"/>
                     </connections>
                 </button>
-                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VCz-7v-qzU" customClass="CPYDesignableButton" customModule="Thoth" customModuleProvider="target">
-                    <rect key="frame" x="59" y="160" width="403" height="18"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                    <buttonCell key="cell" type="check" title="Send crash report and error log (reflected at the next launch)" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="LsC-YB-qAw">
-                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                        <font key="font" metaFont="system"/>
-                    </buttonCell>
-                    <connections>
-                        <binding destination="Rq0-bo-cst" name="value" keyPath="values.kCPYCollectCrashReport" id="fJL-An-xXy"/>
-                    </connections>
-                </button>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="NO" preferredMaxLayoutWidth="206" translatesAutoresizingMaskIntoConstraints="NO" id="Aum-MH-ep1">
                     <rect key="frame" x="59" y="230" width="210" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
