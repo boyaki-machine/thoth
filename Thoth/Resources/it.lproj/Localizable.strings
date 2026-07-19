@@ -31,6 +31,11 @@
 "Quit Thoth" = "Esci da Thoth";
 
 "History" = "Cronologia";
+"History Search" = "Cerca...";
+"History Search Placeholder" = "Cerca nella cronologia...";
+"Section Copy History" = "Cronologia copie";
+"Section Settings" = "Impostazioni";
+"Show Snippet Menu" = "Mostra menu snippet";
 
 "Snippet" = "Snippet";
 

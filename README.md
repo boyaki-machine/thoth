@@ -50,16 +50,31 @@ Keeps a history of copied content that you can re-paste from a menu. Frequently 
 
 | Menu | Default hotkey |
 |---|---|
-| Main menu (history + snippets + tools) | **⌘⇧V** |
-| History menu | **⌘⌃V** |
+| Main menu (search + history + snippets + tools + settings) | **⌘⇧V** |
+| Copy history window (search + history only) | **⌘⌃V** |
 | Snippet menu | **⌘⇧B** |
 
+- The main menu and the copy history window appear as panels with a search box at the top (clicking the status bar icon also opens the main menu)
+- Copy history is shown in groups of 10 (`0 - 9`, `10 - 19`, ...); hovering over a group shows its items in a submenu, where the number keys `0`–`9` select an item directly
+- Press `/` to move to the search box and narrow the history down incrementally. The search covers not only titles but the **full text of the copied content**, and hits stay in their original groups
 - Inside menus you can navigate with arrow keys or vim-style `hjkl` keys
 - The maximum history size, display format, excluded apps, etc. can be adjusted in Preferences (see [4. Settings](#4-settings))
 
 ### 2-2. Secure Items
 
 Paste passwords, TOTP, and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
+
+**How to use:**
+
+- Press the hotkey to authenticate, then pick a parent item and a field to paste it directly into the frontmost app
+
+| Menu | Default hotkey |
+|---|---|
+| Secure menu | **⌘⇧.** |
+
+- Inside the menu you can navigate with arrow keys or vim-style `hjkl` keys
+- Press `/` to move to the search box and narrow items down incrementally
+- The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**
 
 | Feature | Detail |
 |---|---|
@@ -88,8 +103,6 @@ Open the menu bar icon → **Manage Secure Items…**, then click **+** to add a
 3. After authentication, the two-level menu opens
 4. Select the parent item, then the field to paste
 
-The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**.
-
 **Security characteristics:**
 
 - Values are read from Keychain only at the moment of authentication
@@ -108,6 +121,7 @@ Choose **Generate New Password** from the main menu (also launchable with the `p
 - **Character types**: any combination of letters / digits / symbols / distinguish upper and lower case
 - **Easy-to-type password**: a mode that groups characters by type to reduce keyboard-type switching (e.g. on smartphones)
 - **Copy** puts the result on the clipboard (with a concealed marker; auto-cleared after a while)
+- A **QR code** of the generated password is shown below the result so you can photograph it with your smartphone (see ["Passing the fingerprint password via QR code" in 2-4](#passing-the-fingerprint-password-via-qr-code))
 
 Password generation can also be invoked from the secure item edit sheet and the fingerprint-password management window.
 
@@ -126,6 +140,24 @@ Choose **Encrypt / Decrypt** from the main menu (also launchable with the `e` ke
 
 - Encrypted files use the `.enc` extension
 - Folders are packed into a tar archive before encryption and unpacked automatically on decryption
+
+#### Passing the Fingerprint Password via QR Code
+
+This feature hands the fingerprint password (the fixed password recalled via Touch ID) over to another machine using a QR code, so you never have to send the password itself through plaintext e-mail or chat when exchanging encrypted files across machines.
+
+**How to use (sender → receiver):**
+
+1. Open the fingerprint password manager (Encrypt / Decrypt window → **Manage Fingerprint Password...**) and authenticate with Touch ID
+2. A **QR code generated live** from the password field appears below it
+3. **Photograph the QR code with your smartphone** and carry it over
+4. On the receiving Mac, open the same manager window and press **Read QR Code** (camera access permission is required on first use)
+5. Hold the QR code photo on your smartphone up to the camera — the decoded password fills the field
+6. Verify the content and press **Register / Update** to save
+
+- The QR code embeds the password with a `thoth-cpw:v1:` prefix that is validated on reading, so unrelated QR codes (such as TOTP otpauth codes) are never imported by mistake
+- The password generator window ([2-3](#2-3-password-generation)) shows a QR code in the same format, enabling a "generate → photograph → read on another machine" flow for distributing a new shared password
+
+> **Note:** The QR code represents the password itself. Handle the photo carefully (cloud sync, sharing, etc.) and delete it once the transfer is done.
 
 #### Decrypting with openssl (recovery without Thoth)
 

@@ -13,14 +13,21 @@ import Cocoa
 // MARK: - Popup Menu
 extension MenuManager {
     func popUpMenu(_ type: MenuType) {
-        // セキュアメニューとは排他表示: 表示中のセキュアパネルを閉じる
+        // セキュアメニュー・履歴検索パネルとは排他表示: 表示中のパネルを閉じる
         dismissSecurePicker()
+        dismissHistoryPicker()
         let menu: NSMenu?
         switch type {
         case .main:
-            menu = clipMenu
+            // メインはセキュアアイテムと同じ「検索ボックス + リスト一体型」パネルで表示する
+            // （NSMenu にはインクリメンタルサーチを組み込めないため）。
+            // スニペット・ツール類はパネル下部の固定行から利用する
+            popUpHistorySearchPanel(showsFixedSections: true)
+            return
         case .history:
-            menu = historyMenu
+            // 履歴ホットキーは「コピー履歴 + 検索」だけのウィンドウとして表示する
+            popUpHistorySearchPanel(showsFixedSections: false)
+            return
         case .snippet:
             menu = snippetMenu
         case .secure:
@@ -54,9 +61,94 @@ extension MenuManager {
         [clipMenu, historyMenu, snippetMenu].forEach { $0.cancelTrackingWithoutAnimation() }
     }
 
-    func popUpSecureMenu() {
-        // コピー選択メニューとは排他表示: 表示中のメニューを閉じる
+    /// 表示中の履歴検索パネルを閉じて状態をリセットする。
+    /// コピー選択メニュー・セキュアメニューとの排他表示に使用する。
+    func dismissHistoryPicker() {
+        guard historyPickerPanel != nil else { return }
+        // willClose オブザーバー経由の二重リセットを避けるため先に解除する
+        if let observer = historyPickerCloseObserver { NotificationCenter.default.removeObserver(observer) }
+        historyPickerPanel?.close()
+        historyPickerPanel = nil
+        historyPickerCloseObserver = nil
+    }
+
+    /// 履歴検索パネルを表示する。
+    /// - Parameter showsFixedSections: true でスニペット・ツール・設定の固定セクション付き
+    ///   （メインメニュー相当）、false でコピー履歴 + 検索のみ（履歴ウィンドウ相当）。
+    /// 履歴のスナップショットは検索面として常に新しい順で提示する
+    /// （reorderClipsAfterPasting はメニュー表示順のための設定のためここでは適用しない）
+    func popUpHistorySearchPanel(showsFixedSections: Bool = true) {
         dismissClipMenus()
+        dismissSecurePicker()
+        dismissHistoryPicker()
+        guard RealmProvider.isReady else { return }
+
+        let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
+        let clipResults = realm.objects(CPYClip.self)
+            .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: false)
+        var clips = [CPYHistoryPickerPanel.ClipItem]()
+        for clip in clipResults {
+            clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count))
+            if clips.count >= maxHistory { break }
+        }
+
+        let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: showsFixedSections)
+        panel.onSelect = { [weak self, weak panel] dataHash in
+            // NSApp.activate で Thoth がアクティブになっているため、
+            // パネルを閉じる前にペースト先アプリを取得しておく
+            let callerApp = panel?.callerApp
+            self?.dismissHistoryPicker()
+            // ペースト先アプリをアクティブ化してから貼り付ける。
+            // activate は非同期で完了するため少し待ってから送出する
+            callerApp?.activate(options: [.activateIgnoringOtherApps])
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                if !AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: dataHash) {
+                    NSSound.beep()
+                }
+            }
+        }
+        panel.onAction = { [weak self] action in
+            self?.dismissHistoryPicker()
+            let delegate = NSApp.delegate as? AppDelegate
+            switch action {
+            case .snippets:
+                // パネルのクローズが落ち着いてからスニペットメニューをポップアップする
+                DispatchQueue.main.async { [weak self] in
+                    self?.popUpMenu(.snippet)
+                }
+            case .generatePassword:
+                delegate?.showPasswordGeneratorWindow()
+            case .crypto:
+                delegate?.showCryptoWindow()
+            case .clearHistory:
+                delegate?.clearAllHistory()
+            case .editSnippets:
+                delegate?.showSnippetEditorWindow()
+            case .preferences:
+                delegate?.showPreferenceWindow()
+            case .quit:
+                delegate?.terminate()
+            }
+        }
+
+        // パネルが Esc や外部クリックで閉じられた場合も状態をリセットする
+        historyPickerCloseObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            self?.historyPickerPanel = nil
+            self?.historyPickerCloseObserver = nil
+        }
+
+        historyPickerPanel = panel
+        panel.show(near: NSEvent.mouseLocation)
+    }
+
+    func popUpSecureMenu() {
+        // コピー選択メニュー・履歴検索パネルとは排他表示: 表示中のものを閉じる
+        dismissClipMenus()
+        dismissHistoryPicker()
         // セキュアアイテム管理ウィンドウ（編集シート含む）が表示中の場合は、
         // 選択パネルを出さずにそちらをアクティブにする
         if let managementWindow = CPYSecureItemsWindowController.shared.window, managementWindow.isVisible {
@@ -173,8 +265,9 @@ extension MenuManager {
     }
 
     func popUpSnippetFolder(_ folder: CPYFolder) {
-        // セキュアメニューとは排他表示: 表示中のセキュアパネルを閉じる
+        // セキュアメニュー・履歴検索パネルとは排他表示: 表示中のパネルを閉じる
         dismissSecurePicker()
+        dismissHistoryPicker()
         let folderMenu = NSMenu(title: folder.title)
         folderMenu.delegate = self
         // Folder title

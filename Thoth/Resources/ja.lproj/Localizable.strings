@@ -31,6 +31,11 @@
 "Quit Thoth" = "Thothを終了";
 
 "History" = "履歴";
+"History Search" = "検索...";
+"History Search Placeholder" = "履歴を検索...";
+"Section Copy History" = "コピー履歴";
+"Section Settings" = "設定";
+"Show Snippet Menu" = "スニペットメニュー表示";
 
 "Snippet" = "スニペット";
 

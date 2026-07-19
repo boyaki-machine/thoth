@@ -80,6 +80,9 @@ final class CPYSecurePickerPanel: NSPanel {
     private(set) var callerApp: NSRunningApplication?
     var subPanel: CPYSecureSubPanel?
     var isInSubPanelMode = false
+    /// サブパネルが左側に配置されているか（右側にスペースが無い場合のフォールバック）。
+    /// ← → / h l の操作方向の入れ替えに使う
+    var subPanelOnLeft = false
 
     // MARK: - Callbacks
 
@@ -114,6 +117,21 @@ final class CPYSecurePickerPanel: NSPanel {
     override func sendEvent(_ event: NSEvent) {
         if event.type == .keyDown, handleKeyDown(event) { return }
         super.sendEvent(event)
+    }
+
+    // MARK: - Mouse Hover
+
+    /// NSMenu と同じく、マウスカーソルが当たった行をハイライトし、
+    /// 親アイテム行ならサブパネルを表示する（tableView の NSTrackingArea 経由で呼ばれる）
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        let pointInTable = tableView.convert(event.locationInWindow, from: nil)
+        let row = tableView.row(at: pointInTable)
+        guard row >= 0, row < rows.count, rows[row].isSelectable,
+              row != tableView.selectedRow else { return }
+        tableView.selectRowIndexes(IndexSet(integer: row), byExtendingSelection: false)
+        isInSubPanelMode = false
+        updateSubPanel()
     }
 
     // MARK: - Window Lifecycle
@@ -218,6 +236,12 @@ extension CPYSecurePickerPanel {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         effectView.addSubview(scrollView)
 
+        // マウスホバーで行をハイライトするためのトラッキング（NSMenu と同じ操作感）。
+        // .inVisibleRect によりサイズ変更へ自動追従する
+        tableView.addTrackingArea(NSTrackingArea(rect: .zero,
+                                                 options: [.mouseMoved, .activeAlways, .inVisibleRect],
+                                                 owner: self, userInfo: nil))
+
         NSLayoutConstraint.activate([
             searchField.topAnchor.constraint(equalTo: effectView.topAnchor, constant: Layout.vPad),
             searchField.leadingAnchor.constraint(equalTo: effectView.leadingAnchor, constant: Layout.hPad),
@@ -262,7 +286,9 @@ extension CPYSecurePickerPanel {
         rows = result
         tableView.reloadData()
         sizePanel()
-        if tableView.selectedRow < 0 { selectFirstSelectable() }
+        // NSMenu と同じく初期状態では何も選択せず、カーソル（ホバー / j・k）が
+        // 当たったときに初めてハイライト・サブパネル表示を行う
+        // （継続ペーストモードの復元は preselectParent が明示的に選択する）
         if isVisible { updateSubPanel() }
     }
 
@@ -289,63 +315,6 @@ extension CPYSecurePickerPanel {
         let scrollH = min(tableH, Layout.maxTableH)
         let totalH  = Layout.vPad + Layout.searchH + (Layout.vPad - 2) + 1 + 2 + scrollH + 4
         setContentSize(NSSize(width: Layout.width, height: totalH))
-    }
-}
-
-// MARK: - Sub-Panel
-
-extension CPYSecurePickerPanel {
-    func updateSubPanel() {
-        guard isVisible else { return }
-        let idx = tableView.selectedRow
-        guard idx >= 0, idx < rows.count, case .parent(let item) = rows[idx],
-              !item.fields.isEmpty else {
-            closeSubPanel()
-            return
-        }
-        openSubPanel(for: item, atRow: idx)
-    }
-
-    func openSubPanel(for item: SecureMenuItem, atRow rowIndex: Int) {
-        let rowRectInTable  = tableView.rect(ofRow: rowIndex)
-        let rowRectInWindow = tableView.convert(rowRectInTable, to: nil)
-        let rowRectInScreen = convertToScreen(rowRectInWindow)
-
-        let sub: CPYSecureSubPanel
-        if let existing = subPanel {
-            sub = existing
-        } else {
-            sub = CPYSecureSubPanel()
-            sub.onFieldClicked = { [weak self] fieldIndex in
-                self?.confirmField(at: fieldIndex)
-            }
-            subPanel = sub
-            addChildWindow(sub, ordered: .above)
-        }
-
-        sub.setFields(item.fields)
-
-        let mainFrame     = frame
-        let subX          = mainFrame.maxX + 4
-        let targetTopY    = rowRectInScreen.maxY
-        let targetOriginY = targetTopY - sub.frame.height
-        let candidate     = NSRect(x: subX, y: targetOriginY,
-                                   width: sub.frame.width, height: sub.frame.height)
-        let screen  = NSScreen.screens.first { $0.frame.intersects(candidate) } ?? NSScreen.main
-        let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
-        let clampedX = max(visible.minX + 4, min(subX, visible.maxX - sub.frame.width - 4))
-        let clampedY = max(visible.minY + 4, min(targetOriginY, visible.maxY - sub.frame.height - 4))
-        sub.setFrameOrigin(NSPoint(x: clampedX, y: clampedY))
-        sub.orderFront(nil)
-    }
-
-    func closeSubPanel() {
-        guard let sub = subPanel else { return }
-        sub.stopTOTPTimer()
-        removeChildWindow(sub)
-        sub.close()
-        subPanel = nil
-        isInSubPanelMode = false
     }
 }
 

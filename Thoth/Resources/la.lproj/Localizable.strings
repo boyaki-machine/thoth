@@ -27,6 +27,11 @@
 "Quit Thoth" = "Thoth relinquere";
 
 "History" = "Historia";
+"History Search" = "Quaerere...";
+"History Search Placeholder" = "Historiam quaerere...";
+"Section Copy History" = "Historia exscripta";
+"Section Settings" = "Optiones";
+"Show Snippet Menu" = "Indicem snippet monstrare";
 
 "Snippet" = "Fragmentum";
 

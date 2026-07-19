@@ -49,11 +49,20 @@ extension MenuManager {
         labelItem.isEnabled = false
         menu.addItem(labelItem)
 
+        // 履歴検索パネルを開く項目。keyEquivalent "/" によりメニュー表示中の
+        // "/" キー押下でも起動する（ツール項目の p / e と同じネイティブ機構）
+        let searchItem = NSMenuItem(title: "🔍 \(L10n.historySearch)",
+                                    action: #selector(AppDelegate.showHistorySearchPanel),
+                                    keyEquivalent: "/")
+        searchItem.keyEquivalentModifierMask = []
+        menu.addItem(searchItem)
+
         // History
         let firstIndex = firstIndexOfMenuItems()
         var listNumber = firstIndex
         var subMenuCount = placeInLine
-        var subMenuIndex = 1 + placeInLine
+        // ラベル + 検索項目の 2 つ分を先頭に置くため、フォルダ項目の開始位置は 2 + placeInLine
+        var subMenuIndex = 2 + placeInLine
 
         let ascending = !defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
         let clipResults = realm.objects(CPYClip.self).sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
@@ -220,7 +229,19 @@ extension MenuManager {
         statusItem?.image = image
         statusItem?.highlightMode = true
         statusItem?.toolTip = "\(Constants.Application.name) v\(Bundle.main.appVersion ?? "")"
-        statusItem?.menu = clipMenu
+        // クリック時も検索ボックス一体型パネルを表示する（NSMenu は割り当てない）
+        statusItem?.button?.target = self
+        statusItem?.button?.action = #selector(statusItemClicked)
+    }
+
+    /// ステータスバーアイコンのクリックで検索ボックス一体型パネルを表示する。
+    /// 表示中の再クリックはトグルとして閉じる
+    @objc func statusItemClicked() {
+        if let panel = historyPickerPanel, panel.isVisible {
+            dismissHistoryPicker()
+            return
+        }
+        popUpHistorySearchPanel()
     }
 
     fileprivate func removeStatusItem() {

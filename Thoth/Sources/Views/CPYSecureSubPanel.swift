@@ -115,6 +115,19 @@ final class CPYSecureSubPanel: NSPanel {
     // MARK: - Callback
 
     var onFieldClicked: ((Int) -> Void)?
+    /// マウスホバーでフィールドが選択されたときに呼ばれる（メインパネルのモード連動用）
+    var onFieldHovered: ((Int) -> Void)?
+
+    /// NSMenu と同じく、マウスカーソルが当たったフィールド行をハイライトする
+    /// （確定はクリック / Enter で行う）
+    override func mouseMoved(with event: NSEvent) {
+        super.mouseMoved(with: event)
+        let pointInTable = tableView.convert(event.locationInWindow, from: nil)
+        let row = tableView.row(at: pointInTable)
+        guard row >= 0, row < currentFields.count, row != selectedFieldIndex else { return }
+        selectField(at: row)
+        onFieldHovered?(row)
+    }
 
     // MARK: - Init
 
@@ -273,6 +286,11 @@ final class CPYSecureSubPanel: NSPanel {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         effectView.addSubview(scrollView)
 
+        // マウスホバーで行をハイライトするためのトラッキング（NSMenu と同じ操作感）
+        tableView.addTrackingArea(NSTrackingArea(rect: .zero,
+                                                 options: [.mouseMoved, .activeAlways, .inVisibleRect],
+                                                 owner: self, userInfo: nil))
+
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: effectView.topAnchor, constant: Layout.vPad),
             scrollView.leadingAnchor.constraint(equalTo: effectView.leadingAnchor),
@@ -332,7 +350,7 @@ extension CPYSecureSubPanel: NSTableViewDataSource, NSTableViewDelegate {
                 : (field.value.count > 26 ? String(field.value.prefix(26)) + "…" : field.value)
             cell.textField?.stringValue = "\(field.label): \(preview)"
         }
-        cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
+        cell.textField?.font = .systemFont(ofSize: Layout.fontSize)
         return cell
     }
 

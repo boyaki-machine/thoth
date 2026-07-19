@@ -72,6 +72,9 @@ final class MenuManager: NSObject {
     var securePickerPanel: CPYSecurePickerPanel?
     // willCloseNotification オブザーバートークン（解放するまで通知を受け取るために保持が必須）
     var secureCloseObserver: NSObjectProtocol?
+    // 履歴検索パネル（履歴メニューの「検索...」/ "/" キーから開く）
+    var historyPickerPanel: CPYHistoryPickerPanel?
+    var historyPickerCloseObserver: NSObjectProtocol?
 
     // MARK: - Enum Values
     enum StatusType: Int {

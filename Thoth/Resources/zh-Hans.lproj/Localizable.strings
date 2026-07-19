@@ -31,6 +31,11 @@
 "Quit Thoth" = "退出 Thoth";
 
 "History" = "历史";
+"History Search" = "搜索...";
+"History Search Placeholder" = "搜索历史...";
+"Section Copy History" = "拷贝历史";
+"Section Settings" = "设置";
+"Show Snippet Menu" = "显示片段菜单";
 
 "Snippet" = "片断";
 

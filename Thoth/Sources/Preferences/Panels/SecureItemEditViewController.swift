@@ -77,7 +77,8 @@ final class SecureItemEditViewController: NSViewController {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 480, height: 360))
+        // 履歴列（🕘）まで初期状態で見えるよう、列幅合計に余裕を持たせた幅にする
+        view = NSView(frame: NSRect(x: 0, y: 0, width: 560, height: 360))
         setupUI()
     }
 

@@ -31,6 +31,11 @@
 "Quit Thoth" = "Quit Thoth";
 
 "History" = "History";
+"History Search" = "Search...";
+"History Search Placeholder" = "Search history...";
+"Section Copy History" = "Copy History";
+"Section Settings" = "Settings";
+"Show Snippet Menu" = "Show Snippet Menu";
 
 "Snippet" = "Snippet";
 

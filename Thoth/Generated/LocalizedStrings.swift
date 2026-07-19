@@ -142,6 +142,10 @@ internal enum L10n {
   internal static let generatePassword = L10n.tr("Localizable", "Generate Password")
   /// History
   internal static let history = L10n.tr("Localizable", "History")
+  /// Search...
+  internal static let historySearch = L10n.tr("Localizable", "History Search")
+  /// Search history...
+  internal static let historySearchPlaceholder = L10n.tr("Localizable", "History Search Placeholder")
   /// Import...
   internal static let importSecureItems = L10n.tr("Localizable", "Import Secure Items")
   /// Imported %d item(s).
@@ -190,6 +194,10 @@ internal enum L10n {
   internal static let realmOpenFailedTitle = L10n.tr("Localizable", "Realm Open Failed Title")
   /// Save
   internal static let save = L10n.tr("Localizable", "Save")
+  /// Copy History
+  internal static let sectionCopyHistory = L10n.tr("Localizable", "Section Copy History")
+  /// Settings
+  internal static let sectionSettings = L10n.tr("Localizable", "Section Settings")
   /// Label (e.g. ID)
   internal static let secureFieldLabelPlaceholder = L10n.tr("Localizable", "Secure Field Label Placeholder")
   /// Value
@@ -212,6 +220,8 @@ internal enum L10n {
   internal static let secureMenuSearchPlaceholder = L10n.tr("Localizable", "Secure Menu Search Placeholder")
   /// Shortcuts
   internal static let shortcuts = L10n.tr("Localizable", "Shortcuts")
+  /// Show Snippet Menu
+  internal static let showSnippetMenu = L10n.tr("Localizable", "Show Snippet Menu")
   /// Snippet
   internal static let snippet = L10n.tr("Localizable", "Snippet")
   /// To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.

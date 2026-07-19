@@ -31,6 +31,11 @@
 "Quit Thoth" = "Thoth beenden";
 
 "History" = "Verlauf";
+"History Search" = "Suchen...";
+"History Search Placeholder" = "Verlauf durchsuchen...";
+"Section Copy History" = "Kopierverlauf";
+"Section Settings" = "Einstellungen";
+"Show Snippet Menu" = "Snippet-Menü anzeigen";
 
 "Snippet" = "Snippet";
 

@@ -119,6 +119,16 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         AppEnvironment.current.clipService.clearAll()
     }
 
+    /// 履歴検索パネルを開く（履歴メニューの「検索...」項目 / メニュー表示中の "/" キー）。
+    /// メニュー項目のアクションはメニュー閉鎖後に発火するが、閉鎖に伴う
+    /// 元アプリへのアクティベーション返却と競合しないよう次のランループへ遅延する
+    /// （presentWindow と同じ理由）
+    @objc func showHistorySearchPanel() {
+        DispatchQueue.main.async {
+            AppEnvironment.current.menuManager.popUpHistorySearchPanel()
+        }
+    }
+
     @objc func selectClipMenuItem(_ sender: NSMenuItem) {
         CPYUtilities.sendCustomLog(with: "selectClipMenuItem")
         guard let primaryKey = sender.representedObject as? String,
