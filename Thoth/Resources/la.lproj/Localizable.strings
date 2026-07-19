@@ -197,6 +197,16 @@
 "Crypto Encrypted With Command" = "Occultatum. Sine Thoth quoque hoc mandato openssl revelari potest:";
 "Crypto Copy Command" = "Mandatum exscribere";
 
+"Crypto QR Caption" = "Codicem QR telephono photographa ut signum secretum transferas.";
+"Crypto Read QR Camera" = "Codicem QR legere";
+"Crypto QR Scanned" = "Signum secretum ex codice QR lectum est. Preme «Registrare / Renovare» ut serves.";
+"Camera QR Title" = "Codicem QR ante cameram tene";
+"Camera QR Guide" = "Codex QR quaeritur…";
+"Camera QR No Camera" = "Camera in hoc Mac non adest.";
+"Camera QR Permission Denied" = "Accessus ad cameram negatus est. Permitte Thoth in Systematis Optionibus > Secretum et Securitas > Camera.";
+"Camera QR Open Settings" = "Systematis Optiones aperire";
+"Camera QR Wrong Payload" = "Hic codex QR non est codex signi Thoth.";
+
 "Copied" = "Exscriptum";
 
 "Beta Language" = "Lingua:";

@@ -40,6 +40,7 @@ final class CPYPasswordGeneratorWindowController: NSWindowController {
 /// ## レイアウト
 /// ```
 /// [ 生成されたパスワード（選択・コピー可能） ]
+///              [ QR コード ]
 /// 文字数: [ 16 ] --------o------ (スライダー)
 /// 文字種: [x] 半角英字  [x] 数字
 ///         [ ] 記号      [x] 大文字小文字を区別
@@ -50,7 +51,10 @@ final class CPYPasswordGeneratorViewController: NSViewController {
 
     private let service = PasswordGenerateService()
 
-    private let passwordField  = NSTextField(labelWithString: "")
+    private let passwordField = NSTextField(labelWithString: "")
+    /// 生成したパスワードの QR 表示（指紋パスワード管理と同じ thoth-cpw 形式。
+    /// スマートフォンでの持ち出しや、別端末のカメラ読み取りによる取り込みに使える）
+    private let qrImageView    = NSImageView()
     private let lengthField    = NSTextField()
     private let lengthSlider   = NSSlider()
     private lazy var lettersCheckbox = NSButton(checkboxWithTitle: L10n.passwordLetters, target: self, action: #selector(lettersCheckboxChanged))
@@ -65,7 +69,7 @@ final class CPYPasswordGeneratorViewController: NSViewController {
     private static let defaultLength = 16
 
     override func loadView() {
-        view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 250))
+        view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 425))
         setupUI()
     }
 
@@ -107,7 +111,16 @@ final class CPYPasswordGeneratorViewController: NSViewController {
                 return
             }
             self.passwordField.stringValue = password
+            self.updateQRCode()
         }
+    }
+
+    /// 表示中のパスワードから QR 表示を更新する（空・生成失敗時は非表示）
+    private func updateQRCode() {
+        let password = passwordField.stringValue
+        let image = password.isEmpty ? nil : CryptoPasswordQRCodec.generateQRImage(for: password)
+        qrImageView.image = image
+        qrImageView.isHidden = (image == nil)
     }
 
     /// 現在表示中のパスワードをクリップボードにコピーする。
@@ -166,6 +179,14 @@ fileprivate extension CPYPasswordGeneratorViewController {
         passwordField.lineBreakMode = .byTruncatingMiddle
         passwordField.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(passwordField)
+
+        // パスワードの QR 表示（ドット境界が滲まないよう最近傍補間で拡大する）
+        qrImageView.imageScaling = .scaleProportionallyUpOrDown
+        qrImageView.wantsLayer = true
+        qrImageView.layer?.magnificationFilter = .nearest
+        qrImageView.isHidden = true
+        qrImageView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(qrImageView)
 
         // 文字数
         let lengthLabel = NSTextField(labelWithString: L10n.passwordLength)
@@ -230,7 +251,12 @@ fileprivate extension CPYPasswordGeneratorViewController {
             passwordField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             passwordField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-            lengthLabel.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 20),
+            qrImageView.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 12),
+            qrImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            qrImageView.widthAnchor.constraint(equalToConstant: 160),
+            qrImageView.heightAnchor.constraint(equalToConstant: 160),
+
+            lengthLabel.topAnchor.constraint(equalTo: qrImageView.bottomAnchor, constant: 16),
             lengthLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             lengthField.centerYAnchor.constraint(equalTo: lengthLabel.centerYAnchor),
             lengthField.leadingAnchor.constraint(equalTo: lengthLabel.trailingAnchor, constant: 8),

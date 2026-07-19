@@ -201,6 +201,16 @@
 "Crypto Encrypted With Command" = "加密完成。在没有 Thoth 的环境中，也可以使用以下 openssl 命令解密：";
 "Crypto Copy Command" = "拷贝命令";
 
+"Crypto QR Caption" = "用智能手机拍摄二维码即可携带此密码";
+"Crypto Read QR Camera" = "读取二维码";
+"Crypto QR Scanned" = "已从二维码读取密码。请按「注册 / 更新」保存。";
+"Camera QR Title" = "请将二维码对准相机";
+"Camera QR Guide" = "正在寻找二维码…";
+"Camera QR No Camera" = "这台 Mac 上没有可用的相机。";
+"Camera QR Permission Denied" = "相机访问被拒绝。请在 系统设置 > 隐私与安全性 > 相机 中允许 Thoth。";
+"Camera QR Open Settings" = "打开系统设置";
+"Camera QR Wrong Payload" = "此二维码不是 Thoth 的密码二维码。";
+
 "Copied" = "已拷贝";
 
 "Beta Language" = "语言：";

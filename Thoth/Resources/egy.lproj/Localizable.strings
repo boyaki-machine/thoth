@@ -205,6 +205,16 @@
 "Crypto Encrypted With Command" = "𓇋𓏠𓈖 𓄤. 𓃹𓈖 𓅓 openssl 𓂜 𓍹𓆓𓎛𓅱𓏏𓇋𓍺:";
 "Crypto Copy Command" = "𓎡𓊪𓏭𓏞 𓌃";
 
+"Crypto QR Caption" = "𓁹 𓊖 QR 𓅓 𓏇𓏲𓏛 𓂋 𓋴𓐍𓂋 𓊪𓋴𓅱𓂋𓂧𓊃";
+"Crypto Read QR Camera" = "𓁹 QR";
+"Crypto QR Scanned" = "𓊪𓋴𓅱𓂋𓂧𓊃 𓁹 𓅓 QR. 𓏞 / 𓆣 𓂋 𓋴𓐍𓂋.";
+"Camera QR Title" = "𓂋𓂝 𓊖 QR 𓂋 𓂀𓏛";
+"Camera QR Guide" = "𓁹 𓊖 QR…";
+"Camera QR No Camera" = "𓂜 𓂀𓏛 𓅓 Mac 𓊪𓈖.";
+"Camera QR Permission Denied" = "𓂀𓏛 𓅪. 𓂋𓂝 Thoth 𓅓 𓊃𓏏𓏏𓈖𓊃 > 𓊃𓂝𓎡𓂋𓏏 > 𓂀𓏛.";
+"Camera QR Open Settings" = "𓉐 𓊃𓏏𓏏𓈖𓊃";
+"Camera QR Wrong Payload" = "𓊖 QR 𓊪𓈖 𓂜 𓊪𓋴𓅱𓂋𓂧𓊃 𓈖 𓍹𓆓𓎛𓅱𓏏𓇋𓍺.";
+
 "Copied" = "𓎡𓊪𓏭𓏞 𓄤";
 
 "Beta Language" = "𓌃𓂧𓅱𓀁:";

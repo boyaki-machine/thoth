@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2015年 Shunsuke Furubayashi. All rights reserved.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Thoth uses the camera to read a password QR code from your smartphone.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>

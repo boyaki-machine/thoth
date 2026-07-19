@@ -201,6 +201,16 @@
 "Crypto Encrypted With Command" = "暗号化が完了しました。Thoth が無い環境でも、以下の openssl コマンドで復号できます:";
 "Crypto Copy Command" = "コマンドをコピー";
 
+"Crypto QR Caption" = "スマートフォンで撮影してパスワードを持ち運べます";
+"Crypto Read QR Camera" = "QRコード読取り";
+"Crypto QR Scanned" = "QRからパスワードを読み取りました。「登録・更新」で保存してください。";
+"Camera QR Title" = "QRコードをカメラにかざしてください";
+"Camera QR Guide" = "QRコードを探しています…";
+"Camera QR No Camera" = "このMacで利用できるカメラがありません。";
+"Camera QR Permission Denied" = "カメラへのアクセスが拒否されています。システム設定 > プライバシーとセキュリティ > カメラ で Thoth を許可してください。";
+"Camera QR Open Settings" = "システム設定を開く";
+"Camera QR Wrong Payload" = "このQRコードはThothのパスワードQRではありません。";
+
 "Copied" = "コピーしました";
 
 "Beta Language" = "言語:";

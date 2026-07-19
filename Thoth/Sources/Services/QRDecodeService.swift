@@ -43,6 +43,21 @@ enum QRDecodeService {
         return decodeQRPayload(from: cgImage)
     }
 
+    /// CVPixelBuffer（カメラフレーム）から QR ペイロードを取り出す。
+    /// CGImage への変換コストを避けるため、フレームバッファを Vision に直接渡す
+    static func decodeQRPayload(from pixelBuffer: CVPixelBuffer) -> String? {
+        let request = VNDetectBarcodesRequest()
+        request.symbologies = [.qr]
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        do {
+            try handler.perform([request])
+        } catch {
+            return nil
+        }
+        let observations = (request.results as [VNBarcodeObservation]?) ?? []
+        return observations.compactMap { $0.payloadStringValue }.first
+    }
+
     // MARK: - Clipboard
 
     /// クリップボードから TOTP として使える文字列を取り出す。

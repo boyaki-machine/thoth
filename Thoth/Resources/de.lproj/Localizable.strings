@@ -201,6 +201,16 @@
 "Crypto Encrypted With Command" = "Verschlüsselt. Die Datei kann auch ohne Thoth mit dem folgenden openssl-Befehl entschlüsselt werden:";
 "Crypto Copy Command" = "Befehl kopieren";
 
+"Crypto QR Caption" = "Mit dem Smartphone scannen, um dieses Passwort mitzunehmen.";
+"Crypto Read QR Camera" = "QR-Code lesen";
+"Crypto QR Scanned" = "Passwort aus QR gelesen. Mit „Registrieren / Aktualisieren“ speichern.";
+"Camera QR Title" = "QR-Code vor die Kamera halten";
+"Camera QR Guide" = "Suche nach einem QR-Code…";
+"Camera QR No Camera" = "Auf diesem Mac ist keine Kamera verfügbar.";
+"Camera QR Permission Denied" = "Kamerazugriff verweigert. Erlauben Sie Thoth unter Systemeinstellungen > Datenschutz & Sicherheit > Kamera.";
+"Camera QR Open Settings" = "Systemeinstellungen öffnen";
+"Camera QR Wrong Payload" = "Dieser QR-Code ist kein Thoth-Passwort-QR.";
+
 "Copied" = "Kopiert";
 
 "Beta Language" = "Sprache:";

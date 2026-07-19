@@ -36,6 +36,18 @@ internal enum L10n {
   internal static let betaLanguageRestartNow = L10n.tr("Localizable", "Beta Language Restart Now")
   /// System Default
   internal static let betaLanguageSystemDefault = L10n.tr("Localizable", "Beta Language System Default")
+  /// Looking for a QR code…
+  internal static let cameraQRGuide = L10n.tr("Localizable", "Camera QR Guide")
+  /// No camera is available on this Mac.
+  internal static let cameraQRNoCamera = L10n.tr("Localizable", "Camera QR No Camera")
+  /// Open System Settings
+  internal static let cameraQROpenSettings = L10n.tr("Localizable", "Camera QR Open Settings")
+  /// Camera access is denied. Allow Thoth in System Settings > Privacy & Security > Camera.
+  internal static let cameraQRPermissionDenied = L10n.tr("Localizable", "Camera QR Permission Denied")
+  /// Hold the QR code up to the camera
+  internal static let cameraQRTitle = L10n.tr("Localizable", "Camera QR Title")
+  /// This QR code is not a Thoth password QR.
+  internal static let cameraQRWrongPayload = L10n.tr("Localizable", "Camera QR Wrong Payload")
   /// Cancel
   internal static let cancel = L10n.tr("Localizable", "Cancel")
   /// Character Types:
@@ -94,6 +106,12 @@ internal enum L10n {
   internal static let cryptoNoFingerprintPassword = L10n.tr("Localizable", "Crypto No Fingerprint Password")
   /// Output name:
   internal static let cryptoOutputName = L10n.tr("Localizable", "Crypto Output Name")
+  /// Scan with your smartphone to carry this password.
+  internal static let cryptoQRCaption = L10n.tr("Localizable", "Crypto QR Caption")
+  /// Password read from QR. Press Register / Update to save it.
+  internal static let cryptoQRScanned = L10n.tr("Localizable", "Crypto QR Scanned")
+  /// Read QR Code
+  internal static let cryptoReadQRCamera = L10n.tr("Localizable", "Crypto Read QR Camera")
   /// Register / Update
   internal static let cryptoRegisterUpdate = L10n.tr("Localizable", "Crypto Register Update")
   /// Target:
