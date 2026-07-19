@@ -61,6 +61,16 @@ extension MenuManager {
         [clipMenu, historyMenu, snippetMenu].forEach { $0.cancelTrackingWithoutAnimation() }
     }
 
+    /// 環境設定ウィンドウが表示中なら、フォーカスを設定ウィンドウへ戻す。
+    /// 設定ウィンドウを開いたままショートカットでパネルを表示 → 選択せずに閉じた場合に、
+    /// フォーカスが他アプリへ移ってしまわないようにする
+    func restorePreferencesFocusIfNeeded() {
+        guard let window = CPYPreferencesWindowController.sharedController.window,
+              window.isVisible else { return }
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
     /// 表示中の履歴検索パネルを閉じて状態をリセットする。
     /// コピー選択メニュー・セキュアメニューとの排他表示に使用する。
     func dismissHistoryPicker() {
@@ -84,11 +94,13 @@ extension MenuManager {
         guard RealmProvider.isReady else { return }
 
         let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
+        let maxTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)
         let clipResults = realm.objects(CPYClip.self)
             .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: false)
         var clips = [CPYHistoryPickerPanel.ClipItem]()
         for clip in clipResults {
-            clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count))
+            clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count,
+                                                        maxTitleLength: maxTitleLength))
             if clips.count >= maxHistory { break }
         }
 
@@ -139,6 +151,8 @@ extension MenuManager {
         ) { [weak self] _ in
             self?.historyPickerPanel = nil
             self?.historyPickerCloseObserver = nil
+            // 選択なしで閉じた場合、設定ウィンドウが開いていればフォーカスを戻す
+            self?.restorePreferencesFocusIfNeeded()
         }
 
         historyPickerPanel = panel
@@ -224,6 +238,8 @@ extension MenuManager {
                 self?.isSecureMenuActive = false
                 self?.securePickerPanel  = nil
                 self?.secureCloseObserver = nil
+                // 選択なしで閉じた場合、設定ウィンドウが開いていればフォーカスを戻す
+                self?.restorePreferencesFocusIfNeeded()
             }
 
             self.securePickerPanel = panel

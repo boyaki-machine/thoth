@@ -31,6 +31,8 @@
 "History Search Placeholder" = "Historiam quaerere...";
 "Section Copy History" = "Historia exscripta";
 "Section Settings" = "Optiones";
+"Preference Version Tab" = "Versio";
+"Version Release Date" = "Dies emissionis: %@";
 "Show Snippet Menu" = "Indicem snippet monstrare";
 
 "Snippet" = "Fragmentum";

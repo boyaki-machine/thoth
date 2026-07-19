@@ -35,6 +35,8 @@
 "History Search Placeholder" = "搜索历史...";
 "Section Copy History" = "拷贝历史";
 "Section Settings" = "设置";
+"Preference Version Tab" = "版本";
+"Version Release Date" = "发布日期: %@";
 "Show Snippet Menu" = "显示片段菜单";
 
 "Snippet" = "片断";

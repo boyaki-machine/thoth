@@ -9,6 +9,7 @@
 //
 
 import Cocoa
+import PINCache
 
 // MARK: - CPYHistorySubPanel
 
@@ -20,12 +21,15 @@ final class CPYHistorySubPanel: NSPanel {
     // MARK: - Layout
 
     private enum Layout {
-        static let width: CGFloat     = 300
+        static let minWidth: CGFloat  = 220
+        static let maxWidth: CGFloat  = 620
         static let maxTableH: CGFloat = 300
         static let rowH: CGFloat      = 22
         static let corner: CGFloat    = 8
         static let vPad: CGFloat      = 4
         static let fontSize: CGFloat  = NSFont.systemFontSize - 1
+        /// アイコン + 左右余白ぶんの固定幅（セルレイアウトと対応）
+        static let chromeWidth: CGFloat = 8 + 14 + 6 + 6 + 16
     }
 
     private static let cellID = NSUserInterfaceItemIdentifier("HistorySubClip")
@@ -38,8 +42,26 @@ final class CPYHistorySubPanel: NSPanel {
 
     // MARK: - Data
 
-    private(set) var currentClips: [CPYHistoryPickerPanel.ClipItem] = []
+    /// 表示行（メニュータブの設定を反映済みの表示用モデル）
+    struct Entry {
+        let clip: CPYHistoryPickerPanel.ClipItem
+        /// グループ内番号（番号開始値を加算済み。数字キーの対応にも使う）
+        let number: Int
+        /// 番号をタイトルに前置して表示するか（「メニュー項目に番号を付ける」）
+        let showsNumber: Bool
+        /// ツールチップ（「ツールチップを表示」が有効な場合のみ非 nil）
+        let toolTip: String?
+        /// サムネイル画像のキャッシュキー（画像/カラープレビュー表示が有効な場合のみ非 nil）
+        let thumbnailPath: String?
+        /// 種別アイコンの表示（「アイコンを表示」）
+        let showsTypeIcon: Bool
+    }
+
+    private(set) var entries: [Entry] = []
+    var currentClips: [CPYHistoryPickerPanel.ClipItem] { entries.map { $0.clip } }
     private(set) var selectedClipIndex: Int = -1
+    /// 表示内容（タイトルの最大表示文字数設定を反映済み）から計算した現在の幅
+    private var contentWidth: CGFloat = Layout.minWidth
 
     // MARK: - Callback
 
@@ -50,7 +72,7 @@ final class CPYHistorySubPanel: NSPanel {
     // MARK: - Init
 
     init() {
-        super.init(contentRect: NSRect(x: 0, y: 0, width: Layout.width, height: Layout.rowH + Layout.vPad * 2),
+        super.init(contentRect: NSRect(x: 0, y: 0, width: Layout.minWidth, height: Layout.rowH + Layout.vPad * 2),
                    styleMask: [.borderless], backing: .buffered, defer: false)
         isOpaque           = false
         backgroundColor    = .clear
@@ -78,12 +100,26 @@ final class CPYHistorySubPanel: NSPanel {
 
     // MARK: - Public Interface
 
-    func setClips(_ clips: [CPYHistoryPickerPanel.ClipItem]) {
-        currentClips      = clips
+    func setEntries(_ newEntries: [Entry]) {
+        entries           = newEntries
         selectedClipIndex = -1
+        contentWidth      = Self.preferredWidth(for: newEntries)
         tableView.reloadData()
         tableView.deselectAll(nil)
         sizePanel()
+    }
+
+    /// 表示するタイトルの実測幅から適切なパネル幅を求める。
+    /// 「メニュー項目タイトルの最大長」設定で切り詰められたタイトルに追従して
+    /// パネル幅も伸縮する（極端な設定値に備えて上下限でクランプ）
+    static func preferredWidth(for entries: [Entry]) -> CGFloat {
+        let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: Layout.fontSize)]
+        var maxTextWidth: CGFloat = 0
+        for entry in entries {
+            let text = entry.showsNumber ? "\(entry.number). \(entry.clip.title)" : entry.clip.title
+            maxTextWidth = max(maxTextWidth, (text as NSString).size(withAttributes: attributes).width)
+        }
+        return min(max(maxTextWidth + Layout.chromeWidth, Layout.minWidth), Layout.maxWidth)
     }
 
     /// 次クリップへ移動。最下端では false を返す
@@ -180,10 +216,10 @@ final class CPYHistorySubPanel: NSPanel {
     }
 
     private func sizePanel() {
-        let tableH  = CGFloat(currentClips.count) * Layout.rowH
+        let tableH  = CGFloat(entries.count) * Layout.rowH
         let scrollH = min(tableH, Layout.maxTableH)
         let totalH  = max(scrollH + Layout.vPad * 2, Layout.rowH + Layout.vPad * 2)
-        setContentSize(NSSize(width: Layout.width, height: totalH))
+        setContentSize(NSSize(width: contentWidth, height: totalH))
     }
 
     @objc private func rowClicked() {
@@ -199,7 +235,7 @@ final class CPYHistorySubPanel: NSPanel {
 
 extension CPYHistorySubPanel: NSTableViewDataSource, NSTableViewDelegate {
 
-    func numberOfRows(in tableView: NSTableView) -> Int { currentClips.count }
+    func numberOfRows(in tableView: NSTableView) -> Int { entries.count }
 
     func tableView(_ tableView: NSTableView,
                    viewFor tableColumn: NSTableColumn?,
@@ -228,12 +264,26 @@ extension CPYHistorySubPanel: NSTableViewDataSource, NSTableViewDelegate {
                         ])
                         return newCell
                    }()
-        let clip = currentClips[row]
-        // 数字ショートカット（元の位置の下 1 桁）を番号として表示する
-        cell.textField?.stringValue = "\(clip.index % CPYHistoryPickerPanel.Layout.groupSize). \(clip.title)"
+        let entry = entries[row]
+        // 「メニュー項目に番号を付ける」設定に応じてグループ内番号を前置する
+        cell.textField?.stringValue = entry.showsNumber ? "\(entry.number). \(entry.clip.title)" : entry.clip.title
         cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
-        cell.imageView?.image       = Self.typeIcon(for: clip)
-        cell.imageView?.contentTintColor = .secondaryLabelColor
+        cell.toolTip = entry.toolTip
+        // 画像サムネイル / カラープレビュー > 種別アイコン > なし、の優先順で表示する
+        if let thumbnailPath = entry.thumbnailPath {
+            cell.imageView?.image = nil
+            cell.imageView?.contentTintColor = nil
+            PINCache.shared.object(forKeyAsync: thumbnailPath) { [weak cell] _, _, object in
+                DispatchQueue.main.async {
+                    cell?.imageView?.image = object as? NSImage
+                }
+            }
+        } else if entry.showsTypeIcon {
+            cell.imageView?.image = Self.typeIcon(for: entry.clip)
+            cell.imageView?.contentTintColor = .secondaryLabelColor
+        } else {
+            cell.imageView?.image = nil
+        }
         return cell
     }
 

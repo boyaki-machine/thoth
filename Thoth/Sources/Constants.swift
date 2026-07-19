@@ -30,6 +30,8 @@ struct Constants {
 
         /// フォーク元であるオリジナル Clipy のリポジトリ
         static let originalRepositoryURL = URL(string: "https://github.com/Clipy/Clipy")!
+        /// 現行バージョンのリリース年月日（バージョンタブに表示。リリース時に更新する）
+        static let releaseDate = "2026-07-20"
     }
 
     struct Menu {

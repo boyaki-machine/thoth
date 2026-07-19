@@ -45,6 +45,18 @@ class ClipFullTextIndexerSpec: QuickSpec {
         extractionSpecs(makeStringClip: makeStringClip, store: { store }, path: path)
         buildSpecs(makeStringClip: makeStringClip, store: { store })
         filterSpecs()
+        layoutSpecs()
+        titleSpecs()
+    }
+
+    /// テスト用 ClipItem を生成する（Realm 非管理の CPYClip から）
+    private func makeItem(_ hash: String, title: String, index: Int) -> CPYHistoryPickerPanel.ClipItem {
+        let clip = CPYClip()
+        clip.dataHash = hash
+        clip.title = title
+        clip.primaryType = NSPasteboard.PasteboardType.deprecatedString.rawValue
+        clip.dataPath = "/tmp/\(hash).data"
+        return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
     }
 
     // MARK: - Matching
@@ -145,20 +157,13 @@ class ClipFullTextIndexerSpec: QuickSpec {
     // MARK: - Panel Filter
 
     private func filterSpecs() {
-        func item(_ hash: String, title: String, index: Int) -> CPYHistoryPickerPanel.ClipItem {
-            let clip = CPYClip()
-            clip.dataHash = hash
-            clip.title = title
-            clip.primaryType = NSPasteboard.PasteboardType.deprecatedString.rawValue
-            clip.dataPath = "/tmp/\(hash).data"
-            return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
-        }
+        let item = makeItem
 
         describe("履歴パネルのフィルタ") {
             let items = [
-                item("h1", title: "meeting notes", index: 0),
-                item("h2", title: "shopping list", index: 1),
-                item("h3", title: "random text", index: 2)
+                item("h1", "meeting notes", 0),
+                item("h2", "shopping list", 1),
+                item("h3", "random text", 2)
             ]
 
             it("空クエリは全件を元順で返す") {
@@ -189,54 +194,119 @@ class ClipFullTextIndexerSpec: QuickSpec {
                 expect(result).to(beEmpty())
             }
         }
+    }
 
-        describe("履歴パネルのグルーピング") {
+    // MARK: - Layout
+
+    private func layoutSpecs() {
+        let item = makeItem
+
+        describe("履歴パネルのレイアウト（インライン + グルーピング）") {
             // 20 件の履歴（インデックス 0..19）
-            let twenty = (0..<20).map { item("g\($0)", title: "clip number \($0)", index: $0) }
+            let twenty = (0..<20).map { item("g\($0)", "clip number \($0)", $0) }
+
+            func layout(_ items: [CPYHistoryPickerPanel.ClipItem],
+                        fullText: [String: String] = [:], query: String = "",
+                        totalCount: Int, placeInline: Int = 0, groupSize: Int = 10,
+                        numberOffset: Int = 0)
+                -> (inline: [CPYHistoryPickerPanel.ClipItem], groups: [CPYHistoryPickerPanel.ClipGroup]) {
+                let spec = CPYHistoryPickerPanel.LayoutSpec(placeInline: placeInline,
+                                                            groupSize: groupSize,
+                                                            numberOffset: numberOffset)
+                return CPYHistoryPickerPanel.makeLayout(items: items, fullText: fullText,
+                                                        query: query, totalCount: totalCount,
+                                                        spec: spec)
+            }
 
             it("空クエリは 10 件ずつのグループに分かれ、ラベルは元の区切りを表す") {
-                let groups = CPYHistoryPickerPanel.groups(items: twenty, fullText: [:],
-                                                          query: "", totalCount: 20)
-                expect(groups.count) == 2
-                expect(groups[0].title) == "0 - 9"
-                expect(groups[1].title) == "10 - 19"
-                expect(groups[0].clips.count) == 10
-                expect(groups[1].clips.count) == 10
+                let result = layout(twenty, totalCount: 20)
+                expect(result.inline).to(beEmpty())
+                expect(result.groups.count) == 2
+                expect(result.groups[0].title) == "0 - 9"
+                expect(result.groups[1].title) == "10 - 19"
+                expect(result.groups[0].clips.count) == 10
+                expect(result.groups[1].clips.count) == 10
+            }
+
+            it("番号を 1 開始にするとラベルも 1 開始になる") {
+                let result = layout(twenty, totalCount: 20, numberOffset: 1)
+                expect(result.groups[0].title) == "1 - 10"
+                expect(result.groups[1].title) == "11 - 20"
+            }
+
+            it("インライン表示数を指定すると先頭がインラインになり、グループはその後から始まる") {
+                let result = layout(twenty, totalCount: 20, placeInline: 5)
+                expect(result.inline.map { $0.dataHash }) == (0..<5).map { "g\($0)" }
+                expect(result.groups.count) == 2
+                expect(result.groups[0].startIndex) == 5
+                expect(result.groups[0].title) == "5 - 14"
+                expect(result.groups[1].title) == "15 - 19"
+            }
+
+            it("グループサイズの設定が反映される") {
+                let result = layout(twenty, totalCount: 20, groupSize: 5)
+                expect(result.groups.count) == 4
+                expect(result.groups[0].title) == "0 - 4"
+                expect(result.groups[3].title) == "15 - 19"
             }
 
             it("検索時も前に詰めず、元の位置のグループにヒットが残る") {
                 // 元の 3 番目と 15 番目だけがヒットするクエリ
                 let fullText = ["g3": "unique-aaa-token", "g15": "unique-aaa-token"]
-                let groups = CPYHistoryPickerPanel.groups(items: twenty, fullText: fullText,
-                                                          query: "unique-aaa", totalCount: 20)
-                expect(groups.count) == 2
-                expect(groups[0].title) == "0 - 9"
-                expect(groups[0].clips.map { $0.dataHash }) == ["g3"]
-                expect(groups[1].title) == "10 - 19"
-                expect(groups[1].clips.map { $0.dataHash }) == ["g15"]
+                let result = layout(twenty, fullText: fullText, query: "unique-aaa", totalCount: 20)
+                expect(result.groups.count) == 2
+                expect(result.groups[0].title) == "0 - 9"
+                expect(result.groups[0].clips.map { $0.dataHash }) == ["g3"]
+                expect(result.groups[1].title) == "10 - 19"
+                expect(result.groups[1].clips.map { $0.dataHash }) == ["g15"]
+            }
+
+            it("検索時のインラインヒットもインライン枠に残る") {
+                let fullText = ["g2": "inline-hit", "g15": "inline-hit"]
+                let result = layout(twenty, fullText: fullText, query: "inline-hit",
+                                    totalCount: 20, placeInline: 5)
+                expect(result.inline.map { $0.dataHash }) == ["g2"]
+                expect(result.groups.count) == 1
+                expect(result.groups[0].clips.map { $0.dataHash }) == ["g15"]
             }
 
             it("ヒットの無いグループは含まれない") {
                 let fullText = ["g15": "only-here"]
-                let groups = CPYHistoryPickerPanel.groups(items: twenty, fullText: fullText,
-                                                          query: "only-here", totalCount: 20)
-                expect(groups.count) == 1
-                expect(groups[0].title) == "10 - 19"
+                let result = layout(twenty, fullText: fullText, query: "only-here", totalCount: 20)
+                expect(result.groups.count) == 1
+                expect(result.groups[0].title) == "10 - 19"
             }
 
             it("端数グループのラベルは実際の末尾で閉じる") {
-                let fifteen = (0..<15).map { item("f\($0)", title: "clip \($0)", index: $0) }
-                let groups = CPYHistoryPickerPanel.groups(items: fifteen, fullText: [:],
-                                                          query: "", totalCount: 15)
-                expect(groups.count) == 2
-                expect(groups[1].title) == "10 - 14"
-                expect(groups[1].clips.count) == 5
+                let fifteen = (0..<15).map { item("f\($0)", "clip \($0)", $0) }
+                let result = layout(fifteen, totalCount: 15)
+                expect(result.groups.count) == 2
+                expect(result.groups[1].title) == "10 - 14"
+                expect(result.groups[1].clips.count) == 5
             }
 
-            it("ヒットなしは空配列を返す") {
-                let groups = CPYHistoryPickerPanel.groups(items: twenty, fullText: [:],
-                                                          query: "nomatch", totalCount: 20)
-                expect(groups).to(beEmpty())
+            it("ヒットなしはインライン・グループとも空を返す") {
+                let result = layout(twenty, query: "nomatch", totalCount: 20)
+                expect(result.inline).to(beEmpty())
+                expect(result.groups).to(beEmpty())
+            }
+        }
+    }
+
+    // MARK: - Title Trimming
+
+    private func titleSpecs() {
+        describe("タイトルの最大表示文字数") {
+            it("最大長を超えるタイトルは切り詰められ、検索は元の 1 行目に対して行われる") {
+                let clip = CPYClip()
+                clip.dataHash = "t1"
+                clip.title = "abcdefghijklmnopqrstuvwxyz"
+                clip.primaryType = NSPasteboard.PasteboardType.deprecatedString.rawValue
+                clip.dataPath = "/tmp/t1.data"
+                let item = CPYHistoryPickerPanel.ClipItem(clip: clip, index: 0, maxTitleLength: 10)
+                expect(item.title) == "abcdefg..."
+                // 検索用の文字列は切り詰め前
+                expect(item.lowercasedTitle) == "abcdefghijklmnopqrstuvwxyz"
             }
         }
     }

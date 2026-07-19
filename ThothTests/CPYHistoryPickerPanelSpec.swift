@@ -1,0 +1,235 @@
+import Quick
+import Nimble
+import AppKit
+@testable import Thoth
+
+/// 履歴パネルの UI 構成（行構造・設定連動・サブパネル表示行）のスペック。
+/// パネルはヘッドレスで生成し、表示（show）は行わない
+class CPYHistoryPickerPanelSpec: QuickSpec {
+
+    // MARK: - Helpers
+
+    /// テスト用の表示設定（既定はメニュータブのデフォルト相当）
+    private func makeSettings(markWithNumber: Bool = true,
+                              numericKeysEnabled: Bool = true,
+                              numberOffset: Int = 0,
+                              showIcon: Bool = true,
+                              showToolTip: Bool = true,
+                              maxToolTipLength: Int = 200,
+                              placeInline: Int = 0,
+                              groupSize: Int = 10,
+                              showImage: Bool = true,
+                              showColorCode: Bool = true,
+                              maxTitleLength: Int = 0,
+                              showsClearHistory: Bool = false) -> CPYHistoryPickerPanel.DisplaySettings {
+        return CPYHistoryPickerPanel.DisplaySettings(markWithNumber: markWithNumber,
+                                                     numericKeysEnabled: numericKeysEnabled,
+                                                     numberOffset: numberOffset,
+                                                     showIcon: showIcon,
+                                                     showToolTip: showToolTip,
+                                                     maxToolTipLength: maxToolTipLength,
+                                                     placeInline: placeInline,
+                                                     groupSize: groupSize,
+                                                     showImage: showImage,
+                                                     showColorCode: showColorCode,
+                                                     maxTitleLength: maxTitleLength,
+                                                     showsClearHistory: showsClearHistory)
+    }
+
+    private func makeItem(_ hash: String, title: String, index: Int,
+                          primaryType: NSPasteboard.PasteboardType = .deprecatedString,
+                          thumbnailPath: String = "", isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
+        let clip = CPYClip()
+        clip.dataHash = hash
+        clip.title = title
+        clip.primaryType = primaryType.rawValue
+        clip.dataPath = "/tmp/\(hash).data"
+        clip.thumbnailPath = thumbnailPath
+        clip.isColorCode = isColorCode
+        return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
+    }
+
+    /// 行の種別を検証用の文字列へ変換する
+    private func kinds(of rows: [CPYHistoryPickerPanel.Row]) -> [String] {
+        return rows.map { row in
+            switch row {
+            case .sectionHeader: return "header"
+            case .clip:          return "clip"
+            case .group:         return "group"
+            case .separator:     return "separator"
+            case .action(let action): return "action:\(action)"
+            case .noResults:     return "noResults"
+            }
+        }
+    }
+
+    override func spec() {
+        clipItemSpecs()
+        rowStructureSpecs()
+        subEntrySpecs()
+        subPanelWidthSpecs()
+    }
+
+    // MARK: - ClipItem
+
+    private func clipItemSpecs() {
+        describe("ClipItem の表示タイトル") {
+            it("画像・PDF・ファイル名クリップは特殊タイトルに置換される") {
+                expect(self.makeItem("i", title: "raw", index: 0, primaryType: .deprecatedTIFF).title) == "(Image)"
+                expect(self.makeItem("p", title: "raw", index: 0, primaryType: .deprecatedPDF).title) == "(PDF)"
+                expect(self.makeItem("f", title: "", index: 0, primaryType: .deprecatedFilenames).title) == "(Filenames)"
+            }
+
+            it("複数行タイトルは 1 行目のみ表示し、ツールチップ用の全体を保持する") {
+                let item = self.makeItem("m", title: "first line\nsecond line", index: 0)
+                expect(item.title) == "first line"
+                expect(item.fullTitle) == "first line\nsecond line"
+            }
+        }
+    }
+
+    // MARK: - Row Structure
+
+    private func rowStructureSpecs() {
+        describe("パネルの行構成") {
+            let clips = (0..<12).map { self.makeItem("c\($0)", title: "clip \($0)", index: $0) }
+
+            it("フル構成では 4 セクション（履歴/スニペット/ツール/設定）に分かれ、終了は区切り線で分離される") {
+                let panel = CPYHistoryPickerPanel(clips: clips, settings: self.makeSettings())
+                expect(self.kinds(of: panel.rows)) == [
+                    "header", "group", "group",
+                    "separator", "header", "action:snippets",
+                    "separator", "header", "action:generatePassword", "action:crypto",
+                    "separator", "header", "action:editSnippets", "action:preferences",
+                    "separator", "action:quit"
+                ]
+                panel.close()
+            }
+
+            it("「履歴を消去」行は設定に応じて追加される") {
+                let panel = CPYHistoryPickerPanel(clips: clips,
+                                                  settings: self.makeSettings(showsClearHistory: true))
+                expect(self.kinds(of: panel.rows)).to(contain("action:clearHistory"))
+                panel.close()
+            }
+
+            it("履歴専用モード（⌘⌃V）では履歴セクションのみ表示される") {
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings())
+                expect(self.kinds(of: panel.rows)) == ["header", "group", "group"]
+                panel.close()
+            }
+
+            it("インライン表示数の設定で先頭が個別行になる") {
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings(placeInline: 3))
+                expect(self.kinds(of: panel.rows)) == ["header", "clip", "clip", "clip", "group"]
+                panel.close()
+            }
+
+            it("検索でヒットが無い場合は noResults 行を表示する") {
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings())
+                panel.searchField.stringValue = "no-such-clip"
+                panel.rebuildRows()
+                expect(self.kinds(of: panel.rows)) == ["header", "noResults"]
+                panel.close()
+            }
+        }
+    }
+
+    // MARK: - Sub Entries
+
+    private func subEntrySpecs() {
+        describe("サブパネル表示行（設定連動）") {
+            it("グループ内番号は元の位置と番号開始値から計算される") {
+                // グループ "10 - 19" 内の元 15 番目 → 0 開始で 5、1 開始で 6
+                let clip15 = self.makeItem("g15", title: "target", index: 15)
+                let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 10, title: "", clips: [clip15])
+
+                let zeroPanel = CPYHistoryPickerPanel(clips: [clip15],
+                                                      settings: self.makeSettings(numberOffset: 0))
+                expect(zeroPanel.makeSubEntries(for: group).first?.number) == 5
+                zeroPanel.close()
+
+                let onePanel = CPYHistoryPickerPanel(clips: [clip15],
+                                                     settings: self.makeSettings(numberOffset: 1))
+                expect(onePanel.makeSubEntries(for: group).first?.number) == 6
+                onePanel.close()
+            }
+
+            it("ツールチップは設定に応じて最大長で切り詰められる") {
+                let longTitle = String(repeating: "x", count: 50)
+                let clip = self.makeItem("t", title: longTitle, index: 0)
+                let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 0, title: "", clips: [clip])
+
+                let panel = CPYHistoryPickerPanel(clips: [clip],
+                                                  settings: self.makeSettings(showToolTip: true, maxToolTipLength: 10))
+                expect(panel.makeSubEntries(for: group).first?.toolTip) == String(repeating: "x", count: 10)
+                panel.close()
+
+                let noTipPanel = CPYHistoryPickerPanel(clips: [clip],
+                                                       settings: self.makeSettings(showToolTip: false))
+                expect(noTipPanel.makeSubEntries(for: group).first?.toolTip).to(beNil())
+                noTipPanel.close()
+            }
+
+            it("サムネイルは種別と設定の組み合わせで表示可否が決まる") {
+                let image = self.makeItem("img", title: "(Image)", index: 0,
+                                          primaryType: .deprecatedTIFF, thumbnailPath: "thumb-img")
+                let color = self.makeItem("col", title: "#FF0000", index: 1,
+                                          thumbnailPath: "thumb-col", isColorCode: true)
+                let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 0, title: "", clips: [image, color])
+
+                // 両方 ON → 両方サムネイル表示
+                let bothPanel = CPYHistoryPickerPanel(clips: [image, color],
+                                                      settings: self.makeSettings(showImage: true, showColorCode: true))
+                let bothEntries = bothPanel.makeSubEntries(for: group)
+                expect(bothEntries[0].thumbnailPath) == "thumb-img"
+                expect(bothEntries[1].thumbnailPath) == "thumb-col"
+                bothPanel.close()
+
+                // 画像 OFF・カラー ON → 画像のみ非表示
+                let colorOnlyPanel = CPYHistoryPickerPanel(clips: [image, color],
+                                                           settings: self.makeSettings(showImage: false, showColorCode: true))
+                let colorOnlyEntries = colorOnlyPanel.makeSubEntries(for: group)
+                expect(colorOnlyEntries[0].thumbnailPath).to(beNil())
+                expect(colorOnlyEntries[1].thumbnailPath) == "thumb-col"
+                colorOnlyPanel.close()
+            }
+
+            it("番号表示フラグは「メニュー項目に番号を付ける」設定に従う") {
+                let clip = self.makeItem("n", title: "clip", index: 0)
+                let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 0, title: "", clips: [clip])
+
+                let panel = CPYHistoryPickerPanel(clips: [clip],
+                                                  settings: self.makeSettings(markWithNumber: false))
+                expect(panel.makeSubEntries(for: group).first?.showsNumber) == false
+                panel.close()
+            }
+        }
+    }
+
+    // MARK: - Sub Panel Width
+
+    private func subPanelWidthSpecs() {
+        describe("サブパネル幅の自動調整") {
+            func entry(_ title: String) -> CPYHistorySubPanel.Entry {
+                let clip = self.makeItem("w", title: title, index: 0)
+                return CPYHistorySubPanel.Entry(clip: clip, number: 0, showsNumber: false,
+                                                toolTip: nil, thumbnailPath: nil, showsTypeIcon: true)
+            }
+
+            it("タイトルが長いほど幅が広がる") {
+                let short = CPYHistorySubPanel.preferredWidth(for: [entry("short")])
+                let long = CPYHistorySubPanel.preferredWidth(for: [entry(String(repeating: "long title ", count: 5))])
+                expect(long) > short
+            }
+
+            it("幅は上下限でクランプされる") {
+                expect(CPYHistorySubPanel.preferredWidth(for: [entry("a")])) == 220
+                expect(CPYHistorySubPanel.preferredWidth(for: [entry(String(repeating: "very long ", count: 50))])) == 620
+            }
+        }
+    }
+}

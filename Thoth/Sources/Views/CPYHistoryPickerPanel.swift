@@ -32,22 +32,69 @@ final class CPYHistoryPickerPanel: NSPanel {
 
     // MARK: - Row Data Model
 
+    /// レイアウト計算（makeLayout）へ渡す設定の抜粋。
+    /// 純粋関数を UserDefaults 非依存に保つための値型
+    struct LayoutSpec {
+        let placeInline: Int
+        let groupSize: Int
+        let numberOffset: Int
+    }
+
+    /// メニュータブの設定のスナップショット（パネル表示時に取得）。
+    /// `init(defaults:)` は extension 側に定義し、テストからは memberwise init で
+    /// 任意の組み合わせを注入できるようにしている
+    struct DisplaySettings {
+        /// メニュー項目に番号を付ける
+        let markWithNumber: Bool
+        /// 数字キーショートカットの有効/無効
+        let numericKeysEnabled: Bool
+        /// 番号の開始値（0 から開始なら 0、それ以外は 1）
+        let numberOffset: Int
+        /// 種別アイコンの表示
+        let showIcon: Bool
+        /// ツールチップの表示と最大長
+        let showToolTip: Bool
+        let maxToolTipLength: Int
+        /// インライン（グループ化せず直接）表示する件数
+        let placeInline: Int
+        /// 1 グループあたりの件数（旧「フォルダ内に表示する項目数」）
+        let groupSize: Int
+        /// 画像サムネイル / カラーコードプレビューの表示
+        let showImage: Bool
+        let showColorCode: Bool
+        /// タイトルの最大表示文字数
+        let maxTitleLength: Int
+        /// 「履歴を消去」行を表示するか
+        let showsClearHistory: Bool
+
+        var layoutSpec: LayoutSpec {
+            return LayoutSpec(placeInline: placeInline, groupSize: groupSize, numberOffset: numberOffset)
+        }
+    }
+
     /// 履歴クリップの表示用スナップショット（Realm 非依存）
     struct ClipItem {
-        /// 全履歴（未フィルタ）での元の位置。検索時のグループ判定に使う
+        /// 全履歴（未フィルタ）での元の位置。検索時のグループ判定・番号表示に使う
         let index: Int
         let dataHash: String
+        /// 表示用タイトル（1 行目・最大表示文字数で切り詰め済み）
         let title: String
+        /// ツールチップ用のタイトル全体（DB に保存された先頭部分）
+        let fullTitle: String
+        /// 検索用（切り詰め前の 1 行目を小文字化）
         let lowercasedTitle: String
+        let thumbnailPath: String
+        let isColorCode: Bool
         let ref: ClipFullTextIndexer.ClipRef
 
-        init(clip: CPYClip, index: Int) {
+        /// - Parameter maxTitleLength: 0 なら切り詰めなし
+        init(clip: CPYClip, index: Int, maxTitleLength: Int = 0) {
             let primaryType = NSPasteboard.PasteboardType(rawValue: clip.primaryType)
             let firstLine = clip.title
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .components(separatedBy: .newlines).first ?? ""
             // メニュー表示（makeClipMenuItem）と同じ特殊タイトル置換
-            let display: String
+            var display: String
             if primaryType == .deprecatedTIFF {
                 display = "(Image)"
             } else if primaryType == .deprecatedPDF {
@@ -57,19 +104,28 @@ final class CPYHistoryPickerPanel: NSPanel {
             } else {
                 display = firstLine
             }
+            // 「メニュー項目タイトルの最大長」設定に従って切り詰める（trimTitle と同じ流儀）
+            if maxTitleLength > 3, display.count > maxTitleLength {
+                display = String(display.prefix(maxTitleLength - 3)) + "..."
+            }
             self.index = index
             self.dataHash = clip.dataHash
             self.title = display
-            self.lowercasedTitle = display.lowercased()
+            self.fullTitle = clip.title
+            self.lowercasedTitle = firstLine.lowercased()
+            self.thumbnailPath = clip.thumbnailPath
+            self.isColorCode = clip.isColorCode
             self.ref = ClipFullTextIndexer.ClipRef(dataHash: clip.dataHash,
                                                    dataPath: clip.dataPath,
                                                    primaryType: clip.primaryType)
         }
     }
 
-    /// 10 件区切りの履歴グループ（検索時はヒットしたクリップのみを含む）
+    /// groupSize 件区切りの履歴グループ（検索時はヒットしたクリップのみを含む）
     struct ClipGroup {
-        /// 表示ラベル（元の位置に基づく "0 - 9" など）
+        /// グループ先頭の元の位置（グループ内番号の計算に使う）
+        let startIndex: Int
+        /// 表示ラベル（元の位置 + 番号開始値に基づく "0 - 9" / "1 - 10" など）
         let title: String
         /// グループ内のクリップ（元順・検索時はヒットのみ）
         let clips: [ClipItem]
@@ -100,6 +156,8 @@ final class CPYHistoryPickerPanel: NSPanel {
 
     enum Row {
         case sectionHeader(String)
+        /// インライン表示のクリップ（「インラインに表示する項目数」の範囲）
+        case clip(ClipItem)
         case group(ClipGroup)
         case separator
         case action(PanelAction)
@@ -107,7 +165,7 @@ final class CPYHistoryPickerPanel: NSPanel {
 
         var isSelectable: Bool {
             switch self {
-            case .group, .action: return true
+            case .clip, .group, .action: return true
             default: return false
             }
         }
@@ -117,6 +175,7 @@ final class CPYHistoryPickerPanel: NSPanel {
 
     enum CellID {
         static let header = NSUserInterfaceItemIdentifier("HistoryHeader")
+        static let clip   = NSUserInterfaceItemIdentifier("HistoryClip")
         static let group  = NSUserInterfaceItemIdentifier("HistoryGroup")
         static let sep    = NSUserInterfaceItemIdentifier("HistorySep")
         static let action = NSUserInterfaceItemIdentifier("HistoryAction")
@@ -136,8 +195,6 @@ final class CPYHistoryPickerPanel: NSPanel {
         static let hPad: CGFloat      = 8
         static let corner: CGFloat    = 8
         static let fontSize: CGFloat  = NSFont.systemFontSize - 1
-        /// 1 グループあたりの履歴件数
-        static let groupSize = 10
     }
 
     // MARK: - UI
@@ -154,8 +211,8 @@ final class CPYHistoryPickerPanel: NSPanel {
     /// dataHash → 小文字化済み本文（索引ビルドの進捗に応じて増える）
     var fullText: [String: String] = [:]
     let indexer: ClipFullTextIndexer
-    /// 「履歴を消去」行を表示するか（環境設定のスイッチに連動）
-    let showsClearHistory: Bool
+    /// メニュータブの表示設定（表示時のスナップショット）
+    let settings: DisplaySettings
     /// スニペット・ツール・設定の固定セクションを表示するか。
     /// メインメニュー（⌘⇧V・ステータスバー）では true、
     /// コピー履歴ウィンドウ（⌘⌃V）では false で履歴と検索のみを表示する
@@ -180,11 +237,12 @@ final class CPYHistoryPickerPanel: NSPanel {
     // MARK: - Init
 
     init(clips: [ClipItem], showsFixedSections: Bool = true,
-         indexer: ClipFullTextIndexer = ClipFullTextIndexer()) {
+         indexer: ClipFullTextIndexer = ClipFullTextIndexer(),
+         settings: DisplaySettings = DisplaySettings()) {
         self.allClips = clips
         self.showsFixedSections = showsFixedSections
         self.indexer  = indexer
-        self.showsClearHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.addClearHistoryMenuItem)
+        self.settings = settings
         super.init(contentRect: .zero, styleMask: [.borderless],
                    backing: .buffered, defer: false)
         isOpaque                    = false
@@ -254,6 +312,26 @@ final class CPYHistoryPickerPanel: NSPanel {
         indexer.cancel()
         fullText = [:]
         super.close()
+    }
+}
+
+// MARK: - DisplaySettings Loading
+
+extension CPYHistoryPickerPanel.DisplaySettings {
+    /// UserDefaults（メニュータブの設定値）からスナップショットを構築する
+    init(defaults: UserDefaults = AppEnvironment.current.defaults) {
+        self.init(markWithNumber: defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers),
+                  numericKeysEnabled: defaults.bool(forKey: Constants.UserDefaults.addNumericKeyEquivalents),
+                  numberOffset: defaults.bool(forKey: Constants.UserDefaults.menuItemsTitleStartWithZero) ? 0 : 1,
+                  showIcon: defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu),
+                  showToolTip: defaults.bool(forKey: Constants.UserDefaults.showToolTipOnMenuItem),
+                  maxToolTipLength: max(0, defaults.integer(forKey: Constants.UserDefaults.maxLengthOfToolTip)),
+                  placeInline: max(0, defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInline)),
+                  groupSize: max(1, defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInsideFolder)),
+                  showImage: defaults.bool(forKey: Constants.UserDefaults.showImageInTheMenu),
+                  showColorCode: defaults.bool(forKey: Constants.UserDefaults.showColorPreviewInTheMenu),
+                  maxTitleLength: max(0, defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)),
+                  showsClearHistory: defaults.bool(forKey: Constants.UserDefaults.addClearHistoryMenuItem))
     }
 }
 
@@ -362,99 +440,5 @@ extension CPYHistoryPickerPanel {
             scrollView.trailingAnchor.constraint(equalTo: effectView.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: effectView.bottomAnchor, constant: -4)
         ])
-    }
-}
-
-// MARK: - Data / Rows
-
-extension CPYHistoryPickerPanel {
-
-    /// タイトルまたは全文に全検索語が含まれるクリップを返す（純粋関数・テスト対象）。
-    /// 空クエリのときは全件をそのまま返す。元の並び順を維持する
-    static func filter(items: [ClipItem], fullText: [String: String], query: String) -> [ClipItem] {
-        let terms = ClipFullTextIndexer.terms(from: query)
-        guard !terms.isEmpty else { return items }
-        return items.filter { item in
-            if ClipFullTextIndexer.matches(item.lowercasedTitle, terms: terms) { return true }
-            return fullText[item.dataHash].map { ClipFullTextIndexer.matches($0, terms: terms) } ?? false
-        }
-    }
-
-    /// フィルタ結果を「元の位置」に基づいて groupSize 件区切りのグループへ振り分ける
-    /// （純粋関数・テスト対象）。
-    /// 検索時も前に詰めず、元 3 番目のヒットは "0 - 9"、元 15 番目のヒットは "10 - 19" に入る。
-    /// ヒットの無いグループは含まれない。ラベルの範囲は全履歴数に基づく元の区切りを表す
-    static func groups(items: [ClipItem], fullText: [String: String],
-                       query: String, totalCount: Int,
-                       groupSize: Int = Layout.groupSize) -> [ClipGroup] {
-        let matched = filter(items: items, fullText: fullText, query: query)
-        guard !matched.isEmpty else { return [] }
-        var buckets = [Int: [ClipItem]]()
-        for item in matched {
-            buckets[item.index / groupSize, default: []].append(item)
-        }
-        return buckets.keys.sorted().map { bucket in
-            let start = bucket * groupSize
-            let end = min(start + groupSize - 1, totalCount - 1)
-            return ClipGroup(title: "\(start) - \(end)", clips: buckets[bucket] ?? [])
-        }
-    }
-
-    /// 旧 NSMenu と同じセクション構成（コピー履歴 / スニペット / ツール / 設定）で
-    /// 行を組み立てる。各セクションは区切り線と小さな見出し行で区切る
-    func rebuildRows() {
-        let query = searchField.stringValue
-        let grouped = Self.groups(items: allClips, fullText: fullText,
-                                  query: query, totalCount: allClips.count)
-        var result: [Row] = []
-        // コピー履歴セクション
-        result.append(.sectionHeader(L10n.sectionCopyHistory))
-        if grouped.isEmpty && !ClipFullTextIndexer.terms(from: query).isEmpty {
-            result.append(.noResults)
-        } else {
-            result.append(contentsOf: grouped.map { .group($0) })
-        }
-        // 固定セクションはメインメニュー表示時のみ（履歴ウィンドウでは履歴+検索のみ）
-        if showsFixedSections {
-            // スニペットセクション
-            result.append(.separator)
-            result.append(.sectionHeader(L10n.snippet))
-            result.append(.action(.snippets))
-            // ツールセクション
-            result.append(.separator)
-            result.append(.sectionHeader(L10n.tools))
-            result.append(.action(.generatePassword))
-            result.append(.action(.crypto))
-            // 設定セクション
-            result.append(.separator)
-            result.append(.sectionHeader(L10n.sectionSettings))
-            if showsClearHistory {
-                result.append(.action(.clearHistory))
-            }
-            result.append(.action(.editSnippets))
-            result.append(.action(.preferences))
-            // 終了は誤操作を避けるため区切り線で分離する（旧メニューと同じ）
-            result.append(.separator)
-            result.append(.action(.quit))
-        }
-        rows = result
-        tableView.reloadData()
-        sizePanel()
-        // NSMenu と同じく初期状態では何も選択せず、カーソル（ホバー / j・k）が
-        // 当たったときに初めてハイライト・サブパネル表示を行う
-        if isVisible { updateSubPanel() }
-    }
-
-    func sizePanel() {
-        let tableH = rows.reduce(CGFloat(0)) { acc, row in
-            switch row {
-            case .separator:     return acc + Layout.sepRowH
-            case .sectionHeader: return acc + Layout.headerRowH
-            default:             return acc + Layout.rowH
-            }
-        }
-        let scrollH = min(max(tableH, Layout.rowH), Layout.maxTableH)
-        let totalH  = Layout.vPad + Layout.searchH + (Layout.vPad - 2) + 1 + 2 + scrollH + 4
-        setContentSize(NSSize(width: Layout.width, height: totalH))
     }
 }

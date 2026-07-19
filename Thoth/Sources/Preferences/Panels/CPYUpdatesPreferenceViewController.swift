@@ -58,14 +58,6 @@ fileprivate extension CPYUpdatesPreferenceViewController {
         linkButton.frame = NSRect(x: 40, y: 36, width: 400, height: 20)
         linkButton.autoresizingMask = [.maxXMargin, .minYMargin]
         view.addSubview(linkButton)
-
-        // バージョン表記
-        let versionLabel = NSTextField(labelWithString: "v\(Bundle.main.appVersion ?? "")")
-        versionLabel.alignment = .center
-        versionLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        versionLabel.textColor = .secondaryLabelColor
-        versionLabel.frame = NSRect(x: 40, y: 12, width: 400, height: 15)
-        versionLabel.autoresizingMask = [.maxXMargin, .minYMargin]
-        view.addSubview(versionLabel)
+        // バージョン表記は「バージョン」タブ（CPYVersionPreferenceViewController）へ移設
     }
 }

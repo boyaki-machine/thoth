@@ -180,6 +180,8 @@ internal enum L10n {
   internal static let pleaseAllowAccessibility = L10n.tr("Localizable", "Please allow Accessibility")
   /// Please fill in the contents of the snippet
   internal static let pleaseFillInTheContentsOfTheSnippet = L10n.tr("Localizable", "Please fill in the contents of the snippet")
+  /// Version
+  internal static let preferenceVersionTab = L10n.tr("Localizable", "Preference Version Tab")
   /// Preferences...
   internal static let preferences = L10n.tr("Localizable", "Preferences")
   /// Quit Thoth
@@ -264,6 +266,10 @@ internal enum L10n {
   internal static let updatesRespectMessage = L10n.tr("Localizable", "Updates Respect Message")
   /// Value history
   internal static let valueHistory = L10n.tr("Localizable", "Value History")
+  /// Release date: %@
+  internal static func versionReleaseDate(_ p1: Any) -> String {
+    return L10n.tr("Localizable", "Version Release Date", String(describing: p1))
+  }
   /// You can change this setting in the Preferences if you want.
   internal static let youCanChangeThisSettingInThePreferencesIfYouWant = L10n.tr("Localizable", "You can change this setting in the Preferences if you want")
 }

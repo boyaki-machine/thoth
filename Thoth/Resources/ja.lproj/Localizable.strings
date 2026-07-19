@@ -35,6 +35,8 @@
 "History Search Placeholder" = "履歴を検索...";
 "Section Copy History" = "コピー履歴";
 "Section Settings" = "設定";
+"Preference Version Tab" = "バージョン";
+"Version Release Date" = "リリース日: %@";
 "Show Snippet Menu" = "スニペットメニュー表示";
 
 "Snippet" = "スニペット";

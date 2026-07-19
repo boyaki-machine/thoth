@@ -35,6 +35,8 @@
 "History Search Placeholder" = "Verlauf durchsuchen...";
 "Section Copy History" = "Kopierverlauf";
 "Section Settings" = "Einstellungen";
+"Preference Version Tab" = "Version";
+"Version Release Date" = "Veröffentlicht am: %@";
 "Show Snippet Menu" = "Snippet-Menü anzeigen";
 
 "Snippet" = "Snippet";

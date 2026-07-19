@@ -46,7 +46,7 @@ extension CPYHistoryPickerPanel {
             addChildWindow(sub, ordered: .above)
         }
 
-        sub.setClips(group.clips)
+        sub.setEntries(makeSubEntries(for: group))
 
         let mainFrame = frame
         let screen  = NSScreen.screens.first { $0.frame.intersects(mainFrame) } ?? NSScreen.main
@@ -97,68 +97,24 @@ extension CPYHistoryPickerPanel {
               clipIndex >= 0, clipIndex < sub.currentClips.count else { return }
         onSelect?(sub.currentClips[clipIndex].dataHash)
     }
-}
 
-// MARK: - Selection / Navigation
-
-extension CPYHistoryPickerPanel {
-    func selectNext() {
-        var nextIdx = tableView.selectedRow + 1
-        while nextIdx < rows.count, !rows[nextIdx].isSelectable { nextIdx += 1 }
-        guard nextIdx < rows.count else { return }
-        tableView.selectRowIndexes(IndexSet(integer: nextIdx), byExtendingSelection: false)
-        tableView.scrollRowToVisible(nextIdx)
-        isInSubPanelMode = false
-        updateSubPanel()
-    }
-
-    func selectPrev() {
-        var prevIdx = tableView.selectedRow - 1
-        while prevIdx >= 0, !rows[prevIdx].isSelectable { prevIdx -= 1 }
-        guard prevIdx >= 0 else { return }
-        tableView.selectRowIndexes(IndexSet(integer: prevIdx), byExtendingSelection: false)
-        tableView.scrollRowToVisible(prevIdx)
-        isInSubPanelMode = false
-        updateSubPanel()
-    }
-
-    /// 選択中の行を確定する。グループはサブパネルへ、固定行はアクション実行
-    /// （クローズは onSelect / onAction 側で行う）
-    func confirmSelection() {
-        let idx = tableView.selectedRow
-        guard idx >= 0, idx < rows.count else { return }
-        switch rows[idx] {
-        case .group:
-            enterSubPanel()
-        case .action(let action):
-            onAction?(action)
-        default:
-            break
-        }
-    }
-
-    /// 数字キーで、表示中のサブパネル内のアイテムを直接確定する（NSMenu の
-    /// フォルダ内数字ショートカットに相当）。数字は元の位置の下 1 桁に対応し、
-    /// 例えばグループ "10 - 19" 表示中に 5 を押すと元 15 番目のクリップが確定する。
-    /// サブパネルが表示されていない場合は何もしない
-    func confirmSubClip(withDigit digit: Int) {
-        guard let sub = subPanel, sub.isVisible else { return }
-        guard let clipIndex = sub.currentClips.firstIndex(where: { $0.index % Layout.groupSize == digit }) else { return }
-        confirmSubClip(at: clipIndex)
-    }
-
-    /// Esc の段階制: サブパネルを抜ける → クエリ消去 → リストへフォーカス → クローズ
-    func handleEsc() {
-        if isInSubPanelMode {
-            isInSubPanelMode = false
-            subPanel?.deselect()
-        } else if !searchField.stringValue.isEmpty {
-            searchField.stringValue = ""
-            rebuildRows()
-        } else if searchField.currentEditor() != nil {
-            makeFirstResponder(tableView)
-        } else {
-            close()
+    /// メニュータブの設定を反映したサブパネル表示行を組み立てる
+    func makeSubEntries(for group: ClipGroup) -> [CPYHistorySubPanel.Entry] {
+        return group.clips.map { clip in
+            // グループ内番号 = 元の位置のグループ内オフセット + 番号開始値
+            let number = clip.index - group.startIndex + settings.numberOffset
+            let thumbnailVisible = !clip.thumbnailPath.isEmpty
+                && ((clip.isColorCode && settings.showColorCode)
+                    || (!clip.isColorCode && settings.showImage))
+            let toolTip: String? = settings.showToolTip && !clip.fullTitle.isEmpty
+                ? String(clip.fullTitle.prefix(settings.maxToolTipLength))
+                : nil
+            return CPYHistorySubPanel.Entry(clip: clip,
+                                            number: number,
+                                            showsNumber: settings.markWithNumber,
+                                            toolTip: toolTip,
+                                            thumbnailPath: thumbnailVisible ? clip.thumbnailPath : nil,
+                                            showsTypeIcon: settings.showIcon)
         }
     }
 }
@@ -183,6 +139,17 @@ extension CPYHistoryPickerPanel: NSTableViewDelegate {
             cell.textField?.stringValue = title
             cell.textField?.font      = .systemFont(ofSize: NSFont.smallSystemFontSize)
             cell.textField?.textColor = .secondaryLabelColor
+            return cell
+
+        case .clip(let item):
+            let cell = (tableView.makeView(withIdentifier: CellID.clip, owner: nil) as? NSTableCellView)
+                       ?? makeTextCell(identifier: CellID.clip)
+            let number = item.index + settings.numberOffset
+            cell.textField?.stringValue = settings.markWithNumber ? "\(number). \(item.title)" : item.title
+            cell.textField?.font = .systemFont(ofSize: Layout.fontSize)
+            cell.toolTip = settings.showToolTip && !item.fullTitle.isEmpty
+                ? String(item.fullTitle.prefix(settings.maxToolTipLength))
+                : nil
             return cell
 
         case .group(let group):
@@ -274,8 +241,9 @@ extension CPYHistoryPickerPanel {
                 onAction?(.crypto)
                 return true
             case "0"..."9":
-                if let number = Int(chars) {
-                    confirmSubClip(withDigit: number)
+                // 「数字キーショートカットを付ける」設定が有効な場合のみ
+                if settings.numericKeysEnabled, let number = Int(chars) {
+                    confirmClip(withDigit: number)
                     return true
                 }
             default:
@@ -425,7 +393,7 @@ extension CPYHistoryPickerPanel {
             tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
             isInSubPanelMode = false
             updateSubPanel()
-        case .action:
+        case .clip, .action:
             tableView.selectRowIndexes(IndexSet(integer: clicked), byExtendingSelection: false)
             confirmSelection()
         default:

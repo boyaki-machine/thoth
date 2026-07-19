@@ -35,6 +35,8 @@
 "History Search Placeholder" = "Cerca nella cronologia...";
 "Section Copy History" = "Cronologia copie";
 "Section Settings" = "Impostazioni";
+"Preference Version Tab" = "Versione";
+"Version Release Date" = "Data di rilascio: %@";
 "Show Snippet Menu" = "Mostra menu snippet";
 
 "Snippet" = "Snippet";
