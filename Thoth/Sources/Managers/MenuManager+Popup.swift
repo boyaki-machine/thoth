@@ -85,8 +85,9 @@ extension MenuManager {
     /// 履歴検索パネルを表示する。
     /// - Parameter showsFixedSections: true でスニペット・ツール・設定の固定セクション付き
     ///   （メインメニュー相当）、false でコピー履歴 + 検索のみ（履歴ウィンドウ相当）。
-    /// 履歴のスナップショットは検索面として常に新しい順で提示する
-    /// （reorderClipsAfterPasting はメニュー表示順のための設定のためここでは適用しない）
+    /// 並び順は「ペースト後に履歴を並べ替える」設定に従う（旧メニューと同じ）:
+    /// ON なら新しい順、OFF ならコピー順のまま（項目の位置と番号が安定し、
+    /// 数字キーショートカットの筋肉記憶が保たれる）
     func popUpHistorySearchPanel(showsFixedSections: Bool = true) {
         dismissClipMenus()
         dismissSecurePicker()
@@ -95,8 +96,9 @@ extension MenuManager {
 
         let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let maxTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)
+        let ascending = !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
         let clipResults = realm.objects(CPYClip.self)
-            .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: false)
+            .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
         var clips = [CPYHistoryPickerPanel.ClipItem]()
         for clip in clipResults {
             clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count,
