@@ -225,6 +225,41 @@ open build/DerivedData/Build/Products/Release/Thoth.app
 cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
 
+### 4-4. Building a Distribution DMG (for yourself / family)
+
+A script builds the Release app and packages a DMG in one command.
+
+```bash
+./scripts/make_dmg.sh
+```
+
+**What it does:**
+
+1. Builds the `Release` configuration (output under `build/DerivedData`)
+2. Stages `Thoth.app` plus a symlink to `/Applications`
+3. Creates a compressed DMG (UDZO) using the built-in `hdiutil`
+
+**Output:** `build/Thoth-<version>.dmg` (the version is read automatically from `CFBundleShortVersionString` in `Info.plist`; `build/` is in `.gitignore`, so it is not committed)
+
+**Requirements:**
+
+- macOS + Xcode (`xcodebuild`). `hdiutil` ships with macOS, so no extra install is needed
+- Apple Silicon (arm64)-only build
+- Ad-hoc signing (no Developer ID signature or notarization)
+
+**Usage:** open the produced DMG and drag `Thoth.app` into `Applications`.
+
+> **Note (first launch on the target Mac):** because the build is ad-hoc-signed,
+> Gatekeeper blocks it. On the target Mac, either right-click → **Open** to allow it
+> once, or strip the quarantine attribute:
+>
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/Thoth.app
+> ```
+>
+> Distributing to other people without warnings requires a Developer ID signature
+> plus notarization via the Apple Developer Program.
+
 ---
 
 ## 5. Code Signing and Accessibility Permission
