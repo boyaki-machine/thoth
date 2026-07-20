@@ -204,9 +204,19 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 
 **First-launch notes:**
 
+- The app is not notarized by Apple, so copying it to another Mac and launching it triggers a Gatekeeper block ("cannot verify the developer", etc.). On recent macOS, open **System Settings → Privacy & Security** and click **"Open Anyway"** next to the "Thoth was blocked…" message to allow it (first launch only). Alternatively run `xattr -dr com.apple.quarantine /Applications/Thoth.app` in Terminal.
 - On launch, the app re-signs itself with a device-specific certificate and then relaunches (so that secure items remain readable across versions). A macOS confirmation dialog may appear on the first launch only — choose "Always Allow".
 - After re-signing, you must grant **Accessibility permission** (required for the paste feature; no need to re-grant on later version updates).
 - See "Code Signing and Accessibility Permission" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for details.
+
+**Permissions the app requests:**
+
+| Permission | Required? | Purpose |
+|---|---|---|
+| Accessibility | Required | Used for pasting (sending ⌘V / typing keystrokes) |
+| **Desktop folder** | **Optional** | Requested only when the "Observe screenshots" beta feature is enabled. macOS saves screenshots to the Desktop by default, so scanning the Desktop is needed to detect new ones |
+
+> Desktop folder access is requested **only if you enable the "Observe screenshots" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
 
 ---
 
