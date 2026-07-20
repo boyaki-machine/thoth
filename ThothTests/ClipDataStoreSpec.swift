@@ -5,7 +5,7 @@ import Nimble
 /// クリップ .data ファイルの暗号化ストアのスペック。
 /// 鍵はテスト専用のものを注入する（Keychain には触れない）。
 class ClipDataStoreSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         var workDirectory: URL!
         let testKey = Data((0..<32).map { UInt8($0 &+ 7) })
 

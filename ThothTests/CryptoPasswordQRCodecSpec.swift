@@ -6,7 +6,7 @@ import Nimble
 /// QR 画像の生成→デコードのラウンドトリップは Vision を用いるがヘッドレスで動作する
 class CryptoPasswordQRCodecSpec: QuickSpec {
 
-    override func spec() {
+    override class func spec() {
         encodeDecodeSpecs()
         rejectionSpecs()
         qrImageSpecs()
@@ -14,7 +14,7 @@ class CryptoPasswordQRCodecSpec: QuickSpec {
 
     // MARK: - Encode / Decode
 
-    private func encodeDecodeSpecs() {
+    private static func encodeDecodeSpecs() {
         describe("エンコードとデコード") {
             it("エンコードは接頭辞 thoth-cpw:v1: を付与する") {
                 expect(CryptoPasswordQRCodec.encode("abc")) == "thoth-cpw:v1:abc"
@@ -37,7 +37,7 @@ class CryptoPasswordQRCodecSpec: QuickSpec {
 
     // MARK: - Rejection
 
-    private func rejectionSpecs() {
+    private static func rejectionSpecs() {
         describe("不正ペイロードの拒否") {
             it("otpauth URI（TOTP の QR）は拒否する") {
                 expect(CryptoPasswordQRCodec.decode("otpauth://totp/Example:user?secret=ABCDEF")).to(beNil())
@@ -63,7 +63,7 @@ class CryptoPasswordQRCodecSpec: QuickSpec {
 
     // MARK: - QR Image Round-trip
 
-    private func qrImageSpecs() {
+    private static func qrImageSpecs() {
         describe("QR 画像の生成とラウンドトリップ") {
             it("生成した QR 画像をデコードすると元のパスワードに戻る") {
                 let password = "Th0th-P@ssw0rd:2026!"

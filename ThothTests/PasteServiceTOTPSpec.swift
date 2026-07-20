@@ -6,10 +6,10 @@ import Nimble
 
 class PasteServiceTOTPSpec: QuickSpec {
 
-    private var pasteService: PasteService!
-    private let testPasteboard = NSPasteboard(name: .general)
+    private static var pasteService: PasteService!
+    private static let testPasteboard = NSPasteboard(name: .general)
 
-    override func spec() {
+    override class func spec() {
         beforeEach {
             self.pasteService = PasteService()
         }

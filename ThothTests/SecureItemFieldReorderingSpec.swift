@@ -6,7 +6,7 @@ import Nimble
 
 class SecureItemFieldReorderingSpec: QuickSpec {
 
-    override func spec() {
+    override class func spec() {
         describe("Field reordering logic (.above dropOperation semantics)") {
 
             // MARK: - Basic Reordering
@@ -195,7 +195,7 @@ class SecureItemFieldReorderingSpec: QuickSpec {
 
     // MARK: - Helper
 
-    private func makeTestFields(_ count: Int) -> [SecureMenuItem.Field] {
+    private static func makeTestFields(_ count: Int) -> [SecureMenuItem.Field] {
         return (0..<count).map { i in
             SecureMenuItem.Field(label: "Field \(i)", value: "value\(i)")
         }

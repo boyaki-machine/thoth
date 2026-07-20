@@ -4,7 +4,7 @@ import RealmSwift
 @testable import Thoth
 
 class FolderSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         beforeEach {
             Realm.Configuration.defaultConfiguration.inMemoryIdentifier = NSUUID().uuidString
         }
@@ -13,7 +13,7 @@ class FolderSpec: QuickSpec {
         rearrangeIndexSpecs()
     }
 
-    private func createNewSpecs() {
+    private static func createNewSpecs() {
         describe("Create new") {
 
             it("deep copy object") {
@@ -86,7 +86,7 @@ class FolderSpec: QuickSpec {
         }
     }
 
-    private func syncDatabaseSpecs() {
+    private static func syncDatabaseSpecs() {
         describe("Sync database") {
 
             it("Merge snippet") {
@@ -198,7 +198,7 @@ class FolderSpec: QuickSpec {
         }
     }
 
-    private func rearrangeIndexSpecs() {
+    private static func rearrangeIndexSpecs() {
         describe("Rearrange Index") {
 
             it("Rearrange folder index") {

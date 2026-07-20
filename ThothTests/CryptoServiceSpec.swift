@@ -5,9 +5,11 @@ import Foundation
 
 class CryptoServiceSpec: QuickSpec {
 
-    private let service = CryptoService()
+    private static let service = CryptoService()
 
-    override func spec() {
+    // BDD スペックの spec() は多数の it ブロックを含み長くなるため関数長ルールを緩める
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
         var workDirectory: URL!
 
         beforeEach {

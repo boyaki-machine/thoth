@@ -37,7 +37,6 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| Sparkle | Automatic updates (feature removed; unused dependency remains) |
 | PINCache | Thumbnail image caching |
 | LoginServiceKit | Launch at login |
 | RxScreeen | Screenshot observation |
@@ -181,7 +180,7 @@ swiftlint   # run from the project root
 
 `Done linting! Found 0 violations` means there are no style violations.
 
-> **Note:** The CocoaPods `Pods/SwiftLint` (0.31 series) does not work on current Apple Silicon (sourcekitd load failure). Always use the Homebrew `swiftlint`. The Xcode build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable.
+> **Note:** The CocoaPods `Pods/SwiftLint` (0.65 series) works correctly on Apple Silicon, so linting runs during the Xcode build script phase. The Homebrew `swiftlint` runs the same configuration standalone. The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 
 Key style values (`.swiftlint.yml`):
 
@@ -194,7 +193,7 @@ Key style values (`.swiftlint.yml`):
 
 ### 4-3. Build (Debug / Release)
 
-On current Apple Silicon, the SwiftLint build script fails, so add `SKIP_SWIFTLINT=1` for CLI builds.
+Linting runs during the build; add `SKIP_SWIFTLINT=1` to skip it for faster CLI builds.
 
 ```bash
 # Clean (as needed)

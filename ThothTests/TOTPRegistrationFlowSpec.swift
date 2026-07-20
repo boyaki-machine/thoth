@@ -7,9 +7,9 @@ import Nimble
 class TOTPRegistrationFlowSpec: QuickSpec {
 
     private static let testKeychainService = "com.clipy-app.ClipyTests.SecureMenu"
-    private var service: SecureMenuService!
+    private static var service: SecureMenuService!
 
-    override func spec() {
+    override class func spec() {
         beforeEach {
             self.service = SecureMenuService(keychainService: TOTPRegistrationFlowSpec.testKeychainService)
             self.service.deleteAllItems()

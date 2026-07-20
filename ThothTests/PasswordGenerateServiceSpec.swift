@@ -4,16 +4,16 @@ import Nimble
 
 class PasswordGenerateServiceSpec: QuickSpec {
 
-    private let service = PasswordGenerateService()
+    private static let service = PasswordGenerateService()
 
-    override func spec() {
+    override class func spec() {
         generationSpecs()
         characterTypeSpecs()
         easyToTypeSpecs()
         invalidConditionSpecs()
     }
 
-    private func makeConditions(length: Int = 16,
+    private static func makeConditions(length: Int = 16,
                                 useLetters: Bool = true,
                                 useDigits: Bool = true,
                                 useSymbols: Bool = false,
@@ -28,7 +28,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
     }
 
     /// 文字を文字種（小文字/大文字/数字/記号）に分類する
-    private func characterType(of character: Character) -> String {
+    private static func characterType(of character: Character) -> String {
         if character.isLowercase { return "lower" }
         if character.isUppercase { return "upper" }
         if character.isNumber { return "digit" }
@@ -36,7 +36,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
     }
 
     /// 同じ文字種が連続する「ブロック」の長さの一覧を返す
-    private func blockLengths(of password: String) -> [Int] {
+    private static func blockLengths(of password: String) -> [Int] {
         var lengths = [Int]()
         var currentType = ""
         for character in password {
@@ -51,7 +51,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
         return lengths
     }
 
-    private func generationSpecs() {
+    private static func generationSpecs() {
         describe("Generate password") {
 
             it("Generates the requested length") {
@@ -72,7 +72,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
         }
     }
 
-    private func characterTypeSpecs() {
+    private static func characterTypeSpecs() {
         describe("Character types") {
 
             it("Digits only") {
@@ -120,7 +120,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
         }
     }
 
-    private func easyToTypeSpecs() {
+    private static func easyToTypeSpecs() {
         describe("Easy to type password") {
 
             it("Generates the requested length") {
@@ -160,7 +160,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
         }
     }
 
-    private func invalidConditionSpecs() {
+    private static func invalidConditionSpecs() {
         describe("Invalid conditions") {
 
             it("Returns nil when no character type is enabled") {

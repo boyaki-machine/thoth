@@ -4,7 +4,7 @@ import RealmSwift
 @testable import Thoth
 
 class SnippetSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         beforeEach {
             Realm.Configuration.defaultConfiguration.inMemoryIdentifier = NSUUID().uuidString

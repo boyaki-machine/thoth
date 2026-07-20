@@ -6,8 +6,8 @@ target 'Thoth' do
   # Application
   pod 'PINCache'
   pod 'Sauce'
-  pod 'Sparkle'
-  pod 'RealmSwift'
+  # RealmSwift は 10.x 系内で最新に更新（20.x はメジャー移行で破壊的変更が大きいため回避）
+  pod 'RealmSwift', '~> 10.54'
   pod 'RxCocoa'
   pod 'RxSwift'
   pod 'LoginServiceKit', :git => 'https://github.com/Clipy/LoginServiceKit.git'
@@ -25,8 +25,8 @@ target 'Thoth' do
   target 'ThothTests' do
     inherit! :search_paths
 
-    pod 'Quick', '~> 5.0'
-    pod 'Nimble', '~> 10.0'
+    pod 'Quick', '~> 7.0'
+    pod 'Nimble', '~> 14.0'
 
   end
 

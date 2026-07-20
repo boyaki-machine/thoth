@@ -5,7 +5,7 @@ import Carbon
 @testable import Thoth
 
 class HotKeyServiceSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         migrateHotKeySpecs()
         saveHotKeySpecs()
         keyCombosSpecs()
@@ -13,7 +13,7 @@ class HotKeyServiceSpec: QuickSpec {
         folderHotKeySpecs()
     }
 
-    private func migrateHotKeySpecs() {
+    private static func migrateHotKeySpecs() {
         describe("Migrate HotKey") {
 
             beforeEach {
@@ -105,7 +105,7 @@ class HotKeyServiceSpec: QuickSpec {
         }
     }
 
-    private func saveHotKeySpecs() {
+    private static func saveHotKeySpecs() {
         describe("Save HotKey") {
 
             beforeEach {
@@ -216,7 +216,7 @@ class HotKeyServiceSpec: QuickSpec {
         }
     }
 
-    private func keyCombosSpecs() {
+    private static func keyCombosSpecs() {
         describe("Key comobos") {
             it("Default key combos") {
                 let keyCombos = HotKeyService.defaultKeyCombos
@@ -236,7 +236,7 @@ class HotKeyServiceSpec: QuickSpec {
         }
     }
 
-    private func clearHistoryHotKeySpecs() {
+    private static func clearHistoryHotKeySpecs() {
         describe("Clear History HotKey") {
             beforeEach {
                 let defaults = UserDefaults.standard
@@ -271,7 +271,7 @@ class HotKeyServiceSpec: QuickSpec {
         }
     }
 
-    private func folderHotKeySpecs() {
+    private static func folderHotKeySpecs() {
         describe("Folder HotKey") {
             beforeEach {
                 let defaults = UserDefaults.standard

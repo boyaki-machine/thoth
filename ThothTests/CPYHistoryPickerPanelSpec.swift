@@ -10,7 +10,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
     // MARK: - Helpers
 
     /// テスト用の表示設定（既定はメニュータブのデフォルト相当）
-    private func makeSettings(markWithNumber: Bool = true,
+    private static func makeSettings(markWithNumber: Bool = true,
                               numericKeysEnabled: Bool = true,
                               numberOffset: Int = 0,
                               showIcon: Bool = true,
@@ -36,7 +36,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
                                                      showsClearHistory: showsClearHistory)
     }
 
-    private func makeItem(_ hash: String, title: String, index: Int,
+    private static func makeItem(_ hash: String, title: String, index: Int,
                           primaryType: NSPasteboard.PasteboardType = .deprecatedString,
                           thumbnailPath: String = "", isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
         let clip = CPYClip()
@@ -50,7 +50,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
     }
 
     /// 行の種別を検証用の文字列へ変換する
-    private func kinds(of rows: [CPYHistoryPickerPanel.Row]) -> [String] {
+    private static func kinds(of rows: [CPYHistoryPickerPanel.Row]) -> [String] {
         return rows.map { row in
             switch row {
             case .sectionHeader: return "header"
@@ -63,7 +63,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
         }
     }
 
-    override func spec() {
+    override class func spec() {
         clipItemSpecs()
         rowStructureSpecs()
         subEntrySpecs()
@@ -72,7 +72,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - ClipItem
 
-    private func clipItemSpecs() {
+    private static func clipItemSpecs() {
         describe("ClipItem の表示タイトル") {
             it("画像・PDF・ファイル名クリップは特殊タイトルに置換される") {
                 expect(self.makeItem("i", title: "raw", index: 0, primaryType: .deprecatedTIFF).title) == "(Image)"
@@ -90,7 +90,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - Row Structure
 
-    private func rowStructureSpecs() {
+    private static func rowStructureSpecs() {
         describe("パネルの行構成") {
             let clips = (0..<12).map { self.makeItem("c\($0)", title: "clip \($0)", index: $0) }
 
@@ -140,7 +140,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - Sub Entries
 
-    private func subEntrySpecs() {
+    private static func subEntrySpecs() {
         describe("サブパネル表示行（設定連動）") {
             it("グループ内番号は元の位置と番号開始値から計算される") {
                 // グループ "10 - 19" 内の元 15 番目 → 0 開始で 5、1 開始で 6
@@ -212,7 +212,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - Sub Panel Width
 
-    private func subPanelWidthSpecs() {
+    private static func subPanelWidthSpecs() {
         describe("サブパネル幅の自動調整") {
             func entry(_ title: String) -> CPYHistorySubPanel.Entry {
                 let clip = self.makeItem("w", title: title, index: 0)

@@ -6,7 +6,7 @@ import Nimble
 
 class SecureItemEditTabNavigationSpec: QuickSpec {
 
-    override func spec() {
+    override class func spec() {
         describe("Tab navigation in SecureItemEditViewController") {
 
             // MARK: - Field Focus Order

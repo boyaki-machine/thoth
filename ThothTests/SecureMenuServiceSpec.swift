@@ -2,14 +2,16 @@ import Quick
 import Nimble
 @testable import Thoth
 
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class SecureMenuServiceSpec: QuickSpec {
 
     /// 本番エントリ (com.clipy-app.Clipy.SecureMenu) と分離したテスト専用の service 名
     private static let testKeychainService = "io.github.boyaki-machine.ThothTests.SecureMenu"
 
-    private var service: SecureMenuService!
+    private static var service: SecureMenuService!
 
-    override func spec() {
+    override class func spec() {
         beforeEach {
             self.service = SecureMenuService(keychainService: SecureMenuServiceSpec.testKeychainService)
             self.service.deleteAllItems()
@@ -31,7 +33,7 @@ class SecureMenuServiceSpec: QuickSpec {
     }
 
     /// 旧形式（all-items / crypto-password の 2 エントリ）を直接 Keychain に書き込むヘルパー
-    private func addLegacyEntry(account: String, data: Data) {
+    private static func addLegacyEntry(account: String, data: Data) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
@@ -43,7 +45,7 @@ class SecureMenuServiceSpec: QuickSpec {
         expect(SecItemAdd(query as CFDictionary, nil)) == errSecSuccess
     }
 
-    private func legacyEntryExists(account: String) -> Bool {
+    private static func legacyEntryExists(account: String) -> Bool {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
@@ -53,7 +55,7 @@ class SecureMenuServiceSpec: QuickSpec {
         return SecItemCopyMatching(query as CFDictionary, nil) == errSecSuccess
     }
 
-    private func legacyMigrationSpecs() {
+    private static func legacyMigrationSpecs() {
         describe("Legacy entry migration") {
 
             // 旧形式（all-items + crypto-password の 2 エントリ）から
@@ -97,7 +99,7 @@ class SecureMenuServiceSpec: QuickSpec {
         }
     }
 
-    private func cryptoPasswordSpecs() {
+    private static func cryptoPasswordSpecs() {
         describe("Crypto password") {
 
             it("Is not registered initially") {
@@ -136,7 +138,7 @@ class SecureMenuServiceSpec: QuickSpec {
     }
 
     /// 保存済みアイテムを編集画面と同じ手順（読み込み→値変更→保存）で更新するヘルパー
-    private func changeFirstFieldValue(itemID: String, to newValue: String) {
+    private static func changeFirstFieldValue(itemID: String, to newValue: String) {
         guard let current = self.service.loadAllItems().first(where: { $0.itemID == itemID }),
               let field = current.fields.first else { return }
         let updatedField = SecureMenuItem.Field(fieldID: field.fieldID, label: field.label,
@@ -147,7 +149,7 @@ class SecureMenuServiceSpec: QuickSpec {
         _ = self.service.save(updated)
     }
 
-    private func valueHistorySpecs() {
+    private static func valueHistorySpecs() {
         describe("Value history") {
 
             it("Records the old value when a field value changes") {
@@ -244,7 +246,7 @@ class SecureMenuServiceSpec: QuickSpec {
         }
     }
 
-    private func saveAndLoadSpecs() {
+    private static func saveAndLoadSpecs() {
         describe("Save and load") {
 
             it("Load returns empty when nothing is saved") {
@@ -309,7 +311,7 @@ class SecureMenuServiceSpec: QuickSpec {
         }
     }
 
-    private func deleteSpecs() {
+    private static func deleteSpecs() {
         describe("Delete") {
 
             it("Delete single item by itemID") {
@@ -351,7 +353,7 @@ class SecureMenuServiceSpec: QuickSpec {
         }
     }
 
-    private func reorderSpecs() {
+    private static func reorderSpecs() {
         describe("Reorder") {
 
             it("Rearranges displayOrder to match the given order") {
@@ -370,7 +372,7 @@ class SecureMenuServiceSpec: QuickSpec {
         }
     }
 
-    private func accessDeniedGuardSpecs() {
+    private static func accessDeniedGuardSpecs() {
         describe("Keychain access denied guard") {
 
             // バイナリ更新等で Keychain の読み出しが拒否された状態で保存すると、
@@ -399,7 +401,7 @@ class SecureMenuServiceSpec: QuickSpec {
 
     // MARK: - TOTP Field Tests (A-2)
 
-    private func totpFieldSpecs() {
+    private static func totpFieldSpecs() {
         describe("TOTP field management") {
 
             it("Saves and loads a TOTP field correctly") {

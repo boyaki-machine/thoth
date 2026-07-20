@@ -11,26 +11,14 @@
 		6F92D636300240E900478ACF /* CPYTOTPImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */; };
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
 		6F92D63A3002411700478ACF /* QRDecodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6383002411700478ACF /* QRDecodeService.swift */; };
-		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
-		AA20C0DE0000000000000003 /* CPYCameraQRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */; };
-		AA20C0DE0000000000000005 /* CryptoPasswordQRCodecSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000006 /* CryptoPasswordQRCodecSpec.swift */; };
-		AA20C0DE0000000000000021 /* ClipFullTextIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000022 /* ClipFullTextIndexer.swift */; };
-		AA20C0DE0000000000000023 /* CPYHistoryPickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000024 /* CPYHistoryPickerPanel.swift */; };
-		AA20C0DE0000000000000025 /* CPYHistoryPickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000026 /* CPYHistoryPickerPanel+TableView.swift */; };
-		AA20C0DE0000000000000027 /* ClipFullTextIndexerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000028 /* ClipFullTextIndexerSpec.swift */; };
-		AA20C0DE0000000000000031 /* CPYHistorySubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000032 /* CPYHistorySubPanel.swift */; };
-		AA20C0DE0000000000000033 /* CPYHistoryPickerPanel+Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000034 /* CPYHistoryPickerPanel+Rows.swift */; };
-		AA20C0DE0000000000000035 /* CPYVersionPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */; };
-		AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */; };
-		AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */; };
-		AA20C0DE0000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000008 /* InfoPlist.strings */; };
 		6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
-		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */; };
-		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
+		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
 		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
+		6FCC01A1B2C3D4E5F607080B /* NSAlert+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */; };
+		6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
 		AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */; };
@@ -39,7 +27,6 @@
 		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
 		AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */; };
 		AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */; };
-		6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */; };
 		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
@@ -54,6 +41,20 @@
 		AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */; };
 		AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */; };
 		AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */; };
+		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
+		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
+		AA20C0DE0000000000000003 /* CPYCameraQRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */; };
+		AA20C0DE0000000000000005 /* CryptoPasswordQRCodecSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000006 /* CryptoPasswordQRCodecSpec.swift */; };
+		AA20C0DE0000000000000007 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000008 /* InfoPlist.strings */; };
+		AA20C0DE0000000000000021 /* ClipFullTextIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000022 /* ClipFullTextIndexer.swift */; };
+		AA20C0DE0000000000000023 /* CPYHistoryPickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000024 /* CPYHistoryPickerPanel.swift */; };
+		AA20C0DE0000000000000025 /* CPYHistoryPickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000026 /* CPYHistoryPickerPanel+TableView.swift */; };
+		AA20C0DE0000000000000027 /* ClipFullTextIndexerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000028 /* ClipFullTextIndexerSpec.swift */; };
+		AA20C0DE0000000000000031 /* CPYHistorySubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000032 /* CPYHistorySubPanel.swift */; };
+		AA20C0DE0000000000000033 /* CPYHistoryPickerPanel+Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000034 /* CPYHistoryPickerPanel+Rows.swift */; };
+		AA20C0DE0000000000000035 /* CPYVersionPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */; };
+		AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */; };
+		AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */; };
 		B7CC520B88EAA6AD38E93462 /* Pods_Thoth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */; };
 		C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */; };
 		FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */; };
@@ -63,7 +64,6 @@
 		FA10898320EC2AFB00A3FEFC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA10898220EC2AFB00A3FEFC /* Colors.swift */; };
 		FA1189331E4CD58C00244F12 /* ExcludeAppService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */; };
 		FA1DB4901DDCA5D9007F95C8 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */; };
-		FA1DB4941DDCB22C007F95C8 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB4921DDCB22C007F95C8 /* dsa_pub.pem */; };
 		FA1DB4981DDCB2CB007F95C8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB4961DDCB2CB007F95C8 /* Localizable.strings */; };
 		FA1DB49F1DDCB417007F95C8 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB49E1DDCB417007F95C8 /* MainMenu.xib */; };
 		FA1DB4A21DDCB433007F95C8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A01DDCB433007F95C8 /* AppDelegate.swift */; };
@@ -72,7 +72,6 @@
 		FA1DB4B31DDCB452007F95C8 /* Array+Remove.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A81DDCB452007F95C8 /* Array+Remove.swift */; };
 		FA1DB4B41DDCB452007F95C8 /* NSBundle+Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A91DDCB452007F95C8 /* NSBundle+Version.swift */; };
 		FA1DB4B71DDCB452007F95C8 /* NSImage+Resize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AC1DDCB452007F95C8 /* NSImage+Resize.swift */; };
-		6FCC01A1B2C3D4E5F607080B /* NSAlert+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */; };
 		FA1DB4B81DDCB452007F95C8 /* NSLock+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AD1DDCB452007F95C8 /* NSLock+Thoth.swift */; };
 		FA1DB4B91DDCB452007F95C8 /* NSMenuItem+Initialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */; };
 		FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */; };
@@ -113,8 +112,8 @@
 		FA6167921D3ABEB10049FA14 /* FolderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167911D3ABEB10049FA14 /* FolderSpec.swift */; };
 		FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */; };
 		FA6167961D3ACDD80049FA14 /* SnippetSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167951D3ACDD80049FA14 /* SnippetSpec.swift */; };
-		FA6DD5141C7DEDB600317E73 /* (null) in Resources */ = {isa = PBXBuildFile; };
-		FA6DD5151C7DEDB600317E73 /* (null) in Resources */ = {isa = PBXBuildFile; };
+		FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
+		FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */; };
 		FAC0DCE91DE15FD900309C49 /* DataCleanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC0DCE81DE15FD900309C49 /* DataCleanService.swift */; };
 		FAC0DCEF1DE3255E00309C49 /* NSImage+NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC0DCEE1DE3255E00309C49 /* NSImage+NSColor.swift */; };
@@ -169,8 +168,6 @@
 		31ACA9F71EC5B85C00BD34C0 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/CPYUpdatesPreferenceViewController.strings; sourceTree = "<group>"; };
 		31ACA9F81EC5B85C00BD34C0 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/CPYSnippetsEditorWindowController.strings; sourceTree = "<group>"; };
 		31ACA9F91EC5B85C00BD34C0 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/Localizable.strings; sourceTree = "<group>"; };
-		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
-		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
 		54ADE0FA2008F63F00239852 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/CPYPreferencesWindowController.strings"; sourceTree = "<group>"; };
 		54ADE0FB2008F64000239852 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/CPYBetaPreferenceViewController.strings"; sourceTree = "<group>"; };
 		54ADE0FC2008F64000239852 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/CPYExcludeAppPreferenceViewController.strings"; sourceTree = "<group>"; };
@@ -184,33 +181,15 @@
 		6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYTOTPImportViewController.swift; path = Thoth/Sources/Views/CPYTOTPImportViewController.swift; sourceTree = "<group>"; };
 		6F92D6373002411700478ACF /* TOTPService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPService.swift; path = Thoth/Sources/Services/TOTPService.swift; sourceTree = "<group>"; };
 		6F92D6383002411700478ACF /* QRDecodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = QRDecodeService.swift; path = Thoth/Sources/Services/QRDecodeService.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CryptoPasswordQRService.swift; path = Thoth/Sources/Services/CryptoPasswordQRService.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYCameraQRScannerViewController.swift; path = Thoth/Sources/Views/CPYCameraQRScannerViewController.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000006 /* CryptoPasswordQRCodecSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CryptoPasswordQRCodecSpec.swift; path = ThothTests/CryptoPasswordQRCodecSpec.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000022 /* ClipFullTextIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipFullTextIndexer.swift; path = Thoth/Sources/Services/ClipFullTextIndexer.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000024 /* CPYHistoryPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanel.swift; path = Thoth/Sources/Views/CPYHistoryPickerPanel.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000026 /* CPYHistoryPickerPanel+TableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CPYHistoryPickerPanel+TableView.swift"; path = "Thoth/Sources/Views/CPYHistoryPickerPanel+TableView.swift"; sourceTree = "<group>"; };
-		AA20C0DE0000000000000028 /* ClipFullTextIndexerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipFullTextIndexerSpec.swift; path = ThothTests/ClipFullTextIndexerSpec.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000032 /* CPYHistorySubPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistorySubPanel.swift; path = Thoth/Sources/Views/CPYHistorySubPanel.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000034 /* CPYHistoryPickerPanel+Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CPYHistoryPickerPanel+Rows.swift"; path = "Thoth/Sources/Views/CPYHistoryPickerPanel+Rows.swift"; sourceTree = "<group>"; };
-		AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYVersionPreferenceViewController.swift; path = Thoth/Sources/Preferences/Panels/CPYVersionPreferenceViewController.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanelSpec.swift; path = ThothTests/CPYHistoryPickerPanelSpec.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYSecurePickerPanelSpec.swift; path = ThothTests/CPYSecurePickerPanelSpec.swift; sourceTree = "<group>"; };
-		AA20C0DE0000000000000011 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA20C0DE0000000000000012 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA20C0DE0000000000000013 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA20C0DE0000000000000014 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA20C0DE0000000000000015 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
-		AA20C0DE0000000000000016 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		AA20C0DE0000000000000017 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		6F92D63B3002417500478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ThothTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ThothTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmProvider.swift; sourceTree = "<group>"; };
-		AA10CAFE0000000000000012 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ThothTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ThothTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Thoth.swift"; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Thoth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		846004961FD5511800BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYPreferencesWindowController.strings; sourceTree = "<group>"; };
 		846004971FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -232,7 +211,6 @@
 		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
 		AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditViewController.swift; sourceTree = "<group>"; };
 		AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+TableView.swift"; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
@@ -247,6 +225,28 @@
 		AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoWindowController.swift; sourceTree = "<group>"; };
 		AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoServiceSpec.swift; sourceTree = "<group>"; };
 		AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoPasswordManagerWindowController.swift; sourceTree = "<group>"; };
+		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA10CAFE0000000000000012 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CryptoPasswordQRService.swift; path = Thoth/Sources/Services/CryptoPasswordQRService.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYCameraQRScannerViewController.swift; path = Thoth/Sources/Views/CPYCameraQRScannerViewController.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000006 /* CryptoPasswordQRCodecSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CryptoPasswordQRCodecSpec.swift; path = ThothTests/CryptoPasswordQRCodecSpec.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000011 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000012 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000013 /* it */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = it; path = it.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000014 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000015 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		AA20C0DE0000000000000016 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000017 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AA20C0DE0000000000000022 /* ClipFullTextIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipFullTextIndexer.swift; path = Thoth/Sources/Services/ClipFullTextIndexer.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000024 /* CPYHistoryPickerPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanel.swift; path = Thoth/Sources/Views/CPYHistoryPickerPanel.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000026 /* CPYHistoryPickerPanel+TableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CPYHistoryPickerPanel+TableView.swift"; path = "Thoth/Sources/Views/CPYHistoryPickerPanel+TableView.swift"; sourceTree = "<group>"; };
+		AA20C0DE0000000000000028 /* ClipFullTextIndexerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipFullTextIndexerSpec.swift; path = ThothTests/ClipFullTextIndexerSpec.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000032 /* CPYHistorySubPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistorySubPanel.swift; path = Thoth/Sources/Views/CPYHistorySubPanel.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000034 /* CPYHistoryPickerPanel+Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "CPYHistoryPickerPanel+Rows.swift"; path = "Thoth/Sources/Views/CPYHistoryPickerPanel+Rows.swift"; sourceTree = "<group>"; };
+		AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYVersionPreferenceViewController.swift; path = Thoth/Sources/Preferences/Panels/CPYVersionPreferenceViewController.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanelSpec.swift; path = ThothTests/CPYHistoryPickerPanelSpec.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYSecurePickerPanelSpec.swift; path = ThothTests/CPYSecurePickerPanelSpec.swift; sourceTree = "<group>"; };
 		C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSPasteboard+Deprecated.swift"; sourceTree = "<group>"; };
 		FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HotKeyServiceSpec.swift; sourceTree = "<group>"; };
 		FA0D5CE71DDCC61600AC9052 /* ClipService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClipService.swift; sourceTree = "<group>"; };
@@ -256,7 +256,6 @@
 		FA10898220EC2AFB00A3FEFC /* Colors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppService.swift; sourceTree = "<group>"; };
 		FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		FA1DB4921DDCB22C007F95C8 /* dsa_pub.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = dsa_pub.pem; sourceTree = "<group>"; };
 		FA1DB4931DDCB22C007F95C8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA1DB4971DDCB2CB007F95C8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA1DB4991DDCB2D0007F95C8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -267,7 +266,6 @@
 		FA1DB4A81DDCB452007F95C8 /* Array+Remove.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Array+Remove.swift"; sourceTree = "<group>"; };
 		FA1DB4A91DDCB452007F95C8 /* NSBundle+Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSBundle+Version.swift"; sourceTree = "<group>"; };
 		FA1DB4AC1DDCB452007F95C8 /* NSImage+Resize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImage+Resize.swift"; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Thoth.swift"; sourceTree = "<group>"; };
 		FA1DB4AD1DDCB452007F95C8 /* NSLock+Thoth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSLock+Thoth.swift"; sourceTree = "<group>"; };
 		FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSMenuItem+Initialize.swift"; sourceTree = "<group>"; };
 		FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSUserDefaults+ArchiveData.swift"; sourceTree = "<group>"; };
@@ -420,7 +418,6 @@
 		FA1DB4911DDCB205007F95C8 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				FA1DB4921DDCB22C007F95C8 /* dsa_pub.pem */,
 				FA1DB4931DDCB22C007F95C8 /* Info.plist */,
 			);
 			path = "Supporting Files";
@@ -797,7 +794,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA1DB5131DDCB4C0007F95C8 /* CPYPreferencesWindowController.xib in Resources */,
-				FA6DD5141C7DEDB600317E73 /* (null) in Resources */,
+				FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */,
 				FA1DB51E1DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib in Resources */,
 				FA1DB4901DDCA5D9007F95C8 /* Images.xcassets in Resources */,
 				FA1DB51D1DDCB4C0007F95C8 /* CPYShortcutsPreferenceViewController.xib in Resources */,
@@ -806,8 +803,7 @@
 				FA1DB51B1DDCB4C0007F95C8 /* CPYGeneralPreferenceViewController.xib in Resources */,
 				FA1DB51A1DDCB4C0007F95C8 /* CPYExcludeAppPreferenceViewController.xib in Resources */,
 				FA1DB5191DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.xib in Resources */,
-				FA6DD5151C7DEDB600317E73 /* (null) in Resources */,
-				FA1DB4941DDCB22C007F95C8 /* dsa_pub.pem in Resources */,
+				FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */,
 				FA1DB4981DDCB2CB007F95C8 /* Localizable.strings in Resources */,
 				AA20C0DE0000000000000007 /* InfoPlist.strings in Resources */,
 				FA1DB49F1DDCB417007F95C8 /* MainMenu.xib in Resources */,
@@ -847,7 +843,6 @@
 				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/Sauce/Sauce.framework",
 				"${BUILT_PRODUCTS_DIR}/Screeen/Screeen.framework",
-				"${PODS_ROOT}/Sparkle/Sparkle.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftHEXColors/SwiftHEXColors.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -867,7 +862,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sauce.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Screeen.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sparkle.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftHEXColors.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -882,11 +876,21 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ThothTests/Pods-ThothTests-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/CwlCatchException/CwlCatchException.framework",
+				"${BUILT_PRODUCTS_DIR}/CwlCatchExceptionSupport/CwlCatchExceptionSupport.framework",
+				"${BUILT_PRODUCTS_DIR}/CwlMachBadInstructionHandler/CwlMachBadInstructionHandler.framework",
+				"${BUILT_PRODUCTS_DIR}/CwlPosixPreconditionTesting/CwlPosixPreconditionTesting.framework",
+				"${BUILT_PRODUCTS_DIR}/CwlPreconditionTesting/CwlPreconditionTesting.framework",
 				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
 				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlCatchException.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlCatchExceptionSupport.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlMachBadInstructionHandler.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlPosixPreconditionTesting.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlPreconditionTesting.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
 			);

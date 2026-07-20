@@ -213,8 +213,11 @@ final class CodeSignService {
     /// 旧インスタンスの終了を待ってから起動するため、シェル経由で遅延実行する。
     static func relaunch(bundlePath: String = Bundle.main.bundlePath, launchArguments: String = "") {
         let process = Process()
-        let argsSuffix = launchArguments.isEmpty ? "" : " --args \(launchArguments)"
-        process.arguments = ["-c", "sleep 1; /usr/bin/open -n \"\(bundlePath)\"\(argsSuffix)"]
+        // バンドルパスや引数をスクリプト文字列に直接埋め込むとシェルのメタ文字
+        // （" ` $ ; など）が解釈され、パス次第でコマンドインジェクションの余地が生じる。
+        // 値は位置パラメータ（$1/$2）として個別に渡し、シェルに解釈させない
+        let script = "sleep 1; /usr/bin/open -n \"$1\"" + (launchArguments.isEmpty ? "" : " --args \"$2\"")
+        process.arguments = ["-c", script, "--", bundlePath, launchArguments]
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
         do {
             try process.run()

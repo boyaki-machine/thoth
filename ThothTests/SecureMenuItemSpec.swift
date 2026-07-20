@@ -3,14 +3,14 @@ import Nimble
 @testable import Thoth
 
 class SecureMenuItemSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         secureMenuItemSpecs()
         codableCompatibilitySpecs()
         fieldSelectionSpecs()
         selectionContextSpecs()
     }
 
-    private func secureMenuItemSpecs() {
+    private static func secureMenuItemSpecs() {
         describe("SecureMenuItem") {
 
             it("Create item with default values") {
@@ -39,7 +39,7 @@ class SecureMenuItemSpec: QuickSpec {
         }
     }
 
-    private func codableCompatibilitySpecs() {
+    private static func codableCompatibilitySpecs() {
         describe("Codable compatibility") {
 
             it("Encode and decode round trip") {
@@ -123,7 +123,7 @@ class SecureMenuItemSpec: QuickSpec {
         }
     }
 
-    private func fieldSelectionSpecs() {
+    private static func fieldSelectionSpecs() {
         describe("SecureFieldSelection") {
             it("Store selection values") {
                 let selection = SecureFieldSelection(parentItemID: "parent-id", fieldValue: "s3cr3t", fieldIndex: 1)
@@ -134,7 +134,7 @@ class SecureMenuItemSpec: QuickSpec {
         }
     }
 
-    private func selectionContextSpecs() {
+    private static func selectionContextSpecs() {
         describe("SecureSelectionContext") {
 
             it("Initial state is outside the window") {

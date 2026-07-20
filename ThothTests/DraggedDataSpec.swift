@@ -3,7 +3,7 @@ import Nimble
 @testable import Thoth
 
 class DraggedDataSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         describe("NSCoding") {
 

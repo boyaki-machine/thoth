@@ -8,7 +8,7 @@ import AppKit
 /// 一時ディレクトリに作成する（Realm・Keychain には触れない）
 class ClipFullTextIndexerSpec: QuickSpec {
 
-    override func spec() {
+    override class func spec() {
         var workDirectory: URL!
         let testKey = Data((0..<32).map { UInt8($0 &+ 13) })
         var store: ClipDataStore!
@@ -50,7 +50,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
     }
 
     /// テスト用 ClipItem を生成する（Realm 非管理の CPYClip から）
-    private func makeItem(_ hash: String, title: String, index: Int) -> CPYHistoryPickerPanel.ClipItem {
+    private static func makeItem(_ hash: String, title: String, index: Int) -> CPYHistoryPickerPanel.ClipItem {
         let clip = CPYClip()
         clip.dataHash = hash
         clip.title = title
@@ -61,7 +61,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Matching
 
-    private func matchingSpecs() {
+    private static func matchingSpecs() {
         describe("検索語の分解とマッチング") {
             it("クエリをトリム・小文字化・空白区切りで分解する") {
                 expect(ClipFullTextIndexer.terms(from: "  foo  Bar ")) == ["foo", "bar"]
@@ -86,7 +86,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Extraction
 
-    private func extractionSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
+    private static func extractionSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
                                  store: @escaping () -> ClipDataStore,
                                  path: @escaping (String) -> String) {
         describe("本文の抽出") {
@@ -124,7 +124,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Async Build
 
-    private func buildSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
+    private static func buildSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
                             store: @escaping () -> ClipDataStore) {
         describe("非同期ビルド") {
             it("全クリップの索引が最終的に揃う") {
@@ -156,7 +156,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Panel Filter
 
-    private func filterSpecs() {
+    private static func filterSpecs() {
         let item = makeItem
 
         describe("履歴パネルのフィルタ") {
@@ -198,7 +198,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Layout
 
-    private func layoutSpecs() {
+    private static func layoutSpecs() {
         let item = makeItem
 
         describe("履歴パネルのレイアウト（インライン + グルーピング）") {
@@ -295,7 +295,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
 
     // MARK: - Title Trimming
 
-    private func titleSpecs() {
+    private static func titleSpecs() {
         describe("タイトルの最大表示文字数") {
             it("最大長を超えるタイトルは切り詰められ、検索は元の 1 行目に対して行われる") {
                 let clip = CPYClip()
