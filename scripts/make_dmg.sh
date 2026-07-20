@@ -30,6 +30,17 @@ INFO_PLIST="Thoth/Supporting Files/Info.plist"
 # バージョンを Info.plist（CFBundleShortVersionString）から取得
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
 
+# リリース日 = バージョンタグ v<version> をつけた日（注釈タグの tagger 日付）。
+# バージョンタブに表示するため THOTH_RELEASE_DATE としてビルドへ注入する。
+# タグが未作成の場合は空（＝リリース日ラベルは表示されない）。
+RELEASE_DATE="$(git for-each-ref --format='%(taggerdate:short)' "refs/tags/v.$VERSION" 2>/dev/null | head -1)"
+if [ -z "$RELEASE_DATE" ]; then
+  echo "警告: タグ v.$VERSION が見つかりません。リリース日は未設定でビルドします。" >&2
+  echo "      （通常は develop を main へマージし v.$VERSION タグを付けた後に実行します）" >&2
+else
+  echo "==> リリース日: $RELEASE_DATE (タグ v.$VERSION より)"
+fi
+
 echo "==> Release ビルド (Thoth v$VERSION)"
 # SwiftLint はビルド時に走るが、配布ビルドを速くするためスキップする
 SKIP_SWIFTLINT=1 xcodebuild \
@@ -37,6 +48,7 @@ SKIP_SWIFTLINT=1 xcodebuild \
   -scheme "$SCHEME" \
   -configuration Release \
   -derivedDataPath "$DERIVED" \
+  THOTH_RELEASE_DATE="$RELEASE_DATE" \
   build
 
 APP_PATH="$DERIVED/Build/Products/Release/$APP_NAME"
