@@ -225,6 +225,41 @@ open build/DerivedData/Build/Products/Release/Thoth.app
 cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
 
+### 4-4. 配布用 DMG の作成（自分・身内用）
+
+Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意しています。
+
+```bash
+./scripts/make_dmg.sh
+```
+
+**動作内容:**
+
+1. `Release` 構成でビルド（`build/DerivedData` へ出力）
+2. `Thoth.app` と `/Applications` へのシンボリックリンクをステージング
+3. macOS 標準の `hdiutil` で圧縮 DMG（UDZO）を作成
+
+**出力先:** `build/Thoth-<version>.dmg`（バージョンは `Info.plist` の `CFBundleShortVersionString` から自動取得。`build/` は `.gitignore` 済みのためコミットされない）
+
+**実行条件:**
+
+- macOS + Xcode（`xcodebuild`）。`hdiutil` は macOS 標準のため追加インストール不要
+- Apple Silicon (arm64) 専用ビルド
+- 署名は ad-hoc（Developer ID 署名・公証なし）
+
+**利用方法:** 生成された DMG を開き、`Thoth.app` を `Applications` へドラッグする。
+
+> **注意（配布先での初回起動）:** ad-hoc 署名のため Gatekeeper にブロックされる。
+> 配布先の Mac で、右クリック →「開く」で初回のみ許可するか、次のコマンドで
+> 検疫属性を除去する:
+>
+> ```bash
+> xattr -dr com.apple.quarantine /Applications/Thoth.app
+> ```
+>
+> 一般配布（他者の Mac で警告なく動かす）には Apple Developer Program による
+> Developer ID 署名 + 公証（notarization）が別途必要。
+
 ---
 
 ## 5. コード署名とアクセシビリティ権限
