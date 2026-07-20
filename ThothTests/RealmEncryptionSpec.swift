@@ -6,7 +6,7 @@ import RealmSwift
 /// RealmProvider の平文→暗号化移行を担保するスペック。
 /// 実運用の default.realm には触れず、一時ディレクトリ上の Realm ファイルで検証する。
 class RealmEncryptionSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         var workDirectory: URL!
         var fileURL: URL!
         // Realm の暗号鍵は 64 バイト固定

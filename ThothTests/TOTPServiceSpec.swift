@@ -5,9 +5,11 @@ import Foundation
 
 class TOTPServiceSpec: QuickSpec {
 
-    private let service = TOTPService()
+    private static let service = TOTPService()
 
-    override func spec() {
+    // BDD スペックの spec() は多数の it ブロックを含み長くなるため関数長ルールを緩める
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
 
         // RFC 6238 Appendix B のテストベクタ（SHA1, ASCII secret "12345678901234567890", 8 桁）
         // ASCII "12345678901234567890" の Base32 表現
@@ -49,10 +51,10 @@ class TOTPServiceSpec: QuickSpec {
                 expect(String(data: data!, encoding: .utf8)) == "12345678901234567890"
             }
             it("Ignores whitespace, padding and lowercase") {
-                let a = TOTPService.base32Decode("JBSWY3DPEHPK3PXP")
-                let b = TOTPService.base32Decode("jbsw y3dp ehpk 3pxp")
-                expect(a).toNot(beNil())
-                expect(a) == b
+                let decoded = TOTPService.base32Decode("JBSWY3DPEHPK3PXP")
+                let spacedLowercased = TOTPService.base32Decode("jbsw y3dp ehpk 3pxp")
+                expect(decoded).toNot(beNil())
+                expect(decoded) == spacedLowercased
             }
             it("Returns nil for invalid characters") {
                 expect(TOTPService.base32Decode("0189!")).to(beNil())
@@ -143,7 +145,8 @@ class TOTPServiceSpec: QuickSpec {
 // MARK: - SecureMenuItem.Field (CRUD)
 
 class SecureMenuItemFieldSpec: QuickSpec {
-    override func spec() {
+    // swiftlint:disable:next function_body_length
+    override class func spec() {
 
         // MARK: - createdAt Basics
 
@@ -252,7 +255,10 @@ class SecureMenuItemFieldSpec: QuickSpec {
                                                  isPassword: true, kind: .plain)
                 let encoder = JSONEncoder()
                 let data = try! encoder.encode(field)
-                let json = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
+                guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+                    fail("Failed to serialize field to JSON object")
+                    return
+                }
 
                 expect(json.keys.contains("fieldID")) == true
                 expect(json.keys.contains("label")) == true

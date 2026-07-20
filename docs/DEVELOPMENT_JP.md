@@ -37,7 +37,6 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 | RxSwift / RxCocoa | リアクティブなイベント処理・設定監視 |
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
-| Sparkle | 自動アップデート（機能撤去済み・現在は未使用の依存のみ残存） |
 | PINCache | サムネイル画像のキャッシュ |
 | LoginServiceKit | ログイン時の自動起動 |
 | RxScreeen | スクリーンショット監視 |
@@ -181,7 +180,7 @@ swiftlint   # プロジェクトのルートで実行
 
 `Done linting! Found 0 violations` と表示されれば規約違反はありません。
 
-> **注意:** CocoaPods 経由の `Pods/SwiftLint`（0.31 系）は現行 Apple Silicon 環境では動作しません（sourcekitd の読み込み失敗）。必ず Homebrew 版 `swiftlint` を使ってください。Xcode ビルドのスクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
+> **補足:** CocoaPods 経由の `Pods/SwiftLint`（0.65 系）は Apple Silicon で正常に動作するため、Xcode ビルドのスクリプトフェーズでリントが実行されます。Homebrew 版 `swiftlint` でも同じ設定を単体実行できます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 
 主な規約値（`.swiftlint.yml`）:
 
@@ -194,7 +193,7 @@ swiftlint   # プロジェクトのルートで実行
 
 ### 4-3. ビルド（デバッグ / リリース）
 
-現行の Apple Silicon 環境では SwiftLint の実行スクリプトが失敗するため、CLI ビルドでは `SKIP_SWIFTLINT=1` を付けます。
+リントはビルド時に実行されます。CLI ビルドを速くしたい場合は `SKIP_SWIFTLINT=1` を付けてスキップできます。
 
 ```bash
 # クリーン（必要に応じて）

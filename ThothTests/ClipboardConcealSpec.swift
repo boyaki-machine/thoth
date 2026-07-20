@@ -10,7 +10,7 @@ import AppKit
 /// 注意: 実ペーストボード（NSPasteboard.general）を使うテストを含むため、
 /// 直列実行を前提とし afterEach で必ずクリアする。
 class ClipboardConcealSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
 
         // MARK: - 履歴除外の判定ロジック（純関数）
 

@@ -6,12 +6,12 @@ import AppKit
 /// セキュアアイテム編集シートの値収集と、編集フロー経由の履歴記録を担保するスペック。
 /// 「履歴に Label が表示される」リグレッションを検出するためのテストを含む。
 class SecureItemEditSpec: QuickSpec {
-    override func spec() {
+    override class func spec() {
         valueCollectionSpecs()
         editFlowHistorySpecs()
     }
 
-    private func valueCollectionSpecs() {
+    private static func valueCollectionSpecs() {
         describe("Edit sheet value collection") {
 
             it("Collects label and value from the correct columns") {
@@ -66,7 +66,7 @@ class SecureItemEditSpec: QuickSpec {
         }
     }
 
-    private func editFlowHistorySpecs() {
+    private static func editFlowHistorySpecs() {
         describe("Edit flow history") {
 
             // 編集シート → サービス保存の実経路で、履歴に Label ではなく旧 Value が入ることを担保する

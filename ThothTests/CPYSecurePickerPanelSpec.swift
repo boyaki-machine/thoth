@@ -7,7 +7,7 @@ import AppKit
 /// パネルはヘッドレスで生成し、表示（show）は行わない
 class CPYSecurePickerPanelSpec: QuickSpec {
 
-    override func spec() {
+    override class func spec() {
         let items = [
             SecureMenuItem(title: "GitHub", fields: [
                 SecureMenuItem.Field(label: "Password", value: "a", isPassword: true),
