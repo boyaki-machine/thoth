@@ -431,8 +431,11 @@ final class SecureItemEditViewController: NSViewController {
     @objc func passwordCheckboxChanged(_ sender: NSButton) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
-        // Value 列（インデックス 1）の既存セルを取得
-        let valueCell = fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false) as? FieldValueCell
+        // Value 列の既存セルを取得（ドラッグハンドル列があるため列番号は直書きせず
+        // 識別子から解決する）
+        let valueColumn = fieldsTable.column(withIdentifier: ColID.value)
+        guard valueColumn >= 0 else { return }
+        let valueCell = fieldsTable.view(atColumn: valueColumn, row: row, makeIfNecessary: false) as? FieldValueCell
         // 画面上のセルから最新の value を取得してモデルを更新する
         let currentValue = valueCell?.currentValue ?? fields[row].value
         // 値欄を編集中だった場合は、フィールドの差し替え前に編集を確定して
