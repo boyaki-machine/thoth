@@ -154,3 +154,9 @@ build-iPhoneSimulator/
 # .rubocop-https?--*
 .DS_Store
 Clipy.xcodeproj/
+
+# claude settings
+.claude/
+
+# vscode settins
+.vscode/
