@@ -222,6 +222,10 @@ final class SecureItemEditViewController: NSViewController {
         fieldsTable.rowHeight = 24
         fieldsTable.registerForDraggedTypes([NSPasteboard.PasteboardType("io.github.boyaki-machine.thoth.secure-field-row")])
         fieldsTable.setDraggingSourceOperationMask(.move, forLocal: true)
+        // ラベル/値列はシングルクリックで即編集に入る（行選択→再クリックの
+        // 2 段階を無くし、セル幅全体をクリック対象にする）
+        fieldsTable.target = self
+        fieldsTable.action = #selector(fieldsTableClicked)
 
         fieldsScroll.documentView = fieldsTable
         fieldsScroll.hasVerticalScroller = true
@@ -394,6 +398,36 @@ final class SecureItemEditViewController: NSViewController {
                                            history: fields[row].history)
     }
 
+    /// クリックされた列がシングルクリックで即編集に入れる列かを判定する（純粋関数）。
+    /// ラベル列は常に編集可、値列は TOTP 行以外で編集可、それ以外
+    /// （ドラッグハンドル・🔒・履歴の各列）は編集対象外。
+    /// UI に依存しないためユニットテスト可能
+    static func isEditableColumn(_ columnID: NSUserInterfaceItemIdentifier, isTOTP: Bool) -> Bool {
+        switch columnID {
+        case ColID.label: return true
+        case ColID.value: return !isTOTP
+        default: return false
+        }
+    }
+
+    /// 指定列からの行ドラッグ（並べ替え）を許可するかを判定する（純粋関数）。
+    /// ドラッグハンドル列（≡）のみ許可し、ラベル/値/ボタン列上のドラッグは
+    /// 編集・選択のために使えるようにする。UI に依存しないためユニットテスト可能
+    static func allowsRowDrag(from columnID: NSUserInterfaceItemIdentifier) -> Bool {
+        return columnID == ColID.dragHandle
+    }
+
+    /// テーブルのシングルクリックで、ラベル列・値列を即編集に切り替える。
+    /// ボタン列（🔒・履歴）・ドラッグハンドル列は対象外。TOTP 行の値は編集不可
+    @objc func fieldsTableClicked() {
+        let row = fieldsTable.clickedRow
+        let column = fieldsTable.clickedColumn
+        guard row >= 0, row < fields.count, column >= 0, column < fieldsTable.numberOfColumns else { return }
+        let columnID = fieldsTable.tableColumns[column].identifier
+        guard Self.isEditableColumn(columnID, isTOTP: fields[row].isTOTP) else { return }
+        fieldsTable.editColumn(column, row: row, with: nil, select: false)
+    }
+
     @objc func passwordCheckboxChanged(_ sender: NSButton) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
@@ -431,23 +465,19 @@ extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination 
     /// ドラッグソースのペーストボード情報を提供する
     /// NSTableView が自動的にドラッグを開始するために必須
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> (NSPasteboardWriting)? {
+        // ドラッグ開始位置がドラッグハンドル列（≡）のときだけ並べ替えを許可する。
+        // nil を返すとその行のドラッグ自体が始まらないため、ラベル/値のテキスト
+        // フィールド上でのクリックやドラッグが行の並べ替えに奪われず、編集・選択に
+        // 使える（willBeginAt はドラッグ開始後の通知で中止できないため、ここで制御する）。
+        let mouseInWindow = tableView.window?.mouseLocationOutsideOfEventStream ?? .zero
+        let pointInTable = tableView.convert(mouseInWindow, from: nil)
+        let column = tableView.column(at: pointInTable)
+        guard column >= 0, column < tableView.numberOfColumns,
+              Self.allowsRowDrag(from: tableView.tableColumns[column].identifier) else { return nil }
+
         let pasteboardItem = NSPasteboardItem()
         pasteboardItem.setString(String(row), forType: NSPasteboard.PasteboardType("io.github.boyaki-machine.thoth.secure-field-row"))
         return pasteboardItem
-    }
-
-    /// ドラッグハンドル列からのドラッグ開始を検出し、ペーストボードを準備する
-    func tableView(_ tableView: NSTableView, draggingSession session: NSDraggingSession,
-                   willBeginAt screenPoint: NSPoint, forRowIndexes rowIndexes: IndexSet) {
-        let localPoint = tableView.convert(screenPoint, from: nil)
-        let column = tableView.column(at: localPoint)
-        guard column >= 0, column < tableView.numberOfColumns else { return }
-        let colID = tableView.tableColumns[column].identifier
-
-        // ドラッグハンドル列からのドラッグのみを許可
-        guard colID == ColID.dragHandle else { return }
-
-        // pasteboardWriterForRow で既にペーストボードが設定されているため、ここで追加設定は不要
     }
 
     /// ドラッグ中のホバー時に、ドロップが許可されるか判定する

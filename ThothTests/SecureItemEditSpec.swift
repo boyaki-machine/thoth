@@ -9,6 +9,38 @@ class SecureItemEditSpec: QuickSpec {
     override class func spec() {
         valueCollectionSpecs()
         editFlowHistorySpecs()
+        columnBehaviorSpecs()
+    }
+
+    /// クリック時のシングルクリック編集・行ドラッグ許可の列判定（純粋関数）。
+    /// UI 操作そのものはユニットテストできないため、対象列を決めるロジックだけを担保する
+    private static func columnBehaviorSpecs() {
+        describe("Column behavior predicates") {
+            typealias EditVC = SecureItemEditViewController
+
+            it("makes label editable, and value editable only when not TOTP") {
+                expect(EditVC.isEditableColumn(EditVC.ColID.label, isTOTP: false)) == true
+                expect(EditVC.isEditableColumn(EditVC.ColID.label, isTOTP: true)) == true
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, isTOTP: false)) == true
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, isTOTP: true)) == false
+            }
+
+            it("does not make button / drag-handle columns editable") {
+                for isTOTP in [false, true] {
+                    expect(EditVC.isEditableColumn(EditVC.ColID.dragHandle, isTOTP: isTOTP)) == false
+                    expect(EditVC.isEditableColumn(EditVC.ColID.pass, isTOTP: isTOTP)) == false
+                    expect(EditVC.isEditableColumn(EditVC.ColID.history, isTOTP: isTOTP)) == false
+                }
+            }
+
+            it("allows row drag only from the drag-handle column") {
+                expect(EditVC.allowsRowDrag(from: EditVC.ColID.dragHandle)) == true
+                expect(EditVC.allowsRowDrag(from: EditVC.ColID.label)) == false
+                expect(EditVC.allowsRowDrag(from: EditVC.ColID.value)) == false
+                expect(EditVC.allowsRowDrag(from: EditVC.ColID.pass)) == false
+                expect(EditVC.allowsRowDrag(from: EditVC.ColID.history)) == false
+            }
+        }
     }
 
     private static func valueCollectionSpecs() {
