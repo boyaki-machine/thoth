@@ -228,6 +228,8 @@ final class CPYHistoryPickerPanel: NSPanel {
     var subPanelOnLeft = false
     /// パネル外クリックで閉じるためのイベントモニタ（グローバル/ローカル）
     private var dismissMonitors: [Any] = []
+    /// 登録中のモニタ数（テストでのライフサイクル検証用）
+    var dismissMonitorCount: Int { dismissMonitors.count }
 
     // MARK: - Callbacks
 
@@ -332,7 +334,7 @@ final class CPYHistoryPickerPanel: NSPanel {
         dismissMonitors = []
     }
 
-    private func belongsToPanelGroup(_ window: NSWindow?) -> Bool {
+    func belongsToPanelGroup(_ window: NSWindow?) -> Bool {
         if window === self { return true }
         if let children = childWindows, children.contains(where: { $0 === window }) { return true }
         return false

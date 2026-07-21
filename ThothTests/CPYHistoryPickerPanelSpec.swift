@@ -68,6 +68,50 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
         rowStructureSpecs()
         subEntrySpecs()
         subPanelWidthSpecs()
+        dismissBehaviorSpecs()
+    }
+
+    // MARK: - Dismiss on Outside Click
+
+    private static func dismissBehaviorSpecs() {
+        describe("パネル外クリックの解除判定") {
+            let clips = [self.makeItem("c0", title: "clip 0", index: 0)]
+
+            it("本体ウィンドウとサブパネル（子ウィンドウ）は「属する＝閉じない」と判定する") {
+                let panel = CPYHistoryPickerPanel(clips: clips, settings: self.makeSettings())
+                let child = NSWindow(contentRect: .zero, styleMask: [.borderless],
+                                     backing: .buffered, defer: false)
+                panel.addChildWindow(child, ordered: .above)
+                expect(panel.belongsToPanelGroup(panel)) == true
+                expect(panel.belongsToPanelGroup(child)) == true
+                panel.removeChildWindow(child)
+                panel.close()
+            }
+
+            it("無関係なウィンドウと nil は「属さない＝閉じる」と判定する") {
+                let panel = CPYHistoryPickerPanel(clips: clips, settings: self.makeSettings())
+                let other = NSWindow(contentRect: .zero, styleMask: [.borderless],
+                                     backing: .buffered, defer: false)
+                expect(panel.belongsToPanelGroup(other)) == false
+                expect(panel.belongsToPanelGroup(nil)) == false
+                panel.close()
+            }
+        }
+
+        describe("解除モニタのライフサイクル") {
+            let clips = [self.makeItem("c0", title: "clip 0", index: 0)]
+
+            it("install で登録され、多重呼び出しでも累積せず、close で全解除される") {
+                let panel = CPYHistoryPickerPanel(clips: clips, settings: self.makeSettings())
+                panel.installDismissMonitors()
+                let installed = panel.dismissMonitorCount
+                expect(installed) >= 1
+                panel.installDismissMonitors()
+                expect(panel.dismissMonitorCount) == installed
+                panel.close()
+                expect(panel.dismissMonitorCount) == 0
+            }
+        }
     }
 
     // MARK: - ClipItem
