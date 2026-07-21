@@ -54,6 +54,43 @@ class CPYSecurePickerPanelSpec: QuickSpec {
             }
         }
 
+        describe("パネル外クリックの解除判定") {
+            it("本体ウィンドウとサブパネル（子ウィンドウ）は「属する＝閉じない」と判定する") {
+                let panel = makePanel()
+                let child = NSWindow(contentRect: .zero, styleMask: [.borderless],
+                                     backing: .buffered, defer: false)
+                panel.addChildWindow(child, ordered: .above)
+                expect(panel.belongsToPanelGroup(panel)) == true
+                expect(panel.belongsToPanelGroup(child)) == true
+                panel.removeChildWindow(child)
+                panel.close()
+            }
+
+            it("無関係なウィンドウと nil は「属さない＝閉じる」と判定する") {
+                let panel = makePanel()
+                let other = NSWindow(contentRect: .zero, styleMask: [.borderless],
+                                     backing: .buffered, defer: false)
+                expect(panel.belongsToPanelGroup(other)) == false
+                expect(panel.belongsToPanelGroup(nil)) == false
+                panel.close()
+            }
+        }
+
+        describe("解除モニタのライフサイクル") {
+            it("install で登録され、多重呼び出しでも累積せず、close で全解除される") {
+                let panel = makePanel()
+                panel.installDismissMonitors()
+                let installed = panel.dismissMonitorCount
+                expect(installed) >= 1
+                // 多重呼び出しでモニタが二重登録（リーク）しない
+                panel.installDismissMonitors()
+                expect(panel.dismissMonitorCount) == installed
+                // close で確実に解除される
+                panel.close()
+                expect(panel.dismissMonitorCount) == 0
+            }
+        }
+
         describe("行構成") {
             it("通常時は親アイテム + 区切り線 + 管理行が並ぶ") {
                 let panel = makePanel()

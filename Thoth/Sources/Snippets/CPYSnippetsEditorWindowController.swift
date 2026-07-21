@@ -85,6 +85,14 @@ final class CPYSnippetsEditorWindowController: NSWindowController {
         super.showWindow(sender)
         window?.makeKeyAndOrderFront(self)
     }
+
+    // MARK: - Close on Esc
+    /// 他のウィンドウと同様に Esc で閉じる。
+    /// テキスト編集中の Esc はフィールドエディタが編集キャンセルを先に処理するため、
+    /// 未編集状態での Esc がレスポンダチェーン経由でここに届いて閉じる
+    override func cancelOperation(_ sender: Any?) {
+        close()
+    }
 }
 
 // MARK: - IBActions

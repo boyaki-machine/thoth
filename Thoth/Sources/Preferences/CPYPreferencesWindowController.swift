@@ -11,6 +11,7 @@
 //
 
 import Cocoa
+import KeyHolder
 
 final class CPYPreferencesWindowController: NSWindowController {
 
@@ -54,10 +55,14 @@ final class CPYPreferencesWindowController: NSWindowController {
     private let versionImageView = NSImageView()
     private let versionTextField = NSTextField(labelWithString: L10n.preferenceVersionTab)
     private let versionButton = NSButton()
+    /// Esc で閉じるためのローカルキーモニタ（タブ切り替えでレスポンダチェーンが
+    /// 変わっても確実に効くよう、cancelOperation ではなくモニタで処理する）
+    private var escKeyMonitor: Any?
 
     // MARK: - Window Life Cycle
     override func windowDidLoad() {
         super.windowDidLoad()
+        installEscToClose()
         self.window?.collectionBehavior = .canJoinAllSpaces
         self.window?.backgroundColor = NSColor(white: 0.99, alpha: 1)
         if #available(OSX 10.10, *) {
@@ -110,6 +115,28 @@ final class CPYPreferencesWindowController: NSWindowController {
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
         window?.makeKeyAndOrderFront(self)
+    }
+
+    // MARK: - Close on Esc
+    /// 他のウィンドウと同様に Esc で閉じる。
+    /// タブを切り替えると first responder が変わり cancelOperation がここまで
+    /// 届かなくなる（beep のみ）ため、ウィンドウ限定のローカルキーモニタで処理する。
+    /// ショートカット記録中（RecordView が first responder）は Esc を記録キャンセル
+    /// に使うので横取りしない
+    private func installEscToClose() {
+        escKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, let window = self.window, event.window === window else { return event }
+            let isRecording = window.firstResponder is RecordView
+            guard Self.shouldCloseOnEsc(keyCode: event.keyCode, isRecordingShortcut: isRecording) else { return event }
+            self.close()
+            return nil
+        }
+    }
+
+    /// Esc（keyCode 53）でウィンドウを閉じるべきか。
+    /// ショートカット記録中は Esc を記録キャンセルに使うため閉じない
+    static func shouldCloseOnEsc(keyCode: UInt16, isRecordingShortcut: Bool) -> Bool {
+        return keyCode == 53 && !isRecordingShortcut
     }
 }
 

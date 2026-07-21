@@ -77,7 +77,8 @@ final class CPYHistorySubPanel: NSPanel {
         isOpaque           = false
         backgroundColor    = .clear
         hasShadow          = true
-        level              = .popUpMenu
+        // メインパネル（.screenSaver）の上に重ねるため同レベルにする
+        level              = .screenSaver
         animationBehavior  = .utilityWindow
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         buildViews()
