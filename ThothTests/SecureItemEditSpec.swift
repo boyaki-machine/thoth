@@ -10,6 +10,50 @@ class SecureItemEditSpec: QuickSpec {
         valueCollectionSpecs()
         editFlowHistorySpecs()
         columnBehaviorSpecs()
+        passwordMaskToggleSpecs()
+    }
+
+    /// 不可視（🔒）チェックボックスの ON/OFF が値セルのマスク表示に反映されることを担保する。
+    /// （実クリックはユニットテスト不可だが、ハンドラ経由のセル再構成は検証できる。
+    ///  列番号の取り違えでセルが取得できず反映されないリグレッションを検出する）
+    private static func passwordMaskToggleSpecs() {
+        describe("Password mask checkbox reflection") {
+            it("switches the value cell between secure and plain when toggled") {
+                let field = SecureMenuItem.Field(fieldID: "p", label: "PW", value: "secret", isPassword: true)
+                let item = SecureMenuItem(itemID: "mask", title: "T", fields: [field])
+                let viewController = SecureItemEditViewController(item: item)
+                _ = viewController.view
+                let table = viewController.fieldsTable
+                table.reloadData()
+
+                let valueCol = table.column(withIdentifier: SecureItemEditViewController.ColID.value)
+                let passCol  = table.column(withIdentifier: SecureItemEditViewController.ColID.pass)
+                let valueCell = table.view(atColumn: valueCol, row: 0, makeIfNecessary: true) as? FieldValueCell
+
+                // 初期状態（isPassword=true）: secureField 表示
+                expect(valueCell?.secureField.isHidden) == false
+                expect(valueCell?.plainField.isHidden) == true
+
+                // チェックを外す → 平文（plainField）表示に即時切り替わる
+                guard let passCell = table.view(atColumn: passCol, row: 0, makeIfNecessary: true),
+                      let button = passCell.subviews.first(where: { $0 is NSButton }) as? NSButton else {
+                    fail("checkbox button not found")
+                    return
+                }
+                button.state = .off
+                viewController.passwordCheckboxChanged(button)
+                expect(valueCell?.secureField.isHidden) == true
+                expect(valueCell?.plainField.isHidden) == false
+                expect(valueCell?.plainField.stringValue) == "secret"
+
+                // 再びチェック → secureField 表示へ戻り、値は保持される
+                button.state = .on
+                viewController.passwordCheckboxChanged(button)
+                expect(valueCell?.secureField.isHidden) == false
+                expect(valueCell?.plainField.isHidden) == true
+                expect(valueCell?.secureField.stringValue) == "secret"
+            }
+        }
     }
 
     /// クリック時のシングルクリック編集・行ドラッグ許可の列判定（純粋関数）。
