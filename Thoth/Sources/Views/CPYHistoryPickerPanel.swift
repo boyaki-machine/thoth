@@ -248,7 +248,9 @@ final class CPYHistoryPickerPanel: NSPanel {
         isOpaque                    = false
         backgroundColor             = .clear
         hasShadow                   = true
-        level                       = .popUpMenu
+        // システムの AutoFill ポップアップ等の背後に隠れないよう .screenSaver で表示する
+        // （詳細は CPYSecurePickerPanel の同箇所を参照）
+        level                       = .screenSaver
         isMovableByWindowBackground = false
         animationBehavior           = .utilityWindow
         collectionBehavior          = [.canJoinAllSpaces, .fullScreenAuxiliary]

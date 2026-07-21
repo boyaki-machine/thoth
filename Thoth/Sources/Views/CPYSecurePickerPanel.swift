@@ -99,7 +99,10 @@ final class CPYSecurePickerPanel: NSPanel {
         isOpaque                    = false
         backgroundColor             = .clear
         hasShadow                   = true
-        level                       = .popUpMenu
+        // Chrome の iCloud パスワード等、システムの AutoFill ポップアップは高い
+        // ウィンドウレベルで前面に出るため、その背後に隠れないよう .screenSaver
+        // （.popUpMenu より上）で表示する
+        level                       = .screenSaver
         isMovableByWindowBackground = false
         animationBehavior           = .utilityWindow
         collectionBehavior          = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -171,6 +174,9 @@ extension CPYSecurePickerPanel {
         origin.y = max(visible.minY + 4, min(origin.y, visible.maxY - frame.height - 4))
         setFrameOrigin(origin)
         isBeingShown = true
+        // アプリのアクティブ化が制限される状況（他アプリの AutoFill ポップアップ表示中など）
+        // でも最低限パネルを描画するため、まず無条件に前面へ出す
+        orderFrontRegardless()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             guard let self = self else { return }
             NSApp.activate(ignoringOtherApps: true)
