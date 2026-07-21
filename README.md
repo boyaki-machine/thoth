@@ -204,7 +204,7 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 
 **First-launch notes:**
 
-- The app is not notarized by Apple, so copying it to another Mac and launching it triggers a Gatekeeper block ("cannot verify the developer", etc.). On recent macOS, open **System Settings → Privacy & Security** and click **"Open Anyway"** next to the "Thoth was blocked…" message to allow it (first launch only). Alternatively run `xattr -dr com.apple.quarantine /Applications/Thoth.app` in Terminal.
+- The app is not notarized by Apple, so copying it to another Mac and launching it triggers a Gatekeeper block ("cannot verify the developer", etc.). See "Handling the Gatekeeper alert on first launch" below to allow it (first launch only).
 - On launch, the app re-signs itself with a device-specific certificate and then relaunches (so that secure items remain readable across versions). A macOS confirmation dialog may appear on the first launch only — choose "Always Allow".
 - After re-signing, you must grant **Accessibility permission** (required for the paste feature; no need to re-grant on later version updates).
 - See "Code Signing and Accessibility Permission" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for details.
@@ -217,6 +217,35 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 | **Desktop folder** | **Optional** | Requested only when the "Observe screenshots" beta feature is enabled. macOS saves screenshots to the Desktop by default, so scanning the Desktop is needed to detect new ones |
 
 > Desktop folder access is requested **only if you enable the "Observe screenshots" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
+
+### Handling the Gatekeeper Alert on First Launch
+
+When you launch a distributed copy of Thoth for the first time on another Mac, you may see an alert such as "Thoth Not Opened" / "Apple could not verify Thoth is free of malware…" that only offers "Move to Trash" and "Done" (on recent macOS). This is the default block for un-notarized apps. Allow it once with either of the methods below and it will launch normally from then on.
+
+First, dismiss the alert with **"Done"** (not "Move to Trash").
+
+**Method A: GUI (System Settings)**
+
+1. Apple menu → **System Settings** → **Privacy & Security**
+2. Scroll down until you see **"Thoth was blocked to protect your Mac"** with an **"Open Anyway"** button, and click it
+3. Authenticate with Touch ID or your password
+4. If a confirmation dialog appears, choose **"Open"**
+
+**Method B: CLI (Terminal)**
+
+Remove the quarantine attribute from the app. The example assumes it is in `/Applications` (adjust the path to where you placed it).
+
+```sh
+xattr -dr com.apple.quarantine /Applications/Thoth.app
+```
+
+Then double-click `Thoth.app` to launch it normally. To check whether the attribute is present (nothing printed means it is not):
+
+```sh
+xattr -p com.apple.quarantine /Applications/Thoth.app 2>/dev/null
+```
+
+> **Note:** These steps are needed only because the app is not notarized. Signing with a Developer ID plus notarization (via the paid Apple Developer Program) would remove the need for them.
 
 ---
 
