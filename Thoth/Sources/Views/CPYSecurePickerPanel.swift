@@ -83,6 +83,10 @@ final class CPYSecurePickerPanel: NSPanel {
     /// サブパネルが左側に配置されているか（右側にスペースが無い場合のフォールバック）。
     /// ← → / h l の操作方向の入れ替えに使う
     var subPanelOnLeft = false
+    /// パネル外クリックで閉じるためのイベントモニタ（グローバル/ローカル）
+    private var dismissMonitors: [Any] = []
+    /// 登録中のモニタ数（テストでのライフサイクル検証用）
+    var dismissMonitorCount: Int { dismissMonitors.count }
 
     // MARK: - Callbacks
 
@@ -99,7 +103,10 @@ final class CPYSecurePickerPanel: NSPanel {
         isOpaque                    = false
         backgroundColor             = .clear
         hasShadow                   = true
-        level                       = .popUpMenu
+        // Chrome の iCloud パスワード等、システムの AutoFill ポップアップは高い
+        // ウィンドウレベルで前面に出るため、その背後に隠れないよう .screenSaver
+        // （.popUpMenu より上）で表示する
+        level                       = .screenSaver
         isMovableByWindowBackground = false
         animationBehavior           = .utilityWindow
         collectionBehavior          = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -136,16 +143,13 @@ final class CPYSecurePickerPanel: NSPanel {
 
     // MARK: - Window Lifecycle
 
-    override func resignKey() {
-        super.resignKey()
-        #if DEBUG
-        NSLog("[SecurePickerPanel] resignKey: isBeingShown=\(isBeingShown)")
-        #endif
-        guard !isBeingShown else { return }
-        if isVisible { close() }
-    }
+    // キーウィンドウでなくなっても閉じない。システムの AutoFill ポップアップ等と
+    // 最前面を奪い合って点滅・自動クローズするのを避けるため、パネルの解除は
+    // 「ユーザーが実際にパネル外をクリックする」ことだけを契機にする（下記 dismissMonitors）。
+    // resignKey では何もしない。
 
     override func close() {
+        removeDismissMonitors()
         if let sub = subPanel {
             removeChildWindow(sub)
             sub.close()
@@ -153,6 +157,44 @@ final class CPYSecurePickerPanel: NSPanel {
         }
         isInSubPanelMode = false
         super.close()
+    }
+
+    // MARK: - Dismiss on Outside Click
+
+    /// パネル外クリックで閉じるためのイベントモニタを開始する。
+    /// 他アプリのクリック（別ウィンドウへのフォーカス）や、自アプリ内でパネル
+    /// 以外へのクリックで閉じる。パネル/サブパネルへのクリックでは閉じない。
+    /// キー喪失では閉じないため、フォーカスを取れなくてもユーザー操作まで残る。
+    func installDismissMonitors() {
+        removeDismissMonitors()
+        let global = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.dismissByOutsideClick()
+        }
+        let local = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self else { return event }
+            if !self.belongsToPanelGroup(event.window) { self.dismissByOutsideClick() }
+            return event
+        }
+        dismissMonitors = [global, local].compactMap { $0 }
+    }
+
+    private func removeDismissMonitors() {
+        dismissMonitors.forEach { NSEvent.removeMonitor($0) }
+        dismissMonitors = []
+    }
+
+    /// クリックされたウィンドウがこのパネル群（本体またはサブパネル）に属するか
+    func belongsToPanelGroup(_ window: NSWindow?) -> Bool {
+        if window === self { return true }
+        if let children = childWindows, children.contains(where: { $0 === window }) { return true }
+        return false
+    }
+
+    private func dismissByOutsideClick() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.isVisible else { return }
+            self.close()
+        }
     }
 }
 
@@ -171,6 +213,9 @@ extension CPYSecurePickerPanel {
         origin.y = max(visible.minY + 4, min(origin.y, visible.maxY - frame.height - 4))
         setFrameOrigin(origin)
         isBeingShown = true
+        // アプリのアクティブ化が制限される状況（他アプリの AutoFill ポップアップ表示中など）
+        // でも最低限パネルを描画するため、まず無条件に前面へ出す
+        orderFrontRegardless()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
             guard let self = self else { return }
             NSApp.activate(ignoringOtherApps: true)
@@ -184,9 +229,10 @@ extension CPYSecurePickerPanel {
             } else {
                 self.updateSubPanel()
             }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.65) { [weak self] in
-            self?.isBeingShown = false
+            self.isBeingShown = false
+            // パネル起動時のクリック（ホットキー/ステータスバー等）を誤検知しないよう、
+            // 表示が落ち着いてから外部クリック監視を開始する
+            self.installDismissMonitors()
         }
     }
 }

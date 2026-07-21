@@ -226,6 +226,10 @@ final class CPYHistoryPickerPanel: NSPanel {
     /// サブパネルが左側に配置されているか（右側にスペースが無い場合のフォールバック）。
     /// ← → / h l の操作方向の入れ替えに使う
     var subPanelOnLeft = false
+    /// パネル外クリックで閉じるためのイベントモニタ（グローバル/ローカル）
+    private var dismissMonitors: [Any] = []
+    /// 登録中のモニタ数（テストでのライフサイクル検証用）
+    var dismissMonitorCount: Int { dismissMonitors.count }
 
     // MARK: - Callbacks
 
@@ -248,7 +252,9 @@ final class CPYHistoryPickerPanel: NSPanel {
         isOpaque                    = false
         backgroundColor             = .clear
         hasShadow                   = true
-        level                       = .popUpMenu
+        // システムの AutoFill ポップアップ等の背後に隠れないよう .screenSaver で表示する
+        // （詳細は CPYSecurePickerPanel の同箇所を参照）
+        level                       = .screenSaver
         isMovableByWindowBackground = false
         animationBehavior           = .utilityWindow
         collectionBehavior          = [.canJoinAllSpaces, .fullScreenAuxiliary]
@@ -285,23 +291,13 @@ final class CPYHistoryPickerPanel: NSPanel {
 
     // MARK: - Window Lifecycle
 
-    override func resignKey() {
-        super.resignKey()
-        // 表示直後はメニュー閉鎖に伴う「元アプリへのアクティベーション返却」と
-        // 競合してキーを失うことがある。この間は閉じずにキー状態を取り返す
-        // （メニュー項目から開く経路があるため、セキュアパネルより一歩強い対策が必要）
-        if isBeingShown {
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self, self.isVisible, self.isBeingShown else { return }
-                NSApp.activate(ignoringOtherApps: true)
-                self.makeKeyAndOrderFront(nil)
-            }
-            return
-        }
-        if isVisible { close() }
-    }
+    // キーウィンドウでなくなっても閉じない。システムの AutoFill ポップアップ等と
+    // 最前面を奪い合って点滅・自動クローズするのを避けるため、パネルの解除は
+    // 「ユーザーが実際にパネル外をクリックする」ことだけを契機にする（下記 dismissMonitors）。
+    // resignKey では何もしない。
 
     override func close() {
+        removeDismissMonitors()
         if let sub = subPanel {
             removeChildWindow(sub)
             sub.close()
@@ -312,6 +308,43 @@ final class CPYHistoryPickerPanel: NSPanel {
         indexer.cancel()
         fullText = [:]
         super.close()
+    }
+
+    // MARK: - Dismiss on Outside Click
+
+    /// パネル外クリックで閉じるためのイベントモニタを開始する。
+    /// 他アプリのクリック（別ウィンドウへのフォーカス）や、自アプリ内でパネル
+    /// 以外へのクリックで閉じる。パネル/サブパネルへのクリックでは閉じない。
+    /// キー喪失では閉じないため、フォーカスを取れなくてもユーザー操作まで残る。
+    func installDismissMonitors() {
+        removeDismissMonitors()
+        let global = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            self?.dismissByOutsideClick()
+        }
+        let local = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            guard let self = self else { return event }
+            if !self.belongsToPanelGroup(event.window) { self.dismissByOutsideClick() }
+            return event
+        }
+        dismissMonitors = [global, local].compactMap { $0 }
+    }
+
+    private func removeDismissMonitors() {
+        dismissMonitors.forEach { NSEvent.removeMonitor($0) }
+        dismissMonitors = []
+    }
+
+    func belongsToPanelGroup(_ window: NSWindow?) -> Bool {
+        if window === self { return true }
+        if let children = childWindows, children.contains(where: { $0 === window }) { return true }
+        return false
+    }
+
+    private func dismissByOutsideClick() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self, self.isVisible else { return }
+            self.close()
+        }
     }
 }
 
@@ -358,11 +391,10 @@ extension CPYHistoryPickerPanel {
             // （j/k で即移動でき、"/" キーで検索ボックスへ移る）
             self.makeFirstResponder(self.tableView)
             self.updateSubPanel()
-        }
-        // メニュー項目経由ではアクティベーション返却が遅れて届くことがあるため、
-        // セキュアパネル（0.65 秒）より長めに猶予を取る
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.isBeingShown = false
+            self.isBeingShown = false
+            // パネル起動時のクリック（ステータスバー等）を誤検知しないよう、
+            // 表示が落ち着いてから外部クリック監視を開始する
+            self.installDismissMonitors()
         }
         // 全文索引のビルドを開始。進捗が届くたびに再フィルタして
         // 本文ヒットを順次追加表示する（空クエリ時は表示が変わらないため省略）
