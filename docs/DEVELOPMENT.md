@@ -241,6 +241,13 @@ A script builds the Release app and packages a DMG in one command.
 
 **Output:** `build/Thoth-<version>.dmg` (the version is read automatically from `CFBundleShortVersionString` in `Info.plist`; `build/` is in `.gitignore`, so it is not committed)
 
+**Release date:** the release date shown in the Version tab is derived automatically
+from the date the version tag `v<version>` was applied on `main` (the annotated tag's
+tagger date). `make_dmg.sh` reads that date and injects it via the `THOTH_RELEASE_DATE`
+build setting into `Info.plist`'s `ThothReleaseDate` (no manual update needed). Therefore,
+run `make_dmg.sh` **after merging `develop` into `main` and creating the tag**. A
+development build without a tag leaves it empty, and the release date is not shown.
+
 **Requirements:**
 
 - macOS + Xcode (`xcodebuild`). `hdiutil` ships with macOS, so no extra install is needed

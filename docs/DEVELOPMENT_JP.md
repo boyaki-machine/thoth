@@ -241,6 +241,13 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 
 **出力先:** `build/Thoth-<version>.dmg`（バージョンは `Info.plist` の `CFBundleShortVersionString` から自動取得。`build/` は `.gitignore` 済みのためコミットされない）
 
+**リリース日について:** バージョンタブに表示されるリリース日は、`main` に付けた
+バージョンタグ `v<version>` の付与日（注釈タグの tagger 日付）から自動的に決まる。
+`make_dmg.sh` がその日付を取得し、ビルド設定 `THOTH_RELEASE_DATE` として
+`Info.plist` の `ThothReleaseDate` に注入する（手動更新は不要）。そのため、
+**`develop` を `main` へマージしてタグを付けた後に** `make_dmg.sh` を実行すること。
+タグの無い開発ビルドでは空になり、リリース日は表示されない。
+
 **実行条件:**
 
 - macOS + Xcode（`xcodebuild`）。`hdiutil` は macOS 標準のため追加インストール不要

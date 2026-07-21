@@ -11,8 +11,11 @@
 import Cocoa
 
 /// アプリのバージョン情報を表示するタブ。
-/// バージョン文字列は Info.plist（CFBundleShortVersionString）から、
-/// リリース年月日は Constants.Application.releaseDate から取得する
+/// バージョン文字列は Info.plist（CFBundleShortVersionString）から取得する。
+/// リリース年月日は Info.plist の ThothReleaseDate から取得する。この値は
+/// リリースビルド（scripts/make_dmg.sh）が git のバージョンタグ日付を
+/// ビルド設定 THOTH_RELEASE_DATE として注入する。タグの無い開発ビルドでは
+/// 空になり、リリース日ラベルは表示されない
 class CPYVersionPreferenceViewController: NSViewController {
 
     override func loadView() {
@@ -33,13 +36,17 @@ fileprivate extension CPYVersionPreferenceViewController {
         versionLabel.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
         view.addSubview(versionLabel)
 
-        // リリース年月日
-        let releaseDateLabel = NSTextField(labelWithString: L10n.versionReleaseDate(Constants.Application.releaseDate))
-        releaseDateLabel.alignment = .center
-        releaseDateLabel.font = .systemFont(ofSize: NSFont.systemFontSize)
-        releaseDateLabel.textColor = .secondaryLabelColor
-        releaseDateLabel.frame = NSRect(x: 40, y: 178, width: 400, height: 20)
-        releaseDateLabel.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
-        view.addSubview(releaseDateLabel)
+        // リリース年月日（バージョンタグ日付。開発ビルド等で未設定なら表示しない）
+        let releaseDate = (Bundle.main.object(forInfoDictionaryKey: "ThothReleaseDate") as? String)?
+            .trimmingCharacters(in: .whitespaces)
+        if let releaseDate = releaseDate, !releaseDate.isEmpty {
+            let releaseDateLabel = NSTextField(labelWithString: L10n.versionReleaseDate(releaseDate))
+            releaseDateLabel.alignment = .center
+            releaseDateLabel.font = .systemFont(ofSize: NSFont.systemFontSize)
+            releaseDateLabel.textColor = .secondaryLabelColor
+            releaseDateLabel.frame = NSRect(x: 40, y: 178, width: 400, height: 20)
+            releaseDateLabel.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
+            view.addSubview(releaseDateLabel)
+        }
     }
 }
