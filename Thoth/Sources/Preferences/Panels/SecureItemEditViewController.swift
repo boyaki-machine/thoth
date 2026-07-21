@@ -397,18 +397,27 @@ final class SecureItemEditViewController: NSViewController {
     @objc func passwordCheckboxChanged(_ sender: NSButton) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
+        // Value 列（インデックス 1）の既存セルを取得
+        let valueCell = fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false) as? FieldValueCell
         // 画面上のセルから最新の value を取得してモデルを更新する
-        let currentValue = (fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false)
-                                as? FieldValueCell)?.currentValue ?? fields[row].value
+        let currentValue = valueCell?.currentValue ?? fields[row].value
+        // 値欄を編集中だった場合は、フィールドの差し替え前に編集を確定して
+        // フィールドエディタ（NSText）を切り離す
+        if let editing = valueCell?.textField, view.window?.firstResponder != nil {
+            view.window?.endEditing(for: editing)
+        }
+        let isPassword = sender.state == .on
         fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
                                            label: fields[row].label,
                                            value: currentValue,
-                                           isPassword: sender.state == .on,
+                                           isPassword: isPassword,
                                            kind: fields[row].kind,
                                            history: fields[row].history)
-        // value 列を再描画してプレーン／セキュアフィールドの表示を切り替える
-        fieldsTable.reloadData(forRowIndexes: IndexSet(integer: row),
-                               columnIndexes: IndexSet(integer: 1))
+        // reload では field editor の状態次第で表示が更新されないことがあるため、
+        // 既存セルを直接再構成してプレーン／セキュアフィールドの表示を即時に切り替える
+        valueCell?.configure(value: currentValue, isPassword: isPassword, isTOTP: fields[row].isTOTP,
+                             createdAt: fields[row].createdAt,
+                             target: self, action: #selector(valueFieldChanged(_:)))
     }
 
 }
