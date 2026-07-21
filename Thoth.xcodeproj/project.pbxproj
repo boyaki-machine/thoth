@@ -55,6 +55,8 @@
 		AA20C0DE0000000000000035 /* CPYVersionPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */; };
 		AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */; };
 		AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */; };
+		AA20C0DE0000000000000045 /* CPYVersionPreferenceViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */; };
+		AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */; };
 		B7CC520B88EAA6AD38E93462 /* Pods_Thoth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */; };
 		C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */; };
 		FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */; };
@@ -247,6 +249,8 @@
 		AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYVersionPreferenceViewController.swift; path = Thoth/Sources/Preferences/Panels/CPYVersionPreferenceViewController.swift; sourceTree = "<group>"; };
 		AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanelSpec.swift; path = ThothTests/CPYHistoryPickerPanelSpec.swift; sourceTree = "<group>"; };
 		AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYSecurePickerPanelSpec.swift; path = ThothTests/CPYSecurePickerPanelSpec.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYVersionPreferenceViewControllerSpec.swift; path = ThothTests/CPYVersionPreferenceViewControllerSpec.swift; sourceTree = "<group>"; };
+		AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYPreferencesWindowControllerSpec.swift; path = ThothTests/CPYPreferencesWindowControllerSpec.swift; sourceTree = "<group>"; };
 		C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSPasteboard+Deprecated.swift"; sourceTree = "<group>"; };
 		FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HotKeyServiceSpec.swift; sourceTree = "<group>"; };
 		FA0D5CE71DDCC61600AC9052 /* ClipService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClipService.swift; sourceTree = "<group>"; };
@@ -636,6 +640,8 @@
 				AA20C0DE0000000000000036 /* CPYVersionPreferenceViewController.swift */,
 				AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */,
 				AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */,
+				AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */,
+				AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */,
 				6F92D6373002411700478ACF /* TOTPService.swift */,
 				6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */,
 				FAC43DC81B35D8B100C06102 /* Thoth */,
@@ -1075,6 +1081,8 @@
 				AA20C0DE0000000000000027 /* ClipFullTextIndexerSpec.swift in Sources */,
 				AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */,
 				AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */,
+				AA20C0DE0000000000000045 /* CPYVersionPreferenceViewControllerSpec.swift in Sources */,
+				AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */,
