@@ -2,196 +2,139 @@ import Quick
 import Nimble
 @testable import Thoth
 
-// MARK: - A-5: Tab Navigation Logic Tests
+// MARK: - Tab Navigation Logic Tests
+//
+// `SecureItemEditViewController.focusOrder(for:)` は Tab キーの巡回順を組み立てる純粋関数。
+// handleTabKey はこの配列上を前後に 1 つ動くだけなので、順序さえ検証すれば
+// Tab / Shift+Tab の挙動を UI 無しで担保できる。
 
 class SecureItemEditTabNavigationSpec: QuickSpec {
 
+    private typealias Stop = SecureItemEditViewController.FocusStop
+
     override class func spec() {
-        describe("Tab navigation in SecureItemEditViewController") {
+        describe("SecureItemEditViewController.focusOrder") {
 
-            // MARK: - Field Focus Order
+            /// ボトムバーのボタン列（全ケース共通の末尾）
+            let trailingButtons: [Stop] = [.addField, .removeField, .passwordGenerator, .cancel, .save]
 
-            it("Determines correct forward focus order for single field") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Username", value: "alice")
-                ]
-
-                // Expected order: titleField → Label[0] → Value[0] → +button
-                let focusPath = ["title", "label[0]", "value[0]", "add"]
-                expect(focusPath.count) == 4
+            it("Contains only the title and the buttons when there are no fields") {
+                expect(SecureItemEditViewController.focusOrder(for: [])) == [.title] + trailingButtons
             }
 
-            it("Determines correct forward focus order for multiple plain fields") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Username", value: "alice"),
-                    SecureMenuItem.Field(label: "Password", value: "secret", isPassword: true),
-                    SecureMenuItem.Field(label: "Notes", value: "some notes")
-                ]
-
-                // Expected order: title → Label[0] → Value[0] → Check[0] → Label[1] → Value[1] → Check[1] → Label[2] → Value[2] → Check[2] → +button
-                let focusPath = [
-                    "title",
-                    "label[0]", "value[0]", "check[0]",
-                    "label[1]", "value[1]", "check[1]",
-                    "label[2]", "value[2]", "check[2]",
-                    "add"
-                ]
-                expect(focusPath.count) == 11
+            it("Visits label, value and checkbox for a plain field") {
+                let fields = [SecureMenuItem.Field(label: "Username", value: "alice")]
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0), .value(row: 0), .checkbox(row: 0)] + trailingButtons
             }
 
-            // MARK: - TOTP Field Tab Skipping
-
-            it("Skips checkbox for TOTP fields when tabbing forward") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Username", value: "alice"),
-                    SecureMenuItem.Field(label: "GitHub TOTP", value: "otpauth://...", kind: .totp),
-                    SecureMenuItem.Field(label: "Password", value: "secret", isPassword: true)
-                ]
-
-                // TOTP field should skip checkbox: title → Label[0] → Value[0] → Check[0] → Label[1] → Value[1] → Label[2] (skip TOTP check) → Value[2] → Check[2]
-                let focusPath = [
-                    "title",
-                    "label[0]", "value[0]", "check[0]",
-                    "label[1]", "value[1]",  // No check[1]
-                    "label[2]", "value[2]", "check[2]",
-                    "add"
-                ]
-                expect(focusPath.count) == 10  // One less than plain field count
-                expect(focusPath.filter { $0.contains("check") }.count) == 2
+            it("Treats a password field the same as a plain field") {
+                let fields = [SecureMenuItem.Field(label: "Password", value: "s3cr3t", isPassword: true)]
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0), .value(row: 0), .checkbox(row: 0)] + trailingButtons
             }
 
-            it("Skips history button for TOTP fields") {
-                let fields = [
-                    SecureMenuItem.Field(label: "TOTP", value: "otpauth://...", kind: .totp)
-                ]
-
-                // TOTP field: value field hidden, no history button
-                let hasHistoryButton = false
-                expect(hasHistoryButton) == false
+            // TOTP は secret を表示しないため Value を編集できず、マスク切り替えも持たない
+            it("Visits only the label for a totp field") {
+                let fields = [SecureMenuItem.Field(label: "TOTP", value: "otpauth://x", kind: .totp)]
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0)] + trailingButtons
             }
 
-            // MARK: - Reverse Tab Navigation (Shift+Tab)
-
-            it("Determines correct reverse focus order") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Field 1", value: "val1"),
-                    SecureMenuItem.Field(label: "Field 2", value: "val2")
-                ]
-
-                // Reverse: Save → Cancel → -button → +button → Check[1] → Value[1] → Label[1] → Check[0] → Value[0] → Label[0] → title
-                let reverseFocusPath = [
-                    "save", "cancel", "minus", "add",
-                    "check[1]", "value[1]", "label[1]",
-                    "check[0]", "value[0]", "label[0]",
-                    "title"
-                ]
-                expect(reverseFocusPath.count) == 11
+            // URL は通常のテキストと同じ扱い
+            it("Visits label, value and checkbox for a url field") {
+                let fields = [SecureMenuItem.Field(label: "URL", value: "https://example.com", kind: .url)]
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0), .value(row: 0), .checkbox(row: 0)] + trailingButtons
             }
 
-            // MARK: - Shift+Tab with TOTP
-
-            it("Handles Shift+Tab correctly when source is after TOTP field") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Username", value: "alice"),
-                    SecureMenuItem.Field(label: "TOTP", value: "otpauth://...", kind: .totp),
-                    SecureMenuItem.Field(label: "Email", value: "alice@example.com")
-                ]
-
-                // When at Email label and pressing Shift+Tab, should go to TOTP Value (skipping TOTP Check)
-                let currentFocus = "label[2]"
-                let previousInReverse = "value[1]"  // TOTP value, not check
-                expect(previousInReverse).to(contain("value"))
+            // メモは単一行セルで編集できない（改行が失われる）ため Value を飛ばすが、
+            // マスク切り替えは持つのでチェックボックスには到達する。
+            // TOTP と同じ「行ごと飛ばす」扱いにすると 🔒 が操作不能になる
+            it("Skips the value but keeps the checkbox for a note field") {
+                let fields = [SecureMenuItem.Field(label: "Memo", value: "line1\nline2", kind: .note)]
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0), .checkbox(row: 0)] + trailingButtons
             }
 
-            // MARK: - Empty Fields List
+            it("Builds the order for a mix of every kind") {
+                let fields = [SecureMenuItem.Field(label: "ID", value: "alice"),
+                              SecureMenuItem.Field(label: "Password", value: "s3cr3t", isPassword: true),
+                              SecureMenuItem.Field(label: "TOTP", value: "otpauth://x", kind: .totp),
+                              SecureMenuItem.Field(label: "URL", value: "https://example.com", kind: .url),
+                              SecureMenuItem.Field(label: "Memo", value: "a\nb", kind: .note)]
 
-            it("Handles empty fields list (only title and buttons)") {
-                let fields: [SecureMenuItem.Field] = []
-
-                let focusPath = ["title", "add", "minus", "password-gen", "totp-import", "cancel", "save"]
-                expect(focusPath.count) == 7  // Just the standard controls
+                expect(SecureItemEditViewController.focusOrder(for: fields)) == [
+                    .title,
+                    .label(row: 0), .value(row: 0), .checkbox(row: 0),
+                    .label(row: 1), .value(row: 1), .checkbox(row: 1),
+                    .label(row: 2),
+                    .label(row: 3), .value(row: 3), .checkbox(row: 3),
+                    .label(row: 4), .checkbox(row: 4)
+                ] + trailingButtons
             }
 
-            // MARK: - Circular Navigation
-
-            it("Wraps from title to save button in forward direction") {
-                let currentFocus = "title"
-                let nextFocus = "title"  // Should wrap back after save
-
-                // In circular navigation, after save comes title
-                let focusOrder = ["title", "label[0]", "value[0]", "check[0]", "add", "save", "cancel"]
-                let currentIndex = focusOrder.firstIndex(of: currentFocus)!
-                let lastButton = focusOrder.last!
-                let wrappedNext = focusOrder[0]  // Circular: after last, go to first
-
-                expect(wrappedNext) == "title"
+            it("Keeps the row indices aligned with the field array") {
+                let fields = [SecureMenuItem.Field(label: "TOTP", value: "otpauth://x", kind: .totp),
+                              SecureMenuItem.Field(label: "ID", value: "alice")]
+                // 先頭の TOTP が Value/Checkbox を持たなくても、2 番目の行は row: 1 のまま
+                expect(SecureItemEditViewController.focusOrder(for: fields))
+                    == [.title, .label(row: 0), .label(row: 1), .value(row: 1), .checkbox(row: 1)] + trailingButtons
             }
 
-            it("Wraps from save to title in reverse direction") {
-                let currentFocus = "save"
-                let prevFocus = "title"
+            it("Never contains duplicate stops") {
+                let fields = [SecureMenuItem.Field(label: "A", value: "1"),
+                              SecureMenuItem.Field(label: "B", value: "2", kind: .note),
+                              SecureMenuItem.Field(label: "C", value: "3", kind: .totp)]
+                let order = SecureItemEditViewController.focusOrder(for: fields)
+                // handleTabKey は firstIndex(of:) で現在位置を求めるため、重複があると巡回が壊れる
+                for stop in order {
+                    expect(order.filter { $0 == stop }.count) == 1
+                }
+            }
+        }
 
-                // In circular navigation, before title comes cancel
-                expect(prevFocus) == "title"
+        // 巡回はこの配列上を前後に 1 つ動くだけなので、代表的な遷移を配列操作として検証する
+        describe("Tab traversal over the focus order") {
+
+            /// ID（plain）→ TOTP → メモ の 3 行構成
+            func mixedFields() -> [SecureMenuItem.Field] {
+                return [SecureMenuItem.Field(label: "ID", value: "alice"),
+                        SecureMenuItem.Field(label: "TOTP", value: "otpauth://x", kind: .totp),
+                        SecureMenuItem.Field(label: "Memo", value: "a\nb", kind: .note)]
             }
 
-            // MARK: - Mixed Plain and Password and TOTP
-
-            it("Navigates through complex field mix") {
-                let fields = [
-                    SecureMenuItem.Field(label: "Username", value: "alice"),
-                    SecureMenuItem.Field(label: "Password", value: "secret", isPassword: true),
-                    SecureMenuItem.Field(label: "2FA TOTP", value: "otpauth://...", kind: .totp),
-                    SecureMenuItem.Field(label: "Recovery", value: "codes", isPassword: true)
-                ]
-
-                // Path: title → label[0] → value[0] → check[0] → label[1] → value[1] → check[1] → label[2] → value[2] → label[3] → value[3] → check[3] → ...
-                let focusOrder = [
-                    "title",
-                    "label[0]", "value[0]", "check[0]",
-                    "label[1]", "value[1]", "check[1]",
-                    "label[2]", "value[2]",  // No check for TOTP
-                    "label[3]", "value[3]", "check[3]"
-                ]
-                expect(focusOrder.count) == 12  // 4 fields: 1*3 + 1*3 + 1*2 + 1*3 + 1 title
+            func next(from stop: Stop, in fields: [SecureMenuItem.Field], shift: Bool) -> Stop {
+                let order = SecureItemEditViewController.focusOrder(for: fields)
+                let index = order.firstIndex(of: stop)!
+                let offset = shift ? order.count - 1 : 1
+                return order[(index + offset) % order.count]
             }
 
-            // MARK: - Validation: TOTP Field Detection
-
-            it("Correctly identifies TOTP fields for skip logic") {
-                let totpField = SecureMenuItem.Field(label: "TOTP", value: "otpauth://...", kind: .totp)
-                let plainField = SecureMenuItem.Field(label: "Text", value: "value")
-
-                expect(totpField.isTOTP) == true
-                expect(plainField.isTOTP) == false
+            it("Moves from the last control of a row to the next row label") {
+                expect(next(from: .checkbox(row: 0), in: mixedFields(), shift: false)) == Stop.label(row: 1)
             }
 
-            it("Handles field without isPassword flag (defaults to false)") {
-                let field = SecureMenuItem.Field(label: "Username", value: "alice")
-
-                expect(field.isPassword) == false
-                expect(field.isTOTP) == false
+            it("Jumps over the skipped controls of a totp row") {
+                expect(next(from: .label(row: 1), in: mixedFields(), shift: false)) == Stop.label(row: 2)
+                expect(next(from: .label(row: 2), in: mixedFields(), shift: true)) == Stop.label(row: 1)
             }
 
-            // MARK: - List Boundary Conditions
-
-            it("Focuses first field label when fields exist") {
-                let fields = [SecureMenuItem.Field(label: "Test", value: "val")]
-
-                expect(fields.isEmpty) == false
-                expect(fields[0].label) == "Test"
+            it("Reaches the checkbox of a note row without passing through its value") {
+                expect(next(from: .label(row: 2), in: mixedFields(), shift: false)) == Stop.checkbox(row: 2)
             }
 
-            it("Detects when all remaining fields are TOTP (reverse nav edge case)") {
-                let fields = [
-                    SecureMenuItem.Field(label: "User", value: "alice"),
-                    SecureMenuItem.Field(label: "TOTP1", value: "otpauth://...", kind: .totp),
-                    SecureMenuItem.Field(label: "TOTP2", value: "otpauth://...", kind: .totp)
-                ]
+            it("Wraps from save back to the title and vice versa") {
+                expect(next(from: .save, in: mixedFields(), shift: false)) == Stop.title
+                expect(next(from: .title, in: mixedFields(), shift: true)) == Stop.save
+            }
 
-                // When tabbing backward from add button, should reach check[0], not skip to title
-                let plainFieldCount = fields.filter { !$0.isTOTP }.count
-                expect(plainFieldCount) == 1
+            it("Enters the first row from the title") {
+                expect(next(from: .title, in: mixedFields(), shift: false)) == Stop.label(row: 0)
+            }
+
+            it("Falls back to the add button when there are no fields") {
+                expect(next(from: .title, in: [], shift: false)) == Stop.addField
             }
         }
     }

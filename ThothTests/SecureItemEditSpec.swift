@@ -8,9 +8,135 @@ import AppKit
 class SecureItemEditSpec: QuickSpec {
     override class func spec() {
         valueCollectionSpecs()
+        extendedKindPreservationSpecs()
+        multilinePreviewSpecs()
         editFlowHistorySpecs()
         columnBehaviorSpecs()
         passwordMaskToggleSpecs()
+    }
+
+    /// 単一行セルで編集できない種別（メモ）が、既存の編集シートを通しても壊れないことを担保する。
+    /// TOTP と同じ経路で「セルの空文字がモデルを上書きして本文が消える」事故が起きうる。
+    private static func extendedKindPreservationSpecs() {
+        describe("Extended kind preservation in the legacy edit sheet") {
+
+            let memo = "契約番号: 12345-678\nサポート: 03-0000-0000"
+
+            /// メモ・URL・通常フィールドを持つアイテムの編集シートを組み立てる
+            func makeViewController() -> SecureItemEditViewController {
+                let fields = [SecureMenuItem.Field(fieldID: "n1", label: "Memo", value: memo, kind: .note),
+                              SecureMenuItem.Field(fieldID: "u1", label: "URL", value: "https://example.com", kind: .url),
+                              SecureMenuItem.Field(fieldID: "p1", label: "ID", value: "user")]
+                let item = SecureMenuItem(itemID: "extended", title: "Accounting", fields: fields)
+                let viewController = SecureItemEditViewController(item: item)
+                _ = viewController.view
+                viewController.fieldsTable.reloadData()
+                return viewController
+            }
+
+            it("Does not show the raw note value in the single line cell") {
+                let viewController = makeViewController()
+                let noteCell = viewController.fieldsTable.view(atColumn: 2, row: 0, makeIfNecessary: true) as? FieldValueCell
+                // 値をセルに入れると編集で改行が失われるため、プレビューはプレースホルダーに出す
+                expect(noteCell?.currentValue) == ""
+                expect(noteCell?.plainField.isEditable) == false
+                expect(noteCell?.plainField.placeholderString).to(contain("契約番号"))
+            }
+
+            // 中核の回帰テスト: 保存でメモ本文と改行が失われないこと
+            it("Preserves the multiline note value through the edit sheet save") {
+                let viewController = makeViewController()
+                _ = viewController.fieldsTable.view(atColumn: 2, row: 0, makeIfNecessary: true)
+
+                var saved: SecureMenuItem?
+                viewController.onSave = { saved = $0 }
+                viewController.perform(NSSelectorFromString("saveSheet"))
+
+                expect(saved?.fields.first?.value) == memo
+                expect(saved?.fields.first?.value.contains("\n")) == true
+                expect(saved?.fields.first?.kind) == .note
+            }
+
+            it("Keeps the url kind and lets its value be edited in the cell") {
+                let viewController = makeViewController()
+                let urlCell = viewController.fieldsTable.view(atColumn: 2, row: 1, makeIfNecessary: true) as? FieldValueCell
+                expect(urlCell?.currentValue) == "https://example.com"
+                expect(urlCell?.plainField.isEditable) == true
+                urlCell?.plainField.stringValue = "https://example.org/login"
+
+                var saved: SecureMenuItem?
+                viewController.onSave = { saved = $0 }
+                viewController.perform(NSSelectorFromString("saveSheet"))
+
+                expect(saved?.fields[1].value) == "https://example.org/login"
+                expect(saved?.fields[1].kind) == .url
+            }
+
+            // メモは 🔒 を持つため、チェックボックス操作でも本文が消えてはならない
+            // （ハンドラがセルの空文字を読んでモデルを上書きする事故を防ぐ）
+            it("Preserves the note value when the password checkbox is toggled") {
+                let viewController = makeViewController()
+                let table = viewController.fieldsTable
+                let passCol = table.column(withIdentifier: SecureItemEditViewController.ColID.pass)
+                guard let passCell = table.view(atColumn: passCol, row: 0, makeIfNecessary: true),
+                      let button = passCell.subviews.first(where: { $0 is NSButton }) as? NSButton else {
+                    fail("checkbox button not found")
+                    return
+                }
+                // メモの行にはチェックボックスが表示される（TOTP と違い操作できる）
+                expect(button.isHidden) == false
+
+                button.state = .on
+                viewController.passwordCheckboxChanged(button)
+
+                var saved: SecureMenuItem?
+                viewController.onSave = { saved = $0 }
+                viewController.perform(NSSelectorFromString("saveSheet"))
+                expect(saved?.fields.first?.value) == memo
+                expect(saved?.fields.first?.isPassword) == true
+            }
+
+            it("Hides the history button for a note row but keeps it for a url row") {
+                let viewController = makeViewController()
+                let table = viewController.fieldsTable
+                let historyCol = table.column(withIdentifier: SecureItemEditViewController.ColID.history)
+
+                let noteHistory = table.view(atColumn: historyCol, row: 0, makeIfNecessary: true)?
+                    .subviews.first(where: { $0 is NSButton })
+                let urlHistory = table.view(atColumn: historyCol, row: 1, makeIfNecessary: true)?
+                    .subviews.first(where: { $0 is NSButton })
+
+                expect(noteHistory?.isHidden) == true
+                expect(urlHistory?.isHidden) == false
+            }
+        }
+    }
+
+    /// 複数行の値を単一行セルに出すためのプレビュー生成（純粋関数）
+    private static func multilinePreviewSpecs() {
+        describe("FieldValueCell.multilinePreview") {
+
+            it("Shows the first line and marks that more lines follow") {
+                expect(FieldValueCell.multilinePreview(for: "first\nsecond", isPassword: false)) == "first …"
+            }
+
+            it("Returns a single line unchanged") {
+                expect(FieldValueCell.multilinePreview(for: "only line", isPassword: false)) == "only line"
+            }
+
+            it("Truncates a long first line") {
+                let preview = FieldValueCell.multilinePreview(for: String(repeating: "a", count: 40), isPassword: false)
+                expect(preview) == String(repeating: "a", count: 26) + "…"
+            }
+
+            it("Masks the preview when the field is marked as a password") {
+                expect(FieldValueCell.multilinePreview(for: "secret\nlines", isPassword: true)) == "••••••••"
+            }
+
+            it("Returns an empty string for an empty value") {
+                expect(FieldValueCell.multilinePreview(for: "", isPassword: false)) == ""
+            }
+        }
     }
 
     /// 不可視（🔒）チェックボックスの ON/OFF が値セルのマスク表示に反映されることを担保する。
@@ -62,18 +188,28 @@ class SecureItemEditSpec: QuickSpec {
         describe("Column behavior predicates") {
             typealias EditVC = SecureItemEditViewController
 
-            it("makes label editable, and value editable only when not TOTP") {
-                expect(EditVC.isEditableColumn(EditVC.ColID.label, isTOTP: false)) == true
-                expect(EditVC.isEditableColumn(EditVC.ColID.label, isTOTP: true)) == true
-                expect(EditVC.isEditableColumn(EditVC.ColID.value, isTOTP: false)) == true
-                expect(EditVC.isEditableColumn(EditVC.ColID.value, isTOTP: true)) == false
+            let allKinds: [SecureMenuItem.Field.Kind] = [.plain, .totp, .url, .note]
+
+            it("always makes the label column editable") {
+                for kind in allKinds {
+                    expect(EditVC.isEditableColumn(EditVC.ColID.label, kind: kind)) == true
+                }
+            }
+
+            // TOTP は secret を表示しない、メモは改行が失われるため、
+            // いずれも単一行セルでは編集させない
+            it("makes the value column editable only for plain and url") {
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, kind: .plain)) == true
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, kind: .url)) == true
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, kind: .totp)) == false
+                expect(EditVC.isEditableColumn(EditVC.ColID.value, kind: .note)) == false
             }
 
             it("does not make button / drag-handle columns editable") {
-                for isTOTP in [false, true] {
-                    expect(EditVC.isEditableColumn(EditVC.ColID.dragHandle, isTOTP: isTOTP)) == false
-                    expect(EditVC.isEditableColumn(EditVC.ColID.pass, isTOTP: isTOTP)) == false
-                    expect(EditVC.isEditableColumn(EditVC.ColID.history, isTOTP: isTOTP)) == false
+                for kind in allKinds {
+                    expect(EditVC.isEditableColumn(EditVC.ColID.dragHandle, kind: kind)) == false
+                    expect(EditVC.isEditableColumn(EditVC.ColID.pass, kind: kind)) == false
+                    expect(EditVC.isEditableColumn(EditVC.ColID.history, kind: kind)) == false
                 }
             }
 
