@@ -266,14 +266,24 @@ final class SecureMenuService {
     // MARK: - User Data (user-data エントリの読み書き)
 
     /// user-data エントリを読み込む。存在しない場合は旧 2 エントリ
-    /// （all-items / crypto-password）からの移行を試みる
+    /// （all-items / crypto-password）からの移行を試みる。
+    ///
+    /// 「読み出しには成功したが内容を解釈できない」場合は `errSecDecode` を返す。
+    /// ここで `errSecSuccess` + nil を返すと、呼び出し側のガード
+    /// （`status == errSecSuccess || status == errSecItemNotFound`）を素通りして
+    /// 「アイテム 0 件」として扱われ、直後の保存で読めなかったデータを
+    /// 空で上書きしてしまう。破損は「読めなかった」と同義に扱い、書き込みを禁止する
     private func loadUserData() -> (status: OSStatus, userData: SecureUserData?) {
         let (status, raw) = readEntry(account: Self.userDataKey)
-        if status == errSecSuccess, let raw = raw {
-            let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw)
-            #if DEBUG
-            if decoded == nil { NSLog("[SecureMenuService] loadUserData: decode failed") }
-            #endif
+        if status == errSecSuccess {
+            guard let raw = raw else {
+                NSLog("[SecureMenuService] loadUserData: entry found but returned no data")
+                return (errSecDecode, nil)
+            }
+            guard let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) else {
+                NSLog("[SecureMenuService] loadUserData: decode failed (\(raw.count) bytes), treating as unreadable")
+                return (errSecDecode, nil)
+            }
             return (status, decoded)
         }
         guard status == errSecItemNotFound else { return (status, nil) }
@@ -296,7 +306,14 @@ final class SecureMenuService {
 
         var userData = SecureUserData()
         if let itemsData = itemsData {
-            userData.items = (try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData)) ?? []
+            // 旧エントリを解釈できない場合は移行を中止する。空の items で user-data を
+            // 作ってしまうと、読み戻し検証（空データでも成功する）を通過して
+            // 旧エントリが削除され、アイテムが完全に失われる
+            guard let decodedItems = try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData) else {
+                NSLog("[SecureMenuService] migrateLegacyUserData: failed to decode legacy all-items, migration aborted")
+                return (errSecDecode, nil)
+            }
+            userData.items = decodedItems
         }
         if let passwordData = passwordData {
             userData.cryptoPassword = String(data: passwordData, encoding: .utf8)
@@ -324,15 +341,22 @@ final class SecureMenuService {
         // （実環境の Clipy データがテスト用サービスへ流れ込むのを防ぐ）
         guard keychainService == Self.defaultKeychainService else { return (errSecItemNotFound, nil) }
         let (status, raw) = readEntry(account: Self.userDataKey, service: Self.legacyKeychainService)
-        if status == errSecSuccess, let raw = raw,
-           let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) {
+        if status == errSecSuccess {
+            // 旧サービスのエントリが読めたのに解釈できない場合は移行を中止する。
+            // ここで素通りさせると旧 2 エントリ経由の探索に落ちて「新規インストール」
+            // と誤判定され、移行できていないデータの上に空の状態が作られる
+            guard let raw = raw,
+                  let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) else {
+                NSLog("[SecureMenuService] migrateFromLegacyService: failed to decode legacy user-data, migration aborted")
+                return (errSecDecode, nil)
+            }
             if writeUserData(decoded) {
                 NSLog("[SecureMenuService] migrated user-data from legacy Clipy service")
             }
             return (errSecSuccess, decoded)
         }
         // アクセス拒否は移行せずそのまま返す（読めないデータの上書き防止）
-        if status != errSecSuccess && status != errSecItemNotFound { return (status, nil) }
+        if status != errSecItemNotFound { return (status, nil) }
 
         let (itemsStatus, itemsData) = readEntry(account: Self.legacyItemsKey, service: Self.legacyKeychainService)
         let (passwordStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey, service: Self.legacyKeychainService)
@@ -345,7 +369,12 @@ final class SecureMenuService {
 
         var userData = SecureUserData()
         if let itemsData = itemsData {
-            userData.items = (try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData)) ?? []
+            // 解釈できない旧データを空で置き換えないよう、移行を中止する（上記と同じ理由）
+            guard let decodedItems = try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData) else {
+                NSLog("[SecureMenuService] migrateFromLegacyService: failed to decode legacy all-items, migration aborted")
+                return (errSecDecode, nil)
+            }
+            userData.items = decodedItems
         }
         if let passwordData = passwordData {
             userData.cryptoPassword = String(data: passwordData, encoding: .utf8)
@@ -368,8 +397,11 @@ final class SecureMenuService {
         #if DEBUG
         NSLog("[SecureMenuService] loadAllItems: status=\(status)")
         #endif
-        // 「エントリが存在しない」以外の失敗はアクセス拒否として記録する
-        // （バイナリ更新により Keychain ACL の照合に失敗した場合など）
+        // 「エントリが存在しない」以外の失敗は読み出し不能として記録する。
+        // - アクセス拒否（バイナリ更新により Keychain ACL の照合に失敗した場合など）
+        // - errSecDecode: 読めたが解釈できない（破損、または未知の形式で保存された
+        //   データを古いバイナリで読んだ場合）
+        // どちらも「既存データを空で上書きしてはいけない」状態なので同じ扱いにする
         isKeychainAccessDenied = (status != errSecSuccess && status != errSecItemNotFound)
 
         guard let userData = userData else {

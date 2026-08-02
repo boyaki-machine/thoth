@@ -13,6 +13,10 @@ class SecureMenuServiceSpec: QuickSpec {
 
     override class func spec() {
         beforeEach {
+            // 破損データを書き込むテストの後でも確実にクリーンな状態から始める。
+            // deleteAllItems() / deleteCryptoPassword() は破損状態では
+            // 意図的に失敗するため、後片付けには使えない
+            self.removeAllEntriesDirectly()
             self.service = SecureMenuService(keychainService: SecureMenuServiceSpec.testKeychainService)
             self.service.deleteAllItems()
             self.service.deleteCryptoPassword()
@@ -20,6 +24,7 @@ class SecureMenuServiceSpec: QuickSpec {
         afterEach {
             self.service.deleteAllItems()
             self.service.deleteCryptoPassword()
+            self.removeAllEntriesDirectly()
         }
 
         saveAndLoadSpecs()
@@ -27,6 +32,7 @@ class SecureMenuServiceSpec: QuickSpec {
         deleteSpecs()
         reorderSpecs()
         accessDeniedGuardSpecs()
+        corruptedDataGuardSpecs()
         cryptoPasswordSpecs()
         totpFieldSpecs()
         legacyMigrationSpecs()
@@ -43,6 +49,36 @@ class SecureMenuServiceSpec: QuickSpec {
         ]
         SecItemDelete(query as CFDictionary)
         expect(SecItemAdd(query as CFDictionary, nil)) == errSecSuccess
+    }
+
+    /// Keychain エントリを直接削除する。破損データを書き込んだテストの後始末用
+    /// （サービス側の削除 API は破損状態では意図的に失敗するため使えない）
+    private static func removeEntryDirectly(account: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    private static func removeAllEntriesDirectly() {
+        ["user-data", "all-items", "crypto-password"].forEach { removeEntryDirectly(account: $0) }
+    }
+
+    /// Keychain に実際に保存されている生バイト列を読み出す。
+    /// 「保存が拒否され、既存データが書き換わっていない」ことの検証に使う
+    private static func rawEntryData(account: String) -> Data? {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account
+        ]
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecReturnData as String] = true
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return nil }
+        return result as? Data
     }
 
     private static func legacyEntryExists(account: String) -> Bool {
@@ -95,6 +131,40 @@ class SecureMenuServiceSpec: QuickSpec {
                 _ = self.service.saveCryptoPassword("updated")
                 expect(self.service.loadAllItems().count) == 1
                 expect(self.service.loadCryptoPassword()) == "updated"
+            }
+
+            // TOTP は再登録に各サービスの 2FA 設定をやり直す手間がかかるため、
+            // 移行経路で secret がそのまま引き継がれることを明示的に担保する
+            it("Carries TOTP secrets through the legacy migration untouched") {
+                let secret = "otpauth://totp/GitHub:user?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
+                let items = [SecureMenuItem(itemID: "legacy-totp", title: "GitHub",
+                                            fields: [SecureMenuItem.Field(label: "TOTP", value: secret, kind: .totp)])]
+                self.addLegacyEntry(account: "all-items", data: try! JSONEncoder().encode(items))
+
+                let migrated = self.service.loadAllItems()
+                expect(migrated.first?.fields.first?.value) == secret
+                expect(migrated.first?.fields.first?.isTOTP) == true
+                // 移行後に別アイテムを保存しても secret は書き換わらない
+                _ = self.service.save(SecureMenuItem(title: "Another"))
+                expect(self.service.loadAllItems().first { $0.itemID == "legacy-totp" }?
+                        .fields.first?.value) == secret
+            }
+
+            // 旧エントリを解釈できない場合、空の items で移行を完了させてはならない。
+            // 以前は空データを書き込んだうえで読み戻し検証（空でも成功する）を通過し、
+            // 旧エントリを削除していたため、アップグレード時にデータが完全に失われた
+            it("Aborts the migration and keeps the legacy entry when it cannot be decoded") {
+                self.addLegacyEntry(account: "all-items", data: Data("not json at all".utf8))
+
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+                // 旧エントリは削除されずに残っている（あとから救出できる）
+                expect(self.legacyEntryExists(account: "all-items")) == true
+                // 新エントリは作られていない
+                expect(self.rawEntryData(account: "user-data")) == nil
+                // 読めない状態なので保存も拒否される
+                expect(self.service.save(SecureMenuItem(title: "New"))) == false
+                expect(self.legacyEntryExists(account: "all-items")) == true
             }
         }
     }
@@ -395,6 +465,91 @@ class SecureMenuServiceSpec: QuickSpec {
                 self.service.isKeychainAccessDenied = true
                 _ = self.service.loadAllItems()
                 expect(self.service.isKeychainAccessDenied) == false
+            }
+        }
+    }
+
+    // MARK: - Corrupted Data Guard
+
+    /// 「Keychain の読み出しには成功したが、内容を解釈できない」場合のガード。
+    ///
+    /// 以前はこの状態で `errSecSuccess` + nil が返り、呼び出し側のガードを素通りして
+    /// 「アイテム 0 件」と解釈されていた。その直後に保存を行うと、読めなかった
+    /// データを空で上書きして全アイテム（TOTP secret を含む）と指紋パスワードが
+    /// 失われた。破損は「読めなかった」と同義に扱い、書き込みを禁止する。
+    private static func corruptedDataGuardSpecs() {
+        describe("Corrupted data guard") {
+
+            /// user-data エントリを解釈不能なバイト列で置き換える
+            func corruptUserDataEntry() {
+                self.addLegacyEntry(account: "user-data", data: Data("{ this is not valid json".utf8))
+            }
+
+            it("Reports unreadable state when the stored data cannot be decoded") {
+                expect(self.service.save(SecureMenuItem(title: "Existing"))) == true
+                corruptUserDataEntry()
+
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+            }
+
+            // 中核の回帰テスト: 破損状態での保存が既存データを破壊しないこと
+            it("Rejects save and leaves the stored bytes untouched") {
+                expect(self.service.save(SecureMenuItem(title: "Existing"))) == true
+                corruptUserDataEntry()
+                let before = self.rawEntryData(account: "user-data")
+
+                expect(self.service.save(SecureMenuItem(title: "Should not be written"))) == false
+                expect(self.rawEntryData(account: "user-data")) == before
+            }
+
+            it("Rejects every mutating operation while the data is unreadable") {
+                corruptUserDataEntry()
+                let before = self.rawEntryData(account: "user-data")
+
+                expect(self.service.save(SecureMenuItem(title: "New"))) == false
+                expect(self.service.delete(itemID: "anything")) == false
+                expect(self.service.reorderItems([SecureMenuItem(title: "New")])) == false
+                expect(self.service.deleteAllItems()) == false
+                // 指紋パスワードの保存も user-data の read-modify-write なので同じく拒否される
+                expect(self.service.saveCryptoPassword("new-password")) == false
+                expect(self.service.deleteCryptoPassword()) == false
+
+                expect(self.rawEntryData(account: "user-data")) == before
+            }
+
+            it("Recovers once the stored data becomes readable again") {
+                corruptUserDataEntry()
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+
+                self.removeEntryDirectly(account: "user-data")
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == false
+                expect(self.service.save(SecureMenuItem(title: "After recovery"))) == true
+                expect(self.service.loadAllItems().first?.title) == "After recovery"
+            }
+
+            // バージョンアップ／ダウングレードで最も怖い経路。
+            // 新しいバージョンが書いた未知の kind を古いバイナリが読んだ状況を再現する。
+            // 読めるか読めないかは実装によって変わってよいが、
+            // 「保存済みの TOTP secret が失われる」ことは決してあってはならない。
+            it("Never destroys a stored TOTP secret when the field kind is unknown") {
+                let json = """
+                {"version":2,"items":[{"itemID":"future-1","title":"Future","displayOrder":0,
+                 "fields":[{"fieldID":"f1","label":"TOTP","value":"JBSWY3DPEHPK3PXP","isPassword":false,
+                 "kind":"kind-from-the-future","history":[],"createdAt":0}]}],
+                 "cryptoPassword":"fingerprint-password"}
+                """
+                self.addLegacyEntry(account: "user-data", data: Data(json.utf8))
+
+                _ = self.service.loadAllItems()
+                _ = self.service.save(SecureMenuItem(title: "Added after reading unknown data"))
+                _ = self.service.saveCryptoPassword("overwrite-attempt")
+
+                let stored = String(data: self.rawEntryData(account: "user-data") ?? Data(), encoding: .utf8) ?? ""
+                expect(stored).to(contain("JBSWY3DPEHPK3PXP"))
+                expect(stored).to(contain("fingerprint-password"))
             }
         }
     }
