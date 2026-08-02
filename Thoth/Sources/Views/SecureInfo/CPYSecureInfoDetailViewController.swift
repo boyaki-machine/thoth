@@ -41,8 +41,18 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onFieldEdited: ((SecureMenuItem.Field, _ label: String?, _ value: String?) -> Void)?
     /// 編集が終わった。保存のきっかけに使う
     var onEditingEnded: (() -> Void)?
+    /// マスク指定（🔒）が切り替えられた
+    var onFieldMaskToggled: ((SecureMenuItem.Field, Bool) -> Void)?
+    /// フィールドの削除が要求された
+    var onFieldDeleteRequested: ((SecureMenuItem.Field) -> Void)?
+    /// 追加するフィールドの種別が選ばれた
+    var onAddFieldRequested: ((SecureInfoFieldTemplate) -> Void)?
+    /// TOTP の取り込みが要求された
+    var onAddTOTPRequested: (() -> Void)?
 
     private let scrollView = NSScrollView()
+    let addFieldButton = NSPopUpButton()
+    let addTOTPButton = NSButton()
     private let totpService = TOTPService()
     private var totpTimer: Timer?
 
@@ -107,6 +117,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(placeholderLabel)
 
+        setupBottomBar()
+
         NSLayoutConstraint.activate([
             titleField.topAnchor.constraint(equalTo: view.topAnchor, constant: Layout.padding),
             titleField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
@@ -115,7 +127,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             scrollView.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: Layout.padding),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
+            scrollView.bottomAnchor.constraint(equalTo: addFieldButton.topAnchor, constant: -Layout.rowSpacing),
+
+            addFieldButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
+            addFieldButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
+            addTOTPButton.leadingAnchor.constraint(equalTo: addFieldButton.trailingAnchor, constant: Layout.rowSpacing),
+            addTOTPButton.centerYAnchor.constraint(equalTo: addFieldButton.centerYAnchor),
 
             // 横方向はスクロールさせず、内容の幅を可視領域に合わせる。
             // scrollView 自体の幅に合わせると、縦スクローラーが出たときに
@@ -142,6 +159,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             titleField.stringValue = ""
             titleField.isHidden = true
             scrollView.isHidden = true
+            addFieldButton.isHidden = true
+            addTOTPButton.isHidden = true
             placeholderLabel.stringValue = L10n.secureInfoNoSelection
             placeholderLabel.isHidden = false
             return
@@ -151,6 +170,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         titleField.isHidden = false
         scrollView.isHidden = false
         placeholderLabel.isHidden = true
+        addFieldButton.isHidden = isReadOnly
+        addTOTPButton.isHidden = isReadOnly
     }
 
     private func rebuildRows(for item: SecureMenuItem?) {
@@ -168,6 +189,10 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             row.onLabelEdited = { [weak self] row, label in self?.onFieldEdited?(row.field, label, nil) }
             row.onValueEdited = { [weak self] row, value in self?.onFieldEdited?(row.field, nil, value) }
             row.onEditingEnded = { [weak self] _ in self?.onEditingEnded?() }
+            row.onMaskToggled = { [weak self] row, isPassword in
+                self?.onFieldMaskToggled?(row.field, isPassword)
+            }
+            row.onDelete = { [weak self] row in self?.onFieldDeleteRequested?(row.field) }
             rowStackView.addArrangedSubview(row)
             row.widthAnchor.constraint(equalTo: rowStackView.widthAnchor).isActive = true
         }
@@ -179,6 +204,72 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     /// 表示中の平文をすべて伏せ字へ戻す
     func hideAllRevealedValues() {
         fieldRows.forEach { $0.hideRevealedValue() }
+    }
+
+    /// フィールド追加メニューとボトムバーを組み立てる
+    private func setupBottomBar() {
+        addFieldButton.translatesAutoresizingMaskIntoConstraints = false
+        addFieldButton.pullsDown = true
+        let menu = NSMenu()
+        // pullsDown のポップアップは先頭項目がボタンの表示名になる
+        menu.addItem(NSMenuItem(title: L10n.secureInfoAddField, action: nil, keyEquivalent: ""))
+        for template in SecureInfoFieldTemplate.allCases {
+            let menuItem = NSMenuItem(title: template.menuTitle,
+                                      action: #selector(addFieldSelected(_:)), keyEquivalent: "")
+            menuItem.target = self
+            menuItem.representedObject = template.rawValue
+            menu.addItem(menuItem)
+        }
+        addFieldButton.menu = menu
+        view.addSubview(addFieldButton)
+
+        addTOTPButton.title = L10n.addTOTP
+        addTOTPButton.bezelStyle = .rounded
+        addTOTPButton.target = self
+        addTOTPButton.action = #selector(addTOTPSelected)
+        addTOTPButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(addTOTPButton)
+    }
+
+    @objc private func addFieldSelected(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let template = SecureInfoFieldTemplate(rawValue: raw) else { return }
+        onAddFieldRequested?(template)
+    }
+
+    @objc private func addTOTPSelected() {
+        onAddTOTPRequested?()
+    }
+
+    /// タイトル欄へフォーカスを移す（新規作成直後にすぐ名前を付けられるようにする）
+    func focusTitleField() {
+        guard !titleField.isHidden else { return }
+        view.window?.makeFirstResponder(titleField)
+    }
+
+    // MARK: - Row focus
+
+    /// いま編集中（フォーカスがある）フィールド行。並べ替えの対象を決めるのに使う。
+    ///
+    /// テキストフィールドを編集中は first responder がフィールドエディタ（NSTextView）へ
+    /// 移り、ビュー階層の親も行ビューとは限らない。`currentEditor()` による判定を
+    /// 併用しないと、編集中に Ctrl+j を押したとき対象を取り違える
+    var focusedRow: SecureFieldRowView? {
+        guard let responder = view.window?.firstResponder else { return nil }
+        if let editing = fieldRows.first(where: { row in
+            row.labelField.currentEditor() != nil || row.valueField.currentEditor() != nil
+        }) {
+            return editing
+        }
+        guard let responderView = responder as? NSView else { return nil }
+        return fieldRows.first { row in
+            var candidate: NSView? = responderView
+            while let current = candidate {
+                if current === row { return true }
+                candidate = current.superview
+            }
+            return false
+        }
     }
 
     // MARK: - TOTP live update

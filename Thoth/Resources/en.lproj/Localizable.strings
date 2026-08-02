@@ -89,6 +89,24 @@
 
 "Secure Info Title Required" = "Enter a title before saving. Your edits are kept.";
 
+"New Secure Item Title" = "New Item";
+
+"Secure Field Default Label Text" = "Text";
+
+"Secure Field Default Label Password" = "Password";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Memo";
+
+"Secure Info Add Field" = "Add Field";
+
+"Secure Info Remove Field" = "Remove Field";
+
+"Secure Info Remove Field Confirmation" = "Are you sure you want to remove this field?";
+
+"Secure Info Toggle Mask" = "Mask / unmask the value";
+
 "Secure Menu Search Placeholder" = "Search...";
 
 "Secure Menu No Results" = "No matching items";
@@ -112,6 +130,10 @@
 "Export Secure Items" = "Export...";
 
 "Secure Items Export Warning" = "The exported file will contain all values in plain text. Handle it with care.";
+
+"Secure Items Save Failed" = "Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).";
+
+"Secure Item Title Required" = "Enter a title before saving.";
 
 "Imported Secure Items Format" = "Imported %d item(s).";
 

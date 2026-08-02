@@ -85,6 +85,24 @@
 
 "Secure Info Title Required" = "Titulum inscribe antequam serves. Mutationes servantur.";
 
+"New Secure Item Title" = "Res nova";
+
+"Secure Field Default Label Text" = "Textus";
+
+"Secure Field Default Label Password" = "Tessera";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Nota";
+
+"Secure Info Add Field" = "Campum addere";
+
+"Secure Info Remove Field" = "Campum tollere";
+
+"Secure Info Remove Field Confirmation" = "Visne hunc campum tollere?";
+
+"Secure Info Toggle Mask" = "Valorem tegere / detegere";
+
 "Secure Menu Search Placeholder" = "Quaerere...";
 
 "Secure Menu No Results" = "Nihil congruens inventum";
@@ -108,6 +126,10 @@
 "Export Secure Items" = "Exportare...";
 
 "Secure Items Export Warning" = "Plica exportata omnes valores aperte continebit. Caute tracta.";
+
+"Secure Items Save Failed" = "In clavium anulo servare non licuit.";
+
+"Secure Item Title Required" = "Titulum inscribe antequam serves.";
 
 "Imported Secure Items Format" = "%d res importatae.";
 

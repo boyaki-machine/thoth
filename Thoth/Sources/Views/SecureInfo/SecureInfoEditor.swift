@@ -131,6 +131,57 @@ final class SecureInfoEditor {
         return true
     }
 
+    /// 作業コピーの末尾にフィールドを追加する。
+    /// - Returns: 追加したフィールド（読み取り専用・未選択の場合は nil）
+    @discardableResult
+    func addField(kind: SecureMenuItem.Field.Kind, label: String,
+                  value: String = "", isPassword: Bool = false) -> SecureMenuItem.Field? {
+        guard !isReadOnly, var current = draft else { return nil }
+        let field = SecureMenuItem.Field(label: label, value: value, isPassword: isPassword, kind: kind)
+        current.fields.append(field)
+        draft = current
+        isDirty = true
+        return field
+    }
+
+    /// 作業コピーからフィールドを取り除く
+    @discardableResult
+    func removeField(fieldID: String) -> Bool {
+        guard !isReadOnly, var current = draft,
+              let index = current.fields.firstIndex(where: { $0.fieldID == fieldID }) else { return false }
+        current.fields.remove(at: index)
+        draft = current
+        isDirty = true
+        return true
+    }
+
+    /// 作業コピーのフィールドを上下に動かす（Ctrl+j / Ctrl+k 相当）。
+    /// 端を越える移動は行わない
+    @discardableResult
+    func moveField(fieldID: String, by offset: Int) -> Bool {
+        guard !isReadOnly, var current = draft,
+              let index = current.fields.firstIndex(where: { $0.fieldID == fieldID }) else { return false }
+        let destination = index + offset
+        guard destination >= 0, destination < current.fields.count, destination != index else { return false }
+        let field = current.fields.remove(at: index)
+        current.fields.insert(field, at: destination)
+        draft = current
+        isDirty = true
+        return true
+    }
+
+    /// アイテムを上下に動かした並びを返す（純粋関数のためユニットテスト可能）。
+    /// 端を越える場合や対象が見つからない場合は nil
+    static func reordered(_ items: [SecureMenuItem], movingItemID: String, by offset: Int) -> [SecureMenuItem]? {
+        guard let index = items.firstIndex(where: { $0.itemID == movingItemID }) else { return nil }
+        let destination = index + offset
+        guard destination >= 0, destination < items.count, destination != index else { return nil }
+        var reordered = items
+        let item = reordered.remove(at: index)
+        reordered.insert(item, at: destination)
+        return reordered
+    }
+
     /// 保存すべき内容を判定する。
     ///
     /// ラベルも値も空のフィールドは取り除く（既存の編集シートと同じ規則）。

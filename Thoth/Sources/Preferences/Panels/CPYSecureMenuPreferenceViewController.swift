@@ -261,9 +261,14 @@ final class CPYSecureItemsViewController: NSViewController {
         presentAsSheet(editVC)
     }
 
+    /// 保存失敗を知らせる。ウィンドウがあればシート、無ければ表示しない
+    /// （ウィンドウ無しで NSAlert に nil を渡すと runModal() になり、
+    ///  画面に出ないまま操作をブロックしてしまう）
     private func showSaveError() {
-        NSAlert.showNotice(message: "Save failed",
-                           informative: "Failed to save the item to Keychain. Check Console.app for details (filter: SecureMenuService).")
+        guard let window = view.window else { return }
+        NSAlert.showNotice(message: L10n.secureItems,
+                           informative: L10n.secureItemsSaveFailed,
+                           for: window)
     }
 
     @objc private func editItemAction() {

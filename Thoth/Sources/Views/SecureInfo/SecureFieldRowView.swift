@@ -55,14 +55,20 @@ final class SecureFieldRowView: NSView {
     var onValueEdited: ((SecureFieldRowView, String) -> Void)?
     /// 編集が終わった（フォーカスが外れた）。保存のきっかけに使う
     var onEditingEnded: ((SecureFieldRowView) -> Void)?
+    /// マスク指定（🔒）が切り替えられた
+    var onMaskToggled: ((SecureFieldRowView, Bool) -> Void)?
+    /// このフィールドの削除が要求された
+    var onDelete: ((SecureFieldRowView) -> Void)?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let labelField = NSTextField(labelWithString: "")
     let valueField = NSTextField(labelWithString: "")
     let noteTextView = NSTextView()
+    let maskButton   = NSButton()
     let revealButton = NSButton()
     let openButton   = NSButton()
     let copyButton   = NSButton()
+    let deleteButton = NSButton()
 
     private let noteScrollView = NSScrollView()
 
@@ -232,13 +238,24 @@ final class SecureFieldRowView: NSView {
 
     /// 種別に応じたボタン列を組み立てる
     private func makeButtonStack() -> NSStackView {
-        for button in [revealButton, openButton, copyButton] {
+        for button in [maskButton, revealButton, openButton, copyButton, deleteButton] {
             button.bezelStyle = .smallSquare
             button.isBordered = false
             button.translatesAutoresizingMaskIntoConstraints = false
             button.widthAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
             button.heightAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
         }
+
+        maskButton.image = NSImage(systemSymbolName: field.isPassword ? "lock.fill" : "lock.open",
+                                   accessibilityDescription: nil)
+        maskButton.toolTip = L10n.secureInfoToggleMask
+        maskButton.target = self
+        maskButton.action = #selector(maskTapped)
+
+        deleteButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        deleteButton.toolTip = L10n.secureInfoRemoveField
+        deleteButton.target = self
+        deleteButton.action = #selector(deleteTapped)
 
         revealButton.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
         revealButton.toolTip = L10n.secureInfoRevealValue
@@ -257,9 +274,11 @@ final class SecureFieldRowView: NSView {
 
         // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）
         var buttons: [NSView] = []
+        if field.kind.allowsPasswordToggle && !isReadOnly { buttons.append(maskButton) }
         if field.isPassword && field.kind.allowsPasswordToggle { buttons.append(revealButton) }
         if field.kind == .url { buttons.append(openButton) }
         buttons.append(copyButton)
+        if !isReadOnly { buttons.append(deleteButton) }
 
         let stack = NSStackView(views: buttons)
         stack.orientation = .horizontal
@@ -281,6 +300,14 @@ final class SecureFieldRowView: NSView {
 
     @objc private func copyTapped() {
         onCopy?(self)
+    }
+
+    @objc private func maskTapped() {
+        onMaskToggled?(self, !field.isPassword)
+    }
+
+    @objc private func deleteTapped() {
+        onDelete?(self)
     }
 }
 

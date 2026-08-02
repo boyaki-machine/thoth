@@ -16,10 +16,16 @@ final class CPYSecureInfoListViewController: NSViewController {
 
     /// 選択が変わったときに呼ばれる（絞り込みで選択が隠れた場合は nil）
     var onSelectionChange: ((SecureMenuItem?) -> Void)?
+    /// アイテムの新規追加が要求された
+    var onAddItemRequested: (() -> Void)?
+    /// 選択中アイテムの削除が要求された
+    var onDeleteItemRequested: (() -> Void)?
 
     private let editor: SecureInfoEditor
     let searchField = NSSearchField()
     let tableView   = NSTableView()
+    let addButton    = NSButton()
+    let removeButton = NSButton()
     private let scrollView = NSScrollView()
 
     private enum Layout {
@@ -27,6 +33,7 @@ final class CPYSecureInfoListViewController: NSViewController {
         static let searchHeight: CGFloat = 24
         static let rowHeight: CGFloat    = 28
         static let padding: CGFloat      = 8
+        static let buttonSize: CGFloat   = 22
     }
 
     init(editor: SecureInfoEditor) {
@@ -65,6 +72,8 @@ final class CPYSecureInfoListViewController: NSViewController {
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scrollView)
 
+        setupItemButtons()
+
         NSLayoutConstraint.activate([
             searchField.topAnchor.constraint(equalTo: view.topAnchor, constant: Layout.padding),
             searchField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
@@ -74,8 +83,51 @@ final class CPYSecureInfoListViewController: NSViewController {
             scrollView.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: Layout.padding),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            scrollView.bottomAnchor.constraint(equalTo: addButton.topAnchor, constant: -4),
+
+            addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
+            addButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
+            addButton.widthAnchor.constraint(equalToConstant: Layout.buttonSize),
+            addButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize),
+            removeButton.leadingAnchor.constraint(equalTo: addButton.trailingAnchor, constant: 2),
+            removeButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+            removeButton.widthAnchor.constraint(equalToConstant: Layout.buttonSize),
+            removeButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
         ])
+    }
+
+    /// アイテムの追加・削除ボタンを組み立てる
+    private func setupItemButtons() {
+        addButton.image = NSImage(systemSymbolName: "plus", accessibilityDescription: nil)
+        addButton.toolTip = L10n.addSecureItem
+        addButton.target = self
+        addButton.action = #selector(addItemTapped)
+
+        removeButton.image = NSImage(systemSymbolName: "minus", accessibilityDescription: nil)
+        removeButton.toolTip = L10n.deleteSecureItem
+        removeButton.target = self
+        removeButton.action = #selector(removeItemTapped)
+
+        for button in [addButton, removeButton] {
+            button.bezelStyle = .smallSquare
+            button.isBordered = false
+            button.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(button)
+        }
+    }
+
+    @objc private func addItemTapped() {
+        onAddItemRequested?()
+    }
+
+    @objc private func removeItemTapped() {
+        onDeleteItemRequested?()
+    }
+
+    /// 追加・削除ボタンの有効状態を更新する
+    func updateButtonStates(isReadOnly: Bool) {
+        addButton.isEnabled = !isReadOnly
+        removeButton.isEnabled = !isReadOnly && editor.selectedItem != nil
     }
 
     // MARK: - Reload
@@ -86,6 +138,7 @@ final class CPYSecureInfoListViewController: NSViewController {
         tableView.reloadData()
         editor.selectFirstVisibleIfNeeded()
         syncSelectionToTableView()
+        updateButtonStates(isReadOnly: editor.isReadOnly)
         onSelectionChange?(editor.selectedItem)
     }
 
@@ -111,6 +164,13 @@ final class CPYSecureInfoListViewController: NSViewController {
 
     func focusSearchField() {
         view.window?.makeFirstResponder(searchField)
+    }
+
+    /// 検索の絞り込みを解除する（新規追加したアイテムが隠れないようにする）
+    func clearSearch() {
+        guard !searchField.stringValue.isEmpty else { return }
+        searchField.stringValue = ""
+        editor.setQuery("")
     }
 
     func focusList() {
@@ -166,6 +226,7 @@ extension CPYSecureInfoListViewController: NSTableViewDataSource, NSTableViewDel
         let row = tableView.selectedRow
         guard row >= 0 else { return }
         editor.selectRow(row)
+        updateButtonStates(isReadOnly: editor.isReadOnly)
         onSelectionChange?(editor.selectedItem)
     }
 }

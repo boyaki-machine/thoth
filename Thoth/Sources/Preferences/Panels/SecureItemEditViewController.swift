@@ -338,9 +338,11 @@ final class SecureItemEditViewController: NSViewController {
 
         let title = titleField.stringValue.trimmingCharacters(in: .whitespaces)
         guard !title.isEmpty else {
-            let alert = NSAlert()
-            alert.messageText = L10n.pleaseFillInTheContentsOfTheSnippet
-            alert.runModal()
+            // スニペット用の文言を流用していたため、セキュアアイテムの編集で
+            // 「スニペットの内容を入力してください」と表示されていた
+            NSAlert.showNotice(message: L10n.secureItems,
+                               informative: L10n.secureItemTitleRequired,
+                               for: view.window)
             return
         }
 

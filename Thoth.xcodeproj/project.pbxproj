@@ -31,6 +31,7 @@
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
 		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
+		AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */; };
 		AA0000DE00000000ABCDEF01 /* SecureFieldRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */; };
 		AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */; };
 		AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */; };
@@ -229,6 +230,7 @@
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
 		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
+		AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoFieldTemplate.swift; sourceTree = "<group>"; };
 		AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowView.swift; sourceTree = "<group>"; };
 		AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoListViewController.swift; sourceTree = "<group>"; };
 		AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoDetailViewController.swift; sourceTree = "<group>"; };
@@ -597,6 +599,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
+				AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */,
 				AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */,
 				AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */,
 				AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */,
@@ -1105,6 +1108,7 @@
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
 				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
+				AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */,
 				AA0000DE00000000ABCDEF01 /* SecureFieldRowView.swift in Sources */,
 				AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */,
 				AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */,

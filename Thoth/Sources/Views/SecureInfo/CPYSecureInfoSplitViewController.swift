@@ -76,6 +76,141 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         detailViewController.onEditingEnded = { [weak self] in
             self?.commitIfNeeded()
         }
+        detailViewController.onFieldMaskToggled = { [weak self] field, isPassword in
+            guard let self = self else { return }
+            self.editor.updateField(fieldID: field.fieldID, isPassword: isPassword)
+            // マスクの有無で行に並ぶボタンが変わるため作り直す
+            self.detailViewController.show(item: self.editor.draft)
+            self.commitIfNeeded()
+        }
+        detailViewController.onFieldDeleteRequested = { [weak self] field in
+            self?.removeField(field)
+        }
+        detailViewController.onAddFieldRequested = { [weak self] template in
+            self?.addField(template)
+        }
+        detailViewController.onAddTOTPRequested = { [weak self] in
+            self?.presentTOTPImport()
+        }
+        listViewController.onAddItemRequested = { [weak self] in
+            self?.addItem()
+        }
+        listViewController.onDeleteItemRequested = { [weak self] in
+            self?.confirmDeleteSelectedItem()
+        }
+    }
+
+    // MARK: - Fields
+
+    private func addField(_ template: SecureInfoFieldTemplate) {
+        guard editor.draft != nil else { NSSound.beep(); return }
+        guard editor.addField(kind: template.kind, label: template.defaultLabel,
+                              isPassword: template.isPassword) != nil else { return }
+        detailViewController.show(item: editor.draft)
+        commitIfNeeded()
+    }
+
+    private func removeField(_ field: SecureMenuItem.Field) {
+        guard let window = view.window else { return }
+        NSAlert.showConfirmation(message: L10n.secureInfoRemoveField,
+                                 informative: L10n.secureInfoRemoveFieldConfirmation,
+                                 confirmTitle: L10n.secureInfoRemoveField, cancelTitle: L10n.cancel,
+                                 for: window) { [weak self] in
+            guard let self = self, self.editor.removeField(fieldID: field.fieldID) else { return }
+            self.detailViewController.show(item: self.editor.draft)
+            self.commitIfNeeded()
+        }
+    }
+
+    /// TOTP の取り込みシートを開く（既存の取り込み画面を再利用する）
+    private func presentTOTPImport() {
+        guard editor.draft != nil else { NSSound.beep(); return }
+        let importViewController = CPYTOTPImportViewController()
+        importViewController.onImport = { [weak self] secret in
+            guard let self = self else { return }
+            self.editor.addField(kind: .totp, label: L10n.totpDefaultFieldLabel, value: secret)
+            self.detailViewController.show(item: self.editor.draft)
+            self.commitIfNeeded()
+        }
+        presentAsSheet(importViewController)
+    }
+
+    /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）
+    private func moveFocusedField(by offset: Int) {
+        guard let row = detailViewController.focusedRow else { NSSound.beep(); return }
+        guard editor.moveField(fieldID: row.field.fieldID, by: offset) else { NSSound.beep(); return }
+        detailViewController.show(item: editor.draft)
+        commitIfNeeded()
+    }
+
+    // MARK: - Items
+
+    /// アイテムを新規作成して選択する。
+    /// タイトルが空だと保存できないため、既定のタイトルを入れた状態で作る
+    private func addItem() {
+        guard !editor.isReadOnly else { NSSound.beep(); return }
+        commitIfNeeded()
+        let service = AppEnvironment.current.secureMenuService
+        let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)
+        guard service.save(newItem) else {
+            showCommitFailure(informative: L10n.secureInfoSaveFailed)
+            return
+        }
+        // 検索で絞り込んだままだと新しいアイテムが見えないので解除する
+        listViewController.clearSearch()
+        editor.setItems(service.loadAllItems())
+        editor.selectItem(itemID: newItem.itemID)
+        listViewController.reload()
+        detailViewController.focusTitleField()
+    }
+
+    private func confirmDeleteSelectedItem() {
+        guard !editor.isReadOnly, let item = editor.selectedItem, let window = view.window else {
+            NSSound.beep()
+            return
+        }
+        NSAlert.showConfirmation(message: L10n.deleteSecureItem,
+                                 informative: L10n.areYouSureWantToDeleteThisSecureItem,
+                                 confirmTitle: L10n.deleteSecureItem, cancelTitle: L10n.cancel,
+                                 for: window) { [weak self] in
+            self?.deleteItem(item)
+        }
+    }
+
+    private func deleteItem(_ item: SecureMenuItem) {
+        let service = AppEnvironment.current.secureMenuService
+        // 削除するアイテムの未保存編集は捨てる（保存すると復活してしまう）
+        editor.beginEditing(itemID: nil)
+        guard service.delete(itemID: item.itemID) else {
+            showCommitFailure(informative: L10n.secureInfoSaveFailed)
+            return
+        }
+        editor.setItems(service.loadAllItems())
+        editor.selectItem(itemID: nil)
+        listViewController.reload()
+    }
+
+    /// 選択中アイテムを一覧内で上下に動かす（Ctrl+j / Ctrl+k）。
+    /// 絞り込み中は見えている順と保存順が一致しないため行わない
+    private func moveSelectedItem(by offset: Int) {
+        guard !editor.isReadOnly, editor.query.isEmpty, let item = editor.selectedItem else {
+            NSSound.beep()
+            return
+        }
+        // reorderItems は渡した配列の内容をそのまま書き戻すため、**必ず先にコミットしてから**
+        // 並びを組み立てること。順序を逆にすると、直前の編集を保存前の内容で上書きしてしまう
+        commitIfNeeded()
+        guard let reordered = SecureInfoEditor.reordered(editor.items, movingItemID: item.itemID, by: offset) else {
+            NSSound.beep()
+            return
+        }
+        let service = AppEnvironment.current.secureMenuService
+        guard service.reorderItems(reordered) else {
+            showCommitFailure(informative: L10n.secureInfoSaveFailed)
+            return
+        }
+        editor.setItems(service.loadAllItems())
+        listViewController.reload()
     }
 
     // MARK: - Data
@@ -220,6 +355,28 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             view.window?.makeFirstResponder(nil)
             hasShownCommitFailure = false
             commitIfNeeded()
+            return true
+        }
+
+        // ⌘N: アイテムを追加 / ⌘Delete: 選択中アイテムを削除
+        if modifiers == .command, event.charactersIgnoringModifiers == "n" {
+            addItem()
+            return true
+        }
+        if modifiers == .command, event.keyCode == 51 { // Delete
+            confirmDeleteSelectedItem()
+            return true
+        }
+
+        // Ctrl+j / Ctrl+k: 並べ替え。右ペインに編集中の行があればフィールドを、
+        // 無ければ一覧のアイテムを動かす
+        if modifiers == .control, event.keyCode == 38 || event.keyCode == 40 {
+            let offset = event.keyCode == 38 ? 1 : -1
+            if detailViewController.focusedRow != nil {
+                moveFocusedField(by: offset)
+            } else {
+                moveSelectedItem(by: offset)
+            }
             return true
         }
 

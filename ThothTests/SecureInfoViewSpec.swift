@@ -19,6 +19,234 @@ class SecureInfoViewSpec: QuickSpec {
         openableURLSpecs()
         detailRowBuildingSpecs()
         commitFlowSpecs()
+        rowButtonSpecs()
+        structuralFlowSpecs()
+    }
+
+    // MARK: - Row buttons
+
+    private static func rowButtonSpecs() {
+        describe("行のボタン構成") {
+
+            func shownButtons(_ row: SecureFieldRowView) -> [NSButton] {
+                return [row.maskButton, row.revealButton, row.openButton, row.copyButton, row.deleteButton]
+                    .filter { $0.superview is NSStackView }
+            }
+
+            it("通常フィールドはマスク切替・コピー・削除が並ぶ") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "ID", value: "a"))
+                expect(shownButtons(row)) == [row.maskButton, row.copyButton, row.deleteButton]
+            }
+
+            it("マスク中は表示切替も並ぶ") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "a", isPassword: true))
+                expect(shownButtons(row)) == [row.maskButton, row.revealButton, row.copyButton, row.deleteButton]
+            }
+
+            it("URL は「開く」も並ぶ") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "U", value: "a", kind: .url))
+                expect(shownButtons(row)) == [row.maskButton, row.openButton, row.copyButton, row.deleteButton]
+            }
+
+            // TOTP はマスク切替を持たない（secret を表示しない設計のため）
+            it("TOTP はコピーと削除だけが並ぶ") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "T", value: "a", kind: .totp))
+                expect(shownButtons(row)) == [row.copyButton, row.deleteButton]
+            }
+
+            // 読み取り専用では編集系のボタンを出さない（押しても何も起きないボタンを見せない）
+            it("読み取り専用ではマスク切替と削除を出さない") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "a", isPassword: true),
+                                             isReadOnly: true)
+                expect(shownButtons(row)) == [row.revealButton, row.copyButton]
+            }
+
+            it("マスク切替はいまと逆の状態を通知する") {
+                var reported: [Bool] = []
+                let plain = SecureFieldRowView(field: SecureMenuItem.Field(label: "ID", value: "a"))
+                plain.onMaskToggled = { _, isPassword in reported.append(isPassword) }
+                plain.maskButton.performClick(nil)
+
+                let masked = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "a", isPassword: true))
+                masked.onMaskToggled = { _, isPassword in reported.append(isPassword) }
+                masked.maskButton.performClick(nil)
+
+                expect(reported) == [true, false]
+            }
+
+            it("削除ボタンが対象の行を通知する") {
+                var deleted: String?
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "a"))
+                row.onDelete = { deleted = $0.field.fieldID }
+                row.deleteButton.performClick(nil)
+                expect(deleted) == "f1"
+            }
+        }
+    }
+
+    // MARK: - Structural changes (end to end)
+
+    /// フィールドとアイテムの増減・並べ替えを実サービス経由で確認する
+    private static func structuralFlowSpecs() {
+        describe("構成変更の保存フロー") {
+
+            var service: SecureMenuService!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+                AppEnvironment.push(environment: Environment(secureMenuService: service))
+            }
+            afterEach {
+                service.deleteAllItems()
+                AppEnvironment.popLast()
+            }
+
+            func makeSplitViewController(with items: [SecureMenuItem]) -> CPYSecureInfoSplitViewController {
+                for item in items {
+                    expect(service.save(item)) == true
+                }
+                let splitViewController = CPYSecureInfoSplitViewController()
+                _ = splitViewController.view
+                splitViewController.reloadItems()
+                return splitViewController
+            }
+
+            it("追加したフィールドが保存され、種別とマスク指定が保たれる") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub")
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                splitViewController.editor.addField(kind: .url, label: "URL", value: "https://example.com")
+                splitViewController.editor.addField(kind: .plain, label: "PW", value: "s3cr3t", isPassword: true)
+                expect(splitViewController.commitIfNeeded()) == true
+
+                let saved = service.loadAllItems().first
+                expect(saved?.fields.map { $0.label }) == ["URL", "PW"]
+                expect(saved?.fields.first?.kind) == SecureMenuItem.Field.Kind.url
+                expect(saved?.fields.last?.isPassword) == true
+            }
+
+            it("削除したフィールドが保存に反映される") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                        SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice"),
+                        SecureMenuItem.Field(fieldID: "f2", label: "PW", value: "s3cr3t", isPassword: true)
+                    ])
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                expect(splitViewController.editor.removeField(fieldID: "f1")) == true
+                expect(splitViewController.commitIfNeeded()) == true
+
+                expect(service.loadAllItems().first?.fields.map { $0.fieldID }) == ["f2"]
+            }
+
+            it("並べ替えた順序が保存され、TOTP secret も保たれる") {
+                let secret = "otpauth://totp/GitHub?secret=JBSWY3DPEHPK3PXP"
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                        SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice"),
+                        SecureMenuItem.Field(fieldID: "f2", label: "TOTP", value: secret, kind: .totp)
+                    ])
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                expect(splitViewController.editor.moveField(fieldID: "f2", by: -1)) == true
+                expect(splitViewController.commitIfNeeded()) == true
+
+                let saved = service.loadAllItems().first
+                expect(saved?.fields.map { $0.fieldID }) == ["f2", "f1"]
+                expect(saved?.fields.first?.value) == secret
+                expect(saved?.fields.first?.history.isEmpty) == true
+            }
+
+            // マスク切り替えは値を書き換えないこと（Step 8 の伏せ字保存事故の裏返し）
+            it("マスク切り替えで値が壊れない") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                        SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
+                    ])
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                expect(splitViewController.editor.updateField(fieldID: "f1", isPassword: true)) == true
+                expect(splitViewController.commitIfNeeded()) == true
+
+                let saved = service.loadAllItems().first?.fields.first
+                expect(saved?.isPassword) == true
+                expect(saved?.value) == "alice"
+                // 値は変わっていないので履歴も積まれない
+                expect(saved?.history.isEmpty) == true
+            }
+
+            it("アイテムの並べ替えが保存される") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "a", title: "A"),
+                    SecureMenuItem(itemID: "b", title: "B"),
+                    SecureMenuItem(itemID: "c", title: "C")
+                ])
+                guard let reordered = SecureInfoEditor.reordered(splitViewController.editor.items,
+                                                                 movingItemID: "a", by: 2) else {
+                    fail("expected reorder")
+                    return
+                }
+                expect(service.reorderItems(reordered)) == true
+                expect(service.loadAllItems().map { $0.itemID }) == ["b", "c", "a"]
+            }
+
+            // 未保存の編集を残したままアイテムを削除しても、保存で復活しない
+            it("削除したアイテムは未保存の編集ごと消える") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub"),
+                    SecureMenuItem(itemID: "s2", title: "AWS")
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Edited")
+
+                // 削除時と同じ流れ: 作業コピーを捨ててから削除する
+                splitViewController.editor.beginEditing(itemID: nil)
+                expect(service.delete(itemID: "s1")) == true
+                splitViewController.editor.setItems(service.loadAllItems())
+                expect(splitViewController.commitIfNeeded()) == true
+
+                expect(service.loadAllItems().map { $0.itemID }) == ["s2"]
+            }
+
+            // reorderItems は渡した配列の内容をそのまま書き戻すため、並べ替え前に
+            // コミットしないと直前の編集が保存前の内容で上書きされる
+            it("並べ替えの直前に編集していても、その編集が失われない") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "a", title: "A"),
+                    SecureMenuItem(itemID: "b", title: "B")
+                ])
+                splitViewController.editor.beginEditing(itemID: "a")
+                _ = splitViewController.editor.updateTitle("A renamed")
+
+                // 並べ替え操作と同じ流れ（コミット → 並びの組み立て → 保存）
+                expect(splitViewController.commitIfNeeded()) == true
+                guard let reordered = SecureInfoEditor.reordered(splitViewController.editor.items,
+                                                                 movingItemID: "a", by: 1) else {
+                    fail("expected reorder")
+                    return
+                }
+                expect(service.reorderItems(reordered)) == true
+
+                let saved = service.loadAllItems()
+                expect(saved.map { $0.itemID }) == ["b", "a"]
+                expect(saved.first { $0.itemID == "a" }?.title) == "A renamed"
+            }
+
+            it("新規アイテムは既定タイトルを持つのでそのまま保存できる") {
+                let splitViewController = makeSplitViewController(with: [])
+                let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)
+                expect(service.save(newItem)) == true
+                splitViewController.editor.setItems(service.loadAllItems())
+                splitViewController.editor.beginEditing(itemID: newItem.itemID)
+
+                expect(splitViewController.editor.draft?.title.isEmpty) == false
+                _ = splitViewController.editor.updateTitle("My Account")
+                expect(splitViewController.commitIfNeeded()) == true
+                expect(service.loadAllItems().first?.title) == "My Account"
+            }
+        }
     }
 
     // MARK: - Fixtures

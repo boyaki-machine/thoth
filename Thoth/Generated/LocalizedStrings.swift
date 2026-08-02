@@ -160,6 +160,8 @@ internal enum L10n {
   internal static let manageSecureItems = L10n.tr("Localizable", "Manage Secure Items")
   /// Menu
   internal static let menu = L10n.tr("Localizable", "Menu")
+  /// New Item
+  internal static let newSecureItemTitle = L10n.tr("Localizable", "New Secure Item Title")
   /// No history
   internal static let noValueHistory = L10n.tr("Localizable", "No Value History")
   /// Open System Preferences
@@ -200,12 +202,22 @@ internal enum L10n {
   internal static let sectionCopyHistory = L10n.tr("Localizable", "Section Copy History")
   /// Settings
   internal static let sectionSettings = L10n.tr("Localizable", "Section Settings")
+  /// Memo
+  internal static let secureFieldDefaultLabelNote = L10n.tr("Localizable", "Secure Field Default Label Note")
+  /// Password
+  internal static let secureFieldDefaultLabelPassword = L10n.tr("Localizable", "Secure Field Default Label Password")
+  /// Text
+  internal static let secureFieldDefaultLabelText = L10n.tr("Localizable", "Secure Field Default Label Text")
+  /// URL
+  internal static let secureFieldDefaultLabelURL = L10n.tr("Localizable", "Secure Field Default Label URL")
   /// Label (e.g. ID)
   internal static let secureFieldLabelPlaceholder = L10n.tr("Localizable", "Secure Field Label Placeholder")
   /// Value
   internal static let secureFieldValuePlaceholder = L10n.tr("Localizable", "Secure Field Value Placeholder")
   /// Secure Info
   internal static let secureInfo = L10n.tr("Localizable", "Secure Info")
+  /// Add Field
+  internal static let secureInfoAddField = L10n.tr("Localizable", "Secure Info Add Field")
   /// View secure info
   internal static let secureInfoAuthenticationReason = L10n.tr("Localizable", "Secure Info Authentication Reason")
   /// Copy
@@ -214,20 +226,30 @@ internal enum L10n {
   internal static let secureInfoNoSelection = L10n.tr("Localizable", "Secure Info No Selection")
   /// Open in browser
   internal static let secureInfoOpenURL = L10n.tr("Localizable", "Secure Info Open URL")
+  /// Remove Field
+  internal static let secureInfoRemoveField = L10n.tr("Localizable", "Secure Info Remove Field")
+  /// Are you sure you want to remove this field?
+  internal static let secureInfoRemoveFieldConfirmation = L10n.tr("Localizable", "Secure Info Remove Field Confirmation")
   /// Show / hide the value
   internal static let secureInfoRevealValue = L10n.tr("Localizable", "Secure Info Reveal Value")
   /// Failed to save to Keychain. Your edits are kept — press Command-S to try again. See Console.app for details (filter: SecureMenuService).
   internal static let secureInfoSaveFailed = L10n.tr("Localizable", "Secure Info Save Failed")
   /// Enter a title before saving. Your edits are kept.
   internal static let secureInfoTitleRequired = L10n.tr("Localizable", "Secure Info Title Required")
+  /// Mask / unmask the value
+  internal static let secureInfoToggleMask = L10n.tr("Localizable", "Secure Info Toggle Mask")
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder")
+  /// Enter a title before saving.
+  internal static let secureItemTitleRequired = L10n.tr("Localizable", "Secure Item Title Required")
   /// Secure Items
   internal static let secureItems = L10n.tr("Localizable", "Secure Items")
   /// The exported file will contain all values in plain text. Handle it with care.
   internal static let secureItemsExportWarning = L10n.tr("Localizable", "Secure Items Export Warning")
   /// Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose "Always Allow". Saving is disabled to protect the existing data.
   internal static let secureItemsKeychainAccessDenied = L10n.tr("Localizable", "Secure Items Keychain Access Denied")
+  /// Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).
+  internal static let secureItemsSaveFailed = L10n.tr("Localizable", "Secure Items Save Failed")
   /// Secure Menu
   internal static let secureMenu = L10n.tr("Localizable", "Secure Menu")
   /// Access Secure Menu

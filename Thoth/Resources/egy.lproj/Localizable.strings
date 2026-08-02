@@ -93,6 +93,24 @@
 
 "Secure Info Title Required" = "𓂋𓈖 𓏏𓊪 𓎛𓂋𓅱";
 
+"New Secure Item Title" = "𓇋𓏏𓅓 𓎛𓅱𓏏";
+
+"Secure Field Default Label Text" = "𓏛";
+
+"Secure Field Default Label Password" = "𓊃𓏛";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "𓆓𓂧𓏛";
+
+"Secure Info Add Field" = "𓄿 𓎼𓂋𓎛";
+
+"Secure Info Remove Field" = "𓎛𓆓 𓎼𓂋𓎛";
+
+"Secure Info Remove Field Confirmation" = "𓎛𓆓 𓎼𓂋𓎛 ?";
+
+"Secure Info Toggle Mask" = "𓂀 / 𓂋𓐍 𓏛";
+
 "Secure Menu Search Placeholder" = "𓁹𓋴𓂋𓐍...";
 
 "Secure Menu No Results" = "𓂜 𓅠";
@@ -116,6 +134,10 @@
 "Export Secure Items" = "𓂻𓉐...";
 
 "Secure Items Export Warning" = "𓅪 𓏛 𓂻𓉐 𓃹𓈖 𓎟 — 𓊃𓄿𓅱!";
+
+"Secure Items Save Failed" = "𓅘 𓋴𓍿 𓊃𓏛";
+
+"Secure Item Title Required" = "𓂋𓈖 𓏏𓊪";
 
 "Imported Secure Items Format" = "𓏎𓂻 %d 𓇋𓏏𓅓𓏥. 𓄤";
 

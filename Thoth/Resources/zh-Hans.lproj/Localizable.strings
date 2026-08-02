@@ -89,6 +89,24 @@
 
 "Secure Info Title Required" = "保存前请输入标题。您的编辑已保留。";
 
+"New Secure Item Title" = "新建项目";
+
+"Secure Field Default Label Text" = "文本";
+
+"Secure Field Default Label Password" = "密码";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "备忘";
+
+"Secure Info Add Field" = "添加字段";
+
+"Secure Info Remove Field" = "删除字段";
+
+"Secure Info Remove Field Confirmation" = "确定要删除此字段吗？";
+
+"Secure Info Toggle Mask" = "切换值的遮蔽";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";
@@ -112,6 +130,10 @@
 "Export Secure Items" = "导出...";
 
 "Secure Items Export Warning" = "导出的文件将以明文形式包含所有值，请妥善保管。";
+
+"Secure Items Save Failed" = "保存到钥匙串失败。详情请见 Console.app（筛选: SecureMenuService）。";
+
+"Secure Item Title Required" = "保存前请输入标题。";
 
 "Imported Secure Items Format" = "已导入 %d 个项目。";
 

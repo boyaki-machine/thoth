@@ -89,6 +89,24 @@
 
 "Secure Info Title Required" = "Inserisci un titolo prima di salvare. Le modifiche sono conservate.";
 
+"New Secure Item Title" = "Nuovo elemento";
+
+"Secure Field Default Label Text" = "Testo";
+
+"Secure Field Default Label Password" = "Password";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Memo";
+
+"Secure Info Add Field" = "Aggiungi campo";
+
+"Secure Info Remove Field" = "Rimuovi campo";
+
+"Secure Info Remove Field Confirmation" = "Vuoi davvero rimuovere questo campo?";
+
+"Secure Info Toggle Mask" = "Maschera / mostra il valore";
+
 "Secure Menu Search Placeholder" = "Cerca...";
 
 "Secure Menu No Results" = "Nessun elemento corrispondente";
@@ -112,6 +130,10 @@
 "Export Secure Items" = "Esporta...";
 
 "Secure Items Export Warning" = "Il file esportato conterrà tutti i valori in chiaro. Maneggialo con cura.";
+
+"Secure Items Save Failed" = "Salvataggio nel portachiavi non riuscito. Dettagli in Console.app (filtro: SecureMenuService).";
+
+"Secure Item Title Required" = "Inserisci un titolo prima di salvare.";
 
 "Imported Secure Items Format" = "%d elementi importati.";
 

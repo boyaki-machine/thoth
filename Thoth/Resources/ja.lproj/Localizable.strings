@@ -89,6 +89,24 @@
 
 "Secure Info Title Required" = "保存するにはタイトルを入力してください。編集内容は保持されています。";
 
+"New Secure Item Title" = "新規アイテム";
+
+"Secure Field Default Label Text" = "テキスト";
+
+"Secure Field Default Label Password" = "パスワード";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "メモ";
+
+"Secure Info Add Field" = "フィールドを追加";
+
+"Secure Info Remove Field" = "フィールドを削除";
+
+"Secure Info Remove Field Confirmation" = "このフィールドを削除しますか？";
+
+"Secure Info Toggle Mask" = "値のマスクを切り替え";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";
@@ -112,6 +130,10 @@
 "Export Secure Items" = "エクスポート...";
 
 "Secure Items Export Warning" = "エクスポートされるファイルにはすべての値が平文で含まれます。取り扱いには十分注意してください。";
+
+"Secure Items Save Failed" = "キーチェーンへの保存に失敗しました。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
+
+"Secure Item Title Required" = "保存するにはタイトルを入力してください。";
 
 "Imported Secure Items Format" = "%d 件のアイテムをインポートしました。";
 
