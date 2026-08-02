@@ -175,9 +175,7 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         guard historyIndex >= 0, historyIndex < field.history.count else { return }
         var history = field.history
         history.remove(at: historyIndex)
-        fields[row] = SecureMenuItem.Field(fieldID: field.fieldID, label: field.label,
-                                           value: field.value, isPassword: field.isPassword,
-                                           kind: field.kind, history: history)
+        fields[row] = field.updating(history: history)
     }
 
     /// Val 変更履歴のポップアップを開くボタンセル

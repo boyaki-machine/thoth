@@ -5,9 +5,69 @@ import Nimble
 class SecureMenuItemSpec: QuickSpec {
     override class func spec() {
         secureMenuItemSpecs()
+        fieldUpdatingSpecs()
         codableCompatibilitySpecs()
         fieldSelectionSpecs()
         selectionContextSpecs()
+    }
+
+    /// `Field.updating(...)` は編集画面・履歴マージから呼ばれる唯一の差分更新手段。
+    /// 指定しなかったプロパティが黙って既定値へリセットされないことを担保する
+    /// （イニシャライザを直接呼んでいた頃は `createdAt` が毎回現在時刻へ戻っていた）。
+    private static func fieldUpdatingSpecs() {
+        describe("SecureMenuItem.Field.updating") {
+
+            let createdAt = Date(timeIntervalSince1970: 1_700_000_000)
+            let history = [SecureMenuItem.FieldHistoryEntry(value: "old", replacedAt: Date(timeIntervalSince1970: 1_000))]
+            func makeField() -> SecureMenuItem.Field {
+                return SecureMenuItem.Field(fieldID: "stable-field-id", label: "Password", value: "current",
+                                            isPassword: true, kind: .totp, history: history, createdAt: createdAt)
+            }
+
+            it("Preserve identity and metadata when nothing is specified") {
+                let updated = makeField().updating()
+                expect(updated.fieldID) == "stable-field-id"
+                expect(updated.label) == "Password"
+                expect(updated.value) == "current"
+                expect(updated.isPassword) == true
+                expect(updated.kind) == SecureMenuItem.Field.Kind.totp
+                expect(updated.history.count) == 1
+                expect(updated.createdAt) == createdAt
+            }
+
+            // 実際のバグ: ラベルだけ変えたつもりが createdAt が現在時刻にリセットされていた
+            it("Preserve fieldID, createdAt, kind and history when updating a single property") {
+                let updated = makeField().updating(label: "Renamed")
+                expect(updated.label) == "Renamed"
+                expect(updated.fieldID) == "stable-field-id"
+                expect(updated.createdAt) == createdAt
+                expect(updated.kind) == SecureMenuItem.Field.Kind.totp
+                expect(updated.history.first?.value) == "old"
+                expect(updated.value) == "current"
+                expect(updated.isPassword) == true
+            }
+
+            it("Apply every specified property") {
+                let replaced = [SecureMenuItem.FieldHistoryEntry(value: "older", replacedAt: Date(timeIntervalSince1970: 500))]
+                let updated = makeField().updating(label: "ID", value: "user", isPassword: false,
+                                                   kind: .plain, history: replaced)
+                expect(updated.label) == "ID"
+                expect(updated.value) == "user"
+                expect(updated.isPassword) == false
+                expect(updated.kind) == SecureMenuItem.Field.Kind.plain
+                expect(updated.history.count) == 1
+                expect(updated.history.first?.value) == "older"
+                // 差し替え不可のプロパティは維持される
+                expect(updated.fieldID) == "stable-field-id"
+                expect(updated.createdAt) == createdAt
+            }
+
+            it("Allow clearing the history") {
+                let updated = makeField().updating(history: [])
+                expect(updated.history.isEmpty) == true
+                expect(updated.createdAt) == createdAt
+            }
+        }
     }
 
     private static func secureMenuItemSpecs() {

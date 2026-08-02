@@ -498,8 +498,7 @@ final class SecureMenuService {
             }
             // 上限を超えた分は古いものから削除する
             history = Array(history.suffix(Self.maxFieldHistoryCount))
-            return SecureMenuItem.Field(fieldID: field.fieldID, label: field.label, value: field.value,
-                                        isPassword: field.isPassword, kind: field.kind, history: history)
+            return field.updating(history: history)
         }
         return merged
     }

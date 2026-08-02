@@ -361,11 +361,7 @@ final class SecureItemEditViewController: NSViewController {
             }
             guard !label.trimmingCharacters(in: .whitespaces).isEmpty
                     || !value.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
-            currentFields.append(SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                                      label: label, value: value,
-                                                      isPassword: fields[row].isPassword,
-                                                      kind: fields[row].kind,
-                                                      history: fields[row].history))
+            currentFields.append(fields[row].updating(label: label, value: value))
         }
 
         let saved = SecureMenuItem(itemID: editingItem.itemID, title: title, fields: currentFields,
@@ -379,23 +375,13 @@ final class SecureItemEditViewController: NSViewController {
     @objc func labelFieldChanged(_ sender: NSTextField) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: sender.stringValue,
-                                           value: fields[row].value,
-                                           isPassword: fields[row].isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(label: sender.stringValue)
     }
 
     @objc func valueFieldChanged(_ sender: NSTextField) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: fields[row].label,
-                                           value: sender.stringValue,
-                                           isPassword: fields[row].isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(value: sender.stringValue)
     }
 
     /// クリックされた列がシングルクリックで即編集に入れる列かを判定する（純粋関数）。
@@ -444,12 +430,7 @@ final class SecureItemEditViewController: NSViewController {
             view.window?.endEditing(for: editing)
         }
         let isPassword = sender.state == .on
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: fields[row].label,
-                                           value: currentValue,
-                                           isPassword: isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(value: currentValue, isPassword: isPassword)
         // reload では field editor の状態次第で表示が更新されないことがあるため、
         // 既存セルを直接再構成してプレーン／セキュアフィールドの表示を即時に切り替える
         valueCell?.configure(value: currentValue, isPassword: isPassword, isTOTP: fields[row].isTOTP,

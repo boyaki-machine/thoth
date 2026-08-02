@@ -67,6 +67,29 @@ struct SecureMenuItem: Codable {
             self.createdAt = createdAt
         }
 
+        /// 指定したプロパティだけを差し替えた新しい Field を返す（copy-with）。
+        ///
+        /// `Field` は全プロパティが `let` のため、編集のたびに作り直す必要がある。
+        /// このときイニシャライザを直接呼ぶと、引数を省略したプロパティが既定値へ
+        /// 黙って初期化される。特に `fieldID` は値変更履歴の対応付けを、
+        /// `createdAt` は TOTP の登録日時表示を壊すため、
+        /// **既存フィールドの差分更新は必ずこのメソッドを通すこと**。
+        ///
+        /// `fieldID` と `createdAt` はフィールドの同一性・生成時刻を表すため変更できない。
+        func updating(label: String? = nil,
+                      value: String? = nil,
+                      isPassword: Bool? = nil,
+                      kind: Kind? = nil,
+                      history: [FieldHistoryEntry]? = nil) -> Field {
+            return Field(fieldID: fieldID,
+                         label: label ?? self.label,
+                         value: value ?? self.value,
+                         isPassword: isPassword ?? self.isPassword,
+                         kind: kind ?? self.kind,
+                         history: history ?? self.history,
+                         createdAt: createdAt)
+        }
+
         /// 旧形式（`fieldID` / `kind` / `history` / `createdAt` キーなし）の保存データ・エクスポートファイルも読めるようにする
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
