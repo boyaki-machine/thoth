@@ -39,9 +39,19 @@
 | `label` | String | フィールド名（例: "Password"） |
 | `value` | String | 値。TOTP の場合は otpauth URI / Base32 secret |
 | `isPassword` | Bool | 値をマスク表示するか |
-| `kind` | String | `"plain"` または `"totp"` |
-| `history` | `FieldHistoryEntry[]` | 値の変更履歴（TOTP は履歴を残さない） |
+| `kind` | String | `"plain"` または `"totp"`（後述の後方互換のため、この 2 値しか書き込まれません） |
+| `contentKind` | String（省略可） | 拡張種別 `"url"` / `"note"`。v1.2.0 で追加。通常の種別では出力されません |
+| `history` | `FieldHistoryEntry[]` | 値の変更履歴（`plain` / `url` のみ記録。`totp` / `note` は残しません） |
 | `createdAt` | Date | 作成日時 |
+
+#### フィールド種別
+
+| 種別 | JSON 表現 | 用途 |
+|---|---|---|
+| `plain` | `kind: "plain"` | ID・パスワードなど通常のテキスト |
+| `totp` | `kind: "totp"` | `value` に otpauth URI / Base32 secret を保持し、選択時にワンタイムコードを生成 |
+| `url` | `kind: "plain"` + `contentKind: "url"` | ログイン先などの URL。ブラウザで開ける |
+| `note` | `kind: "plain"` + `contentKind: "note"` | 契約番号・連絡先などの複数行メモ |
 
 ### `FieldHistoryEntry`
 
@@ -53,7 +63,20 @@
 ### 後方互換
 
 - デコードは寛容に行われ、欠けているキーはデフォルト値で補完されます（`version` 欠落時は現行版、`kind` 欠落時は `plain`、`history` 欠落時は空、など）。
+- **未知の種別は `plain` にフォールバックします。** 将来のバージョンが書いた種別を古いバイナリが読んでも、デコード自体は成功し値は保持されます。
 - Import は現行形式（`SecureUserData` オブジェクト）を優先し、**旧形式（`SecureMenuItem` の配列のみ）の JSON もフォールバックで読み込めます**。過去バージョンで書き出したファイルもそのまま取り込めます。
+
+### 前方互換（バージョンを戻した場合）
+
+拡張種別（`url` / `note`）を `kind` キーに直接書くと、v1.1.x 以前は `kind` を enum として厳密にデコードするため **例外が発生し、セキュアアイテム全体が読めなくなります**。読めないデータの上に保存すると全件が失われるため、拡張種別は新しいキー `contentKind` に分離しています。
+
+- 旧バージョンは `contentKind` を未知のキーとして無視し、`kind: "plain"` として読みます。
+- **値は失われません。** TOTP secret も `kind: "totp"` のまま維持されます。
+- ただし旧バージョンで保存し直すと `contentKind` が失われ、URL / メモは通常のテキストに降格します（値は残ります）。またメモを旧バージョンの単一行フィールドで編集すると改行が失われます。
+
+### 読み出し不能時の保護
+
+「Keychain の読み出しには成功したが内容を解釈できない」場合（データ破損など）、`SecureMenuService` は `errSecDecode` を返して読み出し不能として扱い、**すべての書き込みを拒否します**。空のデータで既存データを上書きしないための保護です。旧エントリからの移行も、旧データを解釈できない場合は移行を中止して旧エントリを残します。
 
 ---
 

@@ -524,8 +524,9 @@ final class SecureMenuService {
                 ?? oldItem.fields.first { $0.label == field.label }
             guard let old = oldField else { return field }
             var history = field.history
-            // TOTP は secret を履歴に残さない（極めて機微なため）。それ以外は旧値を追記する
-            if !field.isTOTP, old.value != field.value && !old.value.isEmpty {
+            // 履歴を残す種別（plain / url）のみ旧値を追記する。
+            // TOTP は secret が極めて機微なため、メモは長文が履歴表示を壊すため残さない
+            if field.kind.retainsValueHistory, old.value != field.value && !old.value.isEmpty {
                 history.append(SecureMenuItem.FieldHistoryEntry(value: old.value, replacedAt: Date()))
             }
             // 上限を超えた分は古いものから削除する

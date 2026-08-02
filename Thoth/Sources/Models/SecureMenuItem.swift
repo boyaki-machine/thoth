@@ -33,11 +33,23 @@ struct SecureMenuItem: Codable {
 
     struct Field: Codable {
 
-        /// フィールドの種別。`.totp` の場合、`value` には TOTP secret（`otpauth://` URI または Base32 secret）を保持し、
-        /// 選択時にその時点のワンタイムコードを計算して出力する。
+        /// フィールドの種別。
+        ///
+        /// - `.plain`: 通常のテキスト（ID・パスワードなど）
+        /// - `.totp`: `value` に TOTP secret（`otpauth://` URI または Base32 secret）を保持し、
+        ///   選択時にその時点のワンタイムコードを計算して出力する
+        /// - `.url`: ログイン先などの URL。ブラウザで開ける
+        /// - `.note`: 契約番号・連絡先といった複数行のメモ
+        ///
+        /// 種別ごとの振る舞いは Bool の直判定ではなく、下部の capability
+        /// （`retainsValueHistory` など）を通して分岐すること。capability は
+        /// `default` の無い switch で定義してあるため、種別を追加すると
+        /// 判断が必要な箇所がすべてコンパイルエラーとして表面化する。
         enum Kind: String, Codable {
             case plain
             case totp
+            case url
+            case note
         }
 
         /// フィールドの安定 ID。Label を変更しても Val の変更履歴が追従できるようにするためのもの
@@ -90,6 +102,14 @@ struct SecureMenuItem: Codable {
                          createdAt: createdAt)
         }
 
+        private enum CodingKeys: String, CodingKey {
+            case fieldID, label, value, isPassword, kind, history, createdAt
+            /// v1.2.0 で追加した拡張種別（`url` / `note`）の保存先。
+            /// 旧バージョンは知らないキーとして黙って無視するため、
+            /// ダウングレードしてもデータが壊れない（`encode(to:)` の注記を参照）
+            case contentKind
+        }
+
         /// 旧形式（`fieldID` / `kind` / `history` / `createdAt` キーなし）の保存データ・エクスポートファイルも読めるようにする
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -97,10 +117,126 @@ struct SecureMenuItem: Codable {
             label = try container.decode(String.self, forKey: .label)
             value = try container.decode(String.self, forKey: .value)
             isPassword = try container.decode(Bool.self, forKey: .isPassword)
-            kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .plain
+            // 種別は enum ではなく String として読む。enum で直接デコードすると
+            // 未知の raw 値（将来の版が書いた種別）で decodeIfPresent が throw し、
+            // ユーザーデータ全体が読めなくなる。読めないデータは
+            // SecureMenuService が保存を拒否するため、アプリが編集不能に陥る
+            let rawKind = try container.decodeIfPresent(String.self, forKey: .kind)
+            let rawContentKind = try container.decodeIfPresent(String.self, forKey: .contentKind)
+            kind = rawContentKind.flatMap(Kind.init(rawValue:))
+                ?? rawKind.flatMap(Kind.init(rawValue:))
+                ?? .plain
             history = try container.decodeIfPresent([FieldHistoryEntry].self, forKey: .history) ?? []
             createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         }
+
+        /// 拡張種別を `kind` ではなく `contentKind` に書き分ける。
+        ///
+        /// `kind` には旧バージョンが解釈できる値（`plain` / `totp`）だけを書く。
+        /// ここに `url` / `note` を書いてしまうと、v1.1.x 以前の
+        /// `decodeIfPresent(Kind.self, forKey: .kind)` が throw してユーザーデータ全体が
+        /// 読めなくなる。旧バージョンから見ると拡張種別のフィールドは「ただのテキスト」
+        /// として扱われ、値は無傷のまま残る（TOTP secret も同様）。
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(fieldID, forKey: .fieldID)
+            try container.encode(label, forKey: .label)
+            try container.encode(value, forKey: .value)
+            try container.encode(isPassword, forKey: .isPassword)
+            try container.encode(kind.legacyCompatibleKind, forKey: .kind)
+            if kind != kind.legacyCompatibleKind {
+                try container.encode(kind, forKey: .contentKind)
+            }
+            try container.encode(history, forKey: .history)
+            try container.encode(createdAt, forKey: .createdAt)
+        }
+    }
+}
+
+// MARK: - Field Kind Capabilities
+
+/// 種別ごとの振る舞いをここに集約する。呼び出し側で `kind == .totp` のような
+/// 直判定を書くと、種別が増えたときに修正漏れが静かに発生する。
+/// すべて `default` の無い switch で書いてあるため、`Kind` に case を追加すると
+/// 判断が必要な箇所がコンパイルエラーとして列挙される。
+extension SecureMenuItem.Field.Kind {
+
+    /// 値が置き換えられたときに旧値を変更履歴として残すか。
+    /// TOTP は secret が極めて機微なため、メモは長文が履歴メニューの 1 行表示を
+    /// 壊し上限 10 件を推敲で使い切ってしまうため、いずれも残さない
+    var retainsValueHistory: Bool {
+        switch self {
+        case .plain, .url: return true
+        case .totp, .note: return false
+        }
+    }
+
+    /// 単一行のテキストフィールドで値を直接編集できるか。
+    /// false の種別は、テーブルのセルから値を読み取ってはならない
+    /// （TOTP は secret を表示しないため、メモは改行が失われるため、
+    /// いずれもセルの内容が実際の値と一致しない）
+    var allowsSingleLineEditing: Bool {
+        switch self {
+        case .plain, .url: return true
+        case .totp, .note: return false
+        }
+    }
+
+    /// マスク表示（🔒）の切り替えを許すか
+    var allowsPasswordToggle: Bool {
+        switch self {
+        case .plain, .url, .note: return true
+        case .totp: return false
+        }
+    }
+
+    /// セキュア選択パネル（幅 260px・1 行 22px）に表示するか。
+    /// メモは長文でこのパネルに収まらないため、確認ウィンドウ専用にする
+    var isVisibleInPicker: Bool {
+        switch self {
+        case .plain, .totp, .url: return true
+        case .note: return false
+        }
+    }
+
+    /// 値が複数行になりうるか（確認ウィンドウで NSTextView を使うか）
+    var isMultiline: Bool {
+        switch self {
+        case .note: return true
+        case .plain, .totp, .url: return false
+        }
+    }
+
+    /// 保存されている値をそのまま画面に表示してよいか。
+    /// TOTP は secret ではなくその時点のワンタイムコードだけを表示する
+    var displaysRawValue: Bool {
+        switch self {
+        case .plain, .url, .note: return true
+        case .totp: return false
+        }
+    }
+
+    /// v1.1.x 以前が解釈できる種別への写像（保存形式の後方互換に使う）。
+    /// 拡張種別は旧バージョンから見ると「ただのテキスト」になる
+    var legacyCompatibleKind: SecureMenuItem.Field.Kind {
+        switch self {
+        case .plain, .url, .note: return .plain
+        case .totp: return .totp
+        }
+    }
+}
+
+// MARK: - Picker Fields
+
+extension SecureMenuItem {
+
+    /// セキュア選択パネルのサブパネルに表示するフィールド。
+    ///
+    /// 選択確定時の `fieldIndex` はこの配列に対する添字として記録・復元されるため、
+    /// 表示と確定の両方で必ずこのプロパティを通すこと（`item.fields` を直接使うと
+    /// 継続ペーストモードの復元位置がずれる）
+    var pickerFields: [Field] {
+        return fields.filter { $0.kind.isVisibleInPicker }
     }
 }
 

@@ -313,6 +313,38 @@ class SecureMenuServiceSpec: QuickSpec {
                 let history = self.service.loadAllItems().first?.fields.first?.history
                 expect(history?.isEmpty) == true
             }
+
+            /// 値を 1 度置き換えたあとの履歴を返す
+            func historyAfterValueChange(kind: SecureMenuItem.Field.Kind) -> [SecureMenuItem.FieldHistoryEntry] {
+                let original = SecureMenuItem.Field(label: "Field", value: "before", kind: kind)
+                _ = self.service.save(SecureMenuItem(itemID: "kinded", title: "Item", fields: [original]))
+                _ = self.service.save(SecureMenuItem(itemID: "kinded", title: "Item",
+                                                     fields: [original.updating(value: "after")]))
+                let saved = self.service.loadAllItems().first?.fields.first
+                expect(saved?.value) == "after"
+                expect(saved?.kind) == kind
+                return saved?.history ?? []
+            }
+
+            // URL は通常のテキストと同じく、変更前の値をたどれると役に立つ
+            it("Records history for url fields") {
+                expect(historyAfterValueChange(kind: .url).map { $0.value }) == ["before"]
+            }
+
+            // メモは長文が履歴メニューの 1 行表示を壊し、
+            // 上限 10 件を推敲だけで使い切ってしまうため履歴を残さない
+            it("Does not record history for note fields") {
+                expect(historyAfterValueChange(kind: .note).isEmpty) == true
+            }
+
+            // secret が極めて機微なため、TOTP は従来どおり履歴を残さない
+            it("Does not record history for totp fields") {
+                expect(historyAfterValueChange(kind: .totp).isEmpty) == true
+            }
+
+            it("Records history for plain fields") {
+                expect(historyAfterValueChange(kind: .plain).map { $0.value }) == ["before"]
+            }
         }
     }
 
@@ -377,6 +409,23 @@ class SecureMenuServiceSpec: QuickSpec {
                 expect(loaded?.fields[1].label) == "Password"
                 expect(loaded?.fields[1].value) == "s3cr3t"
                 expect(loaded?.fields[1].isPassword) == true
+            }
+
+            // 拡張種別が Keychain の保存形式（JSON）を往復しても失われないこと。
+            // メモは改行を含むため、単一行に丸められていないかも併せて確認する
+            it("Url and note fields survive the keychain round trip") {
+                let memo = "契約番号: 12345-678\nサポート: 03-0000-0000\n用途: 経理システムのログイン"
+                let fields = [SecureMenuItem.Field(label: "URL", value: "https://example.com/login", kind: .url),
+                              SecureMenuItem.Field(label: "Memo", value: memo, kind: .note)]
+                _ = self.service.save(SecureMenuItem(itemID: "extended", title: "Accounting", fields: fields))
+
+                let loaded = self.service.loadAllItems().first
+                expect(loaded?.fields.count) == 2
+                expect(loaded?.fields[0].kind) == SecureMenuItem.Field.Kind.url
+                expect(loaded?.fields[0].value) == "https://example.com/login"
+                expect(loaded?.fields[1].kind) == SecureMenuItem.Field.Kind.note
+                expect(loaded?.fields[1].value) == memo
+                expect(loaded?.fields[1].value.contains("\n")) == true
             }
         }
     }
@@ -544,12 +593,31 @@ class SecureMenuServiceSpec: QuickSpec {
                 self.addLegacyEntry(account: "user-data", data: Data(json.utf8))
 
                 _ = self.service.loadAllItems()
+                // 読めるなら read-modify-write で、読めないなら保存拒否で、
+                // いずれにせよ既存の値は保持されなければならない
                 _ = self.service.save(SecureMenuItem(title: "Added after reading unknown data"))
-                _ = self.service.saveCryptoPassword("overwrite-attempt")
 
                 let stored = String(data: self.rawEntryData(account: "user-data") ?? Data(), encoding: .utf8) ?? ""
                 expect(stored).to(contain("JBSWY3DPEHPK3PXP"))
                 expect(stored).to(contain("fingerprint-password"))
+            }
+
+            // v1.2.0 以降は未知の種別を plain として読めるため、
+            // 将来の版が書いたデータを開いてもアプリは編集可能なまま動く
+            // （v1.1.x はここでデコードに失敗し、保存不能に陥っていた）
+            it("Degrades an unknown field kind to plain instead of locking the app") {
+                let json = """
+                {"version":2,"items":[{"itemID":"future-2","title":"Future","displayOrder":0,
+                 "fields":[{"fieldID":"f1","label":"Something","value":"kept","isPassword":false,
+                 "kind":"kind-from-the-future","history":[],"createdAt":0}]}]}
+                """
+                self.addLegacyEntry(account: "user-data", data: Data(json.utf8))
+
+                let loaded = self.service.loadAllItems()
+                expect(self.service.isKeychainAccessDenied) == false
+                expect(loaded.first?.fields.first?.kind) == SecureMenuItem.Field.Kind.plain
+                expect(loaded.first?.fields.first?.value) == "kept"
+                expect(self.service.save(SecureMenuItem(title: "Still editable"))) == true
             }
         }
     }
