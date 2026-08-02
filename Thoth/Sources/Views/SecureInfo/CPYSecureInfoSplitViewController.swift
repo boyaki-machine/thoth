@@ -20,17 +20,18 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     let editor = SecureInfoEditor()
 
-    private lazy var listViewController = CPYSecureInfoListViewController(editor: editor)
-    private lazy var detailViewController = CPYSecureInfoDetailViewController()
+    // キー操作の拡張（+Keyboard.swift）から参照するため internal
+    lazy var listViewController = CPYSecureInfoListViewController(editor: editor)
+    lazy var detailViewController = CPYSecureInfoDetailViewController()
 
     /// ユニットテストから右ペインの表示状態を確認するための入口
     var detailViewControllerForTesting: CPYSecureInfoDetailViewController { detailViewController }
 
-    private var keyMonitor: Any?
+    var keyMonitor: Any?
     private var fallbackCommitTimer: Timer?
     private var windowObservers: [NSObjectProtocol] = []
     /// 保存失敗の警告を 1 セッションで繰り返さないためのフラグ
-    private var hasShownCommitFailure = false
+    var hasShownCommitFailure = false
 
     /// 最後の入力から保険として保存するまでの秒数
     private static let fallbackCommitInterval: TimeInterval = 20
@@ -136,7 +137,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     }
 
     /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）
-    private func moveFocusedField(by offset: Int) {
+    func moveFocusedField(by offset: Int) {
         guard let row = detailViewController.focusedRow else { NSSound.beep(); return }
         guard editor.moveField(fieldID: row.field.fieldID, by: offset) else { NSSound.beep(); return }
         detailViewController.show(item: editor.draft)
@@ -147,7 +148,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     /// アイテムを新規作成して選択する。
     /// タイトルが空だと保存できないため、既定のタイトルを入れた状態で作る
-    private func addItem() {
+    func addItem() {
         guard !editor.isReadOnly else { NSSound.beep(); return }
         commitIfNeeded()
         let service = AppEnvironment.current.secureMenuService
@@ -164,7 +165,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         detailViewController.focusTitleField()
     }
 
-    private func confirmDeleteSelectedItem() {
+    func confirmDeleteSelectedItem() {
         guard !editor.isReadOnly, let item = editor.selectedItem, let window = view.window else {
             NSSound.beep()
             return
@@ -192,7 +193,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     /// 選択中アイテムを一覧内で上下に動かす（Ctrl+j / Ctrl+k）。
     /// 絞り込み中は見えている順と保存順が一致しないため行わない
-    private func moveSelectedItem(by offset: Int) {
+    func moveSelectedItem(by offset: Int) {
         guard !editor.isReadOnly, editor.query.isEmpty, let item = editor.selectedItem else {
             NSSound.beep()
             return
@@ -330,71 +331,6 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             self?.view.window?.makeFirstResponder(nil)
             self?.commitIfNeeded()
         })
-    }
-
-    private func installKeyMonitor() {
-        guard keyMonitor == nil else { return }
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self = self, event.window === self.view.window else { return event }
-            return self.handleKeyDown(event) ? nil : event
-        }
-    }
-
-    /// - Returns: イベントを消費した場合 true
-    private func handleKeyDown(_ event: NSEvent) -> Bool {
-        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
-        // テキスト入力中（検索欄など）は文字入力を優先し、素通しする
-        let isEditingText = view.window?.firstResponder is NSTextView
-
-        if modifiers == .command, event.charactersIgnoringModifiers == "f" {
-            listViewController.focusSearchField()
-            return true
-        }
-        // ⌘S: 明示保存。編集中のテキストを確定させてから保存する
-        if modifiers == .command, event.charactersIgnoringModifiers == "s" {
-            view.window?.makeFirstResponder(nil)
-            hasShownCommitFailure = false
-            commitIfNeeded()
-            return true
-        }
-
-        // ⌘N: アイテムを追加 / ⌘Delete: 選択中アイテムを削除
-        if modifiers == .command, event.charactersIgnoringModifiers == "n" {
-            addItem()
-            return true
-        }
-        if modifiers == .command, event.keyCode == 51 { // Delete
-            confirmDeleteSelectedItem()
-            return true
-        }
-
-        // Ctrl+j / Ctrl+k: 並べ替え。右ペインに編集中の行があればフィールドを、
-        // 無ければ一覧のアイテムを動かす
-        if modifiers == .control, event.keyCode == 38 || event.keyCode == 40 {
-            let offset = event.keyCode == 38 ? 1 : -1
-            if detailViewController.focusedRow != nil {
-                moveFocusedField(by: offset)
-            } else {
-                moveSelectedItem(by: offset)
-            }
-            return true
-        }
-
-        guard !isEditingText, modifiers.isEmpty else { return false }
-
-        switch event.keyCode {
-        case 38: // j
-            listViewController.moveSelection(by: 1)
-            return true
-        case 40: // k
-            listViewController.moveSelection(by: -1)
-            return true
-        case 44: // /
-            listViewController.focusSearchField()
-            return true
-        default:
-            return false
-        }
     }
 
     /// Esc でウィンドウを閉じる

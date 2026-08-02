@@ -125,6 +125,14 @@
 
 "Secure Field Value Placeholder" = "値";
 
+"Secure Column Title" = "タイトル";
+
+"Secure Column Fields" = "フィールド数";
+
+"Secure Column Label" = "ラベル";
+
+"Secure Column Value" = "値";
+
 "Import Secure Items" = "インポート...";
 
 "Export Secure Items" = "エクスポート...";

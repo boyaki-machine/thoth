@@ -78,11 +78,11 @@ final class CPYSecureItemsViewController: NSViewController {
         dragHandleColumn.maxWidth = 20
 
         let titleColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("title"))
-        titleColumn.title = "Title"
+        titleColumn.title = L10n.secureColumnTitle
         titleColumn.width = 280
 
         let fieldsColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("fields"))
-        fieldsColumn.title = "Fields"
+        fieldsColumn.title = L10n.secureColumnFields
         fieldsColumn.width = 100
 
         tableView.addTableColumn(dragHandleColumn)

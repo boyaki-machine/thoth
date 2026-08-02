@@ -125,6 +125,14 @@
 
 "Secure Field Value Placeholder" = "值";
 
+"Secure Column Title" = "标题";
+
+"Secure Column Fields" = "字段数";
+
+"Secure Column Label" = "标签";
+
+"Secure Column Value" = "值";
+
 "Import Secure Items" = "导入...";
 
 "Export Secure Items" = "导出...";

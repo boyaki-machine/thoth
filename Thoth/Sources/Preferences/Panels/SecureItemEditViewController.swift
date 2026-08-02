@@ -198,10 +198,10 @@ final class SecureItemEditViewController: NSViewController {
         dragHandleCol.title = ""; dragHandleCol.width = 20; dragHandleCol.minWidth = 20; dragHandleCol.maxWidth = 20
 
         let labelCol = NSTableColumn(identifier: ColID.label)
-        labelCol.title = "Label"; labelCol.width = 130; labelCol.minWidth = 60
+        labelCol.title = L10n.secureColumnLabel; labelCol.width = 130; labelCol.minWidth = 60
 
         let valueCol = NSTableColumn(identifier: ColID.value)
-        valueCol.title = "Value"; valueCol.width = 168; valueCol.minWidth = 60
+        valueCol.title = L10n.secureColumnValue; valueCol.width = 168; valueCol.minWidth = 60
 
         let passCol = NSTableColumn(identifier: ColID.pass)
         passCol.title = "🔒"; passCol.width = 36; passCol.minWidth = 36; passCol.maxWidth = 36

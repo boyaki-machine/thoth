@@ -125,6 +125,14 @@
 
 "Secure Field Value Placeholder" = "Valore";
 
+"Secure Column Title" = "Titolo";
+
+"Secure Column Fields" = "Campi";
+
+"Secure Column Label" = "Etichetta";
+
+"Secure Column Value" = "Valore";
+
 "Import Secure Items" = "Importa...";
 
 "Export Secure Items" = "Esporta...";

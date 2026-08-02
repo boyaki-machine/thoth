@@ -202,6 +202,14 @@ internal enum L10n {
   internal static let sectionCopyHistory = L10n.tr("Localizable", "Section Copy History")
   /// Settings
   internal static let sectionSettings = L10n.tr("Localizable", "Section Settings")
+  /// Fields
+  internal static let secureColumnFields = L10n.tr("Localizable", "Secure Column Fields")
+  /// Label
+  internal static let secureColumnLabel = L10n.tr("Localizable", "Secure Column Label")
+  /// Title
+  internal static let secureColumnTitle = L10n.tr("Localizable", "Secure Column Title")
+  /// Value
+  internal static let secureColumnValue = L10n.tr("Localizable", "Secure Column Value")
   /// Memo
   internal static let secureFieldDefaultLabelNote = L10n.tr("Localizable", "Secure Field Default Label Note")
   /// Password
