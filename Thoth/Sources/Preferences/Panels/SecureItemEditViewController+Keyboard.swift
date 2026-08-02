@@ -72,6 +72,7 @@ extension SecureItemEditViewController {
         case addField
         case removeField
         case passwordGenerator
+        case totpImport
         case cancel
         case save
     }
@@ -85,8 +86,8 @@ extension SecureItemEditViewController {
     /// - **チェックボックス（🔒）** はマスク切り替えを許す種別（plain / url / note）のみ。
     ///   TOTP だけが対象外
     ///
-    /// 末尾は Save のあと title へ戻る循環。
-    /// 「TOTP追加...」ボタンは従来から巡回に含まれていないため、この順序でも対象外にしている。
+    /// 末尾のボタン列は画面上の並び（+ / - / パスワード生成 / TOTP追加 / Cancel / Save）と
+    /// 同じ順序で、Save のあと title へ戻る循環になっている。
     static func focusOrder(for fields: [SecureMenuItem.Field]) -> [FocusStop] {
         var order: [FocusStop] = [.title]
         for (row, field) in fields.enumerated() {
@@ -94,7 +95,7 @@ extension SecureItemEditViewController {
             if field.kind.allowsSingleLineEditing { order.append(.value(row: row)) }
             if field.kind.allowsPasswordToggle { order.append(.checkbox(row: row)) }
         }
-        order.append(contentsOf: [.addField, .removeField, .passwordGenerator, .cancel, .save])
+        order.append(contentsOf: [.addField, .removeField, .passwordGenerator, .totpImport, .cancel, .save])
         return order
     }
 
@@ -148,6 +149,7 @@ extension SecureItemEditViewController {
         case addFieldBtnRef:          return .addField
         case removeFieldBtnRef:       return .removeField
         case passwordGeneratorBtnRef: return .passwordGenerator
+        case totpImportBtnRef:        return .totpImport
         case cancelBtnRef:            return .cancel
         case saveBtnRef:              return .save
         default:                      return nil
@@ -163,6 +165,7 @@ extension SecureItemEditViewController {
         case .addField:          window.makeFirstResponder(addFieldBtnRef)
         case .removeField:       window.makeFirstResponder(removeFieldBtnRef)
         case .passwordGenerator: window.makeFirstResponder(passwordGeneratorBtnRef)
+        case .totpImport:        window.makeFirstResponder(totpImportBtnRef)
         case .cancel:            window.makeFirstResponder(cancelBtnRef)
         case .save:              window.makeFirstResponder(saveBtnRef)
         }

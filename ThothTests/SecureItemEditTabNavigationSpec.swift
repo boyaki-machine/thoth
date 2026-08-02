@@ -16,7 +16,7 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
         describe("SecureItemEditViewController.focusOrder") {
 
             /// ボトムバーのボタン列（全ケース共通の末尾）
-            let trailingButtons: [Stop] = [.addField, .removeField, .passwordGenerator, .cancel, .save]
+            let trailingButtons: [Stop] = [.addField, .removeField, .passwordGenerator, .totpImport, .cancel, .save]
 
             it("Contains only the title and the buttons when there are no fields") {
                 expect(SecureItemEditViewController.focusOrder(for: [])) == [.title] + trailingButtons
@@ -135,6 +135,37 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
 
             it("Falls back to the add button when there are no fields") {
                 expect(next(from: .title, in: [], shift: false)) == Stop.addField
+            }
+
+            // ボトムバーのボタン列を画面上の並びどおりに巡回する
+            it("Walks the bottom bar buttons in their on-screen order") {
+                expect(next(from: .addField, in: [], shift: false)) == Stop.removeField
+                expect(next(from: .removeField, in: [], shift: false)) == Stop.passwordGenerator
+                expect(next(from: .passwordGenerator, in: [], shift: false)) == Stop.totpImport
+                expect(next(from: .totpImport, in: [], shift: false)) == Stop.cancel
+                expect(next(from: .cancel, in: [], shift: false)) == Stop.save
+            }
+
+            it("Walks the bottom bar buttons backwards with shift") {
+                expect(next(from: .save, in: [], shift: true)) == Stop.cancel
+                expect(next(from: .cancel, in: [], shift: true)) == Stop.totpImport
+                expect(next(from: .totpImport, in: [], shift: true)) == Stop.passwordGenerator
+                expect(next(from: .passwordGenerator, in: [], shift: true)) == Stop.removeField
+                expect(next(from: .removeField, in: [], shift: true)) == Stop.addField
+            }
+
+            // 一周してちょうど元に戻る（循環の抜けや重複を検出する）
+            it("Returns to the starting stop after a full cycle in both directions") {
+                let fields = mixedFields()
+                let order = SecureItemEditViewController.focusOrder(for: fields)
+                var forward = Stop.title
+                var backward = Stop.title
+                for _ in 0..<order.count {
+                    forward = next(from: forward, in: fields, shift: false)
+                    backward = next(from: backward, in: fields, shift: true)
+                }
+                expect(forward) == Stop.title
+                expect(backward) == Stop.title
             }
         }
     }
