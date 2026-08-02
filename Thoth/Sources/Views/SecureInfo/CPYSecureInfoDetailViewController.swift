@@ -23,8 +23,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         static let rowSpacing: CGFloat = 10
     }
 
-    /// TOTP 行の表示更新間隔（秒）
-    private static let totpRefreshInterval: TimeInterval = 1.0
+    /// 表示更新の間隔（秒）。TOTP のコード更新と、平文表示の期限切れ確認を兼ねる
+    private static let refreshInterval: TimeInterval = 1.0
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let titleField = NSTextField(string: "")
@@ -82,7 +82,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        startTOTPTimerIfNeeded()
+        startRefreshTimerIfNeeded()
     }
 
     private func setupUI() {
@@ -193,12 +193,14 @@ final class CPYSecureInfoDetailViewController: NSViewController {
                 self?.onFieldMaskToggled?(row.field, isPassword)
             }
             row.onDelete = { [weak self] row in self?.onFieldDeleteRequested?(row.field) }
+            // 平文表示が始まったら、期限切れを見張るためタイマーを動かす
+            row.onRevealToggled = { [weak self] _ in self?.startRefreshTimerIfNeeded() }
             rowStackView.addArrangedSubview(row)
             row.widthAnchor.constraint(equalTo: rowStackView.widthAnchor).isActive = true
         }
 
         refreshTOTPRows()
-        startTOTPTimerIfNeeded()
+        startRefreshTimerIfNeeded()
     }
 
     /// 表示中の平文をすべて伏せ字へ戻す
@@ -272,14 +274,15 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         }
     }
 
-    // MARK: - TOTP live update
+    // MARK: - Periodic refresh
 
-    private func startTOTPTimerIfNeeded() {
+    /// TOTP 行があるか、平文表示中の行があるときだけタイマーを動かす
+    private func startRefreshTimerIfNeeded() {
         stopTOTPTimer()
-        guard fieldRows.contains(where: { $0.field.isTOTP }) else { return }
+        guard fieldRows.contains(where: { $0.field.isTOTP || $0.isRevealed }) else { return }
         // NSWindow は通常の RunLoop で動くため .common モードに追加すれば安定して発火する
-        let timer = Timer(timeInterval: Self.totpRefreshInterval, repeats: true) { [weak self] _ in
-            self?.refreshTOTPRows()
+        let timer = Timer(timeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
+            self?.refreshPeriodically()
         }
         RunLoop.main.add(timer, forMode: .common)
         totpTimer = timer
@@ -288,6 +291,20 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     private func stopTOTPTimer() {
         totpTimer?.invalidate()
         totpTimer = nil
+    }
+
+    private func refreshPeriodically() {
+        refreshTOTPRows()
+        expireRevealedValues()
+    }
+
+    /// 期限を過ぎた平文表示を伏せ字へ戻す
+    /// - Returns: 戻した行の数
+    @discardableResult
+    func expireRevealedValues(now: Date = Date()) -> Int {
+        let expired = fieldRows.filter { $0.hideRevealedValueIfExpired(now: now) }.count
+        if expired > 0 { startRefreshTimerIfNeeded() }
+        return expired
     }
 
     /// TOTP 行のコードと残り秒数を現在時刻で描き直す

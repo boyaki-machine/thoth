@@ -199,6 +199,17 @@ final class SecureInfoEditor {
         return .ready(payload)
     }
 
+    /// 保持している機微情報を破棄する（ウィンドウを閉じるときに呼ぶ）。
+    /// シングルトンのウィンドウなので、閉じたあともメモリに平文が残り続けないようにする。
+    /// **未保存の変更も捨てるため、必ずコミット後に呼ぶこと**
+    func clearSensitiveData() {
+        items = []
+        draft = nil
+        isDirty = false
+        selectedItemID = nil
+        query = ""
+    }
+
     /// 保存の成功を記録する。
     /// - Parameter savedItem: 保存後に読み直したアイテム（値変更履歴が追記された状態）
     func markCommitted(_ savedItem: SecureMenuItem) {

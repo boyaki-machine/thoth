@@ -32,6 +32,11 @@ final class CPYSecureInfoWindowController: NSWindowController {
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         // NSWindow にキービューループの自動再計算を委ねる（Tab キーナビゲーション）
         window.autorecalculatesKeyViewLoop = true
+        // 画面共有・画面収録からこのウィンドウを除外する。
+        // 値を平文で表示するため、会議の画面共有に映り込む事故を防ぐ。
+        // 代償としてスクリーンショットにも写らなくなる（サポート用の画面提供には
+        // エクスポート機能を使う）
+        window.sharingType = .none
         window.center()
         return CPYSecureInfoWindowController(window: window)
     }()

@@ -29,12 +29,19 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     var keyMonitor: Any?
     private var fallbackCommitTimer: Timer?
+    // 監視トークンは登録したセンターごとに分けて持つ。
+    // まとめて持つと解除時にどのセンターへ返せばよいか分からなくなる
     private var windowObservers: [NSObjectProtocol] = []
+    private var workspaceObservers: [NSObjectProtocol] = []
+    private var distributedObservers: [NSObjectProtocol] = []
     /// 保存失敗の警告を 1 セッションで繰り返さないためのフラグ
     var hasShownCommitFailure = false
 
     /// 最後の入力から保険として保存するまでの秒数
     private static let fallbackCommitInterval: TimeInterval = 20
+
+    /// 画面ロックの分散通知。AppKit / NSWorkspace には対応する通知が無い
+    static let screenIsLockedNotification = Notification.Name("com.apple.screenIsLocked")
 
     private enum Layout {
         static let sidebarMinWidth: CGFloat = 180
@@ -44,6 +51,8 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     deinit {
         fallbackCommitTimer?.invalidate()
         windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        workspaceObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+        distributedObservers.forEach { DistributedNotificationCenter.default().removeObserver($0) }
     }
 
     override func viewDidLoad() {
@@ -313,24 +322,62 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         // 編集中のテキストを確定させてから保存する（フィールドエディタを切り離す）
         view.window?.makeFirstResponder(nil)
         commitIfNeeded()
-        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        windowObservers = []
+        removeCommitObservers()
+        // 閉じたあともメモリに平文が残り続けないよう、保持しているデータを破棄する。
+        // 次に開くときは showWindow が reloadItems で読み直す
+        editor.clearSensitiveData()
+        listViewController.clearSearch()
+        listViewController.reload()
+        detailViewController.show(item: nil)
     }
 
-    /// ウィンドウが非アクティブになったとき・アプリ終了時にも取りこぼさず保存する
+    /// 監視の解除。NotificationCenter / NSWorkspace / DistributedNotificationCenter は
+    /// それぞれ別のセンターなので、登録元へ返す
+    private func removeCommitObservers() {
+        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        workspaceObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+        distributedObservers.forEach { DistributedNotificationCenter.default().removeObserver($0) }
+        windowObservers = []
+        workspaceObservers = []
+        distributedObservers = []
+    }
+
+    /// ウィンドウが非アクティブになったとき・アプリ終了時にも取りこぼさず保存する。
+    /// あわせて画面ロック・スリープでウィンドウを閉じ、平文が残らないようにする
     private func installCommitObservers() {
-        guard windowObservers.isEmpty, let window = view.window else { return }
+        guard windowObservers.isEmpty, workspaceObservers.isEmpty,
+              distributedObservers.isEmpty, let window = view.window else { return }
         let center = NotificationCenter.default
         windowObservers.append(center.addObserver(forName: NSWindow.didResignKeyNotification,
                                                   object: window, queue: .main) { [weak self] _ in
             self?.view.window?.makeFirstResponder(nil)
             self?.commitIfNeeded()
+            // 他のアプリへ移った隙に平文が見えたままにならないよう伏せ字へ戻す
+            self?.detailViewController.hideAllRevealedValues()
         })
         windowObservers.append(center.addObserver(forName: NSApplication.willTerminateNotification,
                                                   object: nil, queue: .main) { [weak self] _ in
             self?.view.window?.makeFirstResponder(nil)
             self?.commitIfNeeded()
         })
+        // スリープ復帰後にロック画面の背後で開いたままにならないよう閉じる
+        workspaceObservers.append(NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.closeForSecurity()
+        })
+        // 画面ロックは AppKit ではなく分散通知で届く
+        distributedObservers.append(DistributedNotificationCenter.default().addObserver(
+            forName: Self.screenIsLockedNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.closeForSecurity()
+        })
+    }
+
+    /// 画面ロック・スリープを機に、編集内容を保存してからウィンドウを閉じる
+    private func closeForSecurity() {
+        view.window?.makeFirstResponder(nil)
+        commitIfNeeded()
+        detailViewController.hideAllRevealedValues()
+        view.window?.performClose(nil)
     }
 
     /// Esc でウィンドウを閉じる

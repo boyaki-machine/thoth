@@ -38,9 +38,15 @@ final class SecureFieldRowView: NSView {
     /// マスク表示に使う伏せ字
     static let maskedPlaceholder = "••••••••"
 
+    /// 平文表示を自動で伏せ字へ戻すまでの秒数。
+    /// 表示したまま離席すると画面に残り続けるため、時間で必ず閉じる
+    static let revealTimeout: TimeInterval = 30
+
     let field: SecureMenuItem.Field
     /// パスワード等を一時的に平文表示しているか
     private(set) var isRevealed = false
+    /// 平文表示を始めた時刻（自動解除の判定に使う）
+    private(set) var revealedAt: Date?
 
     /// 読み取り専用モード（Keychain を読み出せない場合など）
     let isReadOnly: Bool
@@ -59,6 +65,8 @@ final class SecureFieldRowView: NSView {
     var onMaskToggled: ((SecureFieldRowView, Bool) -> Void)?
     /// このフィールドの削除が要求された
     var onDelete: ((SecureFieldRowView) -> Void)?
+    /// 平文表示が切り替えられた（自動解除タイマーの起動に使う）
+    var onRevealToggled: ((SecureFieldRowView) -> Void)?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let labelField = NSTextField(labelWithString: "")
@@ -97,18 +105,33 @@ final class SecureFieldRowView: NSView {
         return field.value
     }
 
-    /// 表示切替を反転する。マスクを持たない種別では何もしない
-    func toggleReveal() {
+    /// 表示切替を反転する。マスクを持たない種別では何もしない。
+    /// - Parameter date: 平文表示を始めた時刻（自動解除の判定用。テストから注入する）
+    func toggleReveal(at date: Date = Date()) {
         guard field.isPassword, field.kind.allowsPasswordToggle else { return }
         isRevealed.toggle()
+        revealedAt = isRevealed ? date : nil
         updateValueDisplay()
+        onRevealToggled?(self)
     }
 
     /// 平文表示を解除する（アイテムの切り替え・ウィンドウ非アクティブ化などで呼ぶ）
     func hideRevealedValue() {
         guard isRevealed else { return }
         isRevealed = false
+        revealedAt = nil
         updateValueDisplay()
+    }
+
+    /// 平文表示の期限が切れていれば伏せ字へ戻す。
+    /// 表示したまま離席された場合に、画面に残り続けないようにするための保険
+    /// - Returns: 実際に伏せ字へ戻した場合 true
+    @discardableResult
+    func hideRevealedValueIfExpired(now: Date = Date()) -> Bool {
+        guard isRevealed, let revealedAt = revealedAt,
+              now.timeIntervalSince(revealedAt) >= Self.revealTimeout else { return false }
+        hideRevealedValue()
+        return true
     }
 
     /// 値エリアを編集できるかを判定する（純粋関数のためユニットテスト可能）。
