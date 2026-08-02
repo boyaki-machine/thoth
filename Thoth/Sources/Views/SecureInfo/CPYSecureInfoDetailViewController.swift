@@ -27,9 +27,20 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     private static let totpRefreshInterval: TimeInterval = 1.0
 
     // 表示内容をユニットテストから検証できるよう internal にしている
-    let titleLabel = NSTextField(labelWithString: "")
+    let titleField = NSTextField(string: "")
     let placeholderLabel = NSTextField(labelWithString: "")
     let rowStackView = NSStackView()
+
+    /// 読み取り専用モード（Keychain を読み出せない場合など）。
+    /// 反映するには show(item:) を呼び直す
+    var isReadOnly = false
+
+    /// タイトルが変更された（入力のたびに呼ばれる）
+    var onTitleEdited: ((String) -> Void)?
+    /// 値・ラベルが変更された
+    var onFieldEdited: ((SecureMenuItem.Field, _ label: String?, _ value: String?) -> Void)?
+    /// 編集が終わった。保存のきっかけに使う
+    var onEditingEnded: (() -> Void)?
 
     private let scrollView = NSScrollView()
     private let totpService = TOTPService()
@@ -65,10 +76,14 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     }
 
     private func setupUI() {
-        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize + 4, weight: .semibold)
-        titleLabel.lineBreakMode = .byTruncatingTail
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(titleLabel)
+        titleField.font = .systemFont(ofSize: NSFont.systemFontSize + 4, weight: .semibold)
+        titleField.lineBreakMode = .byTruncatingTail
+        titleField.isBordered = false
+        titleField.drawsBackground = false
+        titleField.placeholderString = L10n.secureItemTitlePlaceholder
+        titleField.delegate = self
+        titleField.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleField)
 
         rowStackView.orientation = .vertical
         rowStackView.alignment = .leading
@@ -93,11 +108,11 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         view.addSubview(placeholderLabel)
 
         NSLayoutConstraint.activate([
-            titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: Layout.padding),
-            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
-            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
+            titleField.topAnchor.constraint(equalTo: view.topAnchor, constant: Layout.padding),
+            titleField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
+            titleField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
 
-            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: Layout.padding),
+            scrollView.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: Layout.padding),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
@@ -124,15 +139,16 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         rebuildRows(for: item)
 
         guard let item = item else {
-            titleLabel.stringValue = ""
-            titleLabel.isHidden = true
+            titleField.stringValue = ""
+            titleField.isHidden = true
             scrollView.isHidden = true
             placeholderLabel.stringValue = L10n.secureInfoNoSelection
             placeholderLabel.isHidden = false
             return
         }
-        titleLabel.stringValue = item.title
-        titleLabel.isHidden = false
+        titleField.stringValue = item.title
+        titleField.isEditable = !isReadOnly
+        titleField.isHidden = false
         scrollView.isHidden = false
         placeholderLabel.isHidden = true
     }
@@ -146,9 +162,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         }
 
         for field in item?.fields ?? [] {
-            let row = SecureFieldRowView(field: field)
+            let row = SecureFieldRowView(field: field, isReadOnly: isReadOnly)
             row.onCopy = { [weak self] row in self?.copyValue(of: row.field) }
             row.onOpenURL = { [weak self] row in self?.openURL(of: row.field) }
+            row.onLabelEdited = { [weak self] row, label in self?.onFieldEdited?(row.field, label, nil) }
+            row.onValueEdited = { [weak self] row, value in self?.onFieldEdited?(row.field, nil, value) }
+            row.onEditingEnded = { [weak self] _ in self?.onEditingEnded?() }
             rowStackView.addArrangedSubview(row)
             row.widthAnchor.constraint(equalTo: rowStackView.widthAnchor).isActive = true
         }
@@ -233,5 +252,20 @@ final class CPYSecureInfoDetailViewController: NSViewController {
               scheme == "http" || scheme == "https",
               let host = url.host, !host.isEmpty else { return nil }
         return url
+    }
+}
+
+// MARK: - NSTextFieldDelegate (タイトル)
+
+extension CPYSecureInfoDetailViewController: NSTextFieldDelegate {
+
+    func controlTextDidChange(_ notification: Notification) {
+        guard (notification.object as? NSTextField) === titleField else { return }
+        onTitleEdited?(titleField.stringValue)
+    }
+
+    func controlTextDidEndEditing(_ notification: Notification) {
+        guard (notification.object as? NSTextField) === titleField else { return }
+        onEditingEnded?()
     }
 }

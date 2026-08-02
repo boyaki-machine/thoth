@@ -42,10 +42,19 @@ final class SecureFieldRowView: NSView {
     /// パスワード等を一時的に平文表示しているか
     private(set) var isRevealed = false
 
+    /// 読み取り専用モード（Keychain を読み出せない場合など）
+    let isReadOnly: Bool
+
     /// コピー要求（TOTP はその時点のコードをコピーする）
     var onCopy: ((SecureFieldRowView) -> Void)?
     /// URL を開く要求
     var onOpenURL: ((SecureFieldRowView) -> Void)?
+    /// ラベルが変更された（入力のたびに呼ばれる）
+    var onLabelEdited: ((SecureFieldRowView, String) -> Void)?
+    /// 値が変更された（入力のたびに呼ばれる）
+    var onValueEdited: ((SecureFieldRowView, String) -> Void)?
+    /// 編集が終わった（フォーカスが外れた）。保存のきっかけに使う
+    var onEditingEnded: ((SecureFieldRowView) -> Void)?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let labelField = NSTextField(labelWithString: "")
@@ -59,8 +68,9 @@ final class SecureFieldRowView: NSView {
 
     // MARK: - Init
 
-    init(field: SecureMenuItem.Field) {
+    init(field: SecureMenuItem.Field, isReadOnly: Bool = false) {
         self.field = field
+        self.isReadOnly = isReadOnly
         super.init(frame: .zero)
         setupUI()
         updateValueDisplay()
@@ -95,12 +105,34 @@ final class SecureFieldRowView: NSView {
         updateValueDisplay()
     }
 
+    /// 値エリアを編集できるかを判定する（純粋関数のためユニットテスト可能）。
+    ///
+    /// - 読み取り専用モードでは編集不可
+    /// - TOTP は secret を表示しないため編集不可（取り込み直しで置き換える）
+    /// - **マスク中は編集不可**。伏せ字を表示したまま編集させると、
+    ///   画面に見えている「••••••••」がそのまま値として保存されてしまう。
+    ///   編集したい場合は 👁 で平文に切り替えてから行う
+    static func isValueEditable(field: SecureMenuItem.Field, isRevealed: Bool, isReadOnly: Bool) -> Bool {
+        guard !isReadOnly, field.kind.displaysRawValue else { return false }
+        return !field.isPassword || isRevealed
+    }
+
+    /// ラベルを編集できるか（読み取り専用でなければ種別を問わず編集できる）
+    static func isLabelEditable(isReadOnly: Bool) -> Bool {
+        return !isReadOnly
+    }
+
     private func updateValueDisplay() {
         let displayed = Self.displayedValue(for: field, isRevealed: isRevealed)
+        let editable = Self.isValueEditable(field: field, isRevealed: isRevealed, isReadOnly: isReadOnly)
         if field.kind.isMultiline {
             noteTextView.string = displayed
+            noteTextView.isEditable = editable
         } else {
             valueField.stringValue = displayed
+            valueField.isEditable = editable
+            valueField.isBordered = editable
+            valueField.drawsBackground = editable
         }
         revealButton.image = NSImage(systemSymbolName: isRevealed ? "eye.slash" : "eye",
                                      accessibilityDescription: nil)
@@ -128,6 +160,10 @@ final class SecureFieldRowView: NSView {
         labelField.textColor = .secondaryLabelColor
         labelField.alignment = .right
         labelField.lineBreakMode = .byTruncatingTail
+        labelField.isEditable = Self.isLabelEditable(isReadOnly: isReadOnly)
+        labelField.isBordered = false
+        labelField.drawsBackground = false
+        labelField.delegate = self
         labelField.translatesAutoresizingMaskIntoConstraints = false
         addSubview(labelField)
 
@@ -153,18 +189,19 @@ final class SecureFieldRowView: NSView {
     /// 値エリアを組み立てる。複数行の種別だけスクロール付きの NSTextView にする
     private func makeValueContainer() -> NSView {
         guard field.kind.isMultiline else {
-            // 読み取り専用だが選択・コピーはできるようにする
+            // 編集できない状態でも選択・コピーはできるようにする
             valueField.isSelectable = true
             valueField.lineBreakMode = .byTruncatingTail
+            valueField.delegate = self
             valueField.translatesAutoresizingMaskIntoConstraints = false
             addSubview(valueField)
             valueField.heightAnchor.constraint(equalToConstant: Layout.singleLineHeight).isActive = true
             return valueField
         }
 
-        noteTextView.isEditable = false
         noteTextView.isSelectable = true
         noteTextView.isRichText = false
+        noteTextView.delegate = self
         // メモは URL 等を自動リンク化せずそのまま見せる（誤操作で外部アプリが開くのを避ける）
         noteTextView.isAutomaticLinkDetectionEnabled = false
         noteTextView.enabledTextCheckingTypes = 0
@@ -244,5 +281,34 @@ final class SecureFieldRowView: NSView {
 
     @objc private func copyTapped() {
         onCopy?(self)
+    }
+}
+
+// MARK: - NSTextFieldDelegate / NSTextViewDelegate
+
+extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
+
+    func controlTextDidChange(_ notification: Notification) {
+        guard let control = notification.object as? NSTextField else { return }
+        if control === labelField {
+            onLabelEdited?(self, labelField.stringValue)
+        } else if control === valueField {
+            // マスク中は編集不可なので、ここへ来る値は必ず平文
+            onValueEdited?(self, valueField.stringValue)
+        }
+    }
+
+    func controlTextDidEndEditing(_ notification: Notification) {
+        onEditingEnded?(self)
+    }
+
+    func textDidChange(_ notification: Notification) {
+        guard (notification.object as? NSTextView) === noteTextView else { return }
+        onValueEdited?(self, noteTextView.string)
+    }
+
+    func textDidEndEditing(_ notification: Notification) {
+        guard (notification.object as? NSTextView) === noteTextView else { return }
+        onEditingEnded?(self)
     }
 }

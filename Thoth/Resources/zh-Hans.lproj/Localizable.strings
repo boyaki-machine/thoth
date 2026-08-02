@@ -85,6 +85,10 @@
 
 "Secure Info Open URL" = "在浏览器中打开";
 
+"Secure Info Save Failed" = "保存到钥匙串失败。您的编辑已保留，请按 Command-S 重试。";
+
+"Secure Info Title Required" = "保存前请输入标题。您的编辑已保留。";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";

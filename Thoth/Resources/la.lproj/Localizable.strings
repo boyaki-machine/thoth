@@ -81,6 +81,10 @@
 
 "Secure Info Open URL" = "In navigatro aperire";
 
+"Secure Info Save Failed" = "In clavium anulo servare non licuit. Mutationes servantur; Command-S iterum tenta.";
+
+"Secure Info Title Required" = "Titulum inscribe antequam serves. Mutationes servantur.";
+
 "Secure Menu Search Placeholder" = "Quaerere...";
 
 "Secure Menu No Results" = "Nihil congruens inventum";

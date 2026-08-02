@@ -85,6 +85,10 @@
 
 "Secure Info Open URL" = "ブラウザで開く";
 
+"Secure Info Save Failed" = "キーチェーンへの保存に失敗しました。編集内容は保持されています。⌘S で再試行してください。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
+
+"Secure Info Title Required" = "保存するにはタイトルを入力してください。編集内容は保持されています。";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";

@@ -85,6 +85,10 @@
 
 "Secure Info Open URL" = "Apri nel browser";
 
+"Secure Info Save Failed" = "Salvataggio nel portachiavi non riuscito. Le modifiche sono conservate: premi Comando-S per riprovare.";
+
+"Secure Info Title Required" = "Inserisci un titolo prima di salvare. Le modifiche sono conservate.";
+
 "Secure Menu Search Placeholder" = "Cerca...";
 
 "Secure Menu No Results" = "Nessun elemento corrispondente";

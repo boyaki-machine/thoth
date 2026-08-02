@@ -89,6 +89,14 @@ final class CPYSecureInfoListViewController: NSViewController {
         onSelectionChange?(editor.selectedItem)
     }
 
+    /// 指定アイテムの行だけ描き直す（選択やスクロール位置を保つ）。
+    /// タイトルを編集して保存したあと、一覧の表示を追従させるために使う
+    func refreshRow(itemID: String) {
+        guard let row = editor.visibleItems.firstIndex(where: { $0.itemID == itemID }) else { return }
+        tableView.reloadData(forRowIndexes: IndexSet(integer: row),
+                             columnIndexes: IndexSet(integersIn: 0..<max(1, tableView.numberOfColumns)))
+    }
+
     /// エディタの選択状態をテーブルの選択へ反映する（通知は行わない）
     private func syncSelectionToTableView() {
         if let row = editor.selectedRow {

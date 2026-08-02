@@ -216,6 +216,10 @@ internal enum L10n {
   internal static let secureInfoOpenURL = L10n.tr("Localizable", "Secure Info Open URL")
   /// Show / hide the value
   internal static let secureInfoRevealValue = L10n.tr("Localizable", "Secure Info Reveal Value")
+  /// Failed to save to Keychain. Your edits are kept — press Command-S to try again. See Console.app for details (filter: SecureMenuService).
+  internal static let secureInfoSaveFailed = L10n.tr("Localizable", "Secure Info Save Failed")
+  /// Enter a title before saving. Your edits are kept.
+  internal static let secureInfoTitleRequired = L10n.tr("Localizable", "Secure Info Title Required")
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder")
   /// Secure Items

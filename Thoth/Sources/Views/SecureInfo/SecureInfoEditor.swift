@@ -71,6 +71,93 @@ final class SecureInfoEditor {
         return true
     }
 
+    // MARK: - Editing
+
+    /// 編集中の作業コピー。選択が変わるたびに差し替える。
+    /// 右ペインはこちらを表示する（一覧は保存済みの `items` を表示する）
+    private(set) var draft: SecureMenuItem?
+    /// 作業コピーが未保存の変更を含むか
+    private(set) var isDirty = false
+    /// Keychain を読み出せない状態では編集を受け付けない。
+    /// 編集させても保存が拒否されるだけなので、入力の時点で止める
+    var isReadOnly = false
+
+    /// 保存の要否と可否
+    enum CommitOutcome: Equatable {
+        /// 変更が無いので保存不要
+        case notNeeded
+        /// タイトルが空のため保存できない（編集内容は破棄せず保持する）
+        case titleRequired
+        /// 保存すべき内容
+        case ready(SecureMenuItem)
+    }
+
+    /// 指定アイテムの編集を開始する（選択変更時に呼ぶ）。
+    /// **呼び出し側は直前に未保存の変更をコミットしておくこと**
+    func beginEditing(itemID: String?) {
+        isDirty = false
+        guard let itemID = itemID else {
+            draft = nil
+            return
+        }
+        draft = items.first { $0.itemID == itemID }
+    }
+
+    /// - Returns: 実際に値が変わった場合 true
+    @discardableResult
+    func updateTitle(_ title: String) -> Bool {
+        guard !isReadOnly, var current = draft, current.title != title else { return false }
+        current.title = title
+        draft = current
+        isDirty = true
+        return true
+    }
+
+    /// フィールドの一部を差し替える。nil を渡した項目は現在値を維持する。
+    /// - Returns: 実際に値が変わった場合 true
+    @discardableResult
+    func updateField(fieldID: String, label: String? = nil, value: String? = nil,
+                     isPassword: Bool? = nil) -> Bool {
+        guard !isReadOnly, var current = draft,
+              let index = current.fields.firstIndex(where: { $0.fieldID == fieldID }) else { return false }
+        let field = current.fields[index]
+        let changed = (label != nil && label != field.label)
+            || (value != nil && value != field.value)
+            || (isPassword != nil && isPassword != field.isPassword)
+        guard changed else { return false }
+        current.fields[index] = field.updating(label: label, value: value, isPassword: isPassword)
+        draft = current
+        isDirty = true
+        return true
+    }
+
+    /// 保存すべき内容を判定する。
+    ///
+    /// ラベルも値も空のフィールドは取り除く（既存の編集シートと同じ規則）。
+    /// タイトルが空の場合は保存せず、編集内容も破棄しない
+    func commitOutcome() -> CommitOutcome {
+        guard isDirty, let draft = draft else { return .notNeeded }
+        let title = draft.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { return .titleRequired }
+        var payload = draft
+        payload.title = title
+        payload.fields = draft.fields.filter {
+            !$0.label.trimmingCharacters(in: .whitespaces).isEmpty
+                || !$0.value.trimmingCharacters(in: .whitespaces).isEmpty
+        }
+        return .ready(payload)
+    }
+
+    /// 保存の成功を記録する。
+    /// - Parameter savedItem: 保存後に読み直したアイテム（値変更履歴が追記された状態）
+    func markCommitted(_ savedItem: SecureMenuItem) {
+        isDirty = false
+        draft = savedItem
+        if let index = items.firstIndex(where: { $0.itemID == savedItem.itemID }) {
+            items[index] = savedItem
+        }
+    }
+
     // MARK: - Filtering
 
     /// クエリでアイテムを絞り込む（純粋関数）。

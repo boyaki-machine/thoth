@@ -85,6 +85,10 @@
 
 "Secure Info Open URL" = "Open in browser";
 
+"Secure Info Save Failed" = "Failed to save to Keychain. Your edits are kept — press Command-S to try again. See Console.app for details (filter: SecureMenuService).";
+
+"Secure Info Title Required" = "Enter a title before saving. Your edits are kept.";
+
 "Secure Menu Search Placeholder" = "Search...";
 
 "Secure Menu No Results" = "No matching items";

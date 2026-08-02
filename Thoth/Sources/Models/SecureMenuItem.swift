@@ -12,7 +12,7 @@ import Foundation
 
 // MARK: - SecureMenuItem
 
-struct SecureMenuItem: Codable {
+struct SecureMenuItem: Codable, Equatable {
     let itemID: String
     var title: String
     var fields: [Field]
@@ -26,12 +26,12 @@ struct SecureMenuItem: Codable {
     }
 
     /// 過去の Val 値と、その値が別の値に置き換えられた日時
-    struct FieldHistoryEntry: Codable {
+    struct FieldHistoryEntry: Codable, Equatable {
         let value: String
         let replacedAt: Date
     }
 
-    struct Field: Codable {
+    struct Field: Codable, Equatable {
 
         /// フィールドの種別。
         ///
