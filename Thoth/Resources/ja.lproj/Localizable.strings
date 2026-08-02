@@ -79,6 +79,12 @@
 
 "Secure Info No Selection" = "アイテムを選択すると詳細が表示されます。";
 
+"Secure Info Copy Value" = "コピー";
+
+"Secure Info Reveal Value" = "値の表示 / 非表示";
+
+"Secure Info Open URL" = "ブラウザで開く";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";

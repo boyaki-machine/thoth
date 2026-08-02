@@ -280,9 +280,7 @@ final class CPYSecureSubPanel: NSPanel {
             return "⏱ TOTP: ------"
         }
         let remaining = totpService.remainingSeconds(for: params)
-        // 6 桁は 3 桁ずつ区切って見やすくする（例: "123 456"）
-        let grouped = code.count == 6 ? "\(code.prefix(3)) \(code.suffix(3))" : code
-        return "⏱ TOTP: \(grouped) · \(remaining)s"
+        return "⏱ TOTP: \(TOTPService.groupedCode(code)) · \(remaining)s"
     }
 
     // MARK: - Build Views

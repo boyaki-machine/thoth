@@ -208,8 +208,14 @@ internal enum L10n {
   internal static let secureInfo = L10n.tr("Localizable", "Secure Info")
   /// View secure info
   internal static let secureInfoAuthenticationReason = L10n.tr("Localizable", "Secure Info Authentication Reason")
+  /// Copy
+  internal static let secureInfoCopyValue = L10n.tr("Localizable", "Secure Info Copy Value")
   /// Select an item to view its details.
   internal static let secureInfoNoSelection = L10n.tr("Localizable", "Secure Info No Selection")
+  /// Open in browser
+  internal static let secureInfoOpenURL = L10n.tr("Localizable", "Secure Info Open URL")
+  /// Show / hide the value
+  internal static let secureInfoRevealValue = L10n.tr("Localizable", "Secure Info Reveal Value")
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder")
   /// Secure Items

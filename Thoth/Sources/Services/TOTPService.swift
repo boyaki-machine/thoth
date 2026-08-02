@@ -132,6 +132,18 @@ final class TOTPService {
         return params.period - elapsed
     }
 
+    /// コードを読みやすく区切る（純粋関数）。
+    /// 6 桁は 3 桁ずつ（"123456" → "123 456"）、8 桁は 4 桁ずつ（"12345678" → "1234 5678"）。
+    /// それ以外の桁数はそのまま返す。
+    /// セキュア選択パネルと確認ウィンドウの両方が同じ見た目になるよう、ここに集約する
+    static func groupedCode(_ code: String) -> String {
+        switch code.count {
+        case 6: return "\(code.prefix(3)) \(code.suffix(3))"
+        case 8: return "\(code.prefix(4)) \(code.suffix(4))"
+        default: return code
+        }
+    }
+
     /// HOTP（RFC 4226）ベースのコード計算。TOTP はカウンタに時刻ステップを渡す。
     private func code(secret: Data, counter: UInt64, digits: Int, algorithm: TOTPParameters.Algorithm) -> String? {
         // カウンタを 8 バイトのビッグエンディアンに変換

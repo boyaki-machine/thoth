@@ -79,6 +79,12 @@
 
 "Secure Info No Selection" = "Seleziona un elemento per vederne i dettagli.";
 
+"Secure Info Copy Value" = "Copia";
+
+"Secure Info Reveal Value" = "Mostra / nascondi il valore";
+
+"Secure Info Open URL" = "Apri nel browser";
+
 "Secure Menu Search Placeholder" = "Cerca...";
 
 "Secure Menu No Results" = "Nessun elemento corrispondente";
