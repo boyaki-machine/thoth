@@ -107,6 +107,10 @@
 
 "Secure Info Toggle Mask" = "切换值的遮蔽";
 
+"Secure Info External Change" = "已在其他窗口中修改。";
+
+"Secure Info Reload" = "重新载入";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";

@@ -51,6 +51,10 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onAddTOTPRequested: (() -> Void)?
 
     private let scrollView = NSScrollView()
+    /// 他の画面で変更が起きたことを知らせるバー（未保存の編集がある間だけ出す）
+    let externalChangeBanner = NSStackView()
+    let externalChangeReloadButton = NSButton()
+    private var onExternalChangeReload: (() -> Void)?
     let addFieldButton = NSPopUpButton()
     let addTOTPButton = NSButton()
     private let totpService = TOTPService()
@@ -118,8 +122,13 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         view.addSubview(placeholderLabel)
 
         setupBottomBar()
+        setupExternalChangeBanner()
 
         NSLayoutConstraint.activate([
+            externalChangeBanner.topAnchor.constraint(equalTo: view.topAnchor),
+            externalChangeBanner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            externalChangeBanner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
             titleField.topAnchor.constraint(equalTo: view.topAnchor, constant: Layout.padding),
             titleField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             titleField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
@@ -146,6 +155,44 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             placeholderLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+
+    /// 他の画面での変更を知らせるバーを組み立てる。
+    /// 未保存の編集を勝手に捨てないよう、読み直すかどうかはユーザーに委ねる
+    private func setupExternalChangeBanner() {
+        let label = NSTextField(labelWithString: L10n.secureInfoExternalChange)
+        label.lineBreakMode = .byTruncatingTail
+
+        externalChangeReloadButton.title = L10n.secureInfoReload
+        externalChangeReloadButton.bezelStyle = .rounded
+        externalChangeReloadButton.target = self
+        externalChangeReloadButton.action = #selector(externalChangeReloadTapped)
+
+        externalChangeBanner.orientation = .horizontal
+        externalChangeBanner.spacing = Layout.rowSpacing
+        externalChangeBanner.edgeInsets = NSEdgeInsets(top: 6, left: Layout.padding, bottom: 6, right: Layout.padding)
+        externalChangeBanner.addArrangedSubview(label)
+        externalChangeBanner.addArrangedSubview(externalChangeReloadButton)
+        externalChangeBanner.isHidden = true
+        externalChangeBanner.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(externalChangeBanner)
+    }
+
+    @objc private func externalChangeReloadTapped() {
+        let handler = onExternalChangeReload
+        hideExternalChangeBanner()
+        handler?()
+    }
+
+    /// 他の画面で変更が起きたことを知らせる
+    func showExternalChangeBanner(onReload: @escaping () -> Void) {
+        onExternalChangeReload = onReload
+        externalChangeBanner.isHidden = false
+    }
+
+    func hideExternalChangeBanner() {
+        externalChangeBanner.isHidden = true
+        onExternalChangeReload = nil
     }
 
     // MARK: - Content

@@ -15,6 +15,206 @@ class SecureInfoCommitFlowSpec: QuickSpec {
     override class func spec() {
         commitFlowSpecs()
         structuralFlowSpecs()
+        changeNotificationSpecs()
+        externalChangeSyncSpecs()
+    }
+
+    // MARK: - Change notification
+
+    /// 変更通知は、同じサービスを共有する複数のウィンドウが表示を同期するための土台。
+    /// 通知が飛ばない経路があると、片方の画面が古い内容を表示し続ける
+    private static func changeNotificationSpecs() {
+        describe("変更通知") {
+
+            var service: SecureMenuService!
+            var received: Int!
+            var observer: NSObjectProtocol!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+                received = 0
+                observer = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                  object: nil, queue: nil) { _ in
+                    received += 1
+                }
+            }
+            afterEach {
+                NotificationCenter.default.removeObserver(observer!)
+                service.deleteAllItems()
+            }
+
+            it("保存で 1 回だけ通知され、通し番号が進む") {
+                let before = service.itemsChangeToken
+                expect(service.save(SecureMenuItem(itemID: "n1", title: "A"))) == true
+                expect(received) == 1
+                expect(service.itemsChangeToken) == before + 1
+            }
+
+            it("削除でも通知される") {
+                _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
+                received = 0
+                expect(service.delete(itemID: "n1")) == true
+                expect(received) == 1
+            }
+
+            it("並べ替えでも通知される") {
+                _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
+                _ = service.save(SecureMenuItem(itemID: "n2", title: "B"))
+                received = 0
+                let reordered = service.loadAllItems().reversed().map { $0 }
+                expect(service.reorderItems(reordered)) == true
+                expect(received) == 1
+            }
+
+            // saveAllItems を通らない経路。ここを取りこぼすと全削除が同期されない
+            it("全削除でも通知される") {
+                _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
+                received = 0
+                expect(service.deleteAllItems()) == true
+                expect(received) == 1
+            }
+
+            it("消すものが無い全削除では通知しない") {
+                received = 0
+                _ = service.deleteAllItems()
+                expect(received) == 0
+            }
+
+            // 読み出しは変更ではない（通知すると再読込が無限に続きかねない）
+            it("読み出しでは通知しない") {
+                _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
+                received = 0
+                _ = service.loadAllItems()
+                _ = service.loadCryptoPassword()
+                expect(received) == 0
+            }
+
+            // isKeychainAccessDenied を直接立てても save 内の loadAllItems が読み直して
+            // 解除してしまうため、実際に解釈できないデータを置いて再現する
+            it("保存に失敗したときは通知しない") {
+                _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
+                writeRawUserData(Data("{ broken".utf8))
+                expect(service.loadAllItems().isEmpty) == true
+                expect(service.isKeychainAccessDenied) == true
+
+                received = 0
+                let tokenBefore = service.itemsChangeToken
+                expect(service.save(SecureMenuItem(itemID: "n2", title: "B"))) == false
+                expect(received) == 0
+                expect(service.itemsChangeToken) == tokenBefore
+
+                removeRawUserData()
+            }
+        }
+    }
+
+    // MARK: - External change sync
+
+    private static func externalChangeSyncSpecs() {
+        describe("他の画面での変更への追従") {
+
+            var service: SecureMenuService!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+                AppEnvironment.push(environment: Environment(secureMenuService: service))
+            }
+            afterEach {
+                service.deleteAllItems()
+                AppEnvironment.popLast()
+            }
+
+            /// 行ビューの作り直しを検出できるよう、フィールドを持たせておく
+            func makeSplitViewController() -> CPYSecureInfoSplitViewController {
+                let item = SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
+                ])
+                expect(service.save(item)) == true
+                let splitViewController = CPYSecureInfoSplitViewController()
+                _ = splitViewController.view
+                splitViewController.reloadItems()
+                splitViewController.editor.beginEditing(itemID: "s1")
+                splitViewController.detailViewControllerForTesting.show(item: splitViewController.editor.draft)
+                return splitViewController
+            }
+
+            it("他の画面での変更を取り込む") {
+                let splitViewController = makeSplitViewController()
+                expect(splitViewController.editor.items.count) == 1
+
+                // 別の画面が追加した想定
+                expect(service.save(SecureMenuItem(itemID: "s2", title: "AWS"))) == true
+                splitViewController.applyExternalChangeIfNeeded()
+
+                expect(splitViewController.editor.items.map { $0.itemID }) == ["s1", "s2"]
+            }
+
+            // 自分の保存で読み直すと、入力中のフォーカスとカーソル位置が飛ぶ
+            it("自分が起こした変更では読み直さない") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Renamed")
+                expect(splitViewController.commitIfNeeded()) == true
+
+                // 保存直後の通知では行ビューが作り直されない（同じインスタンスのまま）
+                let before = splitViewController.detailViewControllerForTesting.fieldRows
+                expect(before.isEmpty) == false
+                splitViewController.applyExternalChangeIfNeeded()
+                let after = splitViewController.detailViewControllerForTesting.fieldRows
+                expect(after.count) == before.count
+                expect(zip(before, after).allSatisfy { $0 === $1 }) == true
+                expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == true
+            }
+
+            // 打ちかけの内容を黙って捨てない
+            it("未保存の編集がある場合は読み直さず案内を出す") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Editing")
+
+                expect(service.save(SecureMenuItem(itemID: "s2", title: "AWS"))) == true
+                splitViewController.applyExternalChangeIfNeeded()
+
+                expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == false
+                // 編集内容は残り、一覧もまだ読み直していない
+                expect(splitViewController.editor.draft?.title) == "Editing"
+                expect(splitViewController.editor.items.count) == 1
+            }
+
+            it("案内から読み直すと取り込まれ、案内は消える") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Editing")
+                expect(service.save(SecureMenuItem(itemID: "s2", title: "AWS"))) == true
+                splitViewController.applyExternalChangeIfNeeded()
+
+                let detail = splitViewController.detailViewControllerForTesting
+                detail.externalChangeReloadButton.performClick(nil)
+
+                expect(detail.externalChangeBanner.isHidden) == true
+                expect(splitViewController.editor.items.count) == 2
+            }
+
+            it("読み直すと案内は消える") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.detailViewControllerForTesting.showExternalChangeBanner {}
+                splitViewController.reloadItems()
+                expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == true
+            }
+
+            // 管理ウィンドウ側も同じ通知で追従する。
+            // 通知経由では警告を出さない（同じ警告が繰り返し積み上がるため）
+            it("管理ウィンドウが警告なしで再読込できる") {
+                let itemsViewController = CPYSecureItemsViewController()
+                _ = itemsViewController.view
+                service.isKeychainAccessDenied = true
+                // 警告を出さない経路なので、ウィンドウが無くてもモーダルで止まらない
+                itemsViewController.reloadItems(showsAlert: false)
+                service.isKeychainAccessDenied = false
+            }
+        }
     }
 
     // MARK: - Fixtures

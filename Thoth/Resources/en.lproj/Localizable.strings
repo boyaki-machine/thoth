@@ -107,6 +107,10 @@
 
 "Secure Info Toggle Mask" = "Mask / unmask the value";
 
+"Secure Info External Change" = "Changed in another window.";
+
+"Secure Info Reload" = "Reload";
+
 "Secure Menu Search Placeholder" = "Search...";
 
 "Secure Menu No Results" = "No matching items";

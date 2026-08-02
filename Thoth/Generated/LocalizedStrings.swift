@@ -230,10 +230,14 @@ internal enum L10n {
   internal static let secureInfoAuthenticationReason = L10n.tr("Localizable", "Secure Info Authentication Reason")
   /// Copy
   internal static let secureInfoCopyValue = L10n.tr("Localizable", "Secure Info Copy Value")
+  /// Changed in another window.
+  internal static let secureInfoExternalChange = L10n.tr("Localizable", "Secure Info External Change")
   /// Select an item to view its details.
   internal static let secureInfoNoSelection = L10n.tr("Localizable", "Secure Info No Selection")
   /// Open in browser
   internal static let secureInfoOpenURL = L10n.tr("Localizable", "Secure Info Open URL")
+  /// Reload
+  internal static let secureInfoReload = L10n.tr("Localizable", "Secure Info Reload")
   /// Remove Field
   internal static let secureInfoRemoveField = L10n.tr("Localizable", "Secure Info Remove Field")
   /// Are you sure you want to remove this field?

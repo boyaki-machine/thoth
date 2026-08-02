@@ -101,6 +101,19 @@ final class SecureMenuService {
     /// 直近で認証が成功した時刻（テストから注入できるよう internal）
     var lastAuthenticatedDate: Date?
 
+    /// セキュアアイテムが変更されるたびに増える通し番号。
+    /// 複数のウィンドウが同じサービスを共有するため、「自分が起こした変更か」を
+    /// この番号で判定する（自分の保存で再読込が走ると入力中のフォーカスが飛ぶ）
+    private(set) var itemsChangeToken: Int = 0
+
+    /// セキュアアイテムが変更されたことを知らせる。
+    /// 変更経路は `saveAllItems`（保存・削除・並べ替え）と `deleteAllItems` の 2 つ。
+    /// 新しい変更経路を足す場合は必ず `postItemsDidChange()` を呼ぶこと
+    private func postItemsDidChange() {
+        itemsChangeToken += 1
+        NotificationCenter.default.post(name: .secureItemsDidChange, object: self)
+    }
+
     // MARK: - Initialize
 
     init(keychainService: String = SecureMenuService.defaultKeychainService) {
@@ -459,11 +472,14 @@ final class SecureMenuService {
         if status == errSecItemNotFound { return true }
         guard status == errSecSuccess else { return false }
         var userData = existing ?? SecureUserData()
+        let hadItems = !(existing?.items.isEmpty ?? true)
         userData.items = []
-        if (userData.cryptoPassword ?? "").isEmpty {
-            return removeEntry(account: Self.userDataKey)
-        }
-        return writeUserData(userData)
+        let removed = (userData.cryptoPassword ?? "").isEmpty
+            ? removeEntry(account: Self.userDataKey)
+            : writeUserData(userData)
+        // 消すものが無かった場合は「変更なし」として通知しない
+        if removed && hadItems { postItemsDidChange() }
+        return removed
     }
 
     // MARK: - Crypto Password (指紋パスワード)
@@ -548,6 +564,17 @@ final class SecureMenuService {
         guard status == errSecSuccess || status == errSecItemNotFound else { return false }
         var userData = existing ?? SecureUserData()
         userData.items = items
-        return writeUserData(userData)
+        guard writeUserData(userData) else { return false }
+        postItemsDidChange()
+        return true
     }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// セキュアアイテムが変更された（保存・削除・並べ替え）。
+    /// 同じサービスを共有する複数のウィンドウが表示を同期するために使う。
+    /// object は変更を行った `SecureMenuService`
+    static let secureItemsDidChange = Notification.Name("io.github.boyaki-machine.Thoth.secureItemsDidChange")
 }

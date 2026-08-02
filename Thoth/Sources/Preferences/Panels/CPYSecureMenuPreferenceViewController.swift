@@ -59,6 +59,11 @@ final class CPYSecureItemsViewController: NSViewController {
     private let closeButton  = TabCapturingButton()
     private var items: [SecureMenuItem] = []
     private var keyMonitor: Any?
+    private var changeObserver: NSObjectProtocol?
+
+    deinit {
+        if let changeObserver = changeObserver { NotificationCenter.default.removeObserver(changeObserver) }
+    }
 
     override func loadView() {
         view = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 420))
@@ -171,6 +176,7 @@ final class CPYSecureItemsViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        installChangeObserver()
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.view.window else { return event }
             let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -203,13 +209,29 @@ final class CPYSecureItemsViewController: NSViewController {
     override func viewWillDisappear() {
         super.viewWillDisappear()
         if let monitor = keyMonitor { NSEvent.removeMonitor(monitor); keyMonitor = nil }
+        if let changeObserver = changeObserver {
+            NotificationCenter.default.removeObserver(changeObserver)
+            self.changeObserver = nil
+        }
     }
 
-    func reloadItems() {
+    /// 別のウィンドウ（セキュア情報確認ウィンドウ）での変更に追従する
+    private func installChangeObserver() {
+        guard changeObserver == nil else { return }
+        changeObserver = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                object: nil, queue: .main) { [weak self] _ in
+            // 通知経由の再読込では警告を出さない（同じ警告が繰り返し積み上がるため）
+            self?.reloadItems(showsAlert: false)
+        }
+    }
+
+    /// - Parameter showsAlert: 読み出しに失敗したときに警告を表示するか。
+    ///   通知経由の再読込では false にして、同じ警告が何度も出ないようにする
+    func reloadItems(showsAlert: Bool = true) {
         items = AppEnvironment.current.secureMenuService.loadAllItems()
         tableView.reloadData()
         // アクセス拒否（バイナリ更新による Keychain ACL 不一致など）を検出したら警告を表示する
-        if AppEnvironment.current.secureMenuService.isKeychainAccessDenied {
+        if showsAlert, AppEnvironment.current.secureMenuService.isKeychainAccessDenied {
             showKeychainAccessDeniedAlert()
         }
     }

@@ -103,6 +103,10 @@
 
 "Secure Info Toggle Mask" = "Valorem tegere / detegere";
 
+"Secure Info External Change" = "In alia fenestra mutatum est.";
+
+"Secure Info Reload" = "Relegere";
+
 "Secure Menu Search Placeholder" = "Quaerere...";
 
 "Secure Menu No Results" = "Nihil congruens inventum";

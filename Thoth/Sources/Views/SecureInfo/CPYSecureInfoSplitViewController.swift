@@ -36,6 +36,8 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     private var distributedObservers: [NSObjectProtocol] = []
     /// 保存失敗の警告を 1 セッションで繰り返さないためのフラグ
     var hasShownCommitFailure = false
+    /// 画面へ反映済みの変更番号。自分が起こした変更で再読込しないための目印
+    private var appliedChangeToken = 0
 
     /// 最後の入力から保険として保存するまでの秒数
     private static let fallbackCommitInterval: TimeInterval = 20
@@ -168,6 +170,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         }
         // 検索で絞り込んだままだと新しいアイテムが見えないので解除する
         listViewController.clearSearch()
+        appliedChangeToken = service.itemsChangeToken
         editor.setItems(service.loadAllItems())
         editor.selectItem(itemID: newItem.itemID)
         listViewController.reload()
@@ -195,6 +198,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             showCommitFailure(informative: L10n.secureInfoSaveFailed)
             return
         }
+        appliedChangeToken = service.itemsChangeToken
         editor.setItems(service.loadAllItems())
         editor.selectItem(itemID: nil)
         listViewController.reload()
@@ -219,6 +223,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             showCommitFailure(informative: L10n.secureInfoSaveFailed)
             return
         }
+        appliedChangeToken = service.itemsChangeToken
         editor.setItems(service.loadAllItems())
         listViewController.reload()
     }
@@ -228,6 +233,8 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// Keychain からアイテムを読み直して画面へ反映する
     func reloadItems() {
         let service = AppEnvironment.current.secureMenuService
+        appliedChangeToken = service.itemsChangeToken
+        detailViewController.hideExternalChangeBanner()
         editor.setItems(service.loadAllItems())
         // 読み出せていない状態では編集させない。編集できても保存が拒否されるだけで、
         // 入力した内容が失われるだけになる
@@ -273,6 +280,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         }
         // 保存後の内容（変更履歴が追記された状態）で作業コピーを更新する
         let saved = service.loadAllItems().first { $0.itemID == item.itemID } ?? item
+        appliedChangeToken = service.itemsChangeToken
         editor.markCommitted(saved)
         listViewController.refreshRow(itemID: saved.itemID)
         return true
@@ -370,6 +378,28 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             forName: Self.screenIsLockedNotification, object: nil, queue: .main) { [weak self] _ in
             self?.closeForSecurity()
         })
+        // 別のウィンドウ（セキュアアイテム管理）での変更に追従する
+        windowObservers.append(center.addObserver(forName: .secureItemsDidChange,
+                                                  object: nil, queue: .main) { [weak self] _ in
+            self?.applyExternalChangeIfNeeded()
+        })
+    }
+
+    /// 他の画面での変更を取り込む。
+    ///
+    /// 未保存の編集がある場合は勝手に読み直さず、案内バーを出して選択を委ねる。
+    /// ここで読み直すと、打ちかけの内容が黙って消えてしまう
+    func applyExternalChangeIfNeeded() {
+        let service = AppEnvironment.current.secureMenuService
+        // 自分が起こした変更なら何もしない（再読込で入力中のフォーカスが飛ぶ）
+        guard service.itemsChangeToken != appliedChangeToken else { return }
+        guard !editor.isDirty else {
+            detailViewController.showExternalChangeBanner { [weak self] in
+                self?.reloadItems()
+            }
+            return
+        }
+        reloadItems()
     }
 
     /// 画面ロック・スリープを機に、編集内容を保存してからウィンドウを閉じる

@@ -107,6 +107,10 @@
 
 "Secure Info Toggle Mask" = "値のマスクを切り替え";
 
+"Secure Info External Change" = "他の画面で変更されました。";
+
+"Secure Info Reload" = "再読込";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";
