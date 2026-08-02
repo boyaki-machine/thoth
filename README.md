@@ -16,7 +16,7 @@ This project is a fork of **[Clipy](https://github.com/Clipy/Clipy)** (MIT licen
 
 It keeps the clipboard history and snippet features of the original Clipy, and adds:
 
-- **Secure item management** — paste passwords, TOTP, and other sensitive values directly without leaving them on the clipboard
+- **Secure item management** — paste passwords, TOTP, and other sensitive values directly without leaving them on the clipboard. Related URLs and memos can be kept alongside them
 - **Password generation** — generate random passwords with configurable rules
 - **File encryption / decryption** — encrypt files and folders in an openssl-compatible format
 
@@ -85,16 +85,40 @@ Paste passwords, TOTP, and other sensitive values directly into any app **withou
 | **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |
 | **TOTP support** | Register from an otpauth URI / QR code; a one-time code is generated and typed at selection time |
 
+**Field kinds:**
+
+An item can hold several fields, each of one of these kinds.
+
+| Kind | Purpose | In the picker panel (⌘⇧.) |
+|---|---|---|
+| **Text** | Ordinary values such as an ID | Shown, can be pasted |
+| **Password** | Values that should be masked | Shown as `••••••••`, can be pasted |
+| **URL** | The login address | Shown with `🔗`, can be pasted. Can be opened in a browser from the Secure Info window |
+| **Memo** | Multi-line notes such as a contract number, support contact, or what the credential is for | **Not shown** (too long for the panel — Secure Info window only) |
+| **TOTP** | One-time password | Current code and remaining seconds are shown; typed on selection |
+
 **Step 1 — Register your credentials**
 
-Open the menu bar icon → **Manage Secure Items…**, then click **+** to add a new item.
+Choose **Secure Info** from the main menu (**⌘⇧V**, also launchable with the `s` key while the menu is open). After a Touch ID / password prompt, the **Secure Info window** opens.
 
-1. Enter a **Title** (e.g. "GitHub", "AWS Console")
-2. Click **+** in the field list to add a field
-3. Fill in **Label** (e.g. "Password") and **Value**
-4. Check 🔒 if the value should be masked
-5. To add TOTP, use the **Add TOTP...** button to import an otpauth URI / QR code
-6. Click **Save**
+Pick an item in the left pane and edit its contents in the right pane.
+
+1. Click **+** at the bottom left to add an item, then enter its **title** (e.g. "GitHub", "AWS Console")
+2. Use **Add Field** at the bottom right to choose a kind (Text / Password / URL / Memo)
+3. Fill in the **label** (e.g. "Password") and the **value**
+4. To add TOTP, use **Add TOTP...** to import an otpauth URI / QR code
+5. Edits are saved automatically (**⌘S** saves explicitly)
+
+| Action | Key |
+|---|---|
+| Move the item selection | `j` / `k` |
+| Reorder items / fields | `Ctrl+j` / `Ctrl+k` |
+| Move to the right pane / back to the list | `l`, `→`, `Return` / `h`, `←` |
+| Search | `/` or `⌘F` |
+| Add / delete an item | `⌘N` / `⌘⌫` |
+| Save / close the window | `⌘S` / `⌘W`, `Esc` |
+
+> The **Manage Secure Items** window (press `p` while the picker panel is open) is still available. It is the existing list-oriented screen, and it is where Export / Import live.
 
 **Step 2 — Paste a credential**
 
@@ -108,6 +132,13 @@ Open the menu bar icon → **Manage Secure Items…**, then click **+** to add a
 - Values are read from Keychain only at the moment of authentication
 - Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and it is cleared automatically after pasting
 - TOTP never touches the clipboard; it is typed as keystrokes directly
+- The Secure Info window shows values in plaintext, so it is protected as follows:
+  - Touch ID / password authentication is required before it opens
+  - Passwords are always masked. 👁 reveals a value temporarily, but it is **re-masked automatically after 30 seconds**, and immediately when the window becomes inactive
+  - TOTP secrets are never shown — only the current code is
+  - The window is **excluded from screen sharing and screen recording** (so it cannot leak into a shared screen; as a trade-off it does not appear in screenshots either)
+  - Screen lock and sleep close the window automatically, and its in-memory contents are discarded on close
+  - Copying a value also uses the history-excluding marker and clears the clipboard after a short delay
 
 ### 2-3. Password Generation
 

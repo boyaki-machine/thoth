@@ -72,7 +72,8 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 │   │   ├── Snippets/                スニペットエディタ（レガシー NIB ベース）
 │   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
 │   │   └── Views/                   各種ウィンドウ・パネル（暗号化・パスワード生成・
-│   │                                セキュアピッカー等）
+│   │       │                        セキュアピッカー等）
+│   │       └── SecureInfo/          セキュア情報確認ウィンドウ（2 ペイン）
 │   ├── Resources/                   *.lproj（ローカライズ）、画像アセット
 │   ├── Generated/                   SwiftGen 生成ファイル（L10n / Asset / Colors）
 │   └── Supporting Files/            Info.plist など
@@ -135,6 +136,7 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
 | モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemEditSpec`、`SecureItemEditTabNavigationSpec`、`SecureItemFieldReorderingSpec` |
+| セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec` |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |

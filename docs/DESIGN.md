@@ -230,3 +230,43 @@ Menus (NSMenu) keep a fixed instance and rebuild only their content just before 
 ### 5-5. Code-Signature Stabilization
 
 As noted above, to cope with the macOS behavior of binding keychain ACLs to code signatures, `CodeSignService` self-re-signs with a device-specific certificate at launch. This lets you keep reading secure items across repeated local builds (see [DEVELOPMENT.md](DEVELOPMENT.md)).
+
+### 5-6. Secure Info Window
+
+A two-pane window for browsing and editing secure information (main menu → **Secure Info**). The design decisions are as follows.
+
+**Division of labor with the picker panel (⌘⇧.)**
+
+The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste", with no room for long text. Memo (`note`) fields are excluded from it and belong to the Secure Info window. URLs are worth pasting, so they do appear in the panel, prefixed with `🔗`.
+
+Which fields go into the sub-panel is decided in exactly one place: `CPYSecurePickerPanel.subPanelFields(for:)`. The `fieldIndex` recorded on selection is an index into that array, and it is also used to restore "continue-paste mode". If either the display side or the open/close check used `item.fields` directly, re-opening the panel would paste a different field.
+
+**Why the right pane is not an NSTableView**
+
+- A memo's `NSTextView` has a variable row height, which fits poorly with a table's automatic row heights
+- With cell reuse, a password revealed with 👁 could leave its revealed state on a different field's row. Making row views disposable removes that hazard structurally
+
+**Commit timing**
+
+There is deliberately no per-keystroke debounce. `SecureMenuService.save(_:)` appends one history entry each time a value changes (capped at 10), so debounced saves would fill the history with partial keystrokes and push out the real previous value. Commits happen only at: end of editing, just before switching the selected item, window deactivation, app termination, ⌘S, and 20 seconds after the last input (a safety net).
+
+**Masked values cannot be edited**
+
+Editing a value while it is masked would save the visible `••••••••` as the value itself. Revealing it with 👁 is required first. TOTP is never editable because its secret is not displayed. When the Keychain cannot be read (`isKeychainAccessDenied`), input is blocked up front — otherwise the user would type into fields whose save is going to be rejected, losing the input.
+
+**Protecting displayed plaintext**
+
+| Protection | Detail |
+|---|---|
+| Authentication gate | `secureMenuService.authenticate()` before display (sharing the 30-second grace period) |
+| Auto re-mask | A value revealed with 👁 returns to mask after 30 seconds, and immediately on window deactivation |
+| Screen-capture exclusion | `NSWindow.sharingType = .none` |
+| Screen lock / sleep | `com.apple.screenIsLocked` (distributed notification) and `NSWorkspace.willSleepNotification` commit and then close the window |
+| Memory | Plaintext held in memory is discarded on close and re-read on the next open |
+| Opening URLs | Only `http` / `https` with a host. Prevents `file://` or custom schemes from imported data launching unintended apps |
+
+**Synchronizing the two windows**
+
+The Manage Secure Items window and the Secure Info window share one `SecureMenuService`. Changes are announced via `Notification.Name.secureItemsDidChange`, posted from two places: `saveAllItems` (save / delete / reorder) and `deleteAllItems` (which does not go through `saveAllItems`, so covering only the former would fail to synchronize a full delete).
+
+The Secure Info window uses `SecureMenuService.itemsChangeToken` to tell whether a change was its own. Reloading after its own save would rebuild the row views and throw away editing focus and cursor position. When unsaved edits exist it does not reload at all; it shows a banner and leaves the decision to the user.
