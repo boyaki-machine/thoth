@@ -13,6 +13,11 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
     private typealias Stop = SecureItemEditViewController.FocusStop
 
     override class func spec() {
+        focusOrderSpecs()
+        traversalSpecs()
+    }
+
+    private static func focusOrderSpecs() {
         describe("SecureItemEditViewController.focusOrder") {
 
             /// ボトムバーのボタン列（全ケース共通の末尾）
@@ -94,7 +99,10 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
             }
         }
 
-        // 巡回はこの配列上を前後に 1 つ動くだけなので、代表的な遷移を配列操作として検証する
+    }
+
+    // 巡回はこの配列上を前後に 1 つ動くだけなので、代表的な遷移を配列操作として検証する
+    private static func traversalSpecs() {
         describe("Tab traversal over the focus order") {
 
             /// ID（plain）→ TOTP → メモ の 3 行構成

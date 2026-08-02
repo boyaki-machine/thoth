@@ -73,6 +73,12 @@
 
 "Secure Menu Authentication Reason" = "セキュアメニューにアクセス";
 
+"Secure Info" = "セキュア情報";
+
+"Secure Info Authentication Reason" = "セキュア情報を表示";
+
+"Secure Info No Selection" = "アイテムを選択すると詳細が表示されます。";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";

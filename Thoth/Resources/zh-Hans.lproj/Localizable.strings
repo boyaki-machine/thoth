@@ -73,6 +73,12 @@
 
 "Secure Menu Authentication Reason" = "访问安全菜单";
 
+"Secure Info" = "安全信息";
+
+"Secure Info Authentication Reason" = "查看安全信息";
+
+"Secure Info No Selection" = "选择一个项目以查看其详细信息。";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";

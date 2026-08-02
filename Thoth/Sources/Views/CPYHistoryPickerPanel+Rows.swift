@@ -79,6 +79,7 @@ extension CPYHistoryPickerPanel {
             result.append(.sectionHeader(L10n.tools))
             result.append(.action(.generatePassword))
             result.append(.action(.crypto))
+            result.append(.action(.secureInfo))
             // 設定セクション
             result.append(.separator)
             result.append(.sectionHeader(L10n.sectionSettings))

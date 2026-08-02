@@ -136,6 +136,7 @@ final class CPYHistoryPickerPanel: NSPanel {
         case snippets
         case generatePassword
         case crypto
+        case secureInfo
         case clearHistory
         case editSnippets
         case preferences
@@ -146,6 +147,7 @@ final class CPYHistoryPickerPanel: NSPanel {
             case .snippets:         return L10n.showSnippetMenu
             case .generatePassword: return "\(L10n.generateNewPassword) (&p)"
             case .crypto:           return "\(L10n.encryptDecrypt) (&E)"
+            case .secureInfo:       return "\(L10n.secureInfo) (&s)"
             case .clearHistory:     return L10n.clearHistory
             case .editSnippets:     return L10n.editSnippets
             case .preferences:      return L10n.preferences

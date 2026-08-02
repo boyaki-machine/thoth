@@ -73,6 +73,12 @@
 
 "Secure Menu Authentication Reason" = "Accedere al menu sicuro";
 
+"Secure Info" = "Informazioni sicure";
+
+"Secure Info Authentication Reason" = "Visualizzare le informazioni sicure";
+
+"Secure Info No Selection" = "Seleziona un elemento per vederne i dettagli.";
+
 "Secure Menu Search Placeholder" = "Cerca...";
 
 "Secure Menu No Results" = "Nessun elemento corrispondente";

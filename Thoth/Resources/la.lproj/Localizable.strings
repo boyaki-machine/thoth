@@ -69,6 +69,12 @@
 
 "Secure Menu Authentication Reason" = "Ad indicem securum accedere";
 
+"Secure Info" = "Notitia secura";
+
+"Secure Info Authentication Reason" = "Notitiam securam inspicere";
+
+"Secure Info No Selection" = "Rem elige ut singula videas.";
+
 "Secure Menu Search Placeholder" = "Quaerere...";
 
 "Secure Menu No Results" = "Nihil congruens inventum";

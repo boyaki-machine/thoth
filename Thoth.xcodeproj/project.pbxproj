@@ -30,6 +30,11 @@
 		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
+		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
+		AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */; };
+		AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */; };
+		AA0000D800000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */; };
+		AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */; };
 		AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003800000000ABCDEF01 /* CodeSignService.swift */; };
 		AA00004900000000ABCDEF01 /* SecureMenuItemSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */; };
 		AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */; };
@@ -37,6 +42,7 @@
 		AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */; };
 		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
 		AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */; };
+		AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */; };
 		AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */; };
 		AA0000C600000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */; };
 		AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */; };
@@ -220,6 +226,11 @@
 		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
+		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
+		AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoListViewController.swift; sourceTree = "<group>"; };
+		AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoDetailViewController.swift; sourceTree = "<group>"; };
+		AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoSplitViewController.swift; sourceTree = "<group>"; };
+		AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoWindowController.swift; sourceTree = "<group>"; };
 		AA00003800000000ABCDEF01 /* CodeSignService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeSignService.swift; sourceTree = "<group>"; };
 		AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItemSpec.swift; sourceTree = "<group>"; };
 		AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuServiceSpec.swift; sourceTree = "<group>"; };
@@ -227,6 +238,7 @@
 		AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYPasswordGeneratorWindowController.swift; sourceTree = "<group>"; };
 		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
 		AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditSpec.swift; sourceTree = "<group>"; };
+		AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditorSpec.swift; sourceTree = "<group>"; };
 		AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TOTPRegistrationFlowSpec.swift; sourceTree = "<group>"; };
 		AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemFieldReorderingSpec.swift; sourceTree = "<group>"; };
 		AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteServiceTOTPSpec.swift; sourceTree = "<group>"; };
@@ -532,6 +544,7 @@
 				FA1DB4DF1DDCB49C007F95C8 /* SplitViews */,
 				FA1DB4E11DDCB49C007F95C8 /* TableViewCell */,
 				FA1DB4E31DDCB49C007F95C8 /* TextViews */,
+				AA0000D000000000ABCDEF01 /* SecureInfo */,
 				AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */,
 				AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */,
 				AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */,
@@ -574,6 +587,18 @@
 				FA1DB4E41DDCB49C007F95C8 /* CPYPlaceHolderTextView.swift */,
 			);
 			path = TextViews;
+			sourceTree = "<group>";
+		};
+		AA0000D000000000ABCDEF01 /* SecureInfo */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
+				AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */,
+				AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */,
+				AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */,
+				AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */,
+			);
+			path = SecureInfo;
 			sourceTree = "<group>";
 		};
 		FA1DB4EC1DDCB4C0007F95C8 /* Preferences */ = {
@@ -693,6 +718,7 @@
 				AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */,
 				AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */,
 				AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */,
+				AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */,
 				AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */,
 				AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */,
 				AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */,
@@ -1072,6 +1098,11 @@
 				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
+				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
+				AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */,
+				AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */,
+				AA0000D800000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift in Sources */,
+				AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */,
 				AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */,
 				AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */,
 				AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */,
@@ -1106,6 +1137,7 @@
 				AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */,
 				AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */,
 				AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */,
+				AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */,
 				AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */,
 				AA0000C600000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift in Sources */,
 				AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */,

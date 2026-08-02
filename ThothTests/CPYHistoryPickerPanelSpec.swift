@@ -143,10 +143,25 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
                 expect(self.kinds(of: panel.rows)) == [
                     "header", "group", "group",
                     "separator", "header", "action:snippets",
-                    "separator", "header", "action:generatePassword", "action:crypto",
+                    "separator", "header", "action:generatePassword", "action:crypto", "action:secureInfo",
                     "separator", "header", "action:editSnippets", "action:preferences",
                     "separator", "action:quit"
                 ]
+                panel.close()
+            }
+
+            // セキュア情報確認ウィンドウはメインメニューのツールセクションから開く。
+            // 導線が消えると認証付きの一覧・編集画面へ到達する手段が無くなる
+            it("ツールセクションにセキュア情報の行がある") {
+                let panel = CPYHistoryPickerPanel(clips: clips, settings: self.makeSettings())
+                expect(self.kinds(of: panel.rows)).to(contain("action:secureInfo"))
+                panel.close()
+            }
+
+            it("履歴専用モードではセキュア情報の行を出さない") {
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings())
+                expect(self.kinds(of: panel.rows)).toNot(contain("action:secureInfo"))
                 panel.close()
             }
 

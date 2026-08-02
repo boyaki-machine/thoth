@@ -204,6 +204,12 @@ internal enum L10n {
   internal static let secureFieldLabelPlaceholder = L10n.tr("Localizable", "Secure Field Label Placeholder")
   /// Value
   internal static let secureFieldValuePlaceholder = L10n.tr("Localizable", "Secure Field Value Placeholder")
+  /// Secure Info
+  internal static let secureInfo = L10n.tr("Localizable", "Secure Info")
+  /// View secure info
+  internal static let secureInfoAuthenticationReason = L10n.tr("Localizable", "Secure Info Authentication Reason")
+  /// Select an item to view its details.
+  internal static let secureInfoNoSelection = L10n.tr("Localizable", "Secure Info No Selection")
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder")
   /// Secure Items
