@@ -91,6 +91,8 @@ final class CPYSecureSubPanel: NSPanel {
         static let corner: CGFloat    = 8
         static let vPad: CGFloat      = 4
         static let fontSize: CGFloat  = NSFont.systemFontSize - 1
+        /// 値プレビューの最大文字数（幅 220px の 1 行に収まる目安）
+        static let previewMaxLength: Int = 26
     }
 
     private static let cellID = NSUserInterfaceItemIdentifier("SubField")
@@ -242,6 +244,35 @@ final class CPYSecureSubPanel: NSPanel {
         tableView.reloadData(forRowIndexes: IndexSet(totpRows), columnIndexes: IndexSet(integer: 0))
     }
 
+    /// TOTP 以外のフィールド 1 行分の表示文字列を組み立てる（純粋関数のためユニットテスト可能）。
+    /// TOTP は現在時刻に依存するため `totpDisplayString(for:)` が別に組み立てる。
+    ///
+    /// - パスワードは値を出さずマスク表示にする
+    /// - 値は 1 行に潰してから `previewMaxLength` 文字で切り詰める
+    ///   （改行を含む値がそのまま入ると単一行セルの描画が崩れるため）
+    /// - URL は 🔗 を頭に付けて、貼り付け先が URL だと一目で分かるようにする
+    static func fieldDisplayString(for field: SecureMenuItem.Field) -> String {
+        let preview: String
+        if field.isPassword {
+            preview = "••••••••"
+        } else {
+            // CRLF は .newlines で 2 つに分割され空の要素が挟まるため、空要素を落としてから連結する
+            let singleLine = field.value
+                .components(separatedBy: .newlines)
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            preview = singleLine.count > Layout.previewMaxLength
+                ? String(singleLine.prefix(Layout.previewMaxLength)) + "…"
+                : singleLine
+        }
+        switch field.kind {
+        case .url:
+            return "🔗 \(field.label): \(preview)"
+        case .plain, .note, .totp:
+            return "\(field.label): \(preview)"
+        }
+    }
+
     /// TOTP フィールドの表示文字列（`⏱ TOTP: 123 456 · 18s`）を生成する。
     fileprivate func totpDisplayString(for field: SecureMenuItem.Field) -> String {
         guard let params = TOTPService.parse(field.value),
@@ -342,15 +373,10 @@ extension CPYSecureSubPanel: NSTableViewDataSource, NSTableViewDelegate {
                         return newCell
                    }()
         let field = currentFields[row]
-        if field.isTOTP {
-            // ⏱ TOTP: 123 456 · 18s（現在コードと残り秒数。Timer で毎秒更新される）
-            cell.textField?.stringValue = totpDisplayString(for: field)
-        } else {
-            let preview = field.isPassword
-                ? "••••••••"
-                : (field.value.count > 26 ? String(field.value.prefix(26)) + "…" : field.value)
-            cell.textField?.stringValue = "\(field.label): \(preview)"
-        }
+        // ⏱ TOTP: 123 456 · 18s（現在コードと残り秒数。Timer で毎秒更新される）
+        cell.textField?.stringValue = field.isTOTP
+            ? totpDisplayString(for: field)
+            : CPYSecureSubPanel.fieldDisplayString(for: field)
         cell.textField?.font = .systemFont(ofSize: Layout.fontSize)
         return cell
     }
