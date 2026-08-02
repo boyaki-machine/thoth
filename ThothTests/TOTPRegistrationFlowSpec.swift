@@ -17,7 +17,11 @@ class TOTPRegistrationFlowSpec: QuickSpec {
         afterEach {
             self.service.deleteAllItems()
         }
+        parseAndRegistrationSpecs()
+        codeAndLifecycleSpecs()
+    }
 
+    private static func parseAndRegistrationSpecs() {
         describe("TOTP registration workflow") {
 
             // MARK: - Phase 1: URI Parse and Field Creation
@@ -26,8 +30,8 @@ class TOTPRegistrationFlowSpec: QuickSpec {
                 let uri = "otpauth://totp/GitHub:user@example.com?secret=GEZDGNBVGY3TQOJQ&issuer=GitHub"
                 let params = TOTPService.parse(uri)
 
-                expect(params).toNot(beNil())
-                expect(params?.secret).toNot(beNil())
+                expect(params?.digits) != nil
+                expect(params?.secret.isEmpty) == false
                 expect(params?.issuer) == "GitHub"
                 expect(params?.account) == "user@example.com"
                 expect(params?.digits) == 6
@@ -56,9 +60,9 @@ class TOTPRegistrationFlowSpec: QuickSpec {
                 let uri = "otpauth://totp/?secret=GEZDGNBVGY3TQOJQ"
                 let params = TOTPService.parse(uri)
 
-                expect(params).toNot(beNil())
-                expect(params?.issuer).to(beNil())
-                expect(params?.account).to(beNil())
+                expect(params?.digits) != nil
+                expect(params?.issuer) == nil
+                expect(params?.account) == nil
                 expect(params?.digits) == 6  // default
                 expect(params?.period) == 30  // default
             }
@@ -123,6 +127,12 @@ class TOTPRegistrationFlowSpec: QuickSpec {
                 expect(loaded[0].fields[1].isTOTP) == true
             }
 
+        }
+    }
+
+    private static func codeAndLifecycleSpecs() {
+        describe("TOTP code generation and lifecycle") {
+
             // MARK: - Code Generation After Registration
 
             it("Generates valid TOTP code from loaded field") {
@@ -136,11 +146,11 @@ class TOTPRegistrationFlowSpec: QuickSpec {
                 let loadedField = loaded[0].fields[0]
 
                 let params = TOTPService.parse(loadedField.value)
-                expect(params).toNot(beNil())
+                expect(params?.digits) != nil
 
                 let totpService = TOTPService()
                 let code = totpService.code(for: params!, at: Date())
-                expect(code.count) == 6
+                expect(code?.count) == 6
             }
 
             it("Calculates remaining seconds for loaded TOTP field") {
@@ -157,8 +167,8 @@ class TOTPRegistrationFlowSpec: QuickSpec {
                 let totpService = TOTPService()
                 let remaining = totpService.remainingSeconds(for: params!, at: Date())
 
-                expect(remaining).to(beGreaterThan(0))
-                expect(remaining).to(beLessThanOrEqualTo(30))
+                expect(remaining) > 0
+                expect(remaining) <= 30
             }
 
             // MARK: - Update TOTP Field

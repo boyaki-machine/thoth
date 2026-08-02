@@ -493,6 +493,28 @@ extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination 
         return .move
     }
 
+    /// ドラッグ&ドロップによる並べ替え結果を計算する（純粋関数のためユニットテスト可能）。
+    ///
+    /// NSTableView の `.above` は「その行の *上* に挿入する」意味なので、ドロップ行が
+    /// 元の行より後ろの場合は、先に取り除いた分だけ挿入位置が 1 つ手前になる。
+    ///
+    /// - Returns: 並べ替え後の配列と移動先の行。並べ替えにならない場合（同じ位置への
+    ///   ドロップ、範囲外）は nil
+    static func reorderedFields(_ fields: [SecureMenuItem.Field],
+                                from sourceRow: Int,
+                                toDropRow dropRow: Int) -> (fields: [SecureMenuItem.Field], targetRow: Int)? {
+        // 境界値チェック（.above では dropRow は 0〜count）
+        guard sourceRow >= 0, sourceRow < fields.count, dropRow >= 0, dropRow <= fields.count else { return nil }
+        // 同じ位置へのドロップ（自分の上・自分のすぐ下）は移動にならない
+        guard dropRow != sourceRow, dropRow != sourceRow + 1 else { return nil }
+
+        var reordered = fields
+        let moved = reordered.remove(at: sourceRow)
+        let targetRow = dropRow > sourceRow ? dropRow - 1 : dropRow
+        reordered.insert(moved, at: targetRow)
+        return (reordered, targetRow)
+    }
+
     /// ドロップを受け入れて行の順序を変更する
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
                    row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
@@ -500,24 +522,16 @@ extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination 
             return false
         }
         let pboardStr = String(pboard)
-        guard let sourceRow = Int(pboardStr) else { return false }
+        guard let sourceRow = Int(pboardStr),
+              let result = Self.reorderedFields(fields, from: sourceRow, toDropRow: row) else { return false }
+        fields = result.fields
 
-        // 境界値チェック（.above では row は 0～count）
-        guard sourceRow >= 0, sourceRow < fields.count, row >= 0, row <= fields.count else { return false }
-
-        // 同じ行へのドロップは無視
-        if dropOperation == .above && (row == sourceRow || row == sourceRow + 1) { return false }
-
-        // 行を移動
-        let field = fields.remove(at: sourceRow)
-        let targetRow = row > sourceRow ? row - 1 : row
-        fields.insert(field, at: targetRow)
-
-        // テーブル再描画
-        let minRow = min(sourceRow, targetRow)
-        let maxRow = max(sourceRow, targetRow)
-        fieldsTable.reloadData(forRowIndexes: IndexSet(integersIn: minRow...maxRow), columnIndexes: IndexSet(0..<5))
-        fieldsTable.selectRowIndexes(IndexSet(integer: targetRow), byExtendingSelection: false)
+        // テーブル再描画（列数は列構成の変更に追従させる）
+        let minRow = min(sourceRow, result.targetRow)
+        let maxRow = max(sourceRow, result.targetRow)
+        fieldsTable.reloadData(forRowIndexes: IndexSet(integersIn: minRow...maxRow),
+                               columnIndexes: IndexSet(integersIn: 0..<fieldsTable.numberOfColumns))
+        fieldsTable.selectRowIndexes(IndexSet(integer: result.targetRow), byExtendingSelection: false)
 
         return true
     }
