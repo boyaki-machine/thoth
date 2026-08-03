@@ -270,3 +270,54 @@ Editing a value while it is masked would save the visible `•••••••
 The Manage Secure Items window and the Secure Info window share one `SecureMenuService`. Changes are announced via `Notification.Name.secureItemsDidChange`, posted from two places: `saveAllItems` (save / delete / reorder) and `deleteAllItems` (which does not go through `saveAllItems`, so covering only the former would fail to synchronize a full delete).
 
 The Secure Info window uses `SecureMenuService.itemsChangeToken` to tell whether a change was its own. Reloading after its own save would rebuild the row views and throw away editing focus and cursor position. When unsaved edits exist it does not reload at all; it shows a banner and leaves the decision to the user.
+
+**Undo (⌘Z) — a two-layer model**
+
+Added in v1.2.1. Undo is split into two layers:
+
+| Layer | Owner | Granularity | Lifetime |
+|---|---|---|---|
+| While typing | AppKit (field editor / `NSTextView`) | Per keystroke | Until focus leaves |
+| After committing | `SecureInfoUndoStack` | One save | Until the window closes |
+
+The app-level unit is **one write to the Keychain**. That reuses the existing commit design (no per-keystroke debounce; commits happen only at editing boundaries) as the undo granularity. While typing, `keyAction(...)` returns `nil` for ⌘Z so the event falls through to the standard keystroke undo.
+
+Snapshots are pushed only on the five paths that write to the Keychain. Every edit (title, label, value, mask flag, adding / removing / reordering fields) goes through `save(_:)`, so one push there covers them all; the rest are adding, deleting and reordering items, and import.
+
+**Restoring uses `reorderItems(_:)`, not `save(_:)`.** `save(_:)` appends one history entry each time a value changes (capped at 10), so undoing through it would consume the history and push out the real previous value. `reorderItems(_:)` writes the given array verbatim and leaves history untouched.
+
+**The stack holds plaintext from before the deletion or edit.** It is cleared in three places; missing any one of them either leaves secrets in memory or rolls back another window's change.
+
+| When | Why |
+|---|---|
+| Closing the window | Leave no plaintext behind (called alongside `clearSensitiveData()`) |
+| Reloading data | Snapshots no longer match the current data |
+| Showing the external-change banner | This path does not reload; keeping stale snapshots would roll back the other window's change on undo |
+
+**Deletion is guarded by "hide it and make it reversible", not by a confirmation dialog**
+
+v1.2.0 showed a confirmation dialog for field deletion, but because it appeared every time it was dismissed by reflex — and once dismissed there was no way back. The direct cause of misclicks was copy ⧉ sitting 2pt away from delete 🗑.
+
+v1.2.1 drops the dialog, moves 🗑 **outside the button stack** with a 10pt gap, and shows it only while the pointer is over the row (or while that row is being edited). Keeping it in the stack and toggling `isHidden` would collapse its width and shift the other buttons sideways, making them impossible to aim at — hence the structural separation. A right-click menu on the row provides a discoverable second path to delete.
+
+**Item deletion keeps its confirmation**, because it is broader in effect and, once done, the selection clears and nothing on screen shows what was removed.
+
+**Drag-and-drop reordering**
+
+The left pane (items) uses the standard `NSTableView` mechanism, matching the Manage window. **Dragging is refused while the list is filtered**, because the visible order does not match the stored order and a row number cannot be turned into a correct destination (keyboard reordering is blocked for the same reason).
+
+The right pane (fields) is an `NSStackView`, so this is hand-rolled. A `≡` handle sits at the leading edge of each row and **drags start only from there** — making the whole row draggable would collide with text selection in the value field. The handle's `NSImageView` is an `NSControl` and would swallow `mouseDown`, so `hitTest` routes just that area back to the row.
+
+The pasteboard carries only the `fieldID` or the row number — **never a value** — because a drag pasteboard is readable by other apps. `draggingSession(_:sourceOperationMaskFor:)` also refuses anything but `.withinApplication`, so a row cannot be dragged out of the app.
+
+**Import / export**
+
+The logic lives in `SecureItemsTransfer` (UI-independent) and is shared by the Manage window and the Secure Info window, where it is reached from the ⚙ menu at the bottom of the left pane.
+
+**Neither runs when the Keychain cannot be read (`isKeychainAccessDenied`).** Import would merely be rejected by `saveAllItems`, but export would write a JSON file with zero items — inviting the user to overwrite an existing backup with an empty one.
+
+Import is the least reversible operation here, so undo remains available afterwards (`reloadItems(clearsUndoHistory: false)`).
+
+**Why undo also lives in the ⚙ menu**
+
+Since the delete button only appears on hover, the fact that deletions *are* reversible has to be visible somewhere. The menu item is titled from `undoAction` (e.g. "Undo Delete Item") so it also says what will come back.
