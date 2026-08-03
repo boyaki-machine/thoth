@@ -33,6 +33,7 @@
 		AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */; };
 		AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */; };
 		AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */; };
+		AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */; };
 		AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */; };
 		AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */; };
 		AA00010400000000ABCDEF01 /* CPYSecureInfoSplitViewController+PasswordGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010300000000ABCDEF01 /* CPYSecureInfoSplitViewController+PasswordGenerator.swift */; };
@@ -251,6 +252,7 @@
 		AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureHistoryEntryView.swift; sourceTree = "<group>"; };
 		AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Layout.swift"; sourceTree = "<group>"; };
 		AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+History.swift"; sourceTree = "<group>"; };
+		AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Lifecycle.swift"; sourceTree = "<group>"; };
 		AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemPasteboardType.swift; sourceTree = "<group>"; };
 		AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Undo.swift"; sourceTree = "<group>"; };
 		AA00010300000000ABCDEF01 /* CPYSecureInfoSplitViewController+PasswordGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+PasswordGenerator.swift"; sourceTree = "<group>"; };
@@ -644,6 +646,7 @@
 				AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */,
 				AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */,
 				AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */,
+				AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */,
 				AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */,
 				AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */,
 				AA00010300000000ABCDEF01 /* CPYSecureInfoSplitViewController+PasswordGenerator.swift */,
@@ -1167,6 +1170,7 @@
 				AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */,
 				AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */,
 				AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */,
+				AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */,
 				AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */,
 				AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */,
 				AA00010400000000ABCDEF01 /* CPYSecureInfoSplitViewController+PasswordGenerator.swift in Sources */,

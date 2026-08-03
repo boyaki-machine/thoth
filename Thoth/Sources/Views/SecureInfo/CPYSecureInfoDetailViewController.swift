@@ -286,8 +286,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
 
     private func rebuildRows(for item: SecureMenuItem?) {
         stopTOTPTimer()
-        // 行ビューは使い捨て。前のアイテムの表示状態を持ち越さないよう毎回作り直す
+        // 行ビューは使い捨て。前のアイテムの表示状態を持ち越さないよう毎回作り直す。
+        // **外す前に必ず prepareForRemoval() を通すこと。** 外しただけの行は
+        // フィールドエディタ経由で編集通知を受け取り続け、画面に見えていた
+        // 伏せ字や空文字を作業コピーへ書き戻す
         rowStackView.arrangedSubviews.forEach {
+            ($0 as? SecureFieldRowView)?.prepareForRemoval()
             rowStackView.removeArrangedSubview($0)
             $0.removeFromSuperview()
         }

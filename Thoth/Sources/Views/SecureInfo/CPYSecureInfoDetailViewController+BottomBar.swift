@@ -78,12 +78,26 @@ extension CPYSecureInfoDetailViewController {
 
     /// パスワード生成の入力先になる行（無ければ nil）。
     ///
-    /// 覚えた `fieldID` をその場で行へ解決し直す。並べ替えやマスク切替で
-    /// 行ビューは作り直されるため、覚えたビュー参照はすぐ古くなる。
-    /// 種別が変わって受け取れなくなっていた場合もここで弾かれる
+    /// 1. 直前に編集していた行。覚えた `fieldID` をその場で行へ解決し直す
+    ///    （並べ替えやマスク切替で行ビューは作り直されるため、ビュー参照はすぐ古くなる。
+    ///    種別が変わって受け取れなくなっていた場合もここで弾かれる）
+    /// 2. 覚えが無ければ、**マスク指定のフィールドがちょうど 1 つのときだけ**それを使う
+    ///
+    /// 2 が要るのは、マスク中の値欄はクリックしても編集が始まらない（`isValueEditable`）
+    /// ためで、素直にパスワード欄を触ったユーザーには入力先が記録されない。
+    /// ラベルを選ばないと使えない機能になってしまう。
+    ///
+    /// **候補が複数あるときは推測しない。** どちらのパスワードを潰すかを
+    /// 間違えると取り返しがつきにくいので、その場合はラベルを選んでもらう
     var fillTargetRow: SecureFieldRowView? {
-        guard let fieldID = fillTargetFieldID else { return nil }
-        return fieldRows.first { $0.field.fieldID == fieldID && $0.acceptsGeneratedPassword }
+        if let fieldID = fillTargetFieldID,
+           let remembered = fieldRows.first(where: {
+               $0.field.fieldID == fieldID && $0.acceptsGeneratedPassword
+           }) {
+            return remembered
+        }
+        let masked = fieldRows.filter { $0.acceptsGeneratedPassword && $0.field.isPassword }
+        return masked.count == 1 ? masked.first : nil
     }
 
     // MARK: - Actions

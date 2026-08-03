@@ -76,14 +76,39 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                 return detailViewController
             }
 
-            it("覚えていなければ入力先は無い") {
-                expect(makeDetailViewController().fillTargetRow) == nil
-            }
-
             it("覚えた ID から行を解決する") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "f2"
                 expect(detailViewController.fillTargetRow?.field.fieldID) == "f2"
+            }
+
+            // マスク中の値欄はクリックしても編集が始まらないため、素直に
+            // パスワード欄を触ったユーザーには入力先が記録されない。
+            // ラベルを選ばないと使えない機能にしないための逃げ道
+            it("覚えが無くても、マスク指定が 1 つならそこへ入れる") {
+                let detailViewController = makeDetailViewController()
+                expect(detailViewController.fillTargetFieldID) == nil
+                expect(detailViewController.fillTargetRow?.field.fieldID) == "f2"
+            }
+
+            // どちらのパスワードを潰すかを間違えると取り返しがつきにくい
+            it("マスク指定が複数あるときは推測しない") {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "p1", label: "Password", value: "a", isPassword: true),
+                    SecureMenuItem.Field(fieldID: "p2", label: "Recovery", value: "b", isPassword: true)
+                ]))
+                expect(detailViewController.fillTargetRow) == nil
+            }
+
+            it("マスク指定が 1 つも無ければ推測しない") {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
+                ]))
+                expect(detailViewController.fillTargetRow) == nil
             }
 
             // 行ビューは並べ替え・マスク切替のたびに作り直される。
@@ -99,16 +124,18 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                 expect(after !== before) == true
             }
 
-            it("受け取れない種別を覚えていても入力先にはしない") {
+            // 覚えていた行が使えない場合は、覚えを捨てて通常の判断に落ちる。
+            // TOTP の secret を生成値で潰さないことがここの要点
+            it("受け取れない種別を覚えていたら、それは入力先にしない") {
                 let detailViewController = makeDetailViewController()
-                detailViewController.fillTargetFieldID = "f3"
-                expect(detailViewController.fillTargetRow) == nil
+                detailViewController.fillTargetFieldID = "f3"   // TOTP
+                expect(detailViewController.fillTargetRow?.field.fieldID) != "f3"
             }
 
-            it("消えたフィールドを覚えていても入力先にはしない") {
+            it("消えたフィールドを覚えていたら、それは入力先にしない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "missing"
-                expect(detailViewController.fillTargetRow) == nil
+                expect(detailViewController.fillTargetRow?.field.fieldID) != "missing"
             }
 
             // 別のアイテムの値へ生成値を撃ち込まないための境界
@@ -119,7 +146,8 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                     SecureMenuItem.Field(fieldID: "f9", label: "Password", value: "x", isPassword: true)
                 ]))
                 expect(detailViewController.fillTargetFieldID) == nil
-                expect(detailViewController.fillTargetRow) == nil
+                // 移った先のフィールドだけが候補になる（前のアイテムの f2 は残らない）
+                expect(detailViewController.fillTargetRow?.field.fieldID) == "f9"
             }
 
             // フィールドの追加・削除・並べ替え・マスク切替でも show(item:) を通る。
@@ -210,6 +238,58 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                 let saved = service.loadAllItems().first { $0.itemID == "s1" }
                 expect(saved?.fields.first { $0.fieldID == "f2" }?.value) == "old"
                 expect(saved?.fields.contains { $0.value == "Generated-4" }) == false
+            }
+
+            // 実際に起きた事故の再現。生成値を入れると行が作り直されるが、
+            // フィールドエディタはウィンドウで 1 つを使い回すため、画面から外した
+            // 古い行にも編集通知が届く。届いた行が「画面に見えていた文字列」
+            // （マスク中なら ••••••••、未入力なら空文字）を書き戻していた。
+            // 結果、生成したパスワードが変更履歴へ押し出されて値が化けた
+            it("画面から外した行は作業コピーを書き換えない") {
+                let splitViewController = makeSplitViewController()
+                let detail = splitViewController.detailViewControllerForTesting
+                guard let staleRow = detail.fieldRows.first(where: { $0.field.fieldID == "f2" }) else {
+                    fail("行が見つからない"); return
+                }
+
+                splitViewController.applyGeneratedPassword("Generated-6", toFieldID: "f2")
+
+                // 作り直しで捨てられた行が、あとから編集通知を送ってくる
+                staleRow.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification,
+                                                           object: staleRow.valueField))
+                staleRow.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification,
+                                                           object: staleRow.labelField))
+                splitViewController.commitIfNeeded()
+
+                let saved = service.loadAllItems().first { $0.itemID == "s1" }
+                let field = saved?.fields.first { $0.fieldID == "f2" }
+                expect(field?.value) == "Generated-6"
+                expect(field?.label) == "Password"
+                // 生成値が履歴へ押し出されていないこと
+                expect(field?.history.map { $0.value }) == ["old"]
+            }
+
+            // ラベルまで空にされると commitOutcome() の「ラベルも値も空なら除去」に
+            // 掛かってフィールドごと消え、次から入力先を解決できなくなる
+            it("捨てた行の書き戻しでフィールドが消えない") {
+                let splitViewController = makeSplitViewController()
+                let detail = splitViewController.detailViewControllerForTesting
+                guard let staleRow = detail.fieldRows.first(where: { $0.field.fieldID == "f2" }) else {
+                    fail("行が見つからない"); return
+                }
+                staleRow.labelField.stringValue = ""
+                staleRow.valueField.stringValue = ""
+
+                splitViewController.applyGeneratedPassword("Generated-7", toFieldID: "f2")
+                staleRow.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification,
+                                                           object: staleRow.labelField))
+                staleRow.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification,
+                                                           object: staleRow.valueField))
+                splitViewController.commitIfNeeded()
+
+                let saved = service.loadAllItems().first { $0.itemID == "s1" }
+                expect(saved?.fields.contains { $0.fieldID == "f2" }) == true
+                expect(detail.fillTargetRow?.field.fieldID) == "f2"
             }
 
             it("⌘Z で生成前の値へ戻せる") {
