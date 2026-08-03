@@ -31,6 +31,10 @@
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
 		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
+		AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */; };
+		AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */; };
+		AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */; };
+		AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */; };
 		AA0000EC00000000ABCDEF01 /* FlippedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EB00000000ABCDEF01 /* FlippedView.swift */; };
 		AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */; };
 		AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */; };
@@ -48,6 +52,9 @@
 		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
 		AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */; };
 		AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */; };
+		AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */; };
+		AA0000F800000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */; };
+		AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */; };
 		AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */; };
 		AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */; };
 		AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */; };
@@ -235,6 +242,10 @@
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
 		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
+		AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoStack.swift; sourceTree = "<group>"; };
+		AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Undo.swift"; sourceTree = "<group>"; };
+		AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Observers.swift"; sourceTree = "<group>"; };
+		AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+Row.swift"; sourceTree = "<group>"; };
 		AA0000EB00000000ABCDEF01 /* FlippedView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlippedView.swift; sourceTree = "<group>"; };
 		AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyAction.swift; sourceTree = "<group>"; };
@@ -252,6 +263,9 @@
 		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
 		AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditSpec.swift; sourceTree = "<group>"; };
 		AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditorSpec.swift; sourceTree = "<group>"; };
+		AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoSpec.swift; sourceTree = "<group>"; };
+		AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoFlowSpec.swift; sourceTree = "<group>"; };
+		AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowInteractionSpec.swift; sourceTree = "<group>"; };
 		AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoCommitFlowSpec.swift; sourceTree = "<group>"; };
 		AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyActionSpec.swift; sourceTree = "<group>"; };
 		AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoViewSpec.swift; sourceTree = "<group>"; };
@@ -609,6 +623,10 @@
 			isa = PBXGroup;
 			children = (
 				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
+				AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */,
+				AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */,
+				AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */,
+				AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */,
 				AA0000EB00000000ABCDEF01 /* FlippedView.swift */,
 				AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */,
 				AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */,
@@ -740,6 +758,9 @@
 				AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */,
 				AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */,
 				AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */,
+				AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */,
+				AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */,
+				AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */,
 				AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */,
 				AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */,
 				AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */,
@@ -1123,6 +1144,10 @@
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
 				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
+				AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */,
+				AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */,
+				AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */,
+				AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */,
 				AA0000EC00000000ABCDEF01 /* FlippedView.swift in Sources */,
 				AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */,
 				AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */,
@@ -1167,6 +1192,9 @@
 				AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */,
 				AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */,
 				AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */,
+				AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */,
+				AA0000F800000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift in Sources */,
+				AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */,
 				AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */,
 				AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */,
 				AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */,

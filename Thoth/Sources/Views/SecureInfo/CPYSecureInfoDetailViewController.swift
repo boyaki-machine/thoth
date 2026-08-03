@@ -24,7 +24,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     }
 
     /// 表示更新の間隔（秒）。TOTP のコード更新と、平文表示の期限切れ確認を兼ねる
-    private static let refreshInterval: TimeInterval = 1.0
+    static let refreshInterval: TimeInterval = 1.0
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let titleField = NSTextField(string: "")
@@ -45,6 +45,9 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onFieldMaskToggled: ((SecureMenuItem.Field, Bool) -> Void)?
     /// フィールドの削除が要求された
     var onFieldDeleteRequested: ((SecureMenuItem.Field) -> Void)?
+    /// フィールドの移動が要求された（右クリックメニュー・ドラッグ&ドロップ）。
+    /// 移動先は現在の並びに対する添字
+    var onFieldMoveRequested: ((_ fieldID: String, _ toIndex: Int) -> Void)?
     /// 追加するフィールドの種別が選ばれた
     var onAddFieldRequested: ((SecureInfoFieldTemplate) -> Void)?
     /// TOTP の取り込みが要求された
@@ -59,8 +62,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     private var onExternalChangeReload: (() -> Void)?
     let addFieldButton = NSPopUpButton()
     let addTOTPButton = NSButton()
-    private let totpService = TOTPService()
-    private var totpTimer: Timer?
+    let totpService = TOTPService()
+    var totpTimer: Timer?
 
     private(set) var displayedItem: SecureMenuItem?
 
@@ -256,6 +259,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
                 self?.onFieldMaskToggled?(row.field, isPassword)
             }
             row.onDelete = { [weak self] row in self?.onFieldDeleteRequested?(row.field) }
+            // 行は自分が何番目かを知らないので、位置の解決はここで行う
+            row.onMove = { [weak self] row, offset in
+                guard let self = self,
+                      let index = self.fieldRows.firstIndex(where: { $0 === row }) else { return }
+                self.onFieldMoveRequested?(row.field.fieldID, index + offset)
+            }
             // 平文表示が始まったら、期限切れを見張るためタイマーを動かす
             row.onRevealToggled = { [weak self] _ in self?.startRefreshTimerIfNeeded() }
             rowStackView.addArrangedSubview(row)
@@ -343,94 +352,6 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             }
             return false
         }
-    }
-
-    // MARK: - Periodic refresh
-
-    /// TOTP 行があるか、平文表示中の行があるときだけタイマーを動かす
-    private func startRefreshTimerIfNeeded() {
-        stopTOTPTimer()
-        guard fieldRows.contains(where: { $0.field.isTOTP || $0.isRevealed }) else { return }
-        // NSWindow は通常の RunLoop で動くため .common モードに追加すれば安定して発火する
-        let timer = Timer(timeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
-            self?.refreshPeriodically()
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        totpTimer = timer
-    }
-
-    private func stopTOTPTimer() {
-        totpTimer?.invalidate()
-        totpTimer = nil
-    }
-
-    private func refreshPeriodically() {
-        refreshTOTPRows()
-        expireRevealedValues()
-    }
-
-    /// 期限を過ぎた平文表示を伏せ字へ戻す
-    /// - Returns: 戻した行の数
-    @discardableResult
-    func expireRevealedValues(now: Date = Date()) -> Int {
-        let expired = fieldRows.filter { $0.hideRevealedValueIfExpired(now: now) }.count
-        if expired > 0 { startRefreshTimerIfNeeded() }
-        return expired
-    }
-
-    /// TOTP 行のコードと残り秒数を現在時刻で描き直す
-    func refreshTOTPRows() {
-        for row in fieldRows where row.field.isTOTP {
-            guard let params = TOTPService.parse(row.field.value) else {
-                row.updateTOTPDisplay(code: nil, remainingSeconds: 0)
-                continue
-            }
-            row.updateTOTPDisplay(code: totpService.code(for: params),
-                                  remainingSeconds: totpService.remainingSeconds(for: params))
-        }
-    }
-
-    // MARK: - Actions
-
-    /// 値をコピーする。履歴に残さないよう必ず秘匿マーカー付きで書き込み、
-    /// 一定時間後（その間に別のコピーが無ければ）自動でクリアする
-    private func copyValue(of field: SecureMenuItem.Field) {
-        guard let value = copyableValue(of: field) else {
-            NSSound.beep()
-            return
-        }
-        AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: value)
-        AppEnvironment.current.pasteService.scheduleConcealedClear()
-    }
-
-    /// コピー対象の文字列。TOTP は secret ではなくその時点のコードを返す
-    func copyableValue(of field: SecureMenuItem.Field) -> String? {
-        guard field.isTOTP else { return field.value }
-        guard let params = TOTPService.parse(field.value) else { return nil }
-        return totpService.code(for: params)
-    }
-
-    private func openURL(of field: SecureMenuItem.Field) {
-        guard let url = Self.openableURL(from: field.value) else {
-            NSSound.beep()
-            return
-        }
-        NSWorkspace.shared.open(url)
-    }
-
-    /// ブラウザで開いてよい URL かを判定する（純粋関数のためユニットテスト可能）。
-    ///
-    /// **http / https だけを許可する。** インポートしたデータや打ち間違いに
-    /// `file://` や独自スキームが入っていると、ボタン 1 つで意図しないファイルや
-    /// アプリを開いてしまうため。ホスト名の無い URL も弾く
-    static func openableURL(from value: String) -> URL? {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty,
-              let url = URL(string: trimmed),
-              let scheme = url.scheme?.lowercased(),
-              scheme == "http" || scheme == "https",
-              let host = url.host, !host.isEmpty else { return nil }
-        return url
     }
 }
 

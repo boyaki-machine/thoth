@@ -33,6 +33,9 @@ final class SecureFieldRowView: NSView {
         static let buttonSize: CGFloat    = 22
         static let singleLineHeight: CGFloat = 24
         static let noteHeight: CGFloat    = 84
+        /// コピー ⧉ と削除 🗑 のあいだに空ける幅。
+        /// 他のボタンと同じ 2pt 間隔で並べると、コピーのつもりで削除を押してしまう
+        static let deleteGap: CGFloat = 10
     }
 
     /// マスク表示に使う伏せ字
@@ -67,6 +70,15 @@ final class SecureFieldRowView: NSView {
     var onDelete: ((SecureFieldRowView) -> Void)?
     /// 平文表示が切り替えられた（自動解除タイマーの起動に使う）
     var onRevealToggled: ((SecureFieldRowView) -> Void)?
+    /// 行を上下に動かす要求（右クリックメニュー。引数は移動量）
+    var onMove: ((SecureFieldRowView, Int) -> Void)?
+
+    /// マウスがこの行に乗っているか（削除ボタンの表示条件）
+    private(set) var isHovered = false
+    /// この行のラベルまたは値を編集中か（削除ボタンの表示条件）。
+    /// マウスを使わない操作でも削除ボタンへ到達できるようにするために見る
+    private(set) var hasEditingFocus = false
+    private var hoverTrackingArea: NSTrackingArea?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
     let labelField = NSTextField(labelWithString: "")
@@ -202,6 +214,14 @@ final class SecureFieldRowView: NSView {
         let valueContainer = makeValueContainer()
         let buttonStack = makeButtonStack()
 
+        // 削除ボタンはスタックの外に置き、位置を固定する。
+        // スタックの一員のまま isHidden にすると幅が畳まれ、マウスを乗せるたびに
+        // 他のボタンが横へ動いてしまう（狙って押せなくなる）
+        let buttonStackTrailing = isReadOnly
+            ? buttonStack.trailingAnchor.constraint(equalTo: trailingAnchor)
+            : buttonStack.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor,
+                                                    constant: -Layout.deleteGap)
+
         NSLayoutConstraint.activate([
             labelField.leadingAnchor.constraint(equalTo: leadingAnchor),
             labelField.topAnchor.constraint(equalTo: topAnchor),
@@ -212,10 +232,89 @@ final class SecureFieldRowView: NSView {
             valueContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
             valueContainer.trailingAnchor.constraint(equalTo: buttonStack.leadingAnchor, constant: -Layout.spacing),
 
-            buttonStack.trailingAnchor.constraint(equalTo: trailingAnchor),
+            buttonStackTrailing,
             buttonStack.topAnchor.constraint(equalTo: topAnchor),
             buttonStack.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
         ])
+
+        guard !isReadOnly else { return }
+        NSLayoutConstraint.activate([
+            deleteButton.trailingAnchor.constraint(equalTo: trailingAnchor),
+            deleteButton.topAnchor.constraint(equalTo: topAnchor)
+        ])
+        updateDeleteButtonVisibility()
+    }
+
+    // MARK: - Delete button
+
+    /// 削除ボタンを見せるか（純粋関数のためユニットテスト可能）。
+    ///
+    /// 既定では隠しておき、**マウスが行に乗っているとき**か
+    /// **その行を編集中のとき**だけ出す。コピー ⧉ の隣に常時置くと、
+    /// 狙いを外して不可逆な削除を押してしまう。
+    /// 編集中にも出すのは、マウスを使わない操作でも到達できるようにするため
+    /// （右クリックメニューからも削除できる）
+    static func showsDeleteButton(isReadOnly: Bool, isHovered: Bool, hasFocus: Bool) -> Bool {
+        guard !isReadOnly else { return false }
+        return isHovered || hasFocus
+    }
+
+    private func updateDeleteButtonVisibility() {
+        deleteButton.isHidden = !Self.showsDeleteButton(isReadOnly: isReadOnly,
+                                                        isHovered: isHovered,
+                                                        hasFocus: hasEditingFocus)
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea = hoverTrackingArea { removeTrackingArea(hoverTrackingArea) }
+        guard !isReadOnly else { return }
+        // .inVisibleRect にしておくと、スクロールや行の作り直しで矩形がずれない
+        let area = NSTrackingArea(rect: .zero,
+                                  options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        updateDeleteButtonVisibility()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        updateDeleteButtonVisibility()
+    }
+
+    /// テストから hover 状態を再現するための入口（実イベントを合成せずに済ませる）
+    func setHovered(_ hovered: Bool) {
+        isHovered = hovered
+        updateDeleteButtonVisibility()
+    }
+
+    // MARK: - Context menu
+
+    /// 右クリックメニュー。ホバーでしか出ない削除の導線を補い、
+    /// 並べ替え（Ctrl+j / Ctrl+k）にもマウスから届くようにする
+    override func menu(for event: NSEvent) -> NSMenu? {
+        guard !isReadOnly else { return nil }
+        let menu = NSMenu()
+
+        let moveUp = NSMenuItem(title: L10n.secureInfoMoveUp, action: #selector(moveUpSelected), keyEquivalent: "")
+        moveUp.target = self
+        menu.addItem(moveUp)
+
+        let moveDown = NSMenuItem(title: L10n.secureInfoMoveDown, action: #selector(moveDownSelected), keyEquivalent: "")
+        moveDown.target = self
+        menu.addItem(moveDown)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let delete = NSMenuItem(title: L10n.secureInfoRemoveField, action: #selector(deleteTapped), keyEquivalent: "")
+        delete.target = self
+        menu.addItem(delete)
+        return menu
     }
 
     /// 値エリアを組み立てる。複数行の種別だけスクロール付きの NSTextView にする
@@ -233,6 +332,10 @@ final class SecureFieldRowView: NSView {
 
         noteTextView.isSelectable = true
         noteTextView.isRichText = false
+        // 打鍵単位の取り消しは AppKit に任せる（既定は false で ⌘Z が効かない）。
+        // 単一行のフィールドはウィンドウ共有のフィールドエディタが同じ役目を持つ。
+        // 行ビューは使い捨てなので、行を作り直せば打鍵の履歴も一緒に消える
+        noteTextView.allowsUndo = true
         noteTextView.delegate = self
         // メモは URL 等を自動リンク化せずそのまま見せる（誤操作で外部アプリが開くのを避ける）
         noteTextView.isAutomaticLinkDetectionEnabled = false
@@ -298,13 +401,14 @@ final class SecureFieldRowView: NSView {
         copyButton.target = self
         copyButton.action = #selector(copyTapped)
 
-        // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）
+        // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）。
+        // 削除ボタンだけはスタックに入れず、setupUI が余白を空けて別に配置する
         var buttons: [NSView] = []
         if field.kind.allowsPasswordToggle && !isReadOnly { buttons.append(maskButton) }
         if field.isPassword && field.kind.allowsPasswordToggle { buttons.append(revealButton) }
         if field.kind == .url { buttons.append(openButton) }
         buttons.append(copyButton)
-        if !isReadOnly { buttons.append(deleteButton) }
+        if !isReadOnly { addSubview(deleteButton) }
 
         let stack = NSStackView(views: buttons)
         stack.orientation = .horizontal
@@ -335,11 +439,33 @@ final class SecureFieldRowView: NSView {
     @objc private func deleteTapped() {
         onDelete?(self)
     }
+
+    @objc private func moveUpSelected() {
+        onMove?(self, -1)
+    }
+
+    @objc private func moveDownSelected() {
+        onMove?(self, 1)
+    }
 }
 
 // MARK: - NSTextFieldDelegate / NSTextViewDelegate
 
 extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
+
+    // 編集の開始・終了で削除ボタンの表示を切り替える。
+    // 行の中に first responder があるかを外から見張るより、
+    // フィールドエディタの出入りを直接受け取るほうが取りこぼしが無い
+    func controlTextDidBeginEditing(_ notification: Notification) {
+        hasEditingFocus = true
+        updateDeleteButtonVisibility()
+    }
+
+    func textDidBeginEditing(_ notification: Notification) {
+        guard (notification.object as? NSTextView) === noteTextView else { return }
+        hasEditingFocus = true
+        updateDeleteButtonVisibility()
+    }
 
     func controlTextDidChange(_ notification: Notification) {
         guard let control = notification.object as? NSTextField else { return }
@@ -352,6 +478,8 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
     }
 
     func controlTextDidEndEditing(_ notification: Notification) {
+        hasEditingFocus = false
+        updateDeleteButtonVisibility()
         onEditingEnded?(self)
     }
 
@@ -362,6 +490,8 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
 
     func textDidEndEditing(_ notification: Notification) {
         guard (notification.object as? NSTextView) === noteTextView else { return }
+        hasEditingFocus = false
+        updateDeleteButtonVisibility()
         onEditingEnded?(self)
     }
 }

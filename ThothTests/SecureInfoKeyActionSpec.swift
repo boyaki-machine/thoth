@@ -23,10 +23,45 @@ class SecureInfoKeyActionSpec: QuickSpec {
 
     override class func spec() {
         commandShortcutSpecs()
+        undoShortcutSpecs()
         vimKeySpecs()
         escapeSpecs()
         editingGuardSpecs()
         unmappedSpecs()
+    }
+
+    // MARK: - Undo / Redo
+
+    /// 取り消しは 2 層構成。入力中は AppKit 標準の打鍵 Undo に譲り、
+    /// 確定済みの変更だけをアプリのスタックが扱う。
+    /// ここで入力中に nil を返さないと、打ちかけの文字を戻せなくなる
+    private static func undoShortcutSpecs() {
+        describe("取り消しとやり直し") {
+
+            it("⌘Z で取り消し、⌘⇧Z でやり直し") {
+                expect(action(0, character: "z", modifiers: .command)) == Action.undo
+                expect(action(0, character: "z", modifiers: [.command, .shift])) == Action.redo
+            }
+
+            // 入力中の ⌘Z は打鍵の取り消し（フィールドエディタ / NSTextView）に任せる
+            it("テキスト入力中はどちらも割り当てない") {
+                expect(action(0, character: "z", modifiers: .command, editing: true)) == nil
+                expect(action(0, character: "z", modifiers: [.command, .shift], editing: true)) == nil
+            }
+
+            it("⌘ 無しの z や ⌃Z には割り当てない") {
+                expect(action(0, character: "z")) == nil
+                expect(action(0, character: "z", modifiers: .control)) == nil
+                expect(action(0, character: "z", modifiers: .option)) == nil
+            }
+
+            // ⌘⇧ の分岐を足したことで、他の ⌘⇧ ショートカットが漏れ出さないこと
+            it("⌘⇧ は z 以外に割り当てない") {
+                expect(action(0, character: "s", modifiers: [.command, .shift])) == nil
+                expect(action(0, character: "n", modifiers: [.command, .shift])) == nil
+                expect(action(KeyCode.delete, modifiers: [.command, .shift])) == nil
+            }
+        }
     }
 
     // MARK: - Command shortcuts

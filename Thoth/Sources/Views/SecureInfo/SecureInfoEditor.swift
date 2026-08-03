@@ -172,9 +172,16 @@ final class SecureInfoEditor {
     /// 端を越える移動は行わない
     @discardableResult
     func moveField(fieldID: String, by offset: Int) -> Bool {
+        guard let index = draft?.fields.firstIndex(where: { $0.fieldID == fieldID }) else { return false }
+        return moveField(fieldID: fieldID, toIndex: index + offset)
+    }
+
+    /// 作業コピーのフィールドを指定位置へ動かす（ドラッグ&ドロップ用）。
+    /// 範囲外・移動なしの場合は何もしない
+    @discardableResult
+    func moveField(fieldID: String, toIndex destination: Int) -> Bool {
         guard !isReadOnly, var current = draft,
               let index = current.fields.firstIndex(where: { $0.fieldID == fieldID }) else { return false }
-        let destination = index + offset
         guard destination >= 0, destination < current.fields.count, destination != index else { return false }
         let field = current.fields.remove(at: index)
         current.fields.insert(field, at: destination)
@@ -187,7 +194,13 @@ final class SecureInfoEditor {
     /// 端を越える場合や対象が見つからない場合は nil
     static func reordered(_ items: [SecureMenuItem], movingItemID: String, by offset: Int) -> [SecureMenuItem]? {
         guard let index = items.firstIndex(where: { $0.itemID == movingItemID }) else { return nil }
-        let destination = index + offset
+        return reordered(items, movingItemID: movingItemID, toIndex: index + offset)
+    }
+
+    /// アイテムを指定位置へ動かした並びを返す（ドラッグ&ドロップ用の純粋関数）。
+    /// 範囲外・移動なし・対象が見つからない場合は nil
+    static func reordered(_ items: [SecureMenuItem], movingItemID: String, toIndex destination: Int) -> [SecureMenuItem]? {
+        guard let index = items.firstIndex(where: { $0.itemID == movingItemID }) else { return nil }
         guard destination >= 0, destination < items.count, destination != index else { return nil }
         var reordered = items
         let item = reordered.remove(at: index)
@@ -212,9 +225,33 @@ final class SecureInfoEditor {
         return .ready(payload)
     }
 
+    // MARK: - Undo Snapshot
+
+    /// 「最後に Keychain へ保存された状態」を切り出す（取り消し用）。
+    ///
+    /// `draft` には**編集中の作業コピーではなく、`items` の中の保存済みの姿**を入れる。
+    /// 変更を加える直前にこれを控えておけば、取り消しで保存前の状態へ戻せる。
+    /// `items` は `markCommitted` / `setItems` で保存済みの内容に追従している
+    func committedSnapshot(action: SecureInfoUndoAction) -> SecureInfoSnapshot {
+        let committed = selectedItemID.flatMap { itemID in items.first { $0.itemID == itemID } }
+        return SecureInfoSnapshot(items: items, draft: committed,
+                                  selectedItemID: selectedItemID, action: action)
+    }
+
+    /// 控えておいた状態へ戻す。**Keychain への書き戻しは呼び出し側が行うこと**
+    /// （このクラスはサービスを知らない）
+    func restore(_ snapshot: SecureInfoSnapshot) {
+        setItems(snapshot.items)
+        selectedItemID = snapshot.selectedItemID
+        draft = snapshot.draft
+        isDirty = false
+    }
+
     /// 保持している機微情報を破棄する（ウィンドウを閉じるときに呼ぶ）。
     /// シングルトンのウィンドウなので、閉じたあともメモリに平文が残り続けないようにする。
-    /// **未保存の変更も捨てるため、必ずコミット後に呼ぶこと**
+    /// **未保存の変更も捨てるため、必ずコミット後に呼ぶこと。
+    /// 取り消しスタック（`SecureInfoUndoStack`）も平文を保持しているので、
+    /// あわせて `clear()` すること**
     func clearSensitiveData() {
         items = []
         draft = nil

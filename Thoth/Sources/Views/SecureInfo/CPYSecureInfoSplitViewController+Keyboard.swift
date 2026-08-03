@@ -49,12 +49,21 @@ extension CPYSecureInfoSplitViewController {
                           modifiers: NSEvent.ModifierFlags, isEditingText: Bool) -> SecureInfoKeyAction? {
         let flags = modifiers.intersection(.deviceIndependentFlagsMask)
 
+        // ⌘⇧Z（やり直し）。charactersIgnoringModifiers は Shift だけは無視しないため
+        // "Z" が届く。呼び出し側で小文字化済みなので "z" で判定できる
+        if flags == [.command, .shift] {
+            return (character == "z" && !isEditingText) ? .redo : nil
+        }
+
         if flags == .command {
             switch character {
             case "f": return .focusSearch
             case "s": return .save
             case "n": return .addItem
             case "w": return .close
+            // ⌘Z は入力中だと打鍵の取り消し（AppKit 標準）。横取りすると
+            // 打ちかけの文字を戻せなくなるうえ、確定済みの変更まで巻き戻る
+            case "z": return isEditingText ? nil : .undo
             default:
                 // ⌘Delete はテキスト入力中だと「行頭まで削除」の標準操作。
                 // 横取りするとアイテムごと消えてしまうため、入力中は割り当てない
@@ -112,6 +121,10 @@ extension CPYSecureInfoSplitViewController {
             view.window?.makeFirstResponder(nil)
             hasShownCommitFailure = false
             commitIfNeeded()
+        case .undo:
+            performUndo()
+        case .redo:
+            performRedo()
         case .endEditing:
             view.window?.makeFirstResponder(nil)
             commitIfNeeded()

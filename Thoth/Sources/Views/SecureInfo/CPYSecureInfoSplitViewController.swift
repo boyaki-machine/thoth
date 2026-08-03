@@ -20,6 +20,15 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     let editor = SecureInfoEditor()
 
+    /// 取り消し／やり直しの世代（⌘Z / ⌘⇧Z）。
+    /// **平文を保持する**ため、`clearUndoHistory()` を呼ぶ 3 箇所を必ず維持すること
+    let undoStack = SecureInfoUndoStack()
+    /// 取り消し／やり直しの実行中か。
+    /// `performUndo()` は先頭で `commitIfNeeded()` を呼ぶため、この目印が無いと
+    /// 取り消しの最中に新しい世代が積まれて 1 回で戻りきらなくなる。
+    /// 実際の読み書きは +Undo.swift 側なので internal
+    var isPerformingUndo = false
+
     // キー操作の拡張（+Keyboard.swift）から参照するため internal
     lazy var listViewController = CPYSecureInfoListViewController(editor: editor)
     lazy var detailViewController = CPYSecureInfoDetailViewController()
@@ -31,22 +40,25 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     private var fallbackCommitTimer: Timer?
     // 監視トークンは登録したセンターごとに分けて持つ。
     // まとめて持つと解除時にどのセンターへ返せばよいか分からなくなる
-    private var windowObservers: [NSObjectProtocol] = []
-    private var workspaceObservers: [NSObjectProtocol] = []
-    private var distributedObservers: [NSObjectProtocol] = []
+    // （登録・解除の中身は +Observers.swift）
+    var windowObservers: [NSObjectProtocol] = []
+    var workspaceObservers: [NSObjectProtocol] = []
+    var distributedObservers: [NSObjectProtocol] = []
     /// 保存失敗の警告を 1 セッションで繰り返さないためのフラグ
     var hasShownCommitFailure = false
     /// 画面へ反映済みの変更番号。自分が起こした変更で再読込しないための目印
-    private var appliedChangeToken = 0
+    var appliedChangeToken = 0
     /// 自分がデータを変更している最中か。
     /// 変更通知は NotificationCenter の仕様上、メインスレッドからの post だと
     /// **保存処理の途中で同期的に**届く。その時点では通し番号の更新も
     /// 保存完了の記録も済んでいないため、通し番号だけでは自分の変更を見分けられない
-    private var isApplyingLocalChange = false
+    var isApplyingLocalChange = false
 
     /// 自分の変更として実行する。実行中に届いた変更通知は無視し、
-    /// 終了時に反映済みの通し番号を更新する
-    private func performLocalChange<T>(_ body: () -> T) -> T {
+    /// 終了時に反映済みの通し番号を更新する。
+    /// 取り消し・入出力の拡張（+Undo.swift / +Transfer.swift）からも使うため internal
+    @discardableResult
+    func performLocalChange<T>(_ body: () -> T) -> T {
         isApplyingLocalChange = true
         defer {
             isApplyingLocalChange = false
@@ -122,6 +134,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         detailViewController.onFieldDeleteRequested = { [weak self] field in
             self?.removeField(field)
         }
+        detailViewController.onFieldMoveRequested = { [weak self] fieldID, toIndex in
+            self?.moveField(fieldID: fieldID, toIndex: toIndex)
+        }
         detailViewController.onAddFieldRequested = { [weak self] template in
             self?.addField(template)
         }
@@ -146,16 +161,16 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         commitIfNeeded()
     }
 
+    /// フィールドを削除する。
+    ///
+    /// **確認ダイアログは出さない。** 毎回出しても惰性で通してしまい、通したあとに
+    /// 取り返す手段が無い方が問題だった。代わりに 🗑 をホバー中だけ見せて誤爆を減らし、
+    /// 消してしまっても ⌘Z で戻せるようにしてある（控えは直後の `commitIfNeeded()` が積む）。
+    /// アイテムの削除は影響が大きく、消えたものが画面から見えなくなるため確認を残している
     private func removeField(_ field: SecureMenuItem.Field) {
-        guard let window = view.window else { return }
-        NSAlert.showConfirmation(message: L10n.secureInfoRemoveField,
-                                 informative: L10n.secureInfoRemoveFieldConfirmation,
-                                 confirmTitle: L10n.secureInfoRemoveField, cancelTitle: L10n.cancel,
-                                 for: window) { [weak self] in
-            guard let self = self, self.editor.removeField(fieldID: field.fieldID) else { return }
-            self.detailViewController.show(item: self.editor.draft)
-            self.commitIfNeeded()
-        }
+        guard editor.removeField(fieldID: field.fieldID) else { return }
+        detailViewController.show(item: editor.draft)
+        commitIfNeeded()
     }
 
     /// TOTP の取り込みシートを開く（既存の取り込み画面を再利用する）
@@ -174,8 +189,13 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）
     func moveFocusedField(by offset: Int) {
         guard let row = detailViewController.focusedRow else { NSSound.beep(); return }
-        let fieldID = row.field.fieldID
-        guard editor.moveField(fieldID: fieldID, by: offset) else { NSSound.beep(); return }
+        guard let index = detailViewController.fieldRows.firstIndex(where: { $0 === row }) else { return }
+        moveField(fieldID: row.field.fieldID, toIndex: index + offset)
+    }
+
+    /// フィールドを指定位置へ動かす（右クリックメニュー・ドラッグ&ドロップ・Ctrl+j / Ctrl+k）
+    func moveField(fieldID: String, toIndex: Int) {
+        guard editor.moveField(fieldID: fieldID, toIndex: toIndex) else { NSSound.beep(); return }
         detailViewController.show(item: editor.draft)
         // 行を作り直したのでフォーカスが失われている。動かした行へ戻さないと、
         // 続けて Ctrl+j を押したときに一覧のアイテム側が動いてしまう
@@ -193,6 +213,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         guard commitIfNeeded() else { return }
         let service = AppEnvironment.current.secureMenuService
         let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)
+        pushUndoSnapshot(action: .addItem)
         let added: Bool = performLocalChange {
             guard service.save(newItem) else {
                 showCommitFailure(informative: L10n.secureInfoSaveFailed)
@@ -222,8 +243,12 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         }
     }
 
-    private func deleteItem(_ item: SecureMenuItem) {
+    /// 確認を経ずに削除する。確認は `confirmDeleteSelectedItem()` が行う
+    /// （ウィンドウ無しでは確認シートを出せないため、ユニットテストはこちらを直接呼ぶ）
+    func deleteItem(_ item: SecureMenuItem) {
         let service = AppEnvironment.current.secureMenuService
+        // 取り消し用の控えは beginEditing より前に取る（下で作業コピーを捨てるため）
+        pushUndoSnapshot(action: .deleteItem)
         // 削除するアイテムの未保存編集は捨てる（保存すると復活してしまう）
         editor.beginEditing(itemID: nil)
         performLocalChange {
@@ -251,6 +276,7 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             NSSound.beep()
             return
         }
+        pushUndoSnapshot(action: .reorderItems)
         let service = AppEnvironment.current.secureMenuService
         performLocalChange {
             guard service.reorderItems(reordered) else {
@@ -264,10 +290,15 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     // MARK: - Data
 
-    /// Keychain からアイテムを読み直して画面へ反映する
-    func reloadItems() {
+    /// Keychain からアイテムを読み直して画面へ反映する。
+    ///
+    /// - Parameter clearsUndoHistory: 取り消しの世代を捨てるか。
+    ///   読み直すと控えてある状態が現在のデータと食い違うため既定は true。
+    ///   自分で書き込んだ直後（インポート）だけ false にして、取り消しを効かせる
+    func reloadItems(clearsUndoHistory: Bool = true) {
         let service = AppEnvironment.current.secureMenuService
         appliedChangeToken = service.itemsChangeToken
+        if clearsUndoHistory { clearUndoHistory() }
         detailViewController.hideExternalChangeBanner()
         editor.setItems(service.loadAllItems())
         // 読み出せていない状態では編集させない。編集できても保存が拒否されるだけで、
@@ -308,6 +339,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     private func save(_ item: SecureMenuItem) -> Bool {
         let service = AppEnvironment.current.secureMenuService
+        // 編集系の取り消しはここ 1 箇所で積む。値・ラベル・タイトルの変更も、
+        // フィールドの追加・削除・並べ替えも、確定は必ずこの経路を通るため
+        pushUndoSnapshot(action: .edit)
         return performLocalChange {
             guard service.save(item) else {
                 showCommitFailure(informative: L10n.secureInfoSaveFailed)
@@ -324,8 +358,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     }
 
     /// 保存できなかったことを知らせる。編集内容は保持したままなので、
-    /// 原因を直して ⌘S で再試行できる。同じセッションで警告を連打しない
-    private func showCommitFailure(informative: String) {
+    /// 原因を直して ⌘S で再試行できる。同じセッションで警告を連打しない。
+    /// 取り消し（+Undo.swift）からも使うため internal
+    func showCommitFailure(informative: String) {
         guard !hasShownCommitFailure, let window = view.window else { return }
         hasShownCommitFailure = true
         NSAlert.showNotice(message: L10n.secureInfo, informative: informative, for: window)
@@ -369,87 +404,16 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         commitIfNeeded()
         removeCommitObservers()
         // 閉じたあともメモリに平文が残り続けないよう、保持しているデータを破棄する。
-        // 次に開くときは showWindow が reloadItems で読み直す
+        // 次に開くときは showWindow が reloadItems で読み直す。
+        // 取り消しの世代も削除・編集前の平文を抱えているので同時に捨てる
         editor.clearSensitiveData()
+        clearUndoHistory()
         // OS 側の認証状態も持ち越さない。常駐したまま残り続けると、
         // 次に開くときの認証ゲートを迂回できる余地が生まれる
         AppEnvironment.current.secureMenuService.invalidateAuthentication()
         listViewController.clearSearch()
         listViewController.reload()
         detailViewController.show(item: nil)
-    }
-
-    /// 監視の解除。NotificationCenter / NSWorkspace / DistributedNotificationCenter は
-    /// それぞれ別のセンターなので、登録元へ返す
-    private func removeCommitObservers() {
-        windowObservers.forEach { NotificationCenter.default.removeObserver($0) }
-        workspaceObservers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
-        distributedObservers.forEach { DistributedNotificationCenter.default().removeObserver($0) }
-        windowObservers = []
-        workspaceObservers = []
-        distributedObservers = []
-    }
-
-    /// ウィンドウが非アクティブになったとき・アプリ終了時にも取りこぼさず保存する。
-    /// あわせて画面ロック・スリープでウィンドウを閉じ、平文が残らないようにする
-    private func installCommitObservers() {
-        guard windowObservers.isEmpty, workspaceObservers.isEmpty,
-              distributedObservers.isEmpty, let window = view.window else { return }
-        let center = NotificationCenter.default
-        windowObservers.append(center.addObserver(forName: NSWindow.didResignKeyNotification,
-                                                  object: window, queue: .main) { [weak self] _ in
-            self?.view.window?.makeFirstResponder(nil)
-            self?.commitIfNeeded()
-            // 他のアプリへ移った隙に平文が見えたままにならないよう伏せ字へ戻す
-            self?.detailViewController.hideAllRevealedValues()
-        })
-        windowObservers.append(center.addObserver(forName: NSApplication.willTerminateNotification,
-                                                  object: nil, queue: .main) { [weak self] _ in
-            self?.view.window?.makeFirstResponder(nil)
-            self?.commitIfNeeded()
-        })
-        // スリープ復帰後にロック画面の背後で開いたままにならないよう閉じる
-        workspaceObservers.append(NSWorkspace.shared.notificationCenter.addObserver(
-            forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.closeForSecurity()
-        })
-        // 画面ロックは AppKit ではなく分散通知で届く
-        distributedObservers.append(DistributedNotificationCenter.default().addObserver(
-            forName: Self.screenIsLockedNotification, object: nil, queue: .main) { [weak self] _ in
-            self?.closeForSecurity()
-        })
-        // 別のウィンドウ（セキュアアイテム管理）での変更に追従する
-        windowObservers.append(center.addObserver(forName: .secureItemsDidChange,
-                                                  object: nil, queue: .main) { [weak self] _ in
-            self?.applyExternalChangeIfNeeded()
-        })
-    }
-
-    /// 他の画面での変更を取り込む。
-    ///
-    /// 未保存の編集がある場合は勝手に読み直さず、案内バーを出して選択を委ねる。
-    /// ここで読み直すと、打ちかけの内容が黙って消えてしまう
-    func applyExternalChangeIfNeeded() {
-        let service = AppEnvironment.current.secureMenuService
-        // 自分が起こした変更なら何もしない（再読込で入力中のフォーカスが飛ぶ）。
-        // 保存の途中で同期的に届く通知もここで弾く
-        guard !isApplyingLocalChange else { return }
-        guard service.itemsChangeToken != appliedChangeToken else { return }
-        guard !editor.isDirty else {
-            detailViewController.showExternalChangeBanner { [weak self] in
-                self?.reloadItems()
-            }
-            return
-        }
-        reloadItems()
-    }
-
-    /// 画面ロック・スリープを機に、編集内容を保存してからウィンドウを閉じる
-    private func closeForSecurity() {
-        view.window?.makeFirstResponder(nil)
-        commitIfNeeded()
-        detailViewController.hideAllRevealedValues()
-        view.window?.performClose(nil)
     }
 
     /// Esc でウィンドウを閉じる

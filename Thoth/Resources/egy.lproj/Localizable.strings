@@ -115,6 +115,28 @@
 
 "Secure Info Reload" = "𓂋𓈖 𓅓𓎗";
 
+"Secure Info Undo Format" = "𓂋𓎡𓅓 %@";
+
+"Secure Info Redo Format" = "𓎛𓅓 %@";
+
+"Secure Info Action Edit" = "𓋴𓈙𓏛";
+
+"Secure Info Action Add" = "𓄿𓂧 𓊪𓏏";
+
+"Secure Info Action Delete" = "𓎼𓂋𓎛 𓊪𓏏";
+
+"Secure Info Action Reorder" = "𓋴𓈎𓂧 𓎛";
+
+"Secure Info Action Import" = "𓎡𓏏𓅓";
+
+"Secure Info Actions" = "𓁹𓂋𓏛";
+
+"Secure Info Move Field" = "𓋴𓈎𓂧 𓂝";
+
+"Secure Info Move Up" = "𓐍𓂋𓏏 𓁹";
+
+"Secure Info Move Down" = "𓐍𓂋𓏏 𓎡";
+
 "Secure Menu Search Placeholder" = "𓁹𓋴𓂋𓐍...";
 
 "Secure Menu No Results" = "𓂜 𓅠";

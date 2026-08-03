@@ -178,34 +178,36 @@ class SecureInfoViewSpec: QuickSpec {
     private static func rowButtonSpecs() {
         describe("行のボタン構成") {
 
+            /// スタックに並ぶボタン。削除ボタンは**あえてスタックの外**に置いてあるので
+            /// ここには現れない（下の「削除ボタンの分離」を参照）
             func shownButtons(_ row: SecureFieldRowView) -> [NSButton] {
                 return [row.maskButton, row.revealButton, row.openButton, row.copyButton, row.deleteButton]
                     .filter { $0.superview is NSStackView }
             }
 
-            it("通常フィールドはマスク切替・コピー・削除が並ぶ") {
+            it("通常フィールドはマスク切替とコピーが並ぶ") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "ID", value: "a"))
-                expect(shownButtons(row)) == [row.maskButton, row.copyButton, row.deleteButton]
+                expect(shownButtons(row)) == [row.maskButton, row.copyButton]
             }
 
             it("マスク中は表示切替も並ぶ") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "a", isPassword: true))
-                expect(shownButtons(row)) == [row.maskButton, row.revealButton, row.copyButton, row.deleteButton]
+                expect(shownButtons(row)) == [row.maskButton, row.revealButton, row.copyButton]
             }
 
             it("URL は「開く」も並ぶ") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "U", value: "a", kind: .url))
-                expect(shownButtons(row)) == [row.maskButton, row.openButton, row.copyButton, row.deleteButton]
+                expect(shownButtons(row)) == [row.maskButton, row.openButton, row.copyButton]
             }
 
             // TOTP はマスク切替を持たない（secret を表示しない設計のため）
-            it("TOTP はコピーと削除だけが並ぶ") {
+            it("TOTP はコピーだけが並ぶ") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "T", value: "a", kind: .totp))
-                expect(shownButtons(row)) == [row.copyButton, row.deleteButton]
+                expect(shownButtons(row)) == [row.copyButton]
             }
 
             // 読み取り専用では編集系のボタンを出さない（押しても何も起きないボタンを見せない）
-            it("読み取り専用ではマスク切替と削除を出さない") {
+            it("読み取り専用ではマスク切替を出さない") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "a", isPassword: true),
                                              isReadOnly: true)
                 expect(shownButtons(row)) == [row.revealButton, row.copyButton]

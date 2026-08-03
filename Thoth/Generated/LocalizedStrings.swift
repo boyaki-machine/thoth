@@ -224,6 +224,18 @@ internal enum L10n {
   internal static let secureFieldValuePlaceholder = L10n.tr("Localizable", "Secure Field Value Placeholder")
   /// Secure Info
   internal static let secureInfo = L10n.tr("Localizable", "Secure Info")
+  /// Add Item
+  internal static let secureInfoActionAdd = L10n.tr("Localizable", "Secure Info Action Add")
+  /// Delete Item
+  internal static let secureInfoActionDelete = L10n.tr("Localizable", "Secure Info Action Delete")
+  /// Edit
+  internal static let secureInfoActionEdit = L10n.tr("Localizable", "Secure Info Action Edit")
+  /// Import
+  internal static let secureInfoActionImport = L10n.tr("Localizable", "Secure Info Action Import")
+  /// Reorder
+  internal static let secureInfoActionReorder = L10n.tr("Localizable", "Secure Info Action Reorder")
+  /// Actions
+  internal static let secureInfoActions = L10n.tr("Localizable", "Secure Info Actions")
   /// Add Field
   internal static let secureInfoAddField = L10n.tr("Localizable", "Secure Info Add Field")
   /// View secure info
@@ -232,10 +244,20 @@ internal enum L10n {
   internal static let secureInfoCopyValue = L10n.tr("Localizable", "Secure Info Copy Value")
   /// Changed in another window.
   internal static let secureInfoExternalChange = L10n.tr("Localizable", "Secure Info External Change")
+  /// Move Down
+  internal static let secureInfoMoveDown = L10n.tr("Localizable", "Secure Info Move Down")
+  /// Drag to reorder
+  internal static let secureInfoMoveField = L10n.tr("Localizable", "Secure Info Move Field")
+  /// Move Up
+  internal static let secureInfoMoveUp = L10n.tr("Localizable", "Secure Info Move Up")
   /// Select an item to view its details.
   internal static let secureInfoNoSelection = L10n.tr("Localizable", "Secure Info No Selection")
   /// Open in browser
   internal static let secureInfoOpenURL = L10n.tr("Localizable", "Secure Info Open URL")
+  /// Redo %@
+  internal static func secureInfoRedoFormat(_ p1: Any) -> String {
+    return L10n.tr("Localizable", "Secure Info Redo Format", String(describing: p1))
+  }
   /// Reload
   internal static let secureInfoReload = L10n.tr("Localizable", "Secure Info Reload")
   /// Remove Field
@@ -250,6 +272,10 @@ internal enum L10n {
   internal static let secureInfoTitleRequired = L10n.tr("Localizable", "Secure Info Title Required")
   /// Mask / unmask the value
   internal static let secureInfoToggleMask = L10n.tr("Localizable", "Secure Info Toggle Mask")
+  /// Undo %@
+  internal static func secureInfoUndoFormat(_ p1: Any) -> String {
+    return L10n.tr("Localizable", "Secure Info Undo Format", String(describing: p1))
+  }
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder")
   /// Enter a title before saving.
