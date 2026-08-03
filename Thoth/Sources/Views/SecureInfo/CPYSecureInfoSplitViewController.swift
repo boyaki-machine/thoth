@@ -347,6 +347,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         // 閉じたあともメモリに平文が残り続けないよう、保持しているデータを破棄する。
         // 次に開くときは showWindow が reloadItems で読み直す
         editor.clearSensitiveData()
+        // OS 側の認証状態も持ち越さない。常駐したまま残り続けると、
+        // 次に開くときの認証ゲートを迂回できる余地が生まれる
+        AppEnvironment.current.secureMenuService.invalidateAuthentication()
         listViewController.clearSearch()
         listViewController.reload()
         detailViewController.show(item: nil)

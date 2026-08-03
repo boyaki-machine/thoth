@@ -32,6 +32,7 @@ class SecureMenuServiceSpec: QuickSpec {
         deleteSpecs()
         reorderSpecs()
         accessDeniedGuardSpecs()
+        authenticationLifetimeSpecs()
         corruptedDataGuardSpecs()
         cryptoPasswordSpecs()
         totpFieldSpecs()
@@ -554,6 +555,43 @@ class SecureMenuServiceSpec: QuickSpec {
                 self.service.isKeychainAccessDenied = true
                 _ = self.service.loadAllItems()
                 expect(self.service.isKeychainAccessDenied) == false
+            }
+        }
+    }
+
+    // MARK: - Authentication Lifetime
+
+    /// 常駐運用で「認証状態が残り続けない」ことを担保する。
+    /// 評価済みの LAContext を保持したままだと、アプリ内の再認証ゲートを
+    /// 過ぎても OS レベルの認証が有効に残る
+    private static func authenticationLifetimeSpecs() {
+        describe("認証状態の寿命") {
+
+            it("明示的な破棄で猶予期間もリセットされる") {
+                self.service.lastAuthenticatedDate = Date()
+                self.service.invalidateAuthentication()
+                expect(self.service.lastAuthenticatedDate) == nil
+            }
+
+            // 猶予期間内なら再認証を省略する（既存の UX を壊さない）
+            it("猶予期間内は再認証を省略する") {
+                self.service.lastAuthenticatedDate = Date()
+                var authenticated: Bool?
+                self.service.authenticate(reason: "test") { authenticated = $0 }
+                expect(authenticated).toEventually(equal(true), timeout: .seconds(1))
+            }
+
+            // 破棄したあとは猶予が効かない（＝再認証が要求される）
+            it("破棄後は猶予期間が効かない") {
+                self.service.lastAuthenticatedDate = Date()
+                self.service.invalidateAuthentication()
+                expect(self.service.lastAuthenticatedDate) == nil
+            }
+
+            it("読み書きは認証していなくても猶予判定で失敗しない") {
+                // 認証を通していない状態でも通常の保存・読み出しは行える
+                expect(self.service.save(SecureMenuItem(itemID: "auth", title: "A"))) == true
+                expect(self.service.loadAllItems().count) == 1
             }
         }
     }

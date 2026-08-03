@@ -91,6 +91,33 @@ final class SecureMenuService {
     /// 読み出し時に OS が再認証を要求する＝アプリのロジックを迂回しても値を取れない。
     private var authenticatedContext: LAContext?
 
+    /// Keychain クエリへ添付する評価済みコンテキスト。
+    ///
+    /// **猶予期間を過ぎていたら OS 側のコンテキストも破棄する。** 保持したままだと、
+    /// アプリを常駐させている間ずっと OS レベルの認証状態が有効に残り続け、
+    /// アプリ内の再認証ゲートを迂回できる余地が広がる
+    private func currentAuthenticationContext() -> LAContext? {
+        guard let context = authenticatedContext else { return nil }
+        guard let lastAuthenticated = lastAuthenticatedDate,
+              Date().timeIntervalSince(lastAuthenticated) < Self.authenticationGracePeriod else {
+            context.invalidate()
+            authenticatedContext = nil
+            return nil
+        }
+        return context
+    }
+
+    /// 認証状態を明示的に破棄する（ウィンドウを閉じたときなど）
+    func invalidateAuthentication() {
+        authenticatedContext?.invalidate()
+        authenticatedContext = nil
+        lastAuthenticatedDate = nil
+    }
+
+    deinit {
+        authenticatedContext?.invalidate()
+    }
+
     /// 認証成功からこの秒数以内の再認証は省略する（猶予期間）。
     /// ID → パスワード → TOTP のように短時間に連続してセキュアアイテムを
     /// 選択するユースケースで、選択のたびに Touch ID を要求しないための UX 措置。
@@ -129,6 +156,8 @@ final class SecureMenuService {
             DispatchQueue.main.async { completion(true) }
             return
         }
+        // 猶予切れ。古い評価済みコンテキストを破棄してから改めて評価する
+        invalidateAuthentication()
 
         let context = LAContext()
         var error: NSError?
@@ -186,7 +215,7 @@ final class SecureMenuService {
             var query = keychainQuery(account: account, dataProtection: dataProtection, service: service)
             query[kSecMatchLimit as String] = kSecMatchLimitOne
             query[kSecReturnData as String] = true
-            if let context = authenticatedContext {
+            if let context = currentAuthenticationContext() {
                 query[kSecUseAuthenticationContext as String] = context
             }
             var result: AnyObject?
@@ -220,7 +249,7 @@ final class SecureMenuService {
             guard SecItemCopyMatching(existsQuery as CFDictionary, nil) == errSecSuccess else { continue }
 
             var query = keychainQuery(account: account, dataProtection: dataProtection)
-            if dataProtection, let context = authenticatedContext {
+            if dataProtection, let context = currentAuthenticationContext() {
                 query[kSecUseAuthenticationContext as String] = context
             }
             let attributes: [String: Any] = [
@@ -252,7 +281,7 @@ final class SecureMenuService {
         addQuery[kSecAttrLabel as String] = label
         addQuery[kSecAttrAccessControl as String] = accessControl
         addQuery[kSecValueData as String] = data
-        if let context = authenticatedContext {
+        if let context = currentAuthenticationContext() {
             addQuery[kSecUseAuthenticationContext as String] = context
         }
         let status = SecItemAdd(addQuery as CFDictionary, nil)
