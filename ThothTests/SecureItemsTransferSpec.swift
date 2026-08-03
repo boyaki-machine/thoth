@@ -9,6 +9,8 @@ import Security
 // 指紋パスワードの扱い、そして **TOTP secret が往復で無傷であること** を固定する
 // （TOTP の再登録は各サービスの 2FA 設定をやり直す作業になり、実質データ消失と同じ）。
 
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class SecureItemsTransferSpec: QuickSpec {
 
     private typealias Transfer = SecureItemsTransfer
@@ -243,6 +245,8 @@ class SecureItemsTransferSpec: QuickSpec {
 
     // MARK: - Round trip
 
+    // 固定フィクスチャの JSON が長いため関数長ルールを緩める
+    // swiftlint:disable:next function_body_length
     private static func roundTripSpecs() {
         describe("書き出しと取り込みの往復") {
 
@@ -262,6 +266,27 @@ class SecureItemsTransferSpec: QuickSpec {
 
                 expect(parsed.cryptoPassword) == "pw"
                 expect(parsed.items) == items
+            }
+
+            // 履歴（過去のパスワード）もファイルに含まれる。バックアップから戻したときに
+            // 「過去 N 回と同じパスワードは不可」の判断材料が失われてはいけない
+            it("変更履歴が無傷で戻る") {
+                let history = [
+                    SecureMenuItem.FieldHistoryEntry(value: "old-1",
+                                                     replacedAt: Date(timeIntervalSince1970: 1_000)),
+                    SecureMenuItem.FieldHistoryEntry(value: "old-2",
+                                                     replacedAt: Date(timeIntervalSince1970: 2_000))
+                ]
+                let items = [SecureMenuItem(itemID: "i1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f1", label: "PW", value: "current",
+                                         isPassword: true, kind: .plain, history: history)
+                ])]
+                guard let data = try? Transfer.encode(items: items, cryptoPassword: nil),
+                      let parsed = try? Transfer.parseImport(data) else { return fail("round trip failed") }
+
+                let restored = parsed.items.first?.fields.first?.history
+                expect(restored?.map { $0.value }) == ["old-1", "old-2"]
+                expect(restored?.map { $0.replacedAt }) == history.map { $0.replacedAt }
             }
 
             // TOTP の再登録は 2FA 設定のやり直しになる。secret は絶対に落とさない
@@ -299,6 +324,18 @@ class SecureItemsTransferSpec: QuickSpec {
                           "value" : "otpauth://totp/Legacy?secret=JBSWY3DPEHPK3PXP"
                         },
                         {
+                          "createdAt" : 745000000,
+                          "fieldID" : "f-pw",
+                          "history" : [
+                            { "replacedAt" : 745000000, "value" : "fixture-old-1" },
+                            { "replacedAt" : 745086400, "value" : "fixture-old-2" }
+                          ],
+                          "isPassword" : true,
+                          "kind" : "plain",
+                          "label" : "PW",
+                          "value" : "fixture-current"
+                        },
+                        {
                           "contentKind" : "note",
                           "createdAt" : 745000000,
                           "fieldID" : "f-note",
@@ -321,7 +358,11 @@ class SecureItemsTransferSpec: QuickSpec {
                 }
                 expect(parsed.cryptoPassword) == "fixture-pw"
                 let fields = parsed.items.first?.fields
-                expect(fields?.map { $0.fieldID }) == ["f-totp", "f-note"]
+                expect(fields?.map { $0.fieldID }) == ["f-totp", "f-pw", "f-note"]
+                // 過去に書き出したファイルの変更履歴が読めること
+                let restored = fields?.first { $0.fieldID == "f-pw" }?.history
+                expect(restored?.map { $0.value }) == ["fixture-old-1", "fixture-old-2"]
+                expect(restored?.first?.replacedAt) == Date(timeIntervalSinceReferenceDate: 745_000_000)
                 expect(fields?.first?.value) == "otpauth://totp/Legacy?secret=JBSWY3DPEHPK3PXP"
                 expect(fields?.first?.kind) == SecureMenuItem.Field.Kind.totp
                 // 拡張種別は contentKind から復元する（kind は旧版向けの互換値）

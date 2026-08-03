@@ -12,10 +12,14 @@ import Cocoa
 // TOTP のコード更新と、平文表示の期限切れ確認を 1 本のタイマーで兼ねる。
 extension CPYSecureInfoDetailViewController {
 
-    /// TOTP 行があるか、平文表示中の行があるときだけタイマーを動かす
+    /// TOTP 行があるか、平文表示中の行があるときだけタイマーを動かす。
+    /// **履歴側の平文表示も条件に含める。** 含めないと、履歴だけを 👁 で開いたときに
+    /// タイマーが回らず 30 秒の自動再マスクが働かない
     func startRefreshTimerIfNeeded() {
         stopTOTPTimer()
-        guard fieldRows.contains(where: { $0.field.isTOTP || $0.isRevealed }) else { return }
+        guard fieldRows.contains(where: {
+            $0.field.isTOTP || $0.isRevealed || $0.hasRevealedHistoryValue
+        }) else { return }
         // NSWindow は通常の RunLoop で動くため .common モードに追加すれば安定して発火する
         let timer = Timer(timeInterval: Self.refreshInterval, repeats: true) { [weak self] _ in
             self?.refreshPeriodically()
@@ -34,11 +38,13 @@ extension CPYSecureInfoDetailViewController {
         expireRevealedValues()
     }
 
-    /// 期限を過ぎた平文表示を伏せ字へ戻す
-    /// - Returns: 戻した行の数
+    /// 期限を過ぎた平文表示を伏せ字へ戻す（現在値と、展開中の履歴の両方）
+    /// - Returns: 戻した数
     @discardableResult
     func expireRevealedValues(now: Date = Date()) -> Int {
-        let expired = fieldRows.filter { $0.hideRevealedValueIfExpired(now: now) }.count
+        let expiredRows = fieldRows.filter { $0.hideRevealedValueIfExpired(now: now) }.count
+        let expiredHistory = fieldRows.reduce(0) { $0 + $1.hideExpiredHistoryValues(now: now) }
+        let expired = expiredRows + expiredHistory
         if expired > 0 { startRefreshTimerIfNeeded() }
         return expired
     }
@@ -65,6 +71,13 @@ extension CPYSecureInfoDetailViewController {
             return
         }
         AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: value)
+        AppEnvironment.current.pasteService.scheduleConcealedClear()
+    }
+
+    /// 過去の値をコピーする。現在値と同じく秘匿マーカー付きで書き込み、
+    /// 一定時間後に自動でクリアする（クリップボード履歴にも残さない）
+    func copyHistoryValue(_ entry: SecureMenuItem.FieldHistoryEntry) {
+        AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: entry.value)
         AppEnvironment.current.pasteService.scheduleConcealedClear()
     }
 

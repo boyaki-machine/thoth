@@ -324,6 +324,31 @@ Import is the least reversible operation here, so undo remains available afterwa
 
 **Undo restores items only — not the fingerprint password.** Replacing it happens only after a confirmation that spells out "files encrypted with the current password will no longer open", so a partial undo is accepted here deliberately.
 
+**Value history (v1.2.2)**
+
+The same value history the edit sheet shows (`Field.history`, capped at 10) is now readable from the Secure Info window. There are two uses, and both require the value to be *visible*:
+
+1. Authentication systems that reject "the same password as any of the last N" force the user to **compare past values by eye** before choosing a new one
+2. After a rollback on the authentication side, an old password is the **fallback** that still gets you in
+
+**History expands inline under the row — not in a menu.** Once the value is on screen, where it is drawn decides whether it is protected. `NSWindow.sharingType = .none` (exclusion from screen sharing and recording) covers only the window's own surface; NSMenu and NSPopover are drawn in separate windows and are not covered — the same point as the drag image. The edit sheet's existing UI does list plaintext in a menu, but the Secure Info window is built on the promise of protecting plaintext, so it does not copy that.
+
+History inherits the row's discipline verbatim: masked by default / 👁 reveals and `revealTimeout` seconds re-masks / immediate re-mask on window deactivation / concealed copy with auto-clear. The timeout comes from `SecureFieldRowView.revealTimeout` so that "how long plaintext may stay on screen" is decided in one place. If `startRefreshTimerIfNeeded()` did not count revealed *history* values, opening only a history entry would leave the auto re-mask unarmed.
+
+🕘 appears only on rows that **have at least one history entry**, and only while hovered or being edited. Because it sits in the middle of the button stack, it is toggled with `alphaValue` rather than `isHidden` — the width stays reserved so copy ⧉ does not slide sideways the moment it appears. Kinds that keep no history (TOTP, memo) never show it: a TOTP secret is deliberately never recorded, so even legacy data carrying one is not displayed.
+
+**History is read-only here.** There is no delete and no "restore this value". Use 2 above means this screen must not offer a way to lose history. To go back to an old value the user edits the current one, which pushes the current value into history automatically. Viewing is non-destructive, so it works in read-only mode too.
+
+**How history behaves on export / import (as investigated for v1.2.2)**
+
+| Path | Behavior |
+|---|---|
+| Export | History **is included** (past passwords land in the JSON in cleartext) |
+| Import | History **is read back** |
+| Re-import over an existing item | The current history is **replaced by the file's** (plus one entry if the value differs) |
+
+The third follows from `mergeFieldHistories` taking the incoming `field.history` as its base — intentional, so that deleting an entry from the popup survives a save. On the import path it shows up as "restoring an old backup rewinds the history".
+
 **Why undo also lives in the ⚙ menu**
 
 Since the delete button only appears on hover, the fact that deletions *are* reversible has to be visible somewhere. The menu item is titled from `undoAction` (e.g. "Undo Delete Item") so it also says what will come back.

@@ -284,6 +284,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
                 self?.onFieldMaskToggled?(row.field, isPassword)
             }
             row.onDelete = { [weak self] row in self?.onFieldDeleteRequested?(row.field) }
+            // 過去のパスワードも現在値と同じ経路でコピーする（秘匿マーカー付き + 自動クリア）
+            row.onCopyHistoryValue = { [weak self] _, entry in self?.copyHistoryValue(entry) }
+            // 履歴の平文表示が始まったら、期限切れを見張るためタイマーを動かす
+            row.onHistoryRevealToggled = { [weak self] _ in self?.startRefreshTimerIfNeeded() }
+            // 展開で行の高さが変わるため、スクロール範囲を計算し直させる
+            row.onHistoryToggled = { [weak self] _ in self?.rowStackView.layoutSubtreeIfNeeded() }
             // 行は自分が何番目かを知らないので、位置の解決はここで行う
             row.onMove = { [weak self] row, offset in
                 guard let self = self,
