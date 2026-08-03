@@ -24,6 +24,9 @@ final class CPYSecurePickerPanel: NSPanel {
         case parent(SecureMenuItem)
         case separator
         case noResults
+        /// 一覧の末尾に置く「セキュア情報確認 (&s)」の行。
+        /// v1.3.0 でセキュアアイテム管理ウィンドウを廃止し、宛先を
+        /// セキュア情報確認ウィンドウへ移した（キーも p → s）
         case manage
         case pageControl
 
@@ -91,6 +94,7 @@ final class CPYSecurePickerPanel: NSPanel {
     // MARK: - Callbacks
 
     var onSelect: ((SecureFieldSelection) -> Void)?
+    /// 末尾の `.manage` 行が選ばれた（セキュア情報確認ウィンドウを開く）
     var onManage: (() -> Void)?
 
     // MARK: - Init

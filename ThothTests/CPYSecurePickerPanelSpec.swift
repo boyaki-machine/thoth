@@ -14,6 +14,7 @@ class CPYSecurePickerPanelSpec: QuickSpec {
         dismissDecisionSpecs()
         monitorLifecycleSpecs()
         rowCompositionSpecs()
+        manageShortcutSpecs()
         subPanelFieldSpecs()
         subPanelDisplaySpecs()
         subPanelSelectionSpecs()
@@ -136,7 +137,7 @@ class CPYSecurePickerPanelSpec: QuickSpec {
 
     private static func rowCompositionSpecs() {
         describe("行構成") {
-            it("通常時は親アイテム + 区切り線 + 管理行が並ぶ") {
+            it("通常時は親アイテム + 区切り線 + セキュア情報確認の行が並ぶ") {
                 let panel = makePanel()
                 var parentCount = 0
                 var hasManage = false
@@ -149,7 +150,7 @@ class CPYSecurePickerPanelSpec: QuickSpec {
                 panel.close()
             }
 
-            it("ヒットなしの検索では noResults 行と管理行が表示される") {
+            it("ヒットなしの検索では noResults 行とセキュア情報確認の行が表示される") {
                 let panel = makePanel(query: "no-such-item")
                 var hasNoResults = false
                 var hasManage = false
@@ -159,6 +160,53 @@ class CPYSecurePickerPanelSpec: QuickSpec {
                 }
                 expect(hasNoResults) == true
                 expect(hasManage) == true
+                panel.close()
+            }
+        }
+    }
+
+    // MARK: - Secure info shortcut
+
+    /// v1.3.0 でセキュアアイテム管理ウィンドウを廃止し、この行の宛先を
+    /// セキュア情報確認ウィンドウへ移した。キーもメインメニューと揃えて p → s。
+    /// 表示ラベルとキー処理は別々の場所に書かれているため、片方だけ直すと
+    /// 「(&s) と出ているのに s で開かない」状態になる
+    private static func manageShortcutSpecs() {
+        describe("セキュア情報確認へのショートカット") {
+
+            /// 検索欄にフォーカスが無い状態の keyDown を作る
+            func keyDown(_ keyCode: UInt16) -> NSEvent {
+                return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                        timestamp: 0, windowNumber: 0, context: nil,
+                                        characters: "", charactersIgnoringModifiers: "",
+                                        isARepeat: false, keyCode: keyCode)!
+            }
+
+            it("s キーで開く") {
+                let panel = makePanel()
+                var fired = false
+                panel.onManage = { fired = true }
+                expect(panel.handleKeyDown(keyDown(1))) == true   // s
+                expect(fired) == true
+                panel.close()
+            }
+
+            it("旧ショートカットの p は解放されている") {
+                let panel = makePanel()
+                var fired = false
+                panel.onManage = { fired = true }
+                expect(panel.handleKeyDown(keyDown(35))) == false // p
+                expect(fired) == false
+                panel.close()
+            }
+
+            it("表示ラベルがメインメニューと同じ文言・同じキーになる") {
+                let panel = makePanel()
+                guard let row = panel.rows.firstIndex(where: {
+                    if case .manage = $0 { return true } else { return false }
+                }) else { fail("管理行が無い"); return }
+                let cell = panel.tableView(panel.tableView, viewFor: nil, row: row) as? NSTableCellView
+                expect(cell?.textField?.stringValue) == "\(L10n.secureInfo) (&s)"
                 panel.close()
             }
         }
@@ -517,7 +565,7 @@ class CPYSecurePickerPanelSpec: QuickSpec {
                 panel.close()
             }
 
-            it("アイテムが 0 件でも管理行だけは残る") {
+            it("アイテムが 0 件でもセキュア情報確認の行だけは残る") {
                 let panel = makePagedPanel(itemCount: 0)
                 expect(parentTitles(panel).isEmpty) == true
                 expect(panel.rows.contains { if case .manage = $0 { return true } else { return false } }) == true

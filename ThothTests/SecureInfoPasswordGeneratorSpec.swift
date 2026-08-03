@@ -77,7 +77,7 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
             }
 
             it("覚えていなければ入力先は無い") {
-                expect(makeDetailViewController().fillTargetRow).to(beNil())
+                expect(makeDetailViewController().fillTargetRow) == nil
             }
 
             it("覚えた ID から行を解決する") {
@@ -102,13 +102,13 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
             it("受け取れない種別を覚えていても入力先にはしない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "f3"
-                expect(detailViewController.fillTargetRow).to(beNil())
+                expect(detailViewController.fillTargetRow) == nil
             }
 
             it("消えたフィールドを覚えていても入力先にはしない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "missing"
-                expect(detailViewController.fillTargetRow).to(beNil())
+                expect(detailViewController.fillTargetRow) == nil
             }
 
             // 別のアイテムの値へ生成値を撃ち込まないための境界
@@ -118,8 +118,8 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                 detailViewController.show(item: SecureMenuItem(itemID: "s2", title: "AWS", fields: [
                     SecureMenuItem.Field(fieldID: "f9", label: "Password", value: "x", isPassword: true)
                 ]))
-                expect(detailViewController.fillTargetFieldID).to(beNil())
-                expect(detailViewController.fillTargetRow).to(beNil())
+                expect(detailViewController.fillTargetFieldID) == nil
+                expect(detailViewController.fillTargetRow) == nil
             }
 
             // フィールドの追加・削除・並べ替え・マスク切替でも show(item:) を通る。
@@ -215,7 +215,7 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
             it("⌘Z で生成前の値へ戻せる") {
                 let splitViewController = makeSplitViewController()
                 splitViewController.applyGeneratedPassword("Generated-5", toFieldID: "f2")
-                expect(splitViewController.undoStack.undoAction).toNot(beNil())
+                expect(splitViewController.undoStack.undoAction) != nil
 
                 splitViewController.performUndo()
 

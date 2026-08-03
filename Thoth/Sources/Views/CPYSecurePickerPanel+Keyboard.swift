@@ -132,7 +132,8 @@ extension CPYSecurePickerPanel {
             case 124 where ctrl: goToNextPage(); return true   // Ctrl+→ → 次ページ
             case 4 where ctrl:   goToPrevPage(); return true   // Ctrl+H → 前ページ
             case 123 where ctrl: goToPrevPage(); return true   // Ctrl+← → 前ページ
-            case 35:             if isVisible { close() }; onManage?(); return true  // p → 管理
+            // s → セキュア情報確認（メインメニューの (&s) と同じ宛先・同じキー）
+            case 1:              if isVisible { close() }; onManage?(); return true
             default: break
             }
         }

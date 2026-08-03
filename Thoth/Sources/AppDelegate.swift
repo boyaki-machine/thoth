@@ -80,10 +80,6 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         presentWindow(of: CPYSnippetsEditorWindowController.sharedController)
     }
 
-    @objc func showSecureItemsWindow() {
-        presentWindow(of: CPYSecureItemsWindowController.shared)
-    }
-
     /// セキュア情報確認ウィンドウを開く。
     /// このウィンドウは値を平文で表示するため、表示前に必ず Touch ID / パスワード認証を通す
     /// （認証成功から 30 秒以内は SecureMenuService 側で再認証が省略される）。
