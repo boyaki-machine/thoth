@@ -11,6 +11,8 @@ import AppKit
 // 積む単位は「Keychain へ 1 回書き込むごと」。編集の確定・アイテムの追加削除・
 // 並べ替えのどれもこの粒度で戻せることを固定する。
 
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class SecureInfoUndoFlowSpec: QuickSpec {
 
     private static let testKeychainService = "io.github.boyaki-machine.ThothTests.SecureInfoUndo"
@@ -18,6 +20,7 @@ class SecureInfoUndoFlowSpec: QuickSpec {
     override class func spec() {
         editUndoSpecs()
         structuralUndoSpecs()
+        importUndoSpecs()
         historyPreservationSpecs()
         lifecycleSpecs()
     }
@@ -229,6 +232,32 @@ class SecureInfoUndoFlowSpec: QuickSpec {
                 expect(service.loadAllItems().map { $0.itemID }) == ["s1", "s2", "s3"]
             }
 
+            // 削除は displayOrder を振り直さないので、真ん中を消すと [0, 2] のように穴が開く。
+            // 一方 reorderItems は書き戻しで 0 から振り直すため、控えをそのまま信じると
+            // 手元の写しと保存内容が食い違い、次に積む控えが実データと違う値を持ってしまう
+            it("穴の開いた displayOrder を挟んでも、取り消し後の写しが保存内容と一致する") {
+                select("s2", on: controller)
+                guard let middle = controller.editor.selectedItem else { return fail("no selection") }
+                controller.deleteItem(middle)
+                // ここで手元の写しは [s1(0), s3(2)]（削除は振り直さない）
+                expect(controller.editor.items.map { $0.displayOrder }) == [0, 2]
+
+                select("s1", on: controller)
+                _ = controller.editor.updateTitle("編集")
+                expect(controller.commitIfNeeded()) == true
+
+                controller.performUndo()
+                expect(controller.editor.items) == service.loadAllItems()
+                expect(controller.editor.items.map { $0.title }) == ["GitHub", "経理システム"]
+            }
+
+            it("並べ替えを取り消したあとも写しが一致する") {
+                select("s1", on: controller)
+                controller.moveSelectedItem(by: 1)
+                controller.performUndo()
+                expect(controller.editor.items) == service.loadAllItems()
+            }
+
             it("削除したアイテムをやり直すと再び消える") {
                 select("s2", on: controller)
                 guard let item = controller.editor.selectedItem else { return fail("no selection") }
@@ -237,6 +266,64 @@ class SecureInfoUndoFlowSpec: QuickSpec {
 
                 controller.performRedo()
                 expect(service.loadAllItems().map { $0.itemID }) == ["s1", "s3"]
+            }
+        }
+    }
+
+    // MARK: - Import
+
+    /// 取り込みはこの機能のなかで最も取り返しがつかない（既存のアイテムを
+    /// まとめて上書きしうる）。読み直しは取り消しの世代を捨てるため、
+    /// ここだけは世代を残して読み直している
+    private static func importUndoSpecs() {
+        describe("取り込みの取り消し") {
+
+            var service: SecureMenuService!
+            var controller: CPYSecureInfoSplitViewController!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+                AppEnvironment.push(environment: Environment(secureMenuService: service))
+                controller = makeController(with: sampleItems(), service: service)
+                select("s1", on: controller)
+            }
+            afterEach {
+                service.deleteAllItems()
+                AppEnvironment.popLast()
+            }
+
+            it("取り込みで上書きされた内容を取り消しで戻せる") {
+                // 別の内容で s1 を上書きし、新しい s9 を足すファイルを取り込んだ想定
+                controller.pushUndoSnapshot(action: .importItems)
+                _ = controller.performLocalChange {
+                    SecureItemsTransfer.apply(items: [
+                        SecureMenuItem(itemID: "s1", title: "上書きされた"),
+                        SecureMenuItem(itemID: "s9", title: "取り込んだ")
+                    ], cryptoPassword: nil, using: service)
+                }
+                controller.reloadItems(clearsUndoHistory: false)
+                expect(service.loadAllItems().map { $0.itemID }) == ["s1", "s2", "s3", "s9"]
+                expect(service.loadAllItems().first?.title) == "上書きされた"
+
+                controller.performUndo()
+                expect(service.loadAllItems().map { $0.itemID }) == ["s1", "s2", "s3"]
+                expect(service.loadAllItems().first?.title) == "GitHub"
+            }
+
+            // 読み直しで世代を捨ててしまうと、取り込み直後に ⌘Z が効かない
+            it("取り込み後の読み直しで世代を捨てない") {
+                controller.pushUndoSnapshot(action: .importItems)
+                controller.reloadItems(clearsUndoHistory: false)
+                expect(controller.undoStack.canUndo) == true
+                expect(controller.undoStack.undoAction) == SecureInfoUndoAction.importItems
+            }
+
+            // 既定の読み直しは従来どおり捨てる（控えが現在のデータと食い違うため）
+            it("通常の読み直しでは捨てる") {
+                controller.pushUndoSnapshot(action: .importItems)
+                controller.reloadItems()
+                expect(controller.undoStack.canUndo) == false
             }
         }
     }

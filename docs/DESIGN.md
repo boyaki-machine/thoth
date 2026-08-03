@@ -310,13 +310,19 @@ The right pane (fields) is an `NSStackView`, so this is hand-rolled. A `≡` han
 
 The pasteboard carries only the `fieldID` or the row number — **never a value** — because a drag pasteboard is readable by other apps. `draggingSession(_:sourceOperationMaskFor:)` also refuses anything but `.withinApplication`, so a row cannot be dragged out of the app.
 
+**The drag image is not a snapshot of the row.** A drag image is drawn in a system-owned window, outside this window, so `NSWindow.sharingType = .none` (which keeps the window out of screen sharing and recording) does not cover it. Snapshotting the whole row would put a password revealed with 👁 — or a memo's body — into a surface that *can* be recorded. Drawing **only the label** leaks nothing beyond what already appears in search and in the picker panel, while still showing which field is being dragged. Everything that leaves the row is decided in one place: `SecureFieldRowView.makeDraggingItem()`.
+
 **Import / export**
 
 The logic lives in `SecureItemsTransfer` (UI-independent) and is shared by the Manage window and the Secure Info window, where it is reached from the ⚙ menu at the bottom of the left pane.
 
 **Neither runs when the Keychain cannot be read (`isKeychainAccessDenied`).** Import would merely be rejected by `saveAllItems`, but export would write a JSON file with zero items — inviting the user to overwrite an existing backup with an empty one.
 
+That check lives **inside `SecureItemsTransfer.exportData(using:)`**. The caller-side gates (the ⚙ menu's enabled state, `allowsTransfer`) only consult a cached copy of the last read result, so they miss the case where the Keychain becomes unreadable while the save panel is open. The read has to be re-verified immediately before writing.
+
 Import is the least reversible operation here, so undo remains available afterwards (`reloadItems(clearsUndoHistory: false)`).
+
+**Undo restores items only — not the fingerprint password.** Replacing it happens only after a confirmation that spells out "files encrypted with the current password will no longer open", so a partial undo is accepted here deliberately.
 
 **Why undo also lives in the ⚙ menu**
 

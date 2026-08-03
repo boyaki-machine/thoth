@@ -241,6 +241,43 @@ class SecureInfoDragReorderSpec: QuickSpec {
                 expect(row.hitTest(NSPoint(x: copyRect.midX, y: copyRect.midY))) === row.copyButton
             }
 
+            // ペイストボードはドラッグ中、他のアプリからも読める
+            it("ペイストボードに載るのは fieldID だけで、値は載らない") {
+                let secret = "s3cr3t-value"
+                let field = SecureMenuItem.Field(fieldID: "f1", label: "PW", value: secret)
+                let row = SecureFieldRowView(field: field)
+                guard let written = row.makeDraggingItem().item as? NSPasteboardItem else {
+                    return fail("expected pasteboard item")
+                }
+                expect(written.types) == [.thothSecureFieldRow]
+                expect(written.string(forType: .thothSecureFieldRow)) == "f1"
+                for type in written.types {
+                    expect(written.string(forType: type)?.contains(secret)) == false
+                }
+            }
+
+            // ドラッグの絵は行を離れてシステム側のウィンドウに描かれるため、
+            // ウィンドウに掛けた sharingType = .none（画面共有・収録からの除外）が効かない。
+            // 行を丸ごと写すと、👁 で表示中のパスワードやメモ本文が画面収録に入りうる
+            it("ドラッグの絵は行の写しではなくラベルだけで作る") {
+                let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "PW", value: "s3cr3t-value"))
+                row.frame = NSRect(x: 0, y: 0, width: 420, height: 24)
+                row.layoutSubtreeIfNeeded()
+
+                let frame = row.makeDraggingItem().draggingFrame
+                // 行の写しなら行と同じ大きさになる。ラベルだけなら明らかに小さい
+                expect(frame.size) != row.bounds.size
+                expect(frame.width) < row.bounds.width
+                expect(frame.width) > 0
+                expect(frame.height) > 0
+            }
+
+            it("ラベルが空でも絵を作れる") {
+                let image = SecureFieldRowView.dragImage(label: "")
+                expect(image.size.width) > 0
+                expect(image.size.height) > 0
+            }
+
             // 行を他のアプリへ引き出せると、ペイストボード経由で機微情報が渡る
             it("アプリの外へは引き出せない") {
                 let row = SecureFieldRowView(field: SecureMenuItem.Field(label: "ID", value: "a"))

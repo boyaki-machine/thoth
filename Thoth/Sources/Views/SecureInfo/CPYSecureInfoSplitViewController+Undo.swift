@@ -75,6 +75,10 @@ extension CPYSecureInfoSplitViewController {
                 return
             }
             editor.restore(snapshot)
+            // 控えの displayOrder は取った時点のもので、reorderItems は書き戻しの際に
+            // 0 から振り直す。控えをそのまま信じると手元の写しと保存内容が食い違い、
+            // 次に積む控えが実データと違う値を持つ。並び順は同じなので読み直して揃える
+            editor.setItems(service.loadAllItems())
             // reload が選択の同期と右ペインの再描画（onSelectionChange）まで面倒を見る
             listViewController.reload()
             detailViewController.hideExternalChangeBanner()

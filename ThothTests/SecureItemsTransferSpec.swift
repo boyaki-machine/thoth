@@ -1,5 +1,6 @@
 import Quick
 import Nimble
+import Security
 @testable import Thoth
 
 // MARK: - Secure Items Import / Export Tests
@@ -12,11 +13,135 @@ class SecureItemsTransferSpec: QuickSpec {
 
     private typealias Transfer = SecureItemsTransfer
 
+    private static let testKeychainService = "io.github.boyaki-machine.ThothTests.SecureItemsTransfer"
+
     override class func spec() {
         parseSpecs()
         encodeSpecs()
         roundTripSpecs()
         cryptoPasswordSpecs()
+        exportGuardSpecs()
+        applySpecs()
+    }
+
+    // MARK: - Export guard
+
+    /// **読み出せないまま書き出すと 0 件の JSON ができ、ユーザーが自分の
+    /// バックアップを空で上書きしてしまう。** 呼び出し側の入口判定は直近の
+    /// 読み込み結果を写した控えなので、書き出す直前に確かめ直す必要がある
+    private static func exportGuardSpecs() {
+        describe("書き出し前の読み出し確認") {
+
+            var service: SecureMenuService!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+            }
+            afterEach {
+                removeRawUserData()
+                service.deleteAllItems()
+            }
+
+            it("読めているときは書き出せる") {
+                expect(service.save(SecureMenuItem(itemID: "i1", title: "A"))) == true
+                let data = try? Transfer.exportData(using: service)
+                expect(data) != nil
+                let parsed = data.flatMap { try? Transfer.parseImport($0) }
+                expect(parsed?.items.map { $0.itemID }) == ["i1"]
+            }
+
+            it("読めない状態では書き出さずに throw する") {
+                expect(service.save(SecureMenuItem(itemID: "i1", title: "A"))) == true
+                // 解釈できないデータを置いて「読めない」状態を作る
+                writeRawUserData(Data("{ broken".utf8))
+                expect(service.loadAllItems().isEmpty) == true
+                expect(service.isKeychainAccessDenied) == true
+
+                expect(try? Transfer.exportData(using: service)) == nil
+            }
+
+            // アイテムが 1 件も無い状態と、読めない状態を取り違えない
+            it("本当に 0 件のときは書き出せる") {
+                expect(service.loadAllItems().isEmpty) == true
+                expect(service.isKeychainAccessDenied) == false
+                expect(try? Transfer.exportData(using: service)) != nil
+            }
+        }
+    }
+
+    // MARK: - Apply
+
+    private static func applySpecs() {
+        describe("取り込みの反映") {
+
+            var service: SecureMenuService!
+
+            beforeEach {
+                service = SecureMenuService(keychainService: testKeychainService)
+                service.deleteAllItems()
+                service.deleteCryptoPassword()
+            }
+            afterEach {
+                service.deleteCryptoPassword()
+                service.deleteAllItems()
+            }
+
+            it("アイテムと指紋パスワードを反映する") {
+                let applied = Transfer.apply(items: [SecureMenuItem(itemID: "i1", title: "A")],
+                                             cryptoPassword: "pw", using: service)
+                expect(applied) == true
+                expect(service.loadAllItems().map { $0.itemID }) == ["i1"]
+                expect(service.loadCryptoPassword()) == "pw"
+            }
+
+            it("同じ ID は上書きし、他は末尾に足す") {
+                expect(service.save(SecureMenuItem(itemID: "i1", title: "旧"))) == true
+                _ = Transfer.apply(items: [SecureMenuItem(itemID: "i1", title: "新"),
+                                           SecureMenuItem(itemID: "i2", title: "追加")],
+                                   cryptoPassword: nil, using: service)
+                expect(service.loadAllItems().map { $0.title }) == ["新", "追加"]
+            }
+
+            it("0 件のファイルでは何もしない") {
+                expect(service.save(SecureMenuItem(itemID: "i1", title: "A"))) == true
+                expect(Transfer.apply(items: [], cryptoPassword: nil, using: service)) == true
+                expect(service.loadAllItems().map { $0.itemID }) == ["i1"]
+            }
+
+            // 握りつぶすと「N 件インポートしました」と出たまま
+            // 指紋パスワードだけ入っていない状態に気づけない
+            it("指紋パスワードの保存に失敗したら成功と報告しない") {
+                writeRawUserData(Data("{ broken".utf8))
+                expect(service.loadAllItems().isEmpty) == true
+                expect(Transfer.apply(items: [], cryptoPassword: "pw", using: service)) == false
+                removeRawUserData()
+            }
+        }
+    }
+
+    // MARK: - Keychain helpers
+
+    /// 解釈できないデータを直接書き込み、「読めない」状態を再現する
+    private static func writeRawUserData(_ data: Data) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: testKeychainService,
+            kSecAttrAccount as String: "user-data"
+        ]
+        SecItemDelete(query as CFDictionary)
+        var attributes = query
+        attributes[kSecValueData as String] = data
+        SecItemAdd(attributes as CFDictionary, nil)
+    }
+
+    private static func removeRawUserData() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: testKeychainService,
+            kSecAttrAccount as String: "user-data"
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 
     // MARK: - Parse

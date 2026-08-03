@@ -43,6 +43,8 @@ final class SecureFieldRowView: NSView {
         static let handleGap: CGFloat = 4
         /// ドラッグとみなす移動量。これ未満はクリックとして扱う
         static let dragThreshold: CGFloat = 3
+        /// ドラッグ中に出す絵の余白
+        static let dragImagePadding: CGFloat = 6
     }
 
     /// マスク表示に使う伏せ字
@@ -247,21 +249,46 @@ final class SecureFieldRowView: NSView {
         super.mouseUp(with: event)
     }
 
-    /// ペイストボードに載せるのは **fieldID だけ**。値を載せると、
-    /// ドラッグ中のペイストボードを読める他のアプリへ機微情報が漏れる
     private func beginFieldDrag(with event: NSEvent) {
+        beginDraggingSession(with: [makeDraggingItem()], event: event, source: self)
+    }
+
+    /// ドラッグ 1 件分を組み立てる。**外へ出す情報はここだけで決まる**ので、
+    /// 中身をユニットテストから確認できるよう internal にしている。
+    ///
+    /// - ペイストボードに載せるのは **fieldID だけ**。値を載せると、
+    ///   ドラッグ中のペイストボードを読める他のアプリへ機微情報が漏れる
+    /// - 絵は行の写しではなく**ラベルだけ**（理由は `dragImage(label:)` を参照）
+    func makeDraggingItem() -> NSDraggingItem {
         let pasteboardItem = NSPasteboardItem()
         pasteboardItem.setString(field.fieldID, forType: .thothSecureFieldRow)
         let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
-        draggingItem.setDraggingFrame(bounds, contents: snapshotImage())
-        beginDraggingSession(with: [draggingItem], event: event, source: self)
+        let image = Self.dragImage(label: field.label)
+        draggingItem.setDraggingFrame(NSRect(origin: .zero, size: image.size), contents: image)
+        return draggingItem
     }
 
-    private func snapshotImage() -> NSImage? {
-        guard let rep = bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
-        cacheDisplay(in: bounds, to: rep)
-        let image = NSImage(size: bounds.size)
-        image.addRepresentation(rep)
+    /// ドラッグ中に出す絵。**行そのものの写しは使わない。**
+    ///
+    /// ドラッグの絵は行を離れてシステム側のウィンドウに描かれるため、
+    /// このウィンドウに掛けた `NSWindow.sharingType = .none`（画面共有・収録からの除外）が
+    /// 効かない。行を丸ごと写すと、👁 で表示中のパスワードやメモの本文が
+    /// 画面収録に入りうる。**ラベルだけ**なら検索対象にも選択パネルにも出ている情報で、
+    /// どのフィールドを掴んでいるかも分かる
+    static func dragImage(label: String) -> NSImage {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .foregroundColor: NSColor.labelColor
+        ]
+        let text = label.isEmpty ? L10n.secureInfoMoveField : label
+        let attributed = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributed.size()
+        let size = NSSize(width: max(textSize.width, 1) + Layout.dragImagePadding * 2,
+                          height: max(textSize.height, 1) + Layout.dragImagePadding)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        attributed.draw(at: NSPoint(x: Layout.dragImagePadding, y: Layout.dragImagePadding / 2))
+        image.unlockFocus()
         return image
     }
 

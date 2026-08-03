@@ -48,10 +48,10 @@ extension CPYSecureInfoSplitViewController {
         // 打ちかけの内容も書き出しに含める
         view.window?.makeFirstResponder(nil)
         guard commitIfNeeded() else { return }
-        let service = AppEnvironment.current.secureMenuService
+        // 入口の allowsTransfer が見ているのは直近の読み込み結果を写した控え。
+        // パネルを開いている間に読めなくなった場合に備え、exportData 側で確かめ直す
         do {
-            let data = try SecureItemsTransfer.encode(items: service.loadAllItems(),
-                                                      cryptoPassword: service.loadCryptoPassword())
+            let data = try SecureItemsTransfer.exportData(using: AppEnvironment.current.secureMenuService)
             try data.write(to: url, options: .atomic)
         } catch {
             showTransferError(error)

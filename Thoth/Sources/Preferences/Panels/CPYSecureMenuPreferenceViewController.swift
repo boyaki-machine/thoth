@@ -427,9 +427,9 @@ extension CPYSecureItemsViewController {
 
     private func exportItems(to url: URL) {
         do {
-            let service = AppEnvironment.current.secureMenuService
-            let data = try SecureItemsTransfer.encode(items: service.loadAllItems(),
-                                                      cryptoPassword: service.loadCryptoPassword())
+            // 読み出せないまま 0 件で書き出すと、既存のバックアップを空で潰してしまう。
+            // その確認は exportData の中で行う
+            let data = try SecureItemsTransfer.exportData(using: AppEnvironment.current.secureMenuService)
             try data.write(to: url, options: .atomic)
         } catch {
             showImportExportError(error)
