@@ -18,7 +18,8 @@ import Cocoa
 /// 編集機能は後続ステップで追加する。現時点では表示・コピー・URL を開くまで。
 final class CPYSecureInfoDetailViewController: NSViewController {
 
-    private enum Layout {
+    /// +BottomBar.swift からも参照するので internal
+    enum Layout {
         static let padding: CGFloat    = 20
         static let rowSpacing: CGFloat = 10
     }
@@ -52,6 +53,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onAddFieldRequested: ((SecureInfoFieldTemplate) -> Void)?
     /// TOTP の取り込みが要求された
     var onAddTOTPRequested: (() -> Void)?
+    /// パスワード生成が要求された
+    var onGeneratePasswordRequested: (() -> Void)?
 
     private let scrollView = NSScrollView()
     /// 行を並べる入れ物であり、並べ替えドラッグの受け皿
@@ -64,12 +67,23 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     private var onExternalChangeReload: (() -> Void)?
     let addFieldButton = NSPopUpButton()
     let addTOTPButton = NSButton()
+    let generatePasswordButton = NSButton()
+    /// ボトムバー左側（追加系）をまとめる入れ物
+    let bottomBarStackView = NSStackView()
     /// ウィンドウを閉じるボタン。Esc / ⌘W と同じ操作をマウスからも行えるようにする
     let closeButton = NSButton()
     let totpService = TOTPService()
     var totpTimer: Timer?
 
     private(set) var displayedItem: SecureMenuItem?
+
+    /// 最後にフォーカスが入ったパスワード生成の入力先フィールドの ID。
+    ///
+    /// 行ビューではなく ID で覚える。並べ替え・マスク切替・保存のたびに
+    /// `show(item:)` が行を作り直すため、ビュー参照だと簿記が合わなくなる。
+    /// 別のアイテムへ移ると `show(item:)` が nil に戻す。
+    /// 解決は +BottomBar.swift の `fillTargetRow`
+    var fillTargetFieldID: String?
 
     /// 現在並んでいるフィールド行
     var fieldRows: [SecureFieldRowView] {
@@ -155,16 +169,17 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             scrollView.topAnchor.constraint(equalTo: titleSeparator.bottomAnchor, constant: Layout.rowSpacing),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
-            scrollView.bottomAnchor.constraint(equalTo: addFieldButton.topAnchor, constant: -Layout.rowSpacing),
+            scrollView.bottomAnchor.constraint(equalTo: bottomBarStackView.topAnchor, constant: -Layout.rowSpacing),
 
             // 「閉じる」は選択の有無に関わらず出すので、こちらを下端の基準にする
             closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
             closeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
 
-            addFieldButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
-            addFieldButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
-            addTOTPButton.leadingAnchor.constraint(equalTo: addFieldButton.trailingAnchor, constant: Layout.rowSpacing),
-            addTOTPButton.centerYAnchor.constraint(equalTo: addFieldButton.centerYAnchor),
+            bottomBarStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
+            bottomBarStackView.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
+            // 幅が足りないときは「閉じる」を押しのけず、こちらが縮む
+            bottomBarStackView.trailingAnchor.constraint(lessThanOrEqualTo: closeButton.leadingAnchor,
+                                                         constant: -Layout.rowSpacing),
 
             // 横方向はスクロールさせず、内容の幅を可視領域に合わせる。
             // scrollView 自体の幅に合わせると、縦スクローラーが出たときに
@@ -241,6 +256,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
 
     /// 表示するアイテムを差し替える。nil で「選択なし」表示にする
     func show(item: SecureMenuItem?) {
+        // 別のアイテムへ移ったときだけ入力先を忘れる。フィールドの追加・削除・
+        // 並べ替え・マスク切替でもここを通るが、それらは同じアイテムの中の
+        // 作り直しなので覚えたままにする
+        if displayedItem?.itemID != item?.itemID {
+            fillTargetFieldID = nil
+        }
         displayedItem = item
         rebuildRows(for: item)
 
@@ -249,8 +270,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             titleField.isHidden = true
             titleSeparator.isHidden = true
             scrollView.isHidden = true
-            addFieldButton.isHidden = true
-            addTOTPButton.isHidden = true
+            setBottomBarButtonsHidden(true)
             placeholderLabel.stringValue = L10n.secureInfoNoSelection
             placeholderLabel.isHidden = false
             return
@@ -261,8 +281,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         titleSeparator.isHidden = false
         scrollView.isHidden = false
         placeholderLabel.isHidden = true
-        addFieldButton.isHidden = isReadOnly
-        addTOTPButton.isHidden = isReadOnly
+        setBottomBarButtonsHidden(isReadOnly)
     }
 
     private func rebuildRows(for item: SecureMenuItem?) {
@@ -280,6 +299,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             row.onLabelEdited = { [weak self] row, label in self?.onFieldEdited?(row.field, label, nil) }
             row.onValueEdited = { [weak self] row, value in self?.onFieldEdited?(row.field, nil, value) }
             row.onEditingEnded = { [weak self] _ in self?.onEditingEnded?() }
+            // パスワード生成の入力先を覚える。ボタンを押した時点では編集が終わって
+            // いるため、押されてから探しに行っても手遅れになる
+            row.onEditingFocusGained = { [weak self] row in
+                guard row.acceptsGeneratedPassword else { return }
+                self?.fillTargetFieldID = row.field.fieldID
+            }
             row.onMaskToggled = { [weak self] row, isPassword in
                 self?.onFieldMaskToggled?(row.field, isPassword)
             }
@@ -309,54 +334,6 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     /// 表示中の平文をすべて伏せ字へ戻す
     func hideAllRevealedValues() {
         fieldRows.forEach { $0.hideRevealedValue() }
-    }
-
-    /// フィールド追加メニューとボトムバーを組み立てる
-    private func setupBottomBar() {
-        addFieldButton.translatesAutoresizingMaskIntoConstraints = false
-        addFieldButton.pullsDown = true
-        let menu = NSMenu()
-        // pullsDown のポップアップは先頭項目がボタンの表示名になる
-        menu.addItem(NSMenuItem(title: L10n.secureInfoAddField, action: nil, keyEquivalent: ""))
-        for template in SecureInfoFieldTemplate.allCases {
-            let menuItem = NSMenuItem(title: template.menuTitle,
-                                      action: #selector(addFieldSelected(_:)), keyEquivalent: "")
-            menuItem.target = self
-            menuItem.representedObject = template.rawValue
-            menu.addItem(menuItem)
-        }
-        addFieldButton.menu = menu
-        view.addSubview(addFieldButton)
-
-        addTOTPButton.title = L10n.addTOTP
-        addTOTPButton.bezelStyle = .rounded
-        addTOTPButton.target = self
-        addTOTPButton.action = #selector(addTOTPSelected)
-        addTOTPButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(addTOTPButton)
-
-        closeButton.title = L10n.close
-        closeButton.bezelStyle = .rounded
-        closeButton.target = self
-        closeButton.action = #selector(closeWindowSelected)
-        // 既定ボタンにはしない。Return は右ペインへフォーカスを移す操作に
-        // 割り当て済みで、既定ボタンにすると横取りされる
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(closeButton)
-    }
-
-    @objc private func closeWindowSelected() {
-        view.window?.performClose(self)
-    }
-
-    @objc private func addFieldSelected(_ sender: NSMenuItem) {
-        guard let raw = sender.representedObject as? String,
-              let template = SecureInfoFieldTemplate(rawValue: raw) else { return }
-        onAddFieldRequested?(template)
-    }
-
-    @objc private func addTOTPSelected() {
-        onAddTOTPRequested?()
     }
 
     /// 指定フィールドの行へフォーカスを移す。

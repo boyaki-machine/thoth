@@ -45,9 +45,20 @@ final class CPYPasswordGeneratorWindowController: NSWindowController {
 /// 文字種: [x] 半角英字  [x] 数字
 ///         [ ] 記号      [x] 大文字小文字を区別
 ///         [ ] 入力しやすいパスワード
-///        [パスワード生成] [コピー] [閉じる]
+/// [この項目に入力]      [パスワード生成] [コピー] [閉じる]
 /// ```
+/// 左端の「この項目に入力」は `onUse` が設定されているときだけ出る。
 final class CPYPasswordGeneratorViewController: NSViewController {
+
+    /// 生成したパスワードを呼び出し元へ渡す。
+    ///
+    /// 設定されているときだけ「この項目に入力」ボタンが出る。独立ウィンドウ
+    /// （`CPYPasswordGeneratorWindowController.shared`）や指紋パスワード管理からの
+    /// 呼び出しでは設定しないため、それらの画面の挙動は従来どおり（コピーのみ）。
+    ///
+    /// `presentAsSheet` より前に設定すること。表示直前にも見え方を作り直すので
+    /// `loadView()` との前後関係は問わない
+    var onUse: ((String) -> Void)?
 
     private let service = PasswordGenerateService()
 
@@ -65,6 +76,9 @@ final class CPYPasswordGeneratorViewController: NSViewController {
     private let generateButton = NSButton()
     private let copyButton     = NSButton()
     private let closeButton    = NSButton()
+    /// 生成値を呼び出し元のフィールドへ入れるボタン（`onUse` があるときだけ出す）。
+    /// 出し入れをユニットテストから検証できるよう internal にしている
+    let useButton = NSButton()
 
     private static let defaultLength = 16
 
@@ -75,8 +89,15 @@ final class CPYPasswordGeneratorViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        // onUse が loadView() より後に設定されていても取りこぼさない
+        updateUseButtonVisibility()
         // 表示のたびに条件に基づいた新しいパスワードを生成する
         generateAction()
+    }
+
+    /// 「この項目に入力」の出し入れ。入力先を持たない呼び出し元では出さない
+    func updateUseButtonVisibility() {
+        useButton.isHidden = (onUse == nil)
     }
 
     /// Esc キーで閉じる
@@ -134,6 +155,19 @@ final class CPYPasswordGeneratorViewController: NSViewController {
         }
         AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: password)
         AppEnvironment.current.pasteService.scheduleConcealedClear()
+    }
+
+    /// 表示中のパスワードを呼び出し元のフィールドへ渡して閉じる。
+    /// クリップボードは経由しない（貼り付け先を取り違える事故と、
+    /// 秘匿マーカー付きコピーの自動クリア待ちを避ける）
+    @objc private func useAction() {
+        let password = passwordField.stringValue
+        guard !password.isEmpty else {
+            NSSound.beep()
+            return
+        }
+        onUse?(password)
+        closeSelf()
     }
 
     @objc private func closeWindow() {
@@ -240,7 +274,13 @@ fileprivate extension CPYPasswordGeneratorViewController {
         closeButton.target = self
         closeButton.action = #selector(closeWindow)
 
-        [generateButton, copyButton, closeButton].forEach { button in
+        // 呼び出し元へ返す操作なので、生成・コピー・閉じるの並びとは離して左端に置く
+        useButton.title = L10n.passwordGeneratorFillField
+        useButton.target = self
+        useButton.action = #selector(useAction)
+        updateUseButtonVisibility()
+
+        [generateButton, copyButton, closeButton, useButton].forEach { button in
             button.bezelStyle = .rounded
             button.translatesAutoresizingMaskIntoConstraints = false
             view.addSubview(button)
@@ -283,7 +323,10 @@ fileprivate extension CPYPasswordGeneratorViewController {
             copyButton.trailingAnchor.constraint(equalTo: closeButton.leadingAnchor, constant: -8),
             copyButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor),
             generateButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -8),
-            generateButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor)
+            generateButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor),
+
+            useButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            useButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor)
         ])
     }
 }

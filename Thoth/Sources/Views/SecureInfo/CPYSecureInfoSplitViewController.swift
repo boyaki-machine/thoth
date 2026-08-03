@@ -143,6 +143,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         detailViewController.onAddTOTPRequested = { [weak self] in
             self?.presentTOTPImport()
         }
+        detailViewController.onGeneratePasswordRequested = { [weak self] in
+            self?.presentPasswordGenerator()
+        }
         listViewController.onAddItemRequested = { [weak self] in
             self?.addItem()
         }

@@ -80,6 +80,23 @@ class SecureInfoKeyActionSpec: QuickSpec {
                 expect(action(KeyCode.delete, modifiers: .command)) == Action.deleteItem
             }
 
+            // 廃止した管理ウィンドウの編集シートは ⌘P だったが、こちらは ⌘G。
+            // ⌘P は印刷の標準ショートカットで、他のウィンドウと意味がぶつかる
+            it("⌘G でパスワード生成シートを開く") {
+                expect(action(0, character: "g", modifiers: .command)) == Action.generatePassword
+            }
+
+            // パスワード欄を編集している最中こそ使いたい操作
+            it("⌘G はテキスト入力中でも効く") {
+                expect(action(0, character: "g", modifiers: .command, editing: true)) == Action.generatePassword
+            }
+
+            it("修飾キーの無い g は文字入力として素通しする") {
+                expect(action(0, character: "g")) == nil
+                expect(action(0, character: "g", modifiers: .control)) == nil
+                expect(action(0, character: "g", modifiers: [.command, .shift])) == nil
+            }
+
             // ⌘ 付きは入力中でも効く（入力欄から手を離さずに保存・検索できる）
             it("テキスト入力中でも効く") {
                 expect(action(0, character: "s", modifiers: .command, editing: true)) == Action.save

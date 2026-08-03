@@ -12,14 +12,16 @@ import Cocoa
 ///
 /// このウィンドウは値を平文で画面に表示するため、**表示前に必ず認証を通すこと**
 /// （導線は `AppDelegate.showSecureInfoWindow()`）。
-/// セキュアアイテム管理ウィンドウとは異なり、メインメニューから直接開けるため
+/// メインメニューからもセキュアアイテム選択パネルからも直接開けるため、
 /// 認証ゲートが無いと未認証で機密情報を閲覧できてしまう。
 final class CPYSecureInfoWindowController: NSWindowController {
 
     private enum Layout {
         static let width: CGFloat     = 760
         static let height: CGFloat    = 520
-        static let minWidth: CGFloat  = 620
+        /// 右ペインのボトムバーに「フィールドを追加 / TOTP追加 / パスワード生成 / 閉じる」が
+        /// 並ぶため、サイドバー最小幅 180 を引いても収まる値にしてある
+        static let minWidth: CGFloat  = 680
         static let minHeight: CGFloat = 420
     }
 
