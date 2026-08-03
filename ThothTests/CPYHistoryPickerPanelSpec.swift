@@ -150,6 +150,35 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
                 panel.close()
             }
 
+            // 表示ラベルの "(&x)" とキー処理は同じ定義元から作る。
+            // 別々に書いていたため、行を追加したときにラベルだけ付いて
+            // ショートカットが効かない状態になっていた
+            it("ショートカットを持つ行のラベルに (&キー) が付く") {
+                typealias Action = CPYHistoryPickerPanel.PanelAction
+                for action in Action.allCases {
+                    guard let key = action.shortcutKey else {
+                        expect(action.title) == action.name
+                        continue
+                    }
+                    expect(action.title) == "\(action.name) (&\(key))"
+                    expect(action.title).to(contain("(&\(key))"))
+                }
+            }
+
+            it("ショートカットはすべて小文字 1 文字で重複しない") {
+                typealias Action = CPYHistoryPickerPanel.PanelAction
+                let keys = Action.allCases.compactMap { $0.shortcutKey }
+                expect(keys.allSatisfy { $0.count == 1 && $0 == $0.lowercased() }) == true
+                expect(Set(keys).count) == keys.count
+            }
+
+            it("ツール系の行にショートカットが割り当てられている") {
+                typealias Action = CPYHistoryPickerPanel.PanelAction
+                expect(Action.generatePassword.shortcutKey) == "p"
+                expect(Action.crypto.shortcutKey) == "e"
+                expect(Action.secureInfo.shortcutKey) == "s"
+            }
+
             // セキュア情報確認ウィンドウはメインメニューのツールセクションから開く。
             // 導線が消えると認証付きの一覧・編集画面へ到達する手段が無くなる
             it("ツールセクションにセキュア情報の行がある") {
