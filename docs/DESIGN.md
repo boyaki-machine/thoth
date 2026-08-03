@@ -10,7 +10,7 @@ For a user-facing overview see [../README.md](../README.md); for environment and
 
 ## 1. Export / Import File Schema
 
-The JSON produced by Export in the Manage Secure Items window is the **user-configured sensitive information** (`SecureUserData`). Import reads this file. Information the app generates automatically (encryption keys, etc.) is not included in the Export (see [4. Classification of Information](#4-classification-of-information-user-configured--app-generated)).
+The JSON produced by Export in the Secure Info window (⚙ menu) is the **user-configured sensitive information** (`SecureUserData`). Import reads this file. Information the app generates automatically (encryption keys, etc.) is not included in the Export (see [4. Classification of Information](#4-classification-of-information-user-configured--app-generated)).
 
 > **Note:** The Export file is plaintext JSON. Handle it with care.
 
@@ -233,7 +233,27 @@ As noted above, to cope with the macOS behavior of binding keychain ACLs to code
 
 ### 5-6. Secure Info Window
 
-A two-pane window for browsing and editing secure information (main menu → **Secure Info**). The design decisions are as follows.
+A two-pane window for browsing and editing secure information (main menu → **Secure Info**, or **Secure Info (&s)** at the bottom of the picker panel). The design decisions are as follows.
+
+**Retiring the Manage Secure Items window (v1.3.0)**
+
+Through v1.2.x there were two screens with the same job: the Manage Secure Items window (`p` from the picker panel; a list plus an edit sheet) and this Secure Info window (`s` from the main menu; two panes). By the end of v1.2.x the Secure Info window had grown into an almost complete superset, and maintaining both stopped paying for itself.
+
+**Security decided it before features did.** The Manage window has neither `sharingType = .none` (exclusion from screen sharing and recording) nor an authentication gate before display. Leaving the same plaintext reachable through a less-protected path was not worth keeping.
+
+What was carried over, and what was not:
+
+| Feature of the Manage window | Decision | Reason |
+|---|---|---|
+| Access to the password generator | **Ported** (and improved) | The only real gap. See below |
+| Multi-select bulk delete | Not ported | The Secure Info window shows the selected item's detail in the right pane, which fits poorly with multi-selection; ⌘Z makes one-at-a-time deletion sufficient |
+| Deleting individual history entries | Not ported | Old values are the fallback path after an authentication-side rollback; this screen must not offer a way to lose them (see "Value history") |
+| The "fields" count column in the list | Not ported | The selected item's detail is always in the right pane instead |
+| Cancel (discard) in the edit sheet | Not ported | The Secure Info window is built on autosave + ⌘Z; adding "discard" would give it two competing save models |
+
+The picker panel's trailing row now points at the Secure Info window, and its key is aligned with the main menu: `p` → `s` (`p` is left unassigned). **The row's label and its key handling live in different files**, so changing only one produces a row that reads `(&s)` but does not respond to `s`. `CPYSecurePickerPanelSpec` pins both together.
+
+The picker panel is only reachable after authentication, so opening the Secure Info window from it falls inside `SecureMenuService.authenticationGracePeriod` (30 s) and does not prompt for Touch ID again.
 
 **Division of labor with the picker panel (⌘⇧.)**
 
@@ -265,9 +285,11 @@ Editing a value while it is masked would save the visible `•••••••
 | Memory | Plaintext held in memory is discarded on close and re-read on the next open |
 | Opening URLs | Only `http` / `https` with a host. Prevents `file://` or custom schemes from imported data launching unintended apps |
 
-**Synchronizing the two windows**
+**Synchronizing across screens**
 
-The Manage Secure Items window and the Secure Info window share one `SecureMenuService`. Changes are announced via `Notification.Name.secureItemsDidChange`, posted from two places: `saveAllItems` (save / delete / reorder) and `deleteAllItems` (which does not go through `saveAllItems`, so covering only the former would fail to synchronize a full delete).
+Every screen that touches secure items shares one `SecureMenuService`. Changes are announced via `Notification.Name.secureItemsDidChange`, posted from two places: `saveAllItems` (save / delete / reorder) and `deleteAllItems` (which does not go through `saveAllItems`, so covering only the former would fail to synchronize a full delete).
+
+This machinery stays after the Manage window was retired in v1.3.0: the Secure Info window can be left open while the app is re-activated to use the picker panel, and any future screen needs the same foundation.
 
 The Secure Info window uses `SecureMenuService.itemsChangeToken` to tell whether a change was its own. Reloading after its own save would rebuild the row views and throw away editing focus and cursor position. When unsaved edits exist it does not reload at all; it shows a banner and leaves the decision to the user.
 
@@ -304,7 +326,7 @@ v1.2.1 drops the dialog, moves 🗑 **outside the button stack** with a 10pt gap
 
 **Drag-and-drop reordering**
 
-The left pane (items) uses the standard `NSTableView` mechanism, matching the Manage window. **Dragging is refused while the list is filtered**, because the visible order does not match the stored order and a row number cannot be turned into a correct destination (keyboard reordering is blocked for the same reason).
+The left pane (items) uses the standard `NSTableView` mechanism. **Dragging is refused while the list is filtered**, because the visible order does not match the stored order and a row number cannot be turned into a correct destination (keyboard reordering is blocked for the same reason).
 
 The right pane (fields) is an `NSStackView`, so this is hand-rolled. A `≡` handle sits at the leading edge of each row and **drags start only from there** — making the whole row draggable would collide with text selection in the value field. The handle's `NSImageView` is an `NSControl` and would swallow `mouseDown`, so `hitTest` routes just that area back to the row.
 
@@ -314,7 +336,7 @@ The pasteboard carries only the `fieldID` or the row number — **never a value*
 
 **Import / export**
 
-The logic lives in `SecureItemsTransfer` (UI-independent) and is shared by the Manage window and the Secure Info window, where it is reached from the ⚙ menu at the bottom of the left pane.
+The logic lives in `SecureItemsTransfer` (UI-independent) and is reached from the ⚙ menu at the bottom of the left pane.
 
 **Neither runs when the Keychain cannot be read (`isKeychainAccessDenied`).** Import would merely be rejected by `saveAllItems`, but export would write a JSON file with zero items — inviting the user to overwrite an existing backup with an empty one.
 
@@ -326,18 +348,36 @@ Import is the least reversible operation here, so undo remains available afterwa
 
 **Value history (v1.2.2)**
 
-The same value history the edit sheet shows (`Field.history`, capped at 10) is now readable from the Secure Info window. There are two uses, and both require the value to be *visible*:
+The same value history the retired edit sheet showed (`Field.history`, capped at 10) is readable from the Secure Info window. There are two uses, and both require the value to be *visible*:
 
 1. Authentication systems that reject "the same password as any of the last N" force the user to **compare past values by eye** before choosing a new one
 2. After a rollback on the authentication side, an old password is the **fallback** that still gets you in
 
-**History expands inline under the row — not in a menu.** Once the value is on screen, where it is drawn decides whether it is protected. `NSWindow.sharingType = .none` (exclusion from screen sharing and recording) covers only the window's own surface; NSMenu and NSPopover are drawn in separate windows and are not covered — the same point as the drag image. The edit sheet's existing UI does list plaintext in a menu, but the Secure Info window is built on the promise of protecting plaintext, so it does not copy that.
+**History expands inline under the row — not in a menu.** Once the value is on screen, where it is drawn decides whether it is protected. `NSWindow.sharingType = .none` (exclusion from screen sharing and recording) covers only the window's own surface; NSMenu and NSPopover are drawn in separate windows and are not covered — the same point as the drag image. The retired edit sheet did list plaintext in a menu, but the Secure Info window is built on the promise of protecting plaintext, so it does not copy that.
 
 History inherits the row's discipline verbatim: masked by default / 👁 reveals and `revealTimeout` seconds re-masks / immediate re-mask on window deactivation / concealed copy with auto-clear. The timeout comes from `SecureFieldRowView.revealTimeout` so that "how long plaintext may stay on screen" is decided in one place. If `startRefreshTimerIfNeeded()` did not count revealed *history* values, opening only a history entry would leave the auto re-mask unarmed.
 
 🕘 appears only on rows that **have at least one history entry**, and only while hovered or being edited. Because it sits in the middle of the button stack, it is toggled with `alphaValue` rather than `isHidden` — the width stays reserved so copy ⧉ does not slide sideways the moment it appears. Kinds that keep no history (TOTP, memo) never show it: a TOTP secret is deliberately never recorded, so even legacy data carrying one is not displayed.
 
 **History is read-only here.** There is no delete and no "restore this value". Use 2 above means this screen must not offer a way to lose history. To go back to an old value the user edits the current one, which pushes the current value into history automatically. Viewing is non-destructive, so it works in read-only mode too.
+
+**Password generation (v1.3.0)**
+
+The one feature carried over when the Manage window was retired. There, the generator sheet only opened; the user copied the result by hand and pasted it into the value cell. **The Secure Info window never routes it through the clipboard.** Hand-copying leaves the password sitting on the pasteboard, and it invites pasting into the wrong place.
+
+The destination is **the field that last held editing focus**. By the time the button is pressed, editing has ended and first responder has left the row, so looking for it *then* is too late. It is recorded the moment a row gains editing focus (`SecureFieldRowView.onEditingFocusGained` → `CPYSecureInfoDetailViewController.fillTargetFieldID`).
+
+**What is remembered is the `fieldID`, not the row view.** Row views are rebuilt on every reorder, mask toggle, and save, so a view reference goes stale immediately. `fillTargetRow` resolves the ID to a row at use time and re-checks that the kind can still accept a value.
+
+It is forgotten **only when the selection moves to a different item**. Adding, deleting, and reordering fields all go through the same `show(item:)`, but those are rebuilds within one item, so the target survives them (forgetting every time would force the user to re-pick the target right after moving a row). Remembering it *across* items, on the other hand, would fire a generated password into some other item's value.
+
+Only `plain` accepts a generated value (`SecureMenuItem.Field.Kind.acceptsGeneratedPassword`). A TOTP secret is meaningless unless paired with its issuer, and URL and memo fields do not match what the generator produces.
+
+**Masked fields accept it too.** The "values cannot be edited while masked" rule forbids *typing while looking at asterisks*; a generated value rewrites the model (the working copy) and rebuilds the row, so `••••••••` can never be saved as the value.
+
+The generator sheet shows **Fill This Field** only when the caller set `onUse`. Showing it when opened as a standalone window, or from fingerprint-password management, would leave a button that does nothing.
+
+The shortcut is **⌘G**. The retired edit sheet used ⌘P, but ⌘P is the standard Print shortcut and collides in meaning with other windows. ⌘G stays active while text is being edited — that is exactly when it is wanted.
 
 **How history behaves on export / import (as investigated for v1.2.2)**
 
