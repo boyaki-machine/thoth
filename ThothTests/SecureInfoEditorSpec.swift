@@ -573,14 +573,15 @@ class SecureInfoEditorSpec: QuickSpec {
                 expect(text).to(contain("契約番号"))
             }
 
-            // マスク指定のメモは秘匿したい内容なので検索対象から外す
-            it("マスク指定のメモ本文は含まない") {
+            // メモはマスクを持たない種別なので、旧データで isPassword が
+            // 立っていても本文は検索対象に含める
+            it("旧データでマスク指定が残っているメモも本文を検索できる") {
                 let item = SecureMenuItem(title: "T", fields: [
-                    SecureMenuItem.Field(label: "Memo", value: "hidden-content", isPassword: true, kind: .note)
+                    SecureMenuItem.Field(label: "Memo", value: "contract-content", isPassword: true, kind: .note)
                 ])
                 let text = SecureInfoEditor.searchableText(of: item)
                 expect(text).to(contain("memo"))
-                expect(text).toNot(contain("hidden-content"))
+                expect(text).to(contain("contract-content"))
             }
         }
     }

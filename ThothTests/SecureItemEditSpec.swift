@@ -134,28 +134,19 @@ class SecureItemEditSpec: QuickSpec {
                 expect(saved?.fields[1].kind) == .url
             }
 
-            // メモは 🔒 を持つため、チェックボックス操作でも本文が消えてはならない
-            // （ハンドラがセルの空文字を読んでモデルを上書きする事故を防ぐ）
-            it("Preserves the note value when the password checkbox is toggled") {
+            // メモは伏せ字にすると覚書として用を成さないため 🔒 を持たない
+            it("Hides the password checkbox for a note row but keeps it for a url row") {
                 let viewController = makeViewController()
                 let table = viewController.fieldsTable
                 let passCol = table.column(withIdentifier: SecureItemEditViewController.ColID.pass)
-                guard let passCell = table.view(atColumn: passCol, row: 0, makeIfNecessary: true),
-                      let button = passCell.subviews.first(where: { $0 is NSButton }) as? NSButton else {
-                    fail("checkbox button not found")
-                    return
-                }
-                // メモの行にはチェックボックスが表示される（TOTP と違い操作できる）
-                expect(button.isHidden) == false
 
-                button.state = .on
-                viewController.passwordCheckboxChanged(button)
+                let noteCheckbox = table.view(atColumn: passCol, row: 0, makeIfNecessary: true)?
+                    .subviews.first(where: { $0 is NSButton })
+                let urlCheckbox = table.view(atColumn: passCol, row: 1, makeIfNecessary: true)?
+                    .subviews.first(where: { $0 is NSButton })
 
-                var saved: SecureMenuItem?
-                viewController.onSave = { saved = $0 }
-                viewController.perform(NSSelectorFromString("saveSheet"))
-                expect(saved?.fields.first?.value) == memo
-                expect(saved?.fields.first?.isPassword) == true
+                expect(noteCheckbox?.isHidden) == true
+                expect(urlCheckbox?.isHidden) == false
             }
 
             it("Hides the history button for a note row but keeps it for a url row") {

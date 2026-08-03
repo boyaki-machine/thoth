@@ -197,6 +197,8 @@ final class CPYHistoryPickerPanel: NSPanel {
         static let hPad: CGFloat      = 8
         static let corner: CGFloat    = 8
         static let fontSize: CGFloat  = NSFont.systemFontSize - 1
+        /// 画面の作業領域からこの分だけ余白を残す（画面いっぱいまで伸ばさない）
+        static let screenMargin: CGFloat = 40
     }
 
     // MARK: - UI
@@ -449,6 +451,7 @@ extension CPYHistoryPickerPanel {
         tableView.action                  = #selector(rowClicked)
 
         scrollView.hasVerticalScroller = true
+        // 画面に収まっているときはスクローラーを出さない
         scrollView.autohidesScrollers  = true
         scrollView.drawsBackground     = false
         scrollView.documentView        = tableView

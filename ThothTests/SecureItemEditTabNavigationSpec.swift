@@ -53,13 +53,12 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
                     == [.title, .label(row: 0), .value(row: 0), .checkbox(row: 0)] + trailingButtons
             }
 
-            // メモは単一行セルで編集できない（改行が失われる）ため Value を飛ばすが、
-            // マスク切り替えは持つのでチェックボックスには到達する。
-            // TOTP と同じ「行ごと飛ばす」扱いにすると 🔒 が操作不能になる
-            it("Skips the value but keeps the checkbox for a note field") {
+            // メモは単一行セルで編集できず（改行が失われる）、マスクも持たないため、
+            // TOTP と同じくラベルだけが巡回対象になる
+            it("Visits only the label for a note field") {
                 let fields = [SecureMenuItem.Field(label: "Memo", value: "line1\nline2", kind: .note)]
                 expect(SecureItemEditViewController.focusOrder(for: fields))
-                    == [.title, .label(row: 0), .checkbox(row: 0)] + trailingButtons
+                    == [.title, .label(row: 0)] + trailingButtons
             }
 
             it("Builds the order for a mix of every kind") {
@@ -75,7 +74,7 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
                     .label(row: 1), .value(row: 1), .checkbox(row: 1),
                     .label(row: 2),
                     .label(row: 3), .value(row: 3), .checkbox(row: 3),
-                    .label(row: 4), .checkbox(row: 4)
+                    .label(row: 4)
                 ] + trailingButtons
             }
 
@@ -128,8 +127,9 @@ class SecureItemEditTabNavigationSpec: QuickSpec {
                 expect(next(from: .label(row: 2), in: mixedFields(), shift: true)) == Stop.label(row: 1)
             }
 
-            it("Reaches the checkbox of a note row without passing through its value") {
-                expect(next(from: .label(row: 2), in: mixedFields(), shift: false)) == Stop.checkbox(row: 2)
+            // メモ行は Value もチェックボックスも持たないため、ラベルの次はボタン列へ抜ける
+            it("Leaves a note row after its label") {
+                expect(next(from: .label(row: 2), in: mixedFields(), shift: false)) == Stop.addField
             }
 
             it("Wraps from save back to the title and vice versa") {

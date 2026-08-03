@@ -101,8 +101,10 @@ final class SecureFieldRowView: NSView {
     /// - マスク指定のフィールドは、表示切替が ON のときだけ平文にする
     static func displayedValue(for field: SecureMenuItem.Field, isRevealed: Bool) -> String {
         guard field.kind.displaysRawValue else { return "" }
-        if field.isPassword && !isRevealed { return maskedPlaceholder }
-        return field.value
+        // マスクを持たない種別では isPassword を無視する。旧データでメモに
+        // マスク指定が残っていても、解除できない伏せ字にならないようにする
+        guard field.kind.allowsPasswordToggle, field.isPassword, !isRevealed else { return field.value }
+        return maskedPlaceholder
     }
 
     /// 表示切替を反転する。マスクを持たない種別では何もしない。
@@ -143,7 +145,8 @@ final class SecureFieldRowView: NSView {
     ///   編集したい場合は 👁 で平文に切り替えてから行う
     static func isValueEditable(field: SecureMenuItem.Field, isRevealed: Bool, isReadOnly: Bool) -> Bool {
         guard !isReadOnly, field.kind.displaysRawValue else { return false }
-        return !field.isPassword || isRevealed
+        guard field.kind.allowsPasswordToggle, field.isPassword else { return true }
+        return isRevealed
     }
 
     /// ラベルを編集できるか（読み取り専用でなければ種別を問わず編集できる）

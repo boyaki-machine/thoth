@@ -197,6 +197,42 @@ class SecureInfoCommitFlowSpec: QuickSpec {
                 expect(splitViewController.editor.items.count) == 2
             }
 
+            // 変更通知は NotificationCenter の仕様上、メインスレッドからの post だと
+            // 保存処理の**途中で同期的に**届く。その時点では通し番号の更新も
+            // 保存完了の記録も済んでいないため、通し番号だけの判定では
+            // 自分の保存を「他の画面での変更」と誤認して案内バーが出ていた
+            it("自分の保存の途中で届いた通知では案内を出さない") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Renamed")
+
+                var shownDuringSave = false
+                // queue: nil は post したスレッドで同期的に呼ばれる
+                let observer = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                      object: nil, queue: nil) { _ in
+                    splitViewController.applyExternalChangeIfNeeded()
+                    let banner = splitViewController.detailViewControllerForTesting.externalChangeBanner
+                    if !banner.isHidden { shownDuringSave = true }
+                }
+                defer { NotificationCenter.default.removeObserver(observer) }
+
+                expect(splitViewController.commitIfNeeded()) == true
+                expect(shownDuringSave) == false
+                expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == true
+                expect(service.loadAllItems().first?.title) == "Renamed"
+            }
+
+            // 一度出た案内が残り続けると、以後の操作のたびに出ているように見える
+            it("自分の保存が成功すると残っていた案内も消える") {
+                let splitViewController = makeSplitViewController()
+                splitViewController.detailViewControllerForTesting.showExternalChangeBanner {}
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("Renamed")
+
+                expect(splitViewController.commitIfNeeded()) == true
+                expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == true
+            }
+
             it("読み直すと案内は消える") {
                 let splitViewController = makeSplitViewController()
                 splitViewController.detailViewControllerForTesting.showExternalChangeBanner {}

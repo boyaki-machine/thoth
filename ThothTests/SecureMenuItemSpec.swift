@@ -62,10 +62,12 @@ class SecureMenuItemSpec: QuickSpec {
                 expect(Kind.note.allowsSingleLineEditing) == false
             }
 
-            it("Allows the password toggle for everything but totp") {
+            // メモは伏せ字にすると覚書として用を成さないため対象外。
+            // TOTP は secret を表示しないためマスクの概念が無い
+            it("Allows the password toggle only for plain and url") {
                 expect(Kind.plain.allowsPasswordToggle) == true
                 expect(Kind.url.allowsPasswordToggle) == true
-                expect(Kind.note.allowsPasswordToggle) == true
+                expect(Kind.note.allowsPasswordToggle) == false
                 expect(Kind.totp.allowsPasswordToggle) == false
             }
 

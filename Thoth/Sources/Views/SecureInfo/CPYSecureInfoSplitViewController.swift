@@ -38,6 +38,22 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     var hasShownCommitFailure = false
     /// 画面へ反映済みの変更番号。自分が起こした変更で再読込しないための目印
     private var appliedChangeToken = 0
+    /// 自分がデータを変更している最中か。
+    /// 変更通知は NotificationCenter の仕様上、メインスレッドからの post だと
+    /// **保存処理の途中で同期的に**届く。その時点では通し番号の更新も
+    /// 保存完了の記録も済んでいないため、通し番号だけでは自分の変更を見分けられない
+    private var isApplyingLocalChange = false
+
+    /// 自分の変更として実行する。実行中に届いた変更通知は無視し、
+    /// 終了時に反映済みの通し番号を更新する
+    private func performLocalChange<T>(_ body: () -> T) -> T {
+        isApplyingLocalChange = true
+        defer {
+            isApplyingLocalChange = false
+            appliedChangeToken = AppEnvironment.current.secureMenuService.itemsChangeToken
+        }
+        return body()
+    }
 
     /// 最後の入力から保険として保存するまでの秒数
     private static let fallbackCommitInterval: TimeInterval = 20
@@ -177,16 +193,19 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         guard commitIfNeeded() else { return }
         let service = AppEnvironment.current.secureMenuService
         let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)
-        guard service.save(newItem) else {
-            showCommitFailure(informative: L10n.secureInfoSaveFailed)
-            return
+        let added: Bool = performLocalChange {
+            guard service.save(newItem) else {
+                showCommitFailure(informative: L10n.secureInfoSaveFailed)
+                return false
+            }
+            // 検索で絞り込んだままだと新しいアイテムが見えないので解除する
+            listViewController.clearSearch()
+            editor.setItems(service.loadAllItems())
+            editor.selectItem(itemID: newItem.itemID)
+            listViewController.reload()
+            return true
         }
-        // 検索で絞り込んだままだと新しいアイテムが見えないので解除する
-        listViewController.clearSearch()
-        appliedChangeToken = service.itemsChangeToken
-        editor.setItems(service.loadAllItems())
-        editor.selectItem(itemID: newItem.itemID)
-        listViewController.reload()
+        guard added else { return }
         detailViewController.focusTitleField()
     }
 
@@ -207,14 +226,15 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         let service = AppEnvironment.current.secureMenuService
         // 削除するアイテムの未保存編集は捨てる（保存すると復活してしまう）
         editor.beginEditing(itemID: nil)
-        guard service.delete(itemID: item.itemID) else {
-            showCommitFailure(informative: L10n.secureInfoSaveFailed)
-            return
+        performLocalChange {
+            guard service.delete(itemID: item.itemID) else {
+                showCommitFailure(informative: L10n.secureInfoSaveFailed)
+                return
+            }
+            editor.setItems(service.loadAllItems())
+            editor.selectItem(itemID: nil)
+            listViewController.reload()
         }
-        appliedChangeToken = service.itemsChangeToken
-        editor.setItems(service.loadAllItems())
-        editor.selectItem(itemID: nil)
-        listViewController.reload()
     }
 
     /// 選択中アイテムを一覧内で上下に動かす（Ctrl+j / Ctrl+k）。
@@ -232,13 +252,14 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             return
         }
         let service = AppEnvironment.current.secureMenuService
-        guard service.reorderItems(reordered) else {
-            showCommitFailure(informative: L10n.secureInfoSaveFailed)
-            return
+        performLocalChange {
+            guard service.reorderItems(reordered) else {
+                showCommitFailure(informative: L10n.secureInfoSaveFailed)
+                return
+            }
+            editor.setItems(service.loadAllItems())
+            listViewController.reload()
         }
-        appliedChangeToken = service.itemsChangeToken
-        editor.setItems(service.loadAllItems())
-        listViewController.reload()
     }
 
     // MARK: - Data
@@ -287,16 +308,19 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     private func save(_ item: SecureMenuItem) -> Bool {
         let service = AppEnvironment.current.secureMenuService
-        guard service.save(item) else {
-            showCommitFailure(informative: L10n.secureInfoSaveFailed)
-            return false
+        return performLocalChange {
+            guard service.save(item) else {
+                showCommitFailure(informative: L10n.secureInfoSaveFailed)
+                return false
+            }
+            // 保存後の内容（変更履歴が追記された状態）で作業コピーを更新する
+            let saved = service.loadAllItems().first { $0.itemID == item.itemID } ?? item
+            editor.markCommitted(saved)
+            listViewController.refreshRow(itemID: saved.itemID)
+            // 自分の保存で案内バーが残っていたら消す
+            detailViewController.hideExternalChangeBanner()
+            return true
         }
-        // 保存後の内容（変更履歴が追記された状態）で作業コピーを更新する
-        let saved = service.loadAllItems().first { $0.itemID == item.itemID } ?? item
-        appliedChangeToken = service.itemsChangeToken
-        editor.markCommitted(saved)
-        listViewController.refreshRow(itemID: saved.itemID)
-        return true
     }
 
     /// 保存できなかったことを知らせる。編集内容は保持したままなので、
@@ -407,7 +431,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// ここで読み直すと、打ちかけの内容が黙って消えてしまう
     func applyExternalChangeIfNeeded() {
         let service = AppEnvironment.current.secureMenuService
-        // 自分が起こした変更なら何もしない（再読込で入力中のフォーカスが飛ぶ）
+        // 自分が起こした変更なら何もしない（再読込で入力中のフォーカスが飛ぶ）。
+        // 保存の途中で同期的に届く通知もここで弾く
+        guard !isApplyingLocalChange else { return }
         guard service.itemsChangeToken != appliedChangeToken else { return }
         guard !editor.isDirty else {
             detailViewController.showExternalChangeBanner { [weak self] in

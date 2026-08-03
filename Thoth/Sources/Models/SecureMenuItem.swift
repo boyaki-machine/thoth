@@ -182,11 +182,13 @@ extension SecureMenuItem.Field.Kind {
         }
     }
 
-    /// マスク表示（🔒）の切り替えを許すか
+    /// マスク表示（🔒）の切り替えを許すか。
+    /// メモは長文の覚書で、伏せ字にすると内容を確認できず用を成さないため対象外。
+    /// TOTP は secret を表示しないため、そもそもマスクの概念が無い
     var allowsPasswordToggle: Bool {
         switch self {
-        case .plain, .url, .note: return true
-        case .totp: return false
+        case .plain, .url: return true
+        case .totp, .note: return false
         }
     }
 

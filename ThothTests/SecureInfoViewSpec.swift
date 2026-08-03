@@ -259,10 +259,11 @@ class SecureInfoViewSpec: QuickSpec {
                 expect(editable(masked, revealed: true)) == true
             }
 
-            it("マスク中のメモも編集できない") {
-                let masked = SecureMenuItem.Field(label: "M", value: "a\nb", isPassword: true, kind: .note)
-                expect(editable(masked, revealed: false)) == false
-                expect(editable(masked, revealed: true)) == true
+            // メモはマスクを持たないので、旧データの isPassword で編集不能にならない
+            it("旧データでマスク指定が残っているメモも編集できる") {
+                let legacy = SecureMenuItem.Field(label: "M", value: "a\nb", isPassword: true, kind: .note)
+                expect(editable(legacy, revealed: false)) == true
+                expect(editable(legacy, revealed: true)) == true
             }
 
             // TOTP は secret を表示しないので、編集させると空文字で潰れる
@@ -331,10 +332,12 @@ class SecureInfoViewSpec: QuickSpec {
                 expect(Row.displayedValue(for: note, isRevealed: false)) == "line1\nline2"
             }
 
-            it("マスク指定のメモも伏せ字になる") {
-                let field = SecureMenuItem.Field(label: "Memo", value: "hidden", isPassword: true, kind: .note)
-                expect(Row.displayedValue(for: field, isRevealed: false)) == Row.maskedPlaceholder
-                expect(Row.displayedValue(for: field, isRevealed: true)) == "hidden"
+            // メモはマスクを持たない種別。旧データで isPassword が立っていても
+            // 解除できない伏せ字にせず、そのまま表示する
+            it("旧データでマスク指定が残っているメモもそのまま表示する") {
+                let field = SecureMenuItem.Field(label: "Memo", value: "note body", isPassword: true, kind: .note)
+                expect(Row.displayedValue(for: field, isRevealed: false)) == "note body"
+                expect(Row.displayedValue(for: field, isRevealed: true)) == "note body"
             }
 
             it("TOTP の表示は桁区切りと残り秒数を含む") {
@@ -374,6 +377,7 @@ class SecureInfoViewSpec: QuickSpec {
                 expect(buttonCount(SecureMenuItem.Field(label: "PW", value: "a", isPassword: true))) == 2
                 expect(buttonCount(SecureMenuItem.Field(label: "URL", value: "a", kind: .url))) == 2
                 expect(buttonCount(SecureMenuItem.Field(label: "T", value: "a", kind: .totp))) == 1
+                // メモはマスクを持たないため、コピーだけが並ぶ
                 expect(buttonCount(SecureMenuItem.Field(label: "M", value: "a", kind: .note))) == 1
             }
 
@@ -400,14 +404,17 @@ class SecureInfoViewSpec: QuickSpec {
                 expect(note.noteTextView.textContainer?.widthTracksTextView) == true
             }
 
-            it("マスク指定のメモは複数行ビュー側で伏せ字になり、表示切替で戻る") {
+            // メモの行にはマスク切替も表示切替も並ばない
+            it("メモの行にマスク関連のボタンを出さない") {
                 let field = SecureMenuItem.Field(label: "M", value: "line1\nline2", isPassword: true, kind: .note)
                 let row = SecureFieldRowView(field: field)
-                expect(row.noteTextView.string) == SecureFieldRowView.maskedPlaceholder
-                row.toggleReveal()
                 expect(row.noteTextView.string) == "line1\nline2"
-                row.hideRevealedValue()
-                expect(row.noteTextView.string) == SecureFieldRowView.maskedPlaceholder
+                expect(row.maskButton.superview is NSStackView) == false
+                expect(row.revealButton.superview is NSStackView) == false
+                // 切り替えようとしても何も起きない
+                row.toggleReveal()
+                expect(row.isRevealed) == false
+                expect(row.noteTextView.string) == "line1\nline2"
             }
 
             // マスク指定の URL では表示切替・開く・コピーの 3 つが並ぶ

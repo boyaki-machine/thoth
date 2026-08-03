@@ -51,6 +51,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onAddTOTPRequested: (() -> Void)?
 
     private let scrollView = NSScrollView()
+    /// タイトル行と各フィールドを見分けやすくする区切り線
+    let titleSeparator = NSBox()
     /// 他の画面で変更が起きたことを知らせるバー（未保存の編集がある間だけ出す）
     let externalChangeBanner = NSStackView()
     let externalChangeReloadButton = NSButton()
@@ -104,7 +106,9 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         rowStackView.spacing = Layout.rowSpacing
         rowStackView.translatesAutoresizingMaskIntoConstraints = false
 
-        let documentView = NSView()
+        // NSClipView は上下反転していないため、内容が可視領域より短いと
+        // ドキュメントビューが下端に寄ってしまう。上詰めにするため反転させる
+        let documentView = FlippedView()
         documentView.translatesAutoresizingMaskIntoConstraints = false
         documentView.addSubview(rowStackView)
 
@@ -121,6 +125,10 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(placeholderLabel)
 
+        titleSeparator.boxType = .separator
+        titleSeparator.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(titleSeparator)
+
         setupBottomBar()
         setupExternalChangeBanner()
 
@@ -133,7 +141,11 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             titleField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             titleField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
 
-            scrollView.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: Layout.padding),
+            titleSeparator.topAnchor.constraint(equalTo: titleField.bottomAnchor, constant: Layout.rowSpacing),
+            titleSeparator.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
+            titleSeparator.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
+
+            scrollView.topAnchor.constraint(equalTo: titleSeparator.bottomAnchor, constant: Layout.rowSpacing),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
             scrollView.bottomAnchor.constraint(equalTo: addFieldButton.topAnchor, constant: -Layout.rowSpacing),
@@ -151,6 +163,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             rowStackView.leadingAnchor.constraint(equalTo: documentView.leadingAnchor),
             rowStackView.trailingAnchor.constraint(equalTo: documentView.trailingAnchor),
             rowStackView.bottomAnchor.constraint(equalTo: documentView.bottomAnchor),
+            // 内容が可視領域より短くても、ドキュメントビューを縮めて上詰めを保つ
+            documentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 0),
 
             placeholderLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
@@ -205,6 +219,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         guard let item = item else {
             titleField.stringValue = ""
             titleField.isHidden = true
+            titleSeparator.isHidden = true
             scrollView.isHidden = true
             addFieldButton.isHidden = true
             addTOTPButton.isHidden = true
@@ -215,6 +230,7 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         titleField.stringValue = item.title
         titleField.isEditable = !isReadOnly
         titleField.isHidden = false
+        titleSeparator.isHidden = false
         scrollView.isHidden = false
         placeholderLabel.isHidden = true
         addFieldButton.isHidden = isReadOnly

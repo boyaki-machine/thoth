@@ -258,12 +258,11 @@ final class SecureInfoEditor {
     /// 対象はタイトル・全フィールドのラベル・メモ本文。
     /// **パスワード等の値と TOTP secret は対象外**にする。値の断片で探す用途が無いうえ、
     /// 秘密情報を検索窓へ打たせる動機を作らないため。
-    /// メモでもマスク指定（🔒）があるものは本文を対象から外す。
     static func searchableText(of item: SecureMenuItem) -> String {
         var parts = [item.title]
         for field in item.fields {
             parts.append(field.label)
-            if field.kind == .note && !field.isPassword {
+            if field.kind == .note {
                 parts.append(field.value)
             }
         }
