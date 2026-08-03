@@ -156,8 +156,6 @@ internal enum L10n {
   internal static let launchOnSystemStartup = L10n.tr("Localizable", "Launch on system startup")
   /// Launch Thoth on system startup?
   internal static let launchThothOnSystemStartup = L10n.tr("Localizable", "Launch Thoth on system startup?")
-  /// Manage Secure Items...
-  internal static let manageSecureItems = L10n.tr("Localizable", "Manage Secure Items")
   /// Menu
   internal static let menu = L10n.tr("Localizable", "Menu")
   /// New Item

@@ -167,17 +167,16 @@ extension MenuManager {
         // コピー選択メニュー・履歴検索パネルとは排他表示: 表示中のものを閉じる
         dismissClipMenus()
         dismissHistoryPicker()
-        // セキュアアイテムを編集中のウィンドウ（管理ウィンドウ・確認ウィンドウ）が
-        // 表示中の場合は、選択パネルを出さずにそちらをアクティブにする。
-        // 選択パネルは .screenSaver レベルで表示されるため、編集中の画面に被ってしまう。
+        // セキュア情報確認ウィンドウが表示中の場合は、選択パネルを出さずに
+        // そちらをアクティブにする。選択パネルは .screenSaver レベルで表示されるため、
+        // 編集中の画面に被ってしまう。
         //
-        // ここで `～WindowController.shared` を参照するとシングルトンが生成され、
-        // 一度も開いていないウィンドウまで組み立ててしまう。表示中のウィンドウを
-        // 実際に走査して、生成せずに判定する
+        // ここで `CPYSecureInfoWindowController.shared` を参照するとシングルトンが
+        // 生成され、一度も開いていないウィンドウまで組み立ててしまう。
+        // 表示中のウィンドウを実際に走査して、生成せずに判定する
         if let visibleWindow = NSApp.windows.first(where: { window in
             guard window.isVisible else { return false }
-            return window.contentViewController is CPYSecureItemsViewController
-                || window.contentViewController is CPYSecureInfoSplitViewController
+            return window.contentViewController is CPYSecureInfoSplitViewController
         }) {
             #if DEBUG
             NSLog("[MenuManager] popUpSecureMenu: editing window visible, activating it instead")
@@ -233,9 +232,12 @@ extension MenuManager {
                 callerApp?.activate(options: [.activateIgnoringOtherApps])
                 self?.outputSecureSelection(selection)
             }
+            // 選択パネルからもメインメニューと同じセキュア情報確認ウィンドウを開く。
+            // showSecureInfoWindow() は認証を通すが、選択パネルを開いた時点で
+            // 認証済みなので SecureMenuService の猶予（30 秒）に入り再要求されない
             panel.onManage = { [weak self, weak panel] in
                 panel?.close()
-                (NSApp.delegate as? AppDelegate)?.showSecureItemsWindow()
+                (NSApp.delegate as? AppDelegate)?.showSecureInfoWindow()
                 self?.isSecureMenuActive  = false
                 self?.securePickerPanel   = nil
                 self?.secureCloseObserver = nil

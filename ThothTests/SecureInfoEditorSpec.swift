@@ -413,7 +413,7 @@ class SecureInfoEditorSpec: QuickSpec {
                 expect(payload.title) == "GitHub"
             }
 
-            // 既存の編集シートと同じ規則
+            // v1.2 以前の編集シートから引き継いだ規則
             it("ラベルも値も空のフィールドは保存対象から外す") {
                 let editor = editorEditingFirstItem()
                 guard let fieldID = editor.draft?.fields.first?.fieldID else { return }

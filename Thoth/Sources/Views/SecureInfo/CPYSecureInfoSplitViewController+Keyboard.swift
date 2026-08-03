@@ -61,6 +61,9 @@ extension CPYSecureInfoSplitViewController {
             case "s": return .save
             case "n": return .addItem
             case "w": return .close
+            // 入力中でも効かせる。パスワード欄を編集している最中こそ使いたい操作で、
+            // ⌘G は AppKit の標準編集操作と衝突しない
+            case "g": return .generatePassword
             // ⌘Z は入力中だと打鍵の取り消し（AppKit 標準）。横取りすると
             // 打ちかけの文字を戻せなくなるうえ、確定済みの変更まで巻き戻る
             case "z": return isEditingText ? nil : .undo
@@ -121,6 +124,8 @@ extension CPYSecureInfoSplitViewController {
             view.window?.makeFirstResponder(nil)
             hasShownCommitFailure = false
             commitIfNeeded()
+        case .generatePassword:
+            presentPasswordGenerator()
         case .undo:
             performUndo()
         case .redo:

@@ -15,7 +15,7 @@ import Cocoa
 ///
 /// キーボード操作用のローカルイベントモニターは **このコントローラが 1 つだけ**持つ。
 /// 左右のペインそれぞれに登録すると、アプリ全体を監視するモニターが増えて
-/// 他ウィンドウ（セキュアアイテム管理・編集シート）と干渉するため。
+/// 他ウィンドウ（セキュアアイテム選択パネルなど）と干渉するため。
 final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     let editor = SecureInfoEditor()
@@ -143,6 +143,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         detailViewController.onAddTOTPRequested = { [weak self] in
             self?.presentTOTPImport()
         }
+        detailViewController.onGeneratePasswordRequested = { [weak self] in
+            self?.presentPasswordGenerator()
+        }
         listViewController.onAddItemRequested = { [weak self] in
             self?.addItem()
         }
@@ -182,19 +185,6 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         guard editor.removeField(fieldID: field.fieldID) else { return }
         detailViewController.show(item: editor.draft)
         commitIfNeeded()
-    }
-
-    /// TOTP の取り込みシートを開く（既存の取り込み画面を再利用する）
-    private func presentTOTPImport() {
-        guard editor.draft != nil else { NSSound.beep(); return }
-        let importViewController = CPYTOTPImportViewController()
-        importViewController.onImport = { [weak self] secret in
-            guard let self = self else { return }
-            self.editor.addField(kind: .totp, label: L10n.totpDefaultFieldLabel, value: secret)
-            self.detailViewController.show(item: self.editor.draft)
-            self.commitIfNeeded()
-        }
-        presentAsSheet(importViewController)
     }
 
     /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）

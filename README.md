@@ -99,7 +99,7 @@ An item can hold several fields, each of one of these kinds.
 
 **Step 1 — Register your credentials**
 
-Choose **Secure Info** from the main menu (**⌘⇧V**, also launchable with the `s` key while the menu is open). After a Touch ID / password prompt, the **Secure Info window** opens.
+Choose **Secure Info** from the main menu (**⌘⇧V**, also launchable with the `s` key while the menu is open). After a Touch ID / password prompt, the **Secure Info window** opens. The same window also opens from **Secure Info (&s)** at the bottom of the secure item picker panel (**⌘⇧.**).
 
 Pick an item in the left pane and edit its contents in the right pane.
 
@@ -107,7 +107,10 @@ Pick an item in the left pane and edit its contents in the right pane.
 2. Use **Add Field** at the bottom right to choose a kind (Text / Password / URL / Memo)
 3. Fill in the **label** (e.g. "Password") and the **value**
 4. To add TOTP, use **Add TOTP...** to import an otpauth URI / QR code
-5. Edits are saved automatically (**⌘S** saves explicitly)
+5. Use **Password Generator...** (**⌘G**) to create a password, then **Copy** it and paste it into the value field (reveal a masked field with 👁 first)
+6. Edits are saved automatically (**⌘S** saves explicitly)
+
+Export / Import live in the **⚙** menu at the bottom of the left pane, together with undo / redo.
 
 | Action | Key |
 |---|---|
@@ -116,9 +119,9 @@ Pick an item in the left pane and edit its contents in the right pane.
 | Move to the right pane / back to the list | `l`, `→`, `Return` / `h`, `←` |
 | Search | `/` or `⌘F` |
 | Add / delete an item | `⌘N` / `⌘⌫` |
+| Generate a password | `⌘G` |
+| Undo / redo | `⌘Z` / `⌘⇧Z` |
 | Save / close the window | `⌘S` / `⌘W`, `Esc` |
-
-> The **Manage Secure Items** window (press `p` while the picker panel is open) is still available. It is the existing list-oriented screen, and it is where Export / Import live.
 
 **Step 2 — Paste a credential**
 
@@ -154,7 +157,7 @@ Choose **Generate New Password** from the main menu (also launchable with the `p
 - **Copy** puts the result on the clipboard (with a concealed marker; auto-cleared after a while)
 - A **QR code** of the generated password is shown below the result so you can photograph it with your smartphone (see ["Passing the fingerprint password via QR code" in 2-4](#passing-the-fingerprint-password-via-qr-code))
 
-Password generation can also be invoked from the secure item edit sheet and the fingerprint-password management window.
+Password generation can also be invoked from the Secure Info window (**Password Generator...** / **⌘G**) and the fingerprint-password management window. The window is the same wherever it is opened from; you take the result with **Copy**.
 
 ### 2-4. File Encryption / Decryption
 
@@ -294,7 +297,7 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 | **Excluded** | Register apps to exclude from clipboard-history capture |
 
 - **Excluded apps**: register apps whose content you don't want in history (e.g. password managers). Also, copies carrying a concealed marker such as `org.nspasteboard.ConcealedType` (e.g. copies from other password managers) are automatically kept out of history regardless of the exclude list.
-- **Secure item Export / Import**: from the Manage Secure Items window, you can export/import secure items and the fingerprint password as a JSON file. This is useful for using the same information across multiple machines (**the exported file is plaintext — handle with care**). The exported file schema is described in [docs/DESIGN.md](docs/DESIGN.md).
+- **Secure item Export / Import**: from the **⚙** menu in the Secure Info window, you can export/import secure items and the fingerprint password as a JSON file. This is useful for using the same information across multiple machines (**the exported file is plaintext — handle with care**). The exported file schema is described in [docs/DESIGN.md](docs/DESIGN.md).
 
 ---
 

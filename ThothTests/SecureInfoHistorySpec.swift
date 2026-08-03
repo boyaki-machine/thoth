@@ -75,7 +75,7 @@ class SecureInfoHistorySpec: QuickSpec {
             }
 
             // TOTP の secret は「極めて機微なため履歴を残さない」設計。
-            // 旧データに残っていたとしても見せない（編集シートと同じ扱い）
+            // 旧データに残っていたとしても見せない
             it("履歴を残さない種別では、件数があっても出さない") {
                 expect(Row.showsHistoryButton(kind: .totp, historyCount: 3,
                                               isHovered: true, hasFocus: true)) == false
@@ -161,7 +161,7 @@ class SecureInfoHistorySpec: QuickSpec {
                 expect(Entry.displayedValue(for: entry, isPassword: false, isRevealed: false)) == "old-pass"
             }
 
-            it("日時を編集シートと同じ書式で出す") {
+            it("日時を yyyy/MM/dd HH:mm で出す") {
                 let formatter = DateFormatter()
                 formatter.dateFormat = "yyyy/MM/dd HH:mm"
                 let date = Date(timeIntervalSince1970: 1_700_000_000)
