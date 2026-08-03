@@ -45,6 +45,8 @@ final class SecureFieldRowView: NSView {
         static let dragThreshold: CGFloat = 3
         /// ドラッグ中に出す絵の余白
         static let dragImagePadding: CGFloat = 6
+        /// 値エリアと、その下に展開する履歴パネルの間隔
+        static let historyGap: CGFloat = 6
     }
 
     /// マスク表示に使う伏せ字
@@ -81,6 +83,21 @@ final class SecureFieldRowView: NSView {
     var onRevealToggled: ((SecureFieldRowView) -> Void)?
     /// 行を上下に動かす要求（右クリックメニュー。引数は移動量）
     var onMove: ((SecureFieldRowView, Int) -> Void)?
+    /// 履歴の値のコピー要求
+    var onCopyHistoryValue: ((SecureFieldRowView, SecureMenuItem.FieldHistoryEntry) -> Void)?
+    /// 履歴の展開が切り替わった（行の高さが変わるので再レイアウトのきっかけに使う）
+    var onHistoryToggled: ((SecureFieldRowView) -> Void)?
+    /// 履歴の平文表示が切り替えられた（自動解除タイマーの起動に使う）
+    var onHistoryRevealToggled: ((SecureFieldRowView) -> Void)?
+
+    /// 履歴を展開中か。切り替えは +History.swift の `setHistoryExpanded(_:)` を通すこと
+    var isHistoryExpanded = false
+    var historyPanel: NSStackView?
+    /// 行の高さの基準。折りたたみ時は値エリアの下端、展開時は履歴パネルの下端
+    var collapsedBottomConstraint: NSLayoutConstraint?
+    var expandedBottomConstraint: NSLayoutConstraint?
+    /// 履歴パネルを差し込む基準になる値エリア（+History.swift から参照する）
+    var valueContainerForHistory: NSView = NSView()
 
     /// マウスがこの行に乗っているか（削除ボタンの表示条件）
     private(set) var isHovered = false
@@ -101,6 +118,8 @@ final class SecureFieldRowView: NSView {
     let openButton   = NSButton()
     let copyButton   = NSButton()
     let deleteButton = NSButton()
+    /// 変更履歴の展開ボタン 🕘（表示条件と中身は +History.swift）
+    let historyButton = NSButton()
 
     /// メモ用のスクロールビュー（組み立ては +Layout.swift）
     let noteScrollView = NSScrollView()
@@ -142,8 +161,11 @@ final class SecureFieldRowView: NSView {
         onRevealToggled?(self)
     }
 
-    /// 平文表示を解除する（アイテムの切り替え・ウィンドウ非アクティブ化などで呼ぶ）
+    /// 平文表示を解除する（アイテムの切り替え・ウィンドウ非アクティブ化などで呼ぶ）。
+    /// **展開中の履歴も一緒に伏せ字へ戻す。** 現在値だけ戻して過去の値が
+    /// 平文のまま残ると、守っているつもりで守れていない状態になる
     func hideRevealedValue() {
+        hideRevealedHistoryValues()
         guard isRevealed else { return }
         isRevealed = false
         revealedAt = nil
@@ -327,17 +349,20 @@ final class SecureFieldRowView: NSView {
     override func mouseEntered(with event: NSEvent) {
         isHovered = true
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
     }
 
     override func mouseExited(with event: NSEvent) {
         isHovered = false
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
     }
 
     /// テストから hover 状態を再現するための入口（実イベントを合成せずに済ませる）
     func setHovered(_ hovered: Bool) {
         isHovered = hovered
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
     }
 
     // MARK: - Context menu
@@ -345,53 +370,39 @@ final class SecureFieldRowView: NSView {
     /// 右クリックメニュー。ホバーでしか出ない削除の導線を補い、
     /// 並べ替え（Ctrl+j / Ctrl+k）にもマウスから届くようにする
     override func menu(for event: NSEvent) -> NSMenu? {
-        guard !isReadOnly else { return nil }
         let menu = NSMenu()
+        // 履歴の閲覧は破壊的でないので読み取り専用でも出す。
+        // 履歴が無い行では項目ごと出さない（🕘 が現れないのと揃える。
+        // 押しても何も起きない項目を灰色で見せても案内にならない）
+        if hasValueHistory {
+            let history = NSMenuItem(title: L10n.valueHistory,
+                                     action: #selector(historyTapped), keyEquivalent: "")
+            history.target = self
+            menu.addItem(history)
+        }
 
-        let moveUp = NSMenuItem(title: L10n.secureInfoMoveUp, action: #selector(moveUpSelected), keyEquivalent: "")
-        moveUp.target = self
-        menu.addItem(moveUp)
+        if !isReadOnly {
+            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
 
-        let moveDown = NSMenuItem(title: L10n.secureInfoMoveDown, action: #selector(moveDownSelected), keyEquivalent: "")
-        moveDown.target = self
-        menu.addItem(moveDown)
+            let moveUp = NSMenuItem(title: L10n.secureInfoMoveUp, action: #selector(moveUpSelected), keyEquivalent: "")
+            moveUp.target = self
+            menu.addItem(moveUp)
 
-        menu.addItem(NSMenuItem.separator())
+            let moveDown = NSMenuItem(title: L10n.secureInfoMoveDown,
+                                      action: #selector(moveDownSelected), keyEquivalent: "")
+            moveDown.target = self
+            menu.addItem(moveDown)
 
-        let delete = NSMenuItem(title: L10n.secureInfoRemoveField, action: #selector(deleteTapped), keyEquivalent: "")
-        delete.target = self
-        menu.addItem(delete)
+            menu.addItem(NSMenuItem.separator())
+
+            let delete = NSMenuItem(title: L10n.secureInfoRemoveField,
+                                    action: #selector(deleteTapped), keyEquivalent: "")
+            delete.target = self
+            menu.addItem(delete)
+        }
+
+        guard !menu.items.isEmpty else { return nil }
         return menu
-    }
-
-    // MARK: - Actions
-
-    @objc func revealTapped() {
-        toggleReveal()
-    }
-
-    @objc func openTapped() {
-        onOpenURL?(self)
-    }
-
-    @objc func copyTapped() {
-        onCopy?(self)
-    }
-
-    @objc func maskTapped() {
-        onMaskToggled?(self, !field.isPassword)
-    }
-
-    @objc func deleteTapped() {
-        onDelete?(self)
-    }
-
-    @objc func moveUpSelected() {
-        onMove?(self, -1)
-    }
-
-    @objc func moveDownSelected() {
-        onMove?(self, 1)
     }
 }
 
@@ -417,12 +428,14 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
     func controlTextDidBeginEditing(_ notification: Notification) {
         hasEditingFocus = true
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
     }
 
     func textDidBeginEditing(_ notification: Notification) {
         guard (notification.object as? NSTextView) === noteTextView else { return }
         hasEditingFocus = true
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
     }
 
     func controlTextDidChange(_ notification: Notification) {
@@ -438,6 +451,7 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
     func controlTextDidEndEditing(_ notification: Notification) {
         hasEditingFocus = false
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
         onEditingEnded?(self)
     }
 
@@ -450,6 +464,7 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
         guard (notification.object as? NSTextView) === noteTextView else { return }
         hasEditingFocus = false
         updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
         onEditingEnded?(self)
     }
 }

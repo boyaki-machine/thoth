@@ -46,6 +46,12 @@ extension SecureFieldRowView {
             : buttonStack.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor,
                                                     constant: -Layout.deleteGap)
 
+        // 履歴パネルは値エリアの真下へ差し込むので、基準として控えておく
+        valueContainerForHistory = valueContainer
+        // 行の高さの基準。折りたたみ時は値エリアの下端が行の下端になる。
+        // 展開すると無効化され、履歴パネルの下端が基準に変わる（+History.swift）
+        collapsedBottomConstraint = valueContainer.bottomAnchor.constraint(equalTo: bottomAnchor)
+
         NSLayoutConstraint.activate([
             labelField.leadingAnchor.constraint(equalTo: labelLeading, constant: labelLeadingGap),
             labelField.topAnchor.constraint(equalTo: topAnchor),
@@ -53,13 +59,15 @@ extension SecureFieldRowView {
 
             valueContainer.leadingAnchor.constraint(equalTo: labelField.trailingAnchor, constant: Layout.spacing),
             valueContainer.topAnchor.constraint(equalTo: topAnchor),
-            valueContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
+            collapsedBottomConstraint!,
             valueContainer.trailingAnchor.constraint(equalTo: buttonStack.leadingAnchor, constant: -Layout.spacing),
 
             buttonStackTrailing,
             buttonStack.topAnchor.constraint(equalTo: topAnchor),
             buttonStack.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
         ])
+
+        updateHistoryButtonVisibility()
 
         guard !isReadOnly else { return }
         NSLayoutConstraint.activate([
@@ -173,12 +181,26 @@ extension SecureFieldRowView {
         copyButton.target = self
         copyButton.action = #selector(copyTapped)
 
+        historyButton.image = NSImage(systemSymbolName: "clock.arrow.circlepath", accessibilityDescription: nil)
+        historyButton.toolTip = L10n.valueHistory
+        historyButton.target = self
+        historyButton.action = #selector(historyTapped)
+        historyButton.widthAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
+        historyButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
+        historyButton.bezelStyle = .smallSquare
+        historyButton.isBordered = false
+        historyButton.translatesAutoresizingMaskIntoConstraints = false
+
         // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）。
         // 削除ボタンだけはスタックに入れず、setupUI が余白を空けて別に配置する
         var buttons: [NSView] = []
         if field.kind.allowsPasswordToggle && !isReadOnly { buttons.append(maskButton) }
         if field.isPassword && field.kind.allowsPasswordToggle { buttons.append(revealButton) }
         if field.kind == .url { buttons.append(openButton) }
+        // 🕘 は履歴のある行にだけ並べる。削除ボタンと違いスタックの中ほどに入るため、
+        // ホバーでの出し入れは isHidden ではなく alphaValue で行う（幅を確保したままにして、
+        // 現れた瞬間にコピー ⧉ が横へ動かないようにする）
+        if hasValueHistory { buttons.append(historyButton) }
         buttons.append(copyButton)
         if !isReadOnly { addSubview(deleteButton) }
 
@@ -188,5 +210,39 @@ extension SecureFieldRowView {
         stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
         return stack
+    }
+
+    // MARK: - Actions
+
+    @objc func revealTapped() {
+        toggleReveal()
+    }
+
+    @objc func openTapped() {
+        onOpenURL?(self)
+    }
+
+    @objc func copyTapped() {
+        onCopy?(self)
+    }
+
+    @objc func maskTapped() {
+        onMaskToggled?(self, !field.isPassword)
+    }
+
+    @objc func deleteTapped() {
+        onDelete?(self)
+    }
+
+    @objc func historyTapped() {
+        toggleHistory()
+    }
+
+    @objc func moveUpSelected() {
+        onMove?(self, -1)
+    }
+
+    @objc func moveDownSelected() {
+        onMove?(self, 1)
     }
 }
