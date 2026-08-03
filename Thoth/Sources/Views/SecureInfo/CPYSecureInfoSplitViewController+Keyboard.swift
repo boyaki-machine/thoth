@@ -56,7 +56,9 @@ extension CPYSecureInfoSplitViewController {
             case "n": return .addItem
             case "w": return .close
             default:
-                return keyCode == KeyCode.delete ? .deleteItem : nil
+                // ⌘Delete はテキスト入力中だと「行頭まで削除」の標準操作。
+                // 横取りするとアイテムごと消えてしまうため、入力中は割り当てない
+                return (keyCode == KeyCode.delete && !isEditingText) ? .deleteItem : nil
             }
         }
 

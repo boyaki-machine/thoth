@@ -141,6 +141,8 @@
 
 "Secure Items Save Failed" = "In clavium anulo servare non licuit.";
 
+"Secure Items Import Overwrites Crypto Password" = "Hic fasciculus tesseram digiti aliam continet. Si importas, substituetur, et fasciculi tessera praesenti cifrati aperiri non poterunt. Pergisne?";
+
 "Secure Item Title Required" = "Titulum inscribe antequam serves.";
 
 "Imported Secure Items Format" = "%d res importatae.";

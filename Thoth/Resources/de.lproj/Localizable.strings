@@ -145,6 +145,8 @@
 
 "Secure Items Save Failed" = "Speichern im Schlüsselbund fehlgeschlagen. Details siehe Console.app (Filter: SecureMenuService).";
 
+"Secure Items Import Overwrites Crypto Password" = "Diese Datei enthält ein anderes Fingerabdruck-Passwort als das auf diesem Mac registrierte. Beim Import wird es ersetzt, und zuvor damit verschlüsselte Dateien lassen sich mit dem gespeicherten Passwort nicht mehr öffnen. Fortfahren?";
+
 "Secure Item Title Required" = "Geben Sie vor dem Speichern einen Titel ein.";
 
 "Imported Secure Items Format" = "%d Einträge importiert.";

@@ -73,7 +73,15 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
             guard let self = self else { return }
             // 別のアイテムへ移る前に、直前の編集内容を確定させる。
             // draft は自分の itemID を持っているので、選択が変わったあとでも正しい相手に保存される
-            self.commitIfNeeded()
+            let editingItemID = self.editor.draft?.itemID
+            guard self.commitIfNeeded() else {
+                // 保存できなかった（タイトル未入力など）場合は編集内容を捨てずに戻す。
+                // ここで切り替えると「編集内容は保持されています」という案内と食い違う
+                if let editingItemID = editingItemID, editingItemID != item?.itemID {
+                    self.listViewController.restoreSelection(itemID: editingItemID)
+                }
+                return
+            }
             self.editor.beginEditing(itemID: item?.itemID)
             self.detailViewController.show(item: self.editor.draft)
         }
@@ -150,8 +158,12 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）
     func moveFocusedField(by offset: Int) {
         guard let row = detailViewController.focusedRow else { NSSound.beep(); return }
-        guard editor.moveField(fieldID: row.field.fieldID, by: offset) else { NSSound.beep(); return }
+        let fieldID = row.field.fieldID
+        guard editor.moveField(fieldID: fieldID, by: offset) else { NSSound.beep(); return }
         detailViewController.show(item: editor.draft)
+        // 行を作り直したのでフォーカスが失われている。動かした行へ戻さないと、
+        // 続けて Ctrl+j を押したときに一覧のアイテム側が動いてしまう
+        detailViewController.focusRow(fieldID: fieldID)
         commitIfNeeded()
     }
 
@@ -161,7 +173,8 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// タイトルが空だと保存できないため、既定のタイトルを入れた状態で作る
     func addItem() {
         guard !editor.isReadOnly else { NSSound.beep(); return }
-        commitIfNeeded()
+        // 直前の編集を保存できない状態で追加すると、その編集が失われる
+        guard commitIfNeeded() else { return }
         let service = AppEnvironment.current.secureMenuService
         let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)
         guard service.save(newItem) else {

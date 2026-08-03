@@ -411,6 +411,46 @@ class SecureMenuServiceSpec: QuickSpec {
                 expect(loaded?.fields[1].isPassword) == true
             }
 
+            // 1 件ずつ save(_:) を呼ぶと件数分の読み書きと変更通知が走るため、
+            // インポートのような一括処理では 1 回の書き込みにまとめる
+            it("複数アイテムをまとめて保存し、通知は 1 回だけ飛ぶ") {
+                var received = 0
+                let observer = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                      object: nil, queue: nil) { _ in
+                    received += 1
+                }
+                defer { NotificationCenter.default.removeObserver(observer) }
+
+                let items = (0..<5).map { SecureMenuItem(itemID: "b\($0)", title: "Item \($0)") }
+                expect(self.service.save(items)) == true
+                expect(received) == 1
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded.map { $0.itemID }) == ["b0", "b1", "b2", "b3", "b4"]
+                // 新規追加は末尾に向かって displayOrder が振られる
+                expect(loaded.map { $0.displayOrder }) == [0, 1, 2, 3, 4]
+            }
+
+            it("まとめ保存でも既存アイテムは上書きされ、変更履歴が引き継がれる") {
+                let original = SecureMenuItem.Field(fieldID: "f1", label: "PW", value: "old", isPassword: true)
+                expect(self.service.save(SecureMenuItem(itemID: "batch", title: "A", fields: [original]))) == true
+
+                let updated = original.updating(value: "new")
+                expect(self.service.save([SecureMenuItem(itemID: "batch", title: "A", fields: [updated]),
+                                          SecureMenuItem(itemID: "added", title: "B")])) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded.count) == 2
+                let saved = loaded.first { $0.itemID == "batch" }?.fields.first
+                expect(saved?.value) == "new"
+                expect(saved?.history.map { $0.value }) == ["old"]
+            }
+
+            it("空配列のまとめ保存は何もせず成功を返す") {
+                expect(self.service.save([SecureMenuItem]())) == true
+                expect(self.service.loadAllItems().isEmpty) == true
+            }
+
             // 拡張種別が Keychain の保存形式（JSON）を往復しても失われないこと。
             // メモは改行を含むため、単一行に丸められていないかも併せて確認する
             it("Url and note fields survive the keychain round trip") {

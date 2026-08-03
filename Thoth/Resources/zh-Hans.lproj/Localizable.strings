@@ -145,6 +145,8 @@
 
 "Secure Items Save Failed" = "保存到钥匙串失败。详情请见 Console.app（筛选: SecureMenuService）。";
 
+"Secure Items Import Overwrites Crypto Password" = "此文件包含与本机已注册的指纹密码不同的密码。导入将替换它，之前用当前密码加密的文件将无法再用已保存的密码打开。是否继续？";
+
 "Secure Item Title Required" = "保存前请输入标题。";
 
 "Imported Secure Items Format" = "已导入 %d 个项目。";

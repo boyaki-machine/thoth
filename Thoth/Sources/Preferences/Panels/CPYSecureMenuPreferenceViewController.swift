@@ -460,33 +460,54 @@ extension CPYSecureItemsViewController {
         }
     }
 
+    /// インポートファイルを解釈する（純粋関数のためユニットテスト可能）。
+    /// 現行形式（`SecureUserData` オブジェクト）を優先し、
+    /// 旧形式（アイテムの配列のみ）もフォールバックで読み込める
+    static func parseImport(_ data: Data) throws -> (items: [SecureMenuItem], cryptoPassword: String?) {
+        if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
+            let password = (userData.cryptoPassword?.isEmpty ?? true) ? nil : userData.cryptoPassword
+            return (userData.items, password)
+        }
+        return (try JSONDecoder().decode([SecureMenuItem].self, from: data), nil)
+    }
+
     private func importItems(from url: URL) {
         do {
-            let data = try Data(contentsOf: url)
+            let parsed = try Self.parseImport(try Data(contentsOf: url))
             let service = AppEnvironment.current.secureMenuService
-            // 現行形式（SecureUserData オブジェクト）を優先し、
-            // 旧形式（アイテムの配列のみ）もフォールバックで読み込める
-            let importedItems: [SecureMenuItem]
-            if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
-                importedItems = userData.items
-                // 指紋パスワードが含まれていれば取り込む（既存の登録は上書きされる）
-                if let password = userData.cryptoPassword, !password.isEmpty {
-                    _ = service.saveCryptoPassword(password)
-                }
-            } else {
-                importedItems = try JSONDecoder().decode([SecureMenuItem].self, from: data)
+            // 指紋パスワードの上書きは、以前そのパスワードで暗号化したファイルを
+            // 開けなくすることがあるため、登録済みで内容が異なる場合だけ確認する
+            let currentPassword = service.loadCryptoPassword()
+            let replacesPassword = parsed.cryptoPassword != nil
+                && !(currentPassword ?? "").isEmpty
+                && parsed.cryptoPassword != currentPassword
+            guard replacesPassword, let window = view.window else {
+                applyImport(parsed.items, cryptoPassword: parsed.cryptoPassword)
+                return
             }
-            var savedCount = 0
-            for item in importedItems where service.save(item) {
-                savedCount += 1
+            NSAlert.showConfirmation(message: L10n.importSecureItems,
+                                     informative: L10n.secureItemsImportOverwritesCryptoPassword,
+                                     confirmTitle: L10n.importSecureItems, cancelTitle: L10n.cancel,
+                                     for: window) { [weak self] in
+                self?.applyImport(parsed.items, cryptoPassword: parsed.cryptoPassword)
             }
-            reloadItems()
-            NSAlert.showNotice(message: L10n.importSecureItems,
-                               informative: L10n.importedSecureItemsFormat(savedCount),
-                               style: .informational, for: view.window)
         } catch {
             showImportExportError(error)
         }
+    }
+
+    /// 取り込みを反映する。アイテムは 1 回の書き込みでまとめて保存する
+    /// （1 件ずつ保存すると件数分の Keychain 往復と変更通知が発生する）
+    private func applyImport(_ items: [SecureMenuItem], cryptoPassword: String?) {
+        let service = AppEnvironment.current.secureMenuService
+        if let cryptoPassword = cryptoPassword {
+            _ = service.saveCryptoPassword(cryptoPassword)
+        }
+        let saved = service.save(items)
+        reloadItems()
+        NSAlert.showNotice(message: L10n.importSecureItems,
+                           informative: L10n.importedSecureItemsFormat(saved ? items.count : 0),
+                           style: .informational, for: view.window)
     }
 
     private func showImportExportError(_ error: Error) {

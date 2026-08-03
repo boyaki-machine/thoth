@@ -258,6 +258,8 @@ internal enum L10n {
   internal static let secureItems = L10n.tr("Localizable", "Secure Items")
   /// The exported file will contain all values in plain text. Handle it with care.
   internal static let secureItemsExportWarning = L10n.tr("Localizable", "Secure Items Export Warning")
+  /// This file contains a fingerprint password that differs from the one registered on this Mac. Importing replaces it, and files previously encrypted with the current password will no longer open with the stored password. Continue?
+  internal static let secureItemsImportOverwritesCryptoPassword = L10n.tr("Localizable", "Secure Items Import Overwrites Crypto Password")
   /// Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose "Always Allow". Saving is disabled to protect the existing data.
   internal static let secureItemsKeychainAccessDenied = L10n.tr("Localizable", "Secure Items Keychain Access Denied")
   /// Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).

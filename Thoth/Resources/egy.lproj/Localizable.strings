@@ -149,6 +149,8 @@
 
 "Secure Items Save Failed" = "𓅘 𓋴𓍿 𓊃𓏛";
 
+"Secure Items Import Overwrites Crypto Password" = "𓊃𓏛 𓎡𓏏 𓅓 𓆑𓂋 ?";
+
 "Secure Item Title Required" = "𓂋𓈖 𓏏𓊪";
 
 "Imported Secure Items Format" = "𓏎𓂻 %d 𓇋𓏏𓅓𓏥. 𓄤";

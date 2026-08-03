@@ -145,6 +145,8 @@
 
 "Secure Items Save Failed" = "キーチェーンへの保存に失敗しました。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
 
+"Secure Items Import Overwrites Crypto Password" = "このファイルには、この Mac に登録されている指紋パスワードとは異なるパスワードが含まれています。取り込むと置き換えられ、現在のパスワードで暗号化したファイルは保存済みパスワードでは開けなくなります。続行しますか？";
+
 "Secure Item Title Required" = "保存するにはタイトルを入力してください。";
 
 "Imported Secure Items Format" = "%d 件のアイテムをインポートしました。";

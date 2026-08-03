@@ -427,20 +427,30 @@ final class SecureMenuService {
     }
 
     func save(_ item: SecureMenuItem) -> Bool {
+        return save([item])
+    }
+
+    /// 複数アイテムをまとめて保存する（Keychain への読み書きと変更通知は 1 回）。
+    ///
+    /// 1 件ずつ `save(_:)` を呼ぶと件数分の読み書きが走り、そのたびに変更通知が飛んで
+    /// 各ウィンドウが再読込するため、インポートのような一括処理では極端に遅くなる
+    @discardableResult
+    func save(_ newItems: [SecureMenuItem]) -> Bool {
+        guard !newItems.isEmpty else { return true }
         var items = loadAllItems()
-        if let index = items.firstIndex(where: { $0.itemID == item.itemID }) {
-            // 上書き時は各フィールドの Val 変更履歴を引き継ぎ・追記する
-            items[index] = mergeFieldHistories(oldItem: items[index], newItem: item)
-        } else {
-            // 新規追加: displayOrder を末尾に設定
-            let maxOrder = items.map { $0.displayOrder }.max() ?? -1
-            let newItem = SecureMenuItem(
-                itemID: item.itemID,
-                title: item.title,
-                fields: item.fields,
-                displayOrder: maxOrder + 1
-            )
-            items.append(newItem)
+        // 新規追加の displayOrder は末尾に積む
+        var maxOrder = items.map { $0.displayOrder }.max() ?? -1
+        for item in newItems {
+            if let index = items.firstIndex(where: { $0.itemID == item.itemID }) {
+                // 上書き時は各フィールドの Val 変更履歴を引き継ぎ・追記する
+                items[index] = mergeFieldHistories(oldItem: items[index], newItem: item)
+            } else {
+                maxOrder += 1
+                items.append(SecureMenuItem(itemID: item.itemID,
+                                            title: item.title,
+                                            fields: item.fields,
+                                            displayOrder: maxOrder))
+            }
         }
         return saveAllItems(items)
     }

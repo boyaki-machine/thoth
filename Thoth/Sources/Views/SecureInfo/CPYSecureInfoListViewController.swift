@@ -150,6 +150,14 @@ final class CPYSecureInfoListViewController: NSViewController {
                              columnIndexes: IndexSet(integersIn: 0..<max(1, tableView.numberOfColumns)))
     }
 
+    /// 指定アイテムへ選択を戻す（保存できず切り替えを取り消す場合に使う）。
+    /// 通知を再入させないため onSelectionChange は呼ばない
+    func restoreSelection(itemID: String) {
+        editor.selectItem(itemID: itemID)
+        syncSelectionToTableView()
+        updateButtonStates(isReadOnly: editor.isReadOnly)
+    }
+
     /// エディタの選択状態をテーブルの選択へ反映する（通知は行わない）
     private func syncSelectionToTableView() {
         if let row = editor.selectedRow {

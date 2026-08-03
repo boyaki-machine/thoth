@@ -169,10 +169,16 @@ extension MenuManager {
         dismissHistoryPicker()
         // セキュアアイテムを編集中のウィンドウ（管理ウィンドウ・確認ウィンドウ）が
         // 表示中の場合は、選択パネルを出さずにそちらをアクティブにする。
-        // 選択パネルは .screenSaver レベルで表示されるため、編集中の画面に被ってしまう
-        let editingWindows = [CPYSecureItemsWindowController.shared.window,
-                              CPYSecureInfoWindowController.shared.window]
-        if let visibleWindow = editingWindows.compactMap({ $0 }).first(where: { $0.isVisible }) {
+        // 選択パネルは .screenSaver レベルで表示されるため、編集中の画面に被ってしまう。
+        //
+        // ここで `～WindowController.shared` を参照するとシングルトンが生成され、
+        // 一度も開いていないウィンドウまで組み立ててしまう。表示中のウィンドウを
+        // 実際に走査して、生成せずに判定する
+        if let visibleWindow = NSApp.windows.first(where: { window in
+            guard window.isVisible else { return false }
+            return window.contentViewController is CPYSecureItemsViewController
+                || window.contentViewController is CPYSecureInfoSplitViewController
+        }) {
             #if DEBUG
             NSLog("[MenuManager] popUpSecureMenu: editing window visible, activating it instead")
             #endif

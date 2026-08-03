@@ -474,6 +474,40 @@ class SecureInfoCommitFlowSpec: QuickSpec {
                 expect(service.loadAllItems().first?.title) == "Renamed"
             }
 
+            // 「編集内容は保持されています」と案内しておきながら、選択を切り替えた
+            // 拍子に draft を捨てていた。保存できないときは切り替え自体を取り消す
+            it("保存できない状態で選択を切り替えても編集内容が残る") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub"),
+                    SecureMenuItem(itemID: "s2", title: "AWS")
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("")
+                _ = splitViewController.editor.updateField(fieldID: "no-such", value: "x")
+
+                // 別アイテムを選んだときと同じ流れ
+                expect(splitViewController.commitIfNeeded()) == false
+                expect(splitViewController.editor.isDirty) == true
+                expect(splitViewController.editor.draft?.itemID) == "s1"
+                // 保存もされていない
+                expect(service.loadAllItems().first { $0.itemID == "s1" }?.title) == "GitHub"
+            }
+
+            // 直前の編集を保存できない状態で + を押すと、その編集が失われていた
+            it("保存できない状態ではアイテムを追加しない") {
+                let splitViewController = makeSplitViewController(with: [
+                    SecureMenuItem(itemID: "s1", title: "GitHub")
+                ])
+                splitViewController.editor.beginEditing(itemID: "s1")
+                _ = splitViewController.editor.updateTitle("")
+
+                splitViewController.addItem()
+
+                expect(service.loadAllItems().count) == 1
+                expect(splitViewController.editor.draft?.itemID) == "s1"
+                expect(splitViewController.editor.isDirty) == true
+            }
+
             it("新規アイテムは既定タイトルを持つのでそのまま保存できる") {
                 let splitViewController = makeSplitViewController(with: [])
                 let newItem = SecureMenuItem(title: L10n.newSecureItemTitle)

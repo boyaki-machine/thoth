@@ -145,6 +145,8 @@
 
 "Secure Items Save Failed" = "Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).";
 
+"Secure Items Import Overwrites Crypto Password" = "This file contains a fingerprint password that differs from the one registered on this Mac. Importing replaces it, and files previously encrypted with the current password will no longer open with the stored password. Continue?";
+
 "Secure Item Title Required" = "Enter a title before saving.";
 
 "Imported Secure Items Format" = "Imported %d item(s).";

@@ -49,7 +49,15 @@ class SecureInfoKeyActionSpec: QuickSpec {
             it("テキスト入力中でも効く") {
                 expect(action(0, character: "s", modifiers: .command, editing: true)) == Action.save
                 expect(action(0, character: "f", modifiers: .command, editing: true)) == Action.focusSearch
-                expect(action(KeyCode.delete, modifiers: .command, editing: true)) == Action.deleteItem
+                expect(action(0, character: "n", modifiers: .command, editing: true)) == Action.addItem
+                expect(action(0, character: "w", modifiers: .command, editing: true)) == Action.close
+            }
+
+            // ⌘Delete は入力中だと「行頭まで削除」の標準操作。
+            // 横取りするとアイテムごと消えてしまう
+            it("⌘Delete はテキスト入力中には割り当てない") {
+                expect(action(KeyCode.delete, modifiers: .command, editing: true)) == nil
+                expect(action(KeyCode.delete, modifiers: .command, editing: false)) == Action.deleteItem
             }
 
             // キーボード配列に依存しないよう文字で判定している

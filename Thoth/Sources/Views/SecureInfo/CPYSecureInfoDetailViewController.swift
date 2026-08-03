@@ -290,6 +290,14 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         onAddTOTPRequested?()
     }
 
+    /// 指定フィールドの行へフォーカスを移す。
+    /// 並べ替えのたびに行ビューを作り直すため、これを呼ばないとフォーカスが失われ、
+    /// 続けて Ctrl+j を押したときに一覧のアイテム側が動いてしまう
+    func focusRow(fieldID: String) {
+        guard let row = fieldRows.first(where: { $0.field.fieldID == fieldID }) else { return }
+        view.window?.makeFirstResponder(row.labelField)
+    }
+
     /// タイトル欄へフォーカスを移す（新規作成直後にすぐ名前を付けられるようにする）
     func focusTitleField() {
         guard !titleField.isHidden else { return }

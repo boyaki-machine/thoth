@@ -145,6 +145,8 @@
 
 "Secure Items Save Failed" = "Salvataggio nel portachiavi non riuscito. Dettagli in Console.app (filtro: SecureMenuService).";
 
+"Secure Items Import Overwrites Crypto Password" = "Questo file contiene una password impronta diversa da quella registrata su questo Mac. Importandola verrà sostituita e i file cifrati con la password attuale non si apriranno più con la password memorizzata. Continuare?";
+
 "Secure Item Title Required" = "Inserisci un titolo prima di salvare.";
 
 "Imported Secure Items Format" = "%d elementi importati.";

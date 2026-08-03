@@ -21,19 +21,32 @@ final class SecureInfoEditor {
     /// 絞り込みで一時的に隠れても保持するため、クエリを消すと選択が戻る
     private(set) var selectedItemID: String?
 
+    /// 絞り込み結果のキャッシュ。
+    /// `visibleItems` は一覧の行数取得・各行の描画・選択位置の解決から何度も呼ばれる。
+    /// 都度フィルタし直すと、1 回の再描画で「アイテム数 × アイテム数」回だけ
+    /// 検索対象テキスト（メモ本文を含む）を組み立てることになり、
+    /// アイテムが増えるほど急激に重くなる
+    private var cachedVisibleItems: [SecureMenuItem]?
+
     // MARK: - Items / Query
 
     func setItems(_ items: [SecureMenuItem]) {
         self.items = items
+        cachedVisibleItems = nil
     }
 
     func setQuery(_ query: String) {
+        guard self.query != query else { return }
         self.query = query
+        cachedVisibleItems = nil
     }
 
     /// 現在のクエリで絞り込んだ表示対象
     var visibleItems: [SecureMenuItem] {
-        return Self.filter(items, query: query)
+        if let cachedVisibleItems = cachedVisibleItems { return cachedVisibleItems }
+        let filtered = Self.filter(items, query: query)
+        cachedVisibleItems = filtered
+        return filtered
     }
 
     // MARK: - Selection
@@ -208,6 +221,7 @@ final class SecureInfoEditor {
         isDirty = false
         selectedItemID = nil
         query = ""
+        cachedVisibleItems = nil
     }
 
     /// 保存の成功を記録する。
@@ -217,6 +231,7 @@ final class SecureInfoEditor {
         draft = savedItem
         if let index = items.firstIndex(where: { $0.itemID == savedItem.itemID }) {
             items[index] = savedItem
+            cachedVisibleItems = nil
         }
     }
 
