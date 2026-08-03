@@ -134,6 +134,8 @@ extension MenuManager {
                 delegate?.showPasswordGeneratorWindow()
             case .crypto:
                 delegate?.showCryptoWindow()
+            case .secureInfo:
+                delegate?.showSecureInfoWindow()
             case .clearHistory:
                 delegate?.clearAllHistory()
             case .editSnippets:
@@ -165,14 +167,23 @@ extension MenuManager {
         // コピー選択メニュー・履歴検索パネルとは排他表示: 表示中のものを閉じる
         dismissClipMenus()
         dismissHistoryPicker()
-        // セキュアアイテム管理ウィンドウ（編集シート含む）が表示中の場合は、
-        // 選択パネルを出さずにそちらをアクティブにする
-        if let managementWindow = CPYSecureItemsWindowController.shared.window, managementWindow.isVisible {
+        // セキュアアイテムを編集中のウィンドウ（管理ウィンドウ・確認ウィンドウ）が
+        // 表示中の場合は、選択パネルを出さずにそちらをアクティブにする。
+        // 選択パネルは .screenSaver レベルで表示されるため、編集中の画面に被ってしまう。
+        //
+        // ここで `～WindowController.shared` を参照するとシングルトンが生成され、
+        // 一度も開いていないウィンドウまで組み立ててしまう。表示中のウィンドウを
+        // 実際に走査して、生成せずに判定する
+        if let visibleWindow = NSApp.windows.first(where: { window in
+            guard window.isVisible else { return false }
+            return window.contentViewController is CPYSecureItemsViewController
+                || window.contentViewController is CPYSecureInfoSplitViewController
+        }) {
             #if DEBUG
-            NSLog("[MenuManager] popUpSecureMenu: management window visible, activating it instead")
+            NSLog("[MenuManager] popUpSecureMenu: editing window visible, activating it instead")
             #endif
             NSApp.activate(ignoringOtherApps: true)
-            managementWindow.makeKeyAndOrderFront(nil)
+            visibleWindow.makeKeyAndOrderFront(nil)
             return
         }
         // 認証中・表示中の場合は既存パネルを前面に戻す（または強制リセット）

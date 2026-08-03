@@ -13,41 +13,49 @@ class PasteServiceTOTPSpec: QuickSpec {
         beforeEach {
             self.pasteService = PasteService()
         }
+        codeGenerationSpecs()
+        base32AndValidationSpecs()
+    }
 
+    private static func codeGenerationSpecs() {
         describe("PasteService TOTP operations") {
 
             // MARK: - TOTP Direct Type (Non-pasteboard)
 
-            it("Directly types TOTP code for a given secret") {
+            // RFC 6238 のテストベクタは 8 桁で定義されている。
+            // digits を減らすと下位桁だけが残る（動的トランケーションの性質）
+            it("Generates the RFC 6238 vector and truncates it by the digits setting") {
                 let rfcSecretBase32 = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
-                let params = TOTPParameters(
-                    secret: TOTPService.base32Decode(rfcSecretBase32)!,
-                    digits: 6,
-                    period: 30,
-                    algorithm: .sha1,
-                    issuer: nil,
-                    account: nil
-                )
+                func makeParams(digits: Int) -> TOTPParameters {
+                    return TOTPParameters(
+                        secret: TOTPService.base32Decode(rfcSecretBase32)!,
+                        digits: digits,
+                        period: 30,
+                        algorithm: .sha1,
+                        issuer: nil,
+                        account: nil
+                    )
+                }
 
                 // Test at a known timestamp
-                let testTime = Date(timeIntervalSince1970: 1111111109)
+                let testTime = Date(timeIntervalSince1970: 1_111_111_109)
                 let service = TOTPService()
-                let expectedCode = service.code(for: params, at: testTime)
 
-                expect(expectedCode) == "07081804"  // RFC 6238 vector
+                expect(service.code(for: makeParams(digits: 8), at: testTime)) == "07081804"
+                expect(service.code(for: makeParams(digits: 6), at: testTime)) == "081804"
             }
 
             it("Generates TOTP code from otpauth URI") {
                 let uri = "otpauth://totp/GitHub:user@example.com?secret=GEZDGNBVGY3TQOJQ&issuer=GitHub"
                 let params = TOTPService.parse(uri)
 
-                expect(params).toNot(beNil())
+                expect(params?.digits) != nil
                 expect(params?.issuer) == "GitHub"
                 expect(params?.account) == "user@example.com"
 
                 let service = TOTPService()
                 let code = service.code(for: params!, at: Date())
-                expect(code.count) == 6  // Default 6 digits
+                expect(code?.count) == 6  // Default 6 digits
             }
 
             // MARK: - TOTP with Different Algorithms
@@ -61,7 +69,7 @@ class PasteServiceTOTPSpec: QuickSpec {
 
                 let service = TOTPService()
                 let code = service.code(for: params!, at: Date())
-                expect(code.count) == 8
+                expect(code?.count) == 8
             }
 
             it("Generates code with SHA512 algorithm") {
@@ -73,7 +81,7 @@ class PasteServiceTOTPSpec: QuickSpec {
 
                 let service = TOTPService()
                 let code = service.code(for: params!, at: Date())
-                expect(code).toNot(beEmpty())
+                expect(code?.isEmpty) == false
             }
 
             // MARK: - TOTP Field Integration
@@ -83,12 +91,12 @@ class PasteServiceTOTPSpec: QuickSpec {
                 let field = SecureMenuItem.Field(label: "AWS TOTP", value: uri, kind: .totp)
 
                 let params = TOTPService.parse(field.value)
-                expect(params).toNot(beNil())
+                expect(params?.digits) != nil
 
                 let service = TOTPService()
                 let code = service.code(for: params!, at: Date())
 
-                expect(code.count) == 6
+                expect(code?.count) == 6
                 expect(field.isTOTP) == true
             }
 
@@ -144,14 +152,20 @@ class PasteServiceTOTPSpec: QuickSpec {
                 expect(service.remainingSeconds(for: params, at: time60)) == 60
             }
 
+        }
+    }
+
+    private static func base32AndValidationSpecs() {
+        describe("TOTP secret handling and validation") {
+
             // MARK: - Base32 Secret Handling
 
             it("Handles Base32-encoded secret from URI") {
                 let base32Secret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
                 let data = TOTPService.base32Decode(base32Secret)
 
-                expect(data).toNot(beNil())
-                expect(data?.count).to(beGreaterThan(0))
+                expect(data?.count) != nil
+                expect(data?.isEmpty) == false
                 expect(String(data: data!, encoding: .utf8)) == "12345678901234567890"
             }
 
@@ -159,7 +173,7 @@ class PasteServiceTOTPSpec: QuickSpec {
                 let invalidBase32 = "INVALID!!!CHARS"
                 let data = TOTPService.base32Decode(invalidBase32)
 
-                expect(data).to(beNil())
+                expect(data?.count) == nil
             }
 
             // MARK: - URI Validation for TOTP
@@ -184,7 +198,7 @@ class PasteServiceTOTPSpec: QuickSpec {
                 ]
 
                 let first = TOTPService.base32Decode(variations[0])
-                expect(first).toNot(beNil())
+                expect(first?.isEmpty) == false
 
                 for variant in variations.dropFirst() {
                     let data = TOTPService.base32Decode(variant)

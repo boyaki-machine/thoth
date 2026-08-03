@@ -91,6 +91,33 @@ final class SecureMenuService {
     /// 読み出し時に OS が再認証を要求する＝アプリのロジックを迂回しても値を取れない。
     private var authenticatedContext: LAContext?
 
+    /// Keychain クエリへ添付する評価済みコンテキスト。
+    ///
+    /// **猶予期間を過ぎていたら OS 側のコンテキストも破棄する。** 保持したままだと、
+    /// アプリを常駐させている間ずっと OS レベルの認証状態が有効に残り続け、
+    /// アプリ内の再認証ゲートを迂回できる余地が広がる
+    private func currentAuthenticationContext() -> LAContext? {
+        guard let context = authenticatedContext else { return nil }
+        guard let lastAuthenticated = lastAuthenticatedDate,
+              Date().timeIntervalSince(lastAuthenticated) < Self.authenticationGracePeriod else {
+            context.invalidate()
+            authenticatedContext = nil
+            return nil
+        }
+        return context
+    }
+
+    /// 認証状態を明示的に破棄する（ウィンドウを閉じたときなど）
+    func invalidateAuthentication() {
+        authenticatedContext?.invalidate()
+        authenticatedContext = nil
+        lastAuthenticatedDate = nil
+    }
+
+    deinit {
+        authenticatedContext?.invalidate()
+    }
+
     /// 認証成功からこの秒数以内の再認証は省略する（猶予期間）。
     /// ID → パスワード → TOTP のように短時間に連続してセキュアアイテムを
     /// 選択するユースケースで、選択のたびに Touch ID を要求しないための UX 措置。
@@ -100,6 +127,19 @@ final class SecureMenuService {
 
     /// 直近で認証が成功した時刻（テストから注入できるよう internal）
     var lastAuthenticatedDate: Date?
+
+    /// セキュアアイテムが変更されるたびに増える通し番号。
+    /// 複数のウィンドウが同じサービスを共有するため、「自分が起こした変更か」を
+    /// この番号で判定する（自分の保存で再読込が走ると入力中のフォーカスが飛ぶ）
+    private(set) var itemsChangeToken: Int = 0
+
+    /// セキュアアイテムが変更されたことを知らせる。
+    /// 変更経路は `saveAllItems`（保存・削除・並べ替え）と `deleteAllItems` の 2 つ。
+    /// 新しい変更経路を足す場合は必ず `postItemsDidChange()` を呼ぶこと
+    private func postItemsDidChange() {
+        itemsChangeToken += 1
+        NotificationCenter.default.post(name: .secureItemsDidChange, object: self)
+    }
 
     // MARK: - Initialize
 
@@ -116,6 +156,8 @@ final class SecureMenuService {
             DispatchQueue.main.async { completion(true) }
             return
         }
+        // 猶予切れ。古い評価済みコンテキストを破棄してから改めて評価する
+        invalidateAuthentication()
 
         let context = LAContext()
         var error: NSError?
@@ -173,7 +215,7 @@ final class SecureMenuService {
             var query = keychainQuery(account: account, dataProtection: dataProtection, service: service)
             query[kSecMatchLimit as String] = kSecMatchLimitOne
             query[kSecReturnData as String] = true
-            if let context = authenticatedContext {
+            if let context = currentAuthenticationContext() {
                 query[kSecUseAuthenticationContext as String] = context
             }
             var result: AnyObject?
@@ -207,7 +249,7 @@ final class SecureMenuService {
             guard SecItemCopyMatching(existsQuery as CFDictionary, nil) == errSecSuccess else { continue }
 
             var query = keychainQuery(account: account, dataProtection: dataProtection)
-            if dataProtection, let context = authenticatedContext {
+            if dataProtection, let context = currentAuthenticationContext() {
                 query[kSecUseAuthenticationContext as String] = context
             }
             let attributes: [String: Any] = [
@@ -239,7 +281,7 @@ final class SecureMenuService {
         addQuery[kSecAttrLabel as String] = label
         addQuery[kSecAttrAccessControl as String] = accessControl
         addQuery[kSecValueData as String] = data
-        if let context = authenticatedContext {
+        if let context = currentAuthenticationContext() {
             addQuery[kSecUseAuthenticationContext as String] = context
         }
         let status = SecItemAdd(addQuery as CFDictionary, nil)
@@ -266,14 +308,24 @@ final class SecureMenuService {
     // MARK: - User Data (user-data エントリの読み書き)
 
     /// user-data エントリを読み込む。存在しない場合は旧 2 エントリ
-    /// （all-items / crypto-password）からの移行を試みる
+    /// （all-items / crypto-password）からの移行を試みる。
+    ///
+    /// 「読み出しには成功したが内容を解釈できない」場合は `errSecDecode` を返す。
+    /// ここで `errSecSuccess` + nil を返すと、呼び出し側のガード
+    /// （`status == errSecSuccess || status == errSecItemNotFound`）を素通りして
+    /// 「アイテム 0 件」として扱われ、直後の保存で読めなかったデータを
+    /// 空で上書きしてしまう。破損は「読めなかった」と同義に扱い、書き込みを禁止する
     private func loadUserData() -> (status: OSStatus, userData: SecureUserData?) {
         let (status, raw) = readEntry(account: Self.userDataKey)
-        if status == errSecSuccess, let raw = raw {
-            let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw)
-            #if DEBUG
-            if decoded == nil { NSLog("[SecureMenuService] loadUserData: decode failed") }
-            #endif
+        if status == errSecSuccess {
+            guard let raw = raw else {
+                NSLog("[SecureMenuService] loadUserData: entry found but returned no data")
+                return (errSecDecode, nil)
+            }
+            guard let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) else {
+                NSLog("[SecureMenuService] loadUserData: decode failed (\(raw.count) bytes), treating as unreadable")
+                return (errSecDecode, nil)
+            }
             return (status, decoded)
         }
         guard status == errSecItemNotFound else { return (status, nil) }
@@ -296,7 +348,14 @@ final class SecureMenuService {
 
         var userData = SecureUserData()
         if let itemsData = itemsData {
-            userData.items = (try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData)) ?? []
+            // 旧エントリを解釈できない場合は移行を中止する。空の items で user-data を
+            // 作ってしまうと、読み戻し検証（空データでも成功する）を通過して
+            // 旧エントリが削除され、アイテムが完全に失われる
+            guard let decodedItems = try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData) else {
+                NSLog("[SecureMenuService] migrateLegacyUserData: failed to decode legacy all-items, migration aborted")
+                return (errSecDecode, nil)
+            }
+            userData.items = decodedItems
         }
         if let passwordData = passwordData {
             userData.cryptoPassword = String(data: passwordData, encoding: .utf8)
@@ -324,15 +383,22 @@ final class SecureMenuService {
         // （実環境の Clipy データがテスト用サービスへ流れ込むのを防ぐ）
         guard keychainService == Self.defaultKeychainService else { return (errSecItemNotFound, nil) }
         let (status, raw) = readEntry(account: Self.userDataKey, service: Self.legacyKeychainService)
-        if status == errSecSuccess, let raw = raw,
-           let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) {
+        if status == errSecSuccess {
+            // 旧サービスのエントリが読めたのに解釈できない場合は移行を中止する。
+            // ここで素通りさせると旧 2 エントリ経由の探索に落ちて「新規インストール」
+            // と誤判定され、移行できていないデータの上に空の状態が作られる
+            guard let raw = raw,
+                  let decoded = try? JSONDecoder().decode(SecureUserData.self, from: raw) else {
+                NSLog("[SecureMenuService] migrateFromLegacyService: failed to decode legacy user-data, migration aborted")
+                return (errSecDecode, nil)
+            }
             if writeUserData(decoded) {
                 NSLog("[SecureMenuService] migrated user-data from legacy Clipy service")
             }
             return (errSecSuccess, decoded)
         }
         // アクセス拒否は移行せずそのまま返す（読めないデータの上書き防止）
-        if status != errSecSuccess && status != errSecItemNotFound { return (status, nil) }
+        if status != errSecItemNotFound { return (status, nil) }
 
         let (itemsStatus, itemsData) = readEntry(account: Self.legacyItemsKey, service: Self.legacyKeychainService)
         let (passwordStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey, service: Self.legacyKeychainService)
@@ -345,7 +411,12 @@ final class SecureMenuService {
 
         var userData = SecureUserData()
         if let itemsData = itemsData {
-            userData.items = (try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData)) ?? []
+            // 解釈できない旧データを空で置き換えないよう、移行を中止する（上記と同じ理由）
+            guard let decodedItems = try? JSONDecoder().decode([SecureMenuItem].self, from: itemsData) else {
+                NSLog("[SecureMenuService] migrateFromLegacyService: failed to decode legacy all-items, migration aborted")
+                return (errSecDecode, nil)
+            }
+            userData.items = decodedItems
         }
         if let passwordData = passwordData {
             userData.cryptoPassword = String(data: passwordData, encoding: .utf8)
@@ -368,8 +439,11 @@ final class SecureMenuService {
         #if DEBUG
         NSLog("[SecureMenuService] loadAllItems: status=\(status)")
         #endif
-        // 「エントリが存在しない」以外の失敗はアクセス拒否として記録する
-        // （バイナリ更新により Keychain ACL の照合に失敗した場合など）
+        // 「エントリが存在しない」以外の失敗は読み出し不能として記録する。
+        // - アクセス拒否（バイナリ更新により Keychain ACL の照合に失敗した場合など）
+        // - errSecDecode: 読めたが解釈できない（破損、または未知の形式で保存された
+        //   データを古いバイナリで読んだ場合）
+        // どちらも「既存データを空で上書きしてはいけない」状態なので同じ扱いにする
         isKeychainAccessDenied = (status != errSecSuccess && status != errSecItemNotFound)
 
         guard let userData = userData else {
@@ -382,20 +456,30 @@ final class SecureMenuService {
     }
 
     func save(_ item: SecureMenuItem) -> Bool {
+        return save([item])
+    }
+
+    /// 複数アイテムをまとめて保存する（Keychain への読み書きと変更通知は 1 回）。
+    ///
+    /// 1 件ずつ `save(_:)` を呼ぶと件数分の読み書きが走り、そのたびに変更通知が飛んで
+    /// 各ウィンドウが再読込するため、インポートのような一括処理では極端に遅くなる
+    @discardableResult
+    func save(_ newItems: [SecureMenuItem]) -> Bool {
+        guard !newItems.isEmpty else { return true }
         var items = loadAllItems()
-        if let index = items.firstIndex(where: { $0.itemID == item.itemID }) {
-            // 上書き時は各フィールドの Val 変更履歴を引き継ぎ・追記する
-            items[index] = mergeFieldHistories(oldItem: items[index], newItem: item)
-        } else {
-            // 新規追加: displayOrder を末尾に設定
-            let maxOrder = items.map { $0.displayOrder }.max() ?? -1
-            let newItem = SecureMenuItem(
-                itemID: item.itemID,
-                title: item.title,
-                fields: item.fields,
-                displayOrder: maxOrder + 1
-            )
-            items.append(newItem)
+        // 新規追加の displayOrder は末尾に積む
+        var maxOrder = items.map { $0.displayOrder }.max() ?? -1
+        for item in newItems {
+            if let index = items.firstIndex(where: { $0.itemID == item.itemID }) {
+                // 上書き時は各フィールドの Val 変更履歴を引き継ぎ・追記する
+                items[index] = mergeFieldHistories(oldItem: items[index], newItem: item)
+            } else {
+                maxOrder += 1
+                items.append(SecureMenuItem(itemID: item.itemID,
+                                            title: item.title,
+                                            fields: item.fields,
+                                            displayOrder: maxOrder))
+            }
         }
         return saveAllItems(items)
     }
@@ -427,11 +511,14 @@ final class SecureMenuService {
         if status == errSecItemNotFound { return true }
         guard status == errSecSuccess else { return false }
         var userData = existing ?? SecureUserData()
+        let hadItems = !(existing?.items.isEmpty ?? true)
         userData.items = []
-        if (userData.cryptoPassword ?? "").isEmpty {
-            return removeEntry(account: Self.userDataKey)
-        }
-        return writeUserData(userData)
+        let removed = (userData.cryptoPassword ?? "").isEmpty
+            ? removeEntry(account: Self.userDataKey)
+            : writeUserData(userData)
+        // 消すものが無かった場合は「変更なし」として通知しない
+        if removed && hadItems { postItemsDidChange() }
+        return removed
     }
 
     // MARK: - Crypto Password (指紋パスワード)
@@ -492,14 +579,14 @@ final class SecureMenuService {
                 ?? oldItem.fields.first { $0.label == field.label }
             guard let old = oldField else { return field }
             var history = field.history
-            // TOTP は secret を履歴に残さない（極めて機微なため）。それ以外は旧値を追記する
-            if !field.isTOTP, old.value != field.value && !old.value.isEmpty {
+            // 履歴を残す種別（plain / url）のみ旧値を追記する。
+            // TOTP は secret が極めて機微なため、メモは長文が履歴表示を壊すため残さない
+            if field.kind.retainsValueHistory, old.value != field.value && !old.value.isEmpty {
                 history.append(SecureMenuItem.FieldHistoryEntry(value: old.value, replacedAt: Date()))
             }
             // 上限を超えた分は古いものから削除する
             history = Array(history.suffix(Self.maxFieldHistoryCount))
-            return SecureMenuItem.Field(fieldID: field.fieldID, label: field.label, value: field.value,
-                                        isPassword: field.isPassword, kind: field.kind, history: history)
+            return field.updating(history: history)
         }
         return merged
     }
@@ -516,6 +603,17 @@ final class SecureMenuService {
         guard status == errSecSuccess || status == errSecItemNotFound else { return false }
         var userData = existing ?? SecureUserData()
         userData.items = items
-        return writeUserData(userData)
+        guard writeUserData(userData) else { return false }
+        postItemsDidChange()
+        return true
     }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// セキュアアイテムが変更された（保存・削除・並べ替え）。
+    /// 同じサービスを共有する複数のウィンドウが表示を同期するために使う。
+    /// object は変更を行った `SecureMenuService`
+    static let secureItemsDidChange = Notification.Name("io.github.boyaki-machine.Thoth.secureItemsDidChange")
 }

@@ -73,6 +73,44 @@
 
 "Secure Menu Authentication Reason" = "Zugriff auf das sichere Menü";
 
+"Secure Info" = "Sichere Informationen";
+
+"Secure Info Authentication Reason" = "Sichere Informationen anzeigen";
+
+"Secure Info No Selection" = "Wählen Sie einen Eintrag, um die Details zu sehen.";
+
+"Secure Info Copy Value" = "Kopieren";
+
+"Secure Info Reveal Value" = "Wert ein-/ausblenden";
+
+"Secure Info Open URL" = "Im Browser öffnen";
+
+"Secure Info Save Failed" = "Speichern im Schlüsselbund fehlgeschlagen. Ihre Änderungen bleiben erhalten — mit Befehl-S erneut versuchen.";
+
+"Secure Info Title Required" = "Geben Sie vor dem Speichern einen Titel ein. Ihre Änderungen bleiben erhalten.";
+
+"New Secure Item Title" = "Neuer Eintrag";
+
+"Secure Field Default Label Text" = "Text";
+
+"Secure Field Default Label Password" = "Passwort";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Notiz";
+
+"Secure Info Add Field" = "Feld hinzufügen";
+
+"Secure Info Remove Field" = "Feld entfernen";
+
+"Secure Info Remove Field Confirmation" = "Möchten Sie dieses Feld wirklich entfernen?";
+
+"Secure Info Toggle Mask" = "Wert maskieren / anzeigen";
+
+"Secure Info External Change" = "In einem anderen Fenster geändert.";
+
+"Secure Info Reload" = "Neu laden";
+
 "Secure Menu Search Placeholder" = "Suchen...";
 
 "Secure Menu No Results" = "Keine passenden Einträge";
@@ -91,11 +129,25 @@
 
 "Secure Field Value Placeholder" = "Wert";
 
+"Secure Column Title" = "Titel";
+
+"Secure Column Fields" = "Felder";
+
+"Secure Column Label" = "Bezeichnung";
+
+"Secure Column Value" = "Wert";
+
 "Import Secure Items" = "Importieren...";
 
 "Export Secure Items" = "Exportieren...";
 
 "Secure Items Export Warning" = "Die exportierte Datei enthält alle Werte im Klartext. Bitte gehen Sie sorgsam damit um.";
+
+"Secure Items Save Failed" = "Speichern im Schlüsselbund fehlgeschlagen. Details siehe Console.app (Filter: SecureMenuService).";
+
+"Secure Items Import Overwrites Crypto Password" = "Diese Datei enthält ein anderes Fingerabdruck-Passwort als das auf diesem Mac registrierte. Beim Import wird es ersetzt, und zuvor damit verschlüsselte Dateien lassen sich mit dem gespeicherten Passwort nicht mehr öffnen. Fortfahren?";
+
+"Secure Item Title Required" = "Geben Sie vor dem Speichern einen Titel ein.";
 
 "Imported Secure Items Format" = "%d Einträge importiert.";
 

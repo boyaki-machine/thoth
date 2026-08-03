@@ -79,6 +79,7 @@ extension CPYHistoryPickerPanel {
             result.append(.sectionHeader(L10n.tools))
             result.append(.action(.generatePassword))
             result.append(.action(.crypto))
+            result.append(.action(.secureInfo))
             // 設定セクション
             result.append(.separator)
             result.append(.sectionHeader(L10n.sectionSettings))
@@ -99,6 +100,22 @@ extension CPYHistoryPickerPanel {
         if isVisible { updateSubPanel() }
     }
 
+    /// 検索欄・区切り線・余白など、表以外に必要な高さ
+    static var chromeHeight: CGFloat {
+        return Layout.vPad + Layout.searchH + (Layout.vPad - 2) + 1 + 2 + 4
+    }
+
+    /// 表示に必要な高さと画面の余地から、表の高さを決める（純粋関数）。
+    ///
+    /// **画面に収まる範囲ならスクロールさせず全項目を出す。**
+    /// 固定の上限で頭打ちにすると、項目が増えたときに画面に余裕があっても
+    /// スクロールが必要になってしまう
+    static func tableHeight(contentHeight: CGFloat, availableHeight: CGFloat) -> CGFloat {
+        // 空でもパネルが潰れないよう 1 行分は確保する
+        let minimum = Layout.rowH
+        return min(max(contentHeight, minimum), max(minimum, availableHeight))
+    }
+
     func sizePanel() {
         let tableH = rows.reduce(CGFloat(0)) { acc, row in
             switch row {
@@ -107,9 +124,12 @@ extension CPYHistoryPickerPanel {
             default:             return acc + Layout.rowH
             }
         }
-        let scrollH = min(max(tableH, Layout.rowH), Layout.maxTableH)
-        let totalH  = Layout.vPad + Layout.searchH + (Layout.vPad - 2) + 1 + 2 + scrollH + 4
-        setContentSize(NSSize(width: Layout.width, height: totalH))
+        // 表示先の画面（マウスのある画面）の作業領域に収まる範囲まで伸ばす
+        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
+        let visibleH = screen?.visibleFrame.height ?? Layout.maxTableH
+        let available = visibleH - Layout.screenMargin - Self.chromeHeight
+        let scrollH = Self.tableHeight(contentHeight: tableH, availableHeight: available)
+        setContentSize(NSSize(width: Layout.width, height: Self.chromeHeight + scrollH))
     }
 }
 
