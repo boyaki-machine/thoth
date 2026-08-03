@@ -209,16 +209,6 @@ extension SecureMenuItem.Field.Kind {
         }
     }
 
-    /// パスワード生成の結果を流し込んでよいか。
-    /// URL とメモは生成物の用途と合わず、TOTP の secret は発行元と対にならないと
-    /// 意味を成さない（取り込み直しで置き換える）ため、いずれも対象外
-    var acceptsGeneratedPassword: Bool {
-        switch self {
-        case .plain: return true
-        case .totp, .url, .note: return false
-        }
-    }
-
     /// 保存されている値をそのまま画面に表示してよいか。
     /// TOTP は secret ではなくその時点のワンタイムコードだけを表示する
     var displaysRawValue: Bool {

@@ -363,35 +363,15 @@ History inherits the row's discipline verbatim: masked by default / 👁 reveals
 
 **Password generation (v1.3.0)**
 
-The one feature carried over when the Manage window was retired. There, the generator sheet only opened; the user copied the result by hand and pasted it into the value cell. **The Secure Info window never routes it through the clipboard.** Hand-copying leaves the password sitting on the pasteboard, and it invites pasting into the wrong place.
+An affordance inherited from the retired Manage window's edit sheet: **Password Generator...** (**⌘G**) in the bottom bar opens the existing generator as a sheet.
 
-**The destination is chosen in a "Fill into" popup on the sheet, never inferred.** It was originally inferred from "the field that last held editing focus", and that broke in testing — in three compounding ways, none of them visible to the user.
+**There is no path that writes the generated value straight into a field.** The user copies the result and pastes it. That path was built and then withdrawn, failing in this order:
 
-| Assumption | Reality |
-|---|---|
-| Clicking a field gives it focus | A **masked value cell is not editable** (`isValueEditable`), so it never takes focus. Only users who clicked the *label* registered a target |
-| You can see whether it worked | A **masked field renders `••••••••` even when empty**, so there is no way to confirm the fill, or which field got it |
-| One candidate can be picked when nothing is remembered | An item with two password fields — or none — cannot be narrowed down, and **the affordance disappears entirely**. Worse, that state lives in the saved data, so restarting the app does not clear it |
+1. It first filled **the field that last held editing focus**. A masked value cell is not editable (`isValueEditable`), so it never takes focus — the record was almost always empty, and the feature only worked for users who clicked the *label*
+2. A fallback of "use the masked field when there is exactly one" was added. On an item with a text field and a password field it always chose the password field, never the text field the user was looking at. Since **a masked field renders `••••••••` even when empty**, the mistake was invisible; and an item with two password fields could not be narrowed down at all, so the affordance disappeared
+3. A "Fill into" popup on the sheet fixed the ambiguity, but **made the generator noticeably heavier to operate**
 
-It surfaced as "I filled the text field but the password field changed" and "the button stopped appearing". **The problem is not whether the guess is right; it is that the user cannot tell whether it was right**, so the design now lists every candidate and lets the user pick (`CPYSecureInfoDetailViewController.fillCandidates`).
-
-The last-edited field is used only as a **hint for the initial selection** (`preferredFillFieldID`); with nothing remembered it selects the first masked field, since defaulting to an ID field makes it easy to clobber the wrong value. Either way the user can change it on screen.
-
-**What is remembered is the `fieldID`, not the row view.** Row views are rebuilt on every reorder, mask toggle, and save, so a view reference goes stale immediately. The ID is resolved to a row at use time, re-checking that the kind can still accept a value.
-
-**The popup is built from an `NSMenu` directly.** `NSPopUpButton.addItem(withTitle:)` removes any existing item with the same title, which would collapse two fields both labelled "Password" into one entry. Selection resolves by index, so identical labels are never confused.
-
-**Rows are detached with `prepareForRemoval()` before being discarded.** This addresses a real defect. The field editor is shared per window, so a row that `rebuildRows` merely removed from the hierarchy still receives text-changed and end-editing callbacks — and writes whatever was *on screen* back into the working copy: `••••••••` for a masked field, an empty string for an untouched one. This feature hits it hardest because rows are rebuilt while the generator sheet is open, and it surfaced as **the generated password being pushed into history while the value turned into asterisks or blank**. If the label was blanked too, `commitOutcome()`'s "drop fields with an empty label and value" rule removed the field entirely, after which no fill target could be resolved. The same hazard applies to add / delete / reorder / mask toggle, so the fix lives in the one place they all share: `rebuildRows`.
-
-It is forgotten **only when the selection moves to a different item**. Adding, deleting, and reordering fields all go through the same `show(item:)`, but those are rebuilds within one item, so the target survives them (forgetting every time would force the user to re-pick the target right after moving a row). Remembering it *across* items, on the other hand, would fire a generated password into some other item's value.
-
-Only `plain` accepts a generated value (`SecureMenuItem.Field.Kind.acceptsGeneratedPassword`). A TOTP secret is meaningless unless paired with its issuer, and URL and memo fields do not match what the generator produces.
-
-**Masked fields accept it too.** The "values cannot be edited while masked" rule forbids *typing while looking at asterisks*; a generated value rewrites the model (the working copy) and rebuilds the row, so `••••••••` can never be saved as the value.
-
-The generator sheet shows **Fill This Field** only when the caller set `onUse`. Showing it when opened as a standalone window, or from fingerprint-password management, would leave a button that does nothing.
-
-The shortcut is **⌘G**. The retired edit sheet used ⌘P, but ⌘P is the standard Print shortcut and collides in meaning with other windows. ⌘G stays active while text is being edited — that is exactly when it is wanted.
+The generator is not opened often, so the copy-and-paste round trip is an acceptable cost. The point this decision turns on: **do not decide "where it lands" outside the user's view.**
 
 **How history behaves on export / import (as investigated for v1.2.2)**
 

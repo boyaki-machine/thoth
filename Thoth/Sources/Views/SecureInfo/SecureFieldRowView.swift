@@ -75,10 +75,6 @@ final class SecureFieldRowView: NSView {
     var onValueEdited: ((SecureFieldRowView, String) -> Void)?
     /// 編集が終わった（フォーカスが外れた）。保存のきっかけに使う
     var onEditingEnded: ((SecureFieldRowView) -> Void)?
-    /// 編集が始まった（フォーカスが入った）。
-    /// パスワード生成の入力先を覚えておくために使う（ボタンを押した時点では
-    /// フォーカスが外れていて、どの行が対象だったか分からなくなるため）
-    var onEditingFocusGained: ((SecureFieldRowView) -> Void)?
     /// マスク指定（🔒）が切り替えられた
     var onMaskToggled: ((SecureFieldRowView, Bool) -> Void)?
     /// このフィールドの削除が要求された
@@ -203,20 +199,6 @@ final class SecureFieldRowView: NSView {
     /// ラベルを編集できるか（読み取り専用でなければ種別を問わず編集できる）
     static func isLabelEditable(isReadOnly: Bool) -> Bool {
         return !isReadOnly
-    }
-
-    /// パスワード生成の結果を受け取れる行か（純粋関数のためユニットテスト可能）。
-    ///
-    /// マスク中かどうかは問わない。`isValueEditable` が禁じているのは
-    /// 「伏せ字を見ながらの手入力」であって、生成値はモデルを経由して入るため
-    /// 伏せ字が値として保存される事故は起きない
-    static func acceptsGeneratedPassword(field: SecureMenuItem.Field, isReadOnly: Bool) -> Bool {
-        return !isReadOnly && field.kind.acceptsGeneratedPassword
-    }
-
-    /// この行がパスワード生成の入力先になれるか
-    var acceptsGeneratedPassword: Bool {
-        return Self.acceptsGeneratedPassword(field: field, isReadOnly: isReadOnly)
     }
 
     private func updateValueDisplay() {
@@ -447,7 +429,6 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
         hasEditingFocus = true
         updateDeleteButtonVisibility()
         updateHistoryButtonVisibility()
-        onEditingFocusGained?(self)
     }
 
     func textDidBeginEditing(_ notification: Notification) {
@@ -455,7 +436,6 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
         hasEditingFocus = true
         updateDeleteButtonVisibility()
         updateHistoryButtonVisibility()
-        onEditingFocusGained?(self)
     }
 
     func controlTextDidChange(_ notification: Notification) {

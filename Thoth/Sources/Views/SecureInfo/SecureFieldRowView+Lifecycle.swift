@@ -21,10 +21,9 @@ extension SecureFieldRowView {
     /// 「画面に見えていた文字列」を作業コピーへ書き戻すので、マスク中なら
     /// `••••••••` が、未入力なら空文字が、そのまま値として保存される。
     ///
-    /// 実害の例: パスワード生成シートを開いている間に行が作り直されると、
-    /// シートを閉じたあとに古い行が書き戻し、**生成したパスワードが変更履歴へ
-    /// 押し出されて値が伏せ字や空に化ける**。ラベルまで空になった場合は
-    /// `commitOutcome()` の「ラベルも値も空なら除去」に掛かってフィールドごと消える
+    /// 実害の例: 行が作り直されたあとに古い行が書き戻すと、**入力した値が
+    /// 伏せ字や空に化ける**。ラベルまで空になった場合は `commitOutcome()` の
+    /// 「ラベルも値も空なら除去」に掛かってフィールドごと消える
     func prepareForRemoval() {
         // 先に切る。あとの hideRevealedValue() が stringValue を書き換えても
         // 通知が飛ばないようにするため
@@ -34,7 +33,6 @@ extension SecureFieldRowView {
         onLabelEdited = nil
         onValueEdited = nil
         onEditingEnded = nil
-        onEditingFocusGained = nil
         // 捨てる行に平文を残さない
         hideRevealedValue()
     }

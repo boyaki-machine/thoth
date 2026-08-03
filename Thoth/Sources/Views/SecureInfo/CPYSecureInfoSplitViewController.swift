@@ -187,19 +187,6 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         commitIfNeeded()
     }
 
-    /// TOTP の取り込みシートを開く（既存の取り込み画面を再利用する）
-    private func presentTOTPImport() {
-        guard editor.draft != nil else { NSSound.beep(); return }
-        let importViewController = CPYTOTPImportViewController()
-        importViewController.onImport = { [weak self] secret in
-            guard let self = self else { return }
-            self.editor.addField(kind: .totp, label: L10n.totpDefaultFieldLabel, value: secret)
-            self.detailViewController.show(item: self.editor.draft)
-            self.commitIfNeeded()
-        }
-        presentAsSheet(importViewController)
-    }
-
     /// フォーカスのあるフィールド行を上下に動かす（Ctrl+j / Ctrl+k）
     func moveFocusedField(by offset: Int) {
         guard let row = detailViewController.focusedRow else { NSSound.beep(); return }
