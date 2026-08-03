@@ -13,18 +13,30 @@ import Cocoa
 // MARK: - Sub-Panel
 
 extension CPYSecurePickerPanel {
+    /// サブパネルに載せるフィールド。載せるものが無ければ nil（＝サブパネルを開かない）。
+    ///
+    /// **表示（setFields）と開閉判定の両方が必ずこの 1 箇所を通ること。**
+    /// 確定時に記録される `fieldIndex` はこの配列に対する添字なので、
+    /// どちらか一方でも `item.fields` を直接使うと、継続ペーストモードの復元時に
+    /// 別のフィールドが貼り付けられる。またメモしか持たないアイテムでは
+    /// 空のサブパネルが開いてしまう。純粋関数のためユニットテスト可能
+    static func subPanelFields(for item: SecureMenuItem) -> [SecureMenuItem.Field]? {
+        let fields = item.pickerFields
+        return fields.isEmpty ? nil : fields
+    }
+
     func updateSubPanel() {
         guard isVisible else { return }
         let idx = tableView.selectedRow
         guard idx >= 0, idx < rows.count, case .parent(let item) = rows[idx],
-              !item.fields.isEmpty else {
+              let fields = Self.subPanelFields(for: item) else {
             closeSubPanel()
             return
         }
-        openSubPanel(for: item, atRow: idx)
+        openSubPanel(for: item, fields: fields, atRow: idx)
     }
 
-    func openSubPanel(for item: SecureMenuItem, atRow rowIndex: Int) {
+    func openSubPanel(for item: SecureMenuItem, fields: [SecureMenuItem.Field], atRow rowIndex: Int) {
         let rowRectInTable  = tableView.rect(ofRow: rowIndex)
         let rowRectInWindow = tableView.convert(rowRectInTable, to: nil)
         let rowRectInScreen = convertToScreen(rowRectInWindow)
@@ -45,7 +57,7 @@ extension CPYSecurePickerPanel {
             addChildWindow(sub, ordered: .above)
         }
 
-        sub.setFields(item.fields)
+        sub.setFields(fields)
 
         let mainFrame = frame
         let screen  = NSScreen.screens.first { $0.frame.intersects(mainFrame) } ?? NSScreen.main

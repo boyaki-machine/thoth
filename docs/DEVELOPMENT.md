@@ -72,7 +72,8 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
 │   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
 │   │   └── Views/                   Windows and panels (encryption, password
-│   │                                generation, secure picker, etc.)
+│   │       │                        generation, secure picker, etc.)
+│   │       └── SecureInfo/          Secure Info window (two-pane)
 │   ├── Resources/                   *.lproj (localization), image assets
 │   ├── Generated/                   SwiftGen output (L10n / Asset / Colors)
 │   └── Supporting Files/            Info.plist, etc.
@@ -135,6 +136,7 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
 | Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemEditSpec`, `SecureItemEditTabNavigationSpec`, `SecureItemFieldReorderingSpec` |
+| Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec` |
 | Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec` |

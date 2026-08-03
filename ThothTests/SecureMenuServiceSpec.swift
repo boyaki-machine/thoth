@@ -13,6 +13,10 @@ class SecureMenuServiceSpec: QuickSpec {
 
     override class func spec() {
         beforeEach {
+            // 破損データを書き込むテストの後でも確実にクリーンな状態から始める。
+            // deleteAllItems() / deleteCryptoPassword() は破損状態では
+            // 意図的に失敗するため、後片付けには使えない
+            self.removeAllEntriesDirectly()
             self.service = SecureMenuService(keychainService: SecureMenuServiceSpec.testKeychainService)
             self.service.deleteAllItems()
             self.service.deleteCryptoPassword()
@@ -20,6 +24,7 @@ class SecureMenuServiceSpec: QuickSpec {
         afterEach {
             self.service.deleteAllItems()
             self.service.deleteCryptoPassword()
+            self.removeAllEntriesDirectly()
         }
 
         saveAndLoadSpecs()
@@ -27,6 +32,8 @@ class SecureMenuServiceSpec: QuickSpec {
         deleteSpecs()
         reorderSpecs()
         accessDeniedGuardSpecs()
+        authenticationLifetimeSpecs()
+        corruptedDataGuardSpecs()
         cryptoPasswordSpecs()
         totpFieldSpecs()
         legacyMigrationSpecs()
@@ -43,6 +50,36 @@ class SecureMenuServiceSpec: QuickSpec {
         ]
         SecItemDelete(query as CFDictionary)
         expect(SecItemAdd(query as CFDictionary, nil)) == errSecSuccess
+    }
+
+    /// Keychain エントリを直接削除する。破損データを書き込んだテストの後始末用
+    /// （サービス側の削除 API は破損状態では意図的に失敗するため使えない）
+    private static func removeEntryDirectly(account: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
+    private static func removeAllEntriesDirectly() {
+        ["user-data", "all-items", "crypto-password"].forEach { removeEntryDirectly(account: $0) }
+    }
+
+    /// Keychain に実際に保存されている生バイト列を読み出す。
+    /// 「保存が拒否され、既存データが書き換わっていない」ことの検証に使う
+    private static func rawEntryData(account: String) -> Data? {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: SecureMenuServiceSpec.testKeychainService,
+            kSecAttrAccount as String: account
+        ]
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+        query[kSecReturnData as String] = true
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess else { return nil }
+        return result as? Data
     }
 
     private static func legacyEntryExists(account: String) -> Bool {
@@ -95,6 +132,40 @@ class SecureMenuServiceSpec: QuickSpec {
                 _ = self.service.saveCryptoPassword("updated")
                 expect(self.service.loadAllItems().count) == 1
                 expect(self.service.loadCryptoPassword()) == "updated"
+            }
+
+            // TOTP は再登録に各サービスの 2FA 設定をやり直す手間がかかるため、
+            // 移行経路で secret がそのまま引き継がれることを明示的に担保する
+            it("Carries TOTP secrets through the legacy migration untouched") {
+                let secret = "otpauth://totp/GitHub:user?secret=JBSWY3DPEHPK3PXP&issuer=GitHub"
+                let items = [SecureMenuItem(itemID: "legacy-totp", title: "GitHub",
+                                            fields: [SecureMenuItem.Field(label: "TOTP", value: secret, kind: .totp)])]
+                self.addLegacyEntry(account: "all-items", data: try! JSONEncoder().encode(items))
+
+                let migrated = self.service.loadAllItems()
+                expect(migrated.first?.fields.first?.value) == secret
+                expect(migrated.first?.fields.first?.isTOTP) == true
+                // 移行後に別アイテムを保存しても secret は書き換わらない
+                _ = self.service.save(SecureMenuItem(title: "Another"))
+                expect(self.service.loadAllItems().first { $0.itemID == "legacy-totp" }?
+                        .fields.first?.value) == secret
+            }
+
+            // 旧エントリを解釈できない場合、空の items で移行を完了させてはならない。
+            // 以前は空データを書き込んだうえで読み戻し検証（空でも成功する）を通過し、
+            // 旧エントリを削除していたため、アップグレード時にデータが完全に失われた
+            it("Aborts the migration and keeps the legacy entry when it cannot be decoded") {
+                self.addLegacyEntry(account: "all-items", data: Data("not json at all".utf8))
+
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+                // 旧エントリは削除されずに残っている（あとから救出できる）
+                expect(self.legacyEntryExists(account: "all-items")) == true
+                // 新エントリは作られていない
+                expect(self.rawEntryData(account: "user-data")) == nil
+                // 読めない状態なので保存も拒否される
+                expect(self.service.save(SecureMenuItem(title: "New"))) == false
+                expect(self.legacyEntryExists(account: "all-items")) == true
             }
         }
     }
@@ -243,6 +314,38 @@ class SecureMenuServiceSpec: QuickSpec {
                 let history = self.service.loadAllItems().first?.fields.first?.history
                 expect(history?.isEmpty) == true
             }
+
+            /// 値を 1 度置き換えたあとの履歴を返す
+            func historyAfterValueChange(kind: SecureMenuItem.Field.Kind) -> [SecureMenuItem.FieldHistoryEntry] {
+                let original = SecureMenuItem.Field(label: "Field", value: "before", kind: kind)
+                _ = self.service.save(SecureMenuItem(itemID: "kinded", title: "Item", fields: [original]))
+                _ = self.service.save(SecureMenuItem(itemID: "kinded", title: "Item",
+                                                     fields: [original.updating(value: "after")]))
+                let saved = self.service.loadAllItems().first?.fields.first
+                expect(saved?.value) == "after"
+                expect(saved?.kind) == kind
+                return saved?.history ?? []
+            }
+
+            // URL は通常のテキストと同じく、変更前の値をたどれると役に立つ
+            it("Records history for url fields") {
+                expect(historyAfterValueChange(kind: .url).map { $0.value }) == ["before"]
+            }
+
+            // メモは長文が履歴メニューの 1 行表示を壊し、
+            // 上限 10 件を推敲だけで使い切ってしまうため履歴を残さない
+            it("Does not record history for note fields") {
+                expect(historyAfterValueChange(kind: .note).isEmpty) == true
+            }
+
+            // secret が極めて機微なため、TOTP は従来どおり履歴を残さない
+            it("Does not record history for totp fields") {
+                expect(historyAfterValueChange(kind: .totp).isEmpty) == true
+            }
+
+            it("Records history for plain fields") {
+                expect(historyAfterValueChange(kind: .plain).map { $0.value }) == ["before"]
+            }
         }
     }
 
@@ -307,6 +410,63 @@ class SecureMenuServiceSpec: QuickSpec {
                 expect(loaded?.fields[1].label) == "Password"
                 expect(loaded?.fields[1].value) == "s3cr3t"
                 expect(loaded?.fields[1].isPassword) == true
+            }
+
+            // 1 件ずつ save(_:) を呼ぶと件数分の読み書きと変更通知が走るため、
+            // インポートのような一括処理では 1 回の書き込みにまとめる
+            it("複数アイテムをまとめて保存し、通知は 1 回だけ飛ぶ") {
+                var received = 0
+                let observer = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                      object: nil, queue: nil) { _ in
+                    received += 1
+                }
+                defer { NotificationCenter.default.removeObserver(observer) }
+
+                let items = (0..<5).map { SecureMenuItem(itemID: "b\($0)", title: "Item \($0)") }
+                expect(self.service.save(items)) == true
+                expect(received) == 1
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded.map { $0.itemID }) == ["b0", "b1", "b2", "b3", "b4"]
+                // 新規追加は末尾に向かって displayOrder が振られる
+                expect(loaded.map { $0.displayOrder }) == [0, 1, 2, 3, 4]
+            }
+
+            it("まとめ保存でも既存アイテムは上書きされ、変更履歴が引き継がれる") {
+                let original = SecureMenuItem.Field(fieldID: "f1", label: "PW", value: "old", isPassword: true)
+                expect(self.service.save(SecureMenuItem(itemID: "batch", title: "A", fields: [original]))) == true
+
+                let updated = original.updating(value: "new")
+                expect(self.service.save([SecureMenuItem(itemID: "batch", title: "A", fields: [updated]),
+                                          SecureMenuItem(itemID: "added", title: "B")])) == true
+
+                let loaded = self.service.loadAllItems()
+                expect(loaded.count) == 2
+                let saved = loaded.first { $0.itemID == "batch" }?.fields.first
+                expect(saved?.value) == "new"
+                expect(saved?.history.map { $0.value }) == ["old"]
+            }
+
+            it("空配列のまとめ保存は何もせず成功を返す") {
+                expect(self.service.save([SecureMenuItem]())) == true
+                expect(self.service.loadAllItems().isEmpty) == true
+            }
+
+            // 拡張種別が Keychain の保存形式（JSON）を往復しても失われないこと。
+            // メモは改行を含むため、単一行に丸められていないかも併せて確認する
+            it("Url and note fields survive the keychain round trip") {
+                let memo = "契約番号: 12345-678\nサポート: 03-0000-0000\n用途: 経理システムのログイン"
+                let fields = [SecureMenuItem.Field(label: "URL", value: "https://example.com/login", kind: .url),
+                              SecureMenuItem.Field(label: "Memo", value: memo, kind: .note)]
+                _ = self.service.save(SecureMenuItem(itemID: "extended", title: "Accounting", fields: fields))
+
+                let loaded = self.service.loadAllItems().first
+                expect(loaded?.fields.count) == 2
+                expect(loaded?.fields[0].kind) == SecureMenuItem.Field.Kind.url
+                expect(loaded?.fields[0].value) == "https://example.com/login"
+                expect(loaded?.fields[1].kind) == SecureMenuItem.Field.Kind.note
+                expect(loaded?.fields[1].value) == memo
+                expect(loaded?.fields[1].value.contains("\n")) == true
             }
         }
     }
@@ -395,6 +555,147 @@ class SecureMenuServiceSpec: QuickSpec {
                 self.service.isKeychainAccessDenied = true
                 _ = self.service.loadAllItems()
                 expect(self.service.isKeychainAccessDenied) == false
+            }
+        }
+    }
+
+    // MARK: - Authentication Lifetime
+
+    /// 常駐運用で「認証状態が残り続けない」ことを担保する。
+    /// 評価済みの LAContext を保持したままだと、アプリ内の再認証ゲートを
+    /// 過ぎても OS レベルの認証が有効に残る
+    private static func authenticationLifetimeSpecs() {
+        describe("認証状態の寿命") {
+
+            it("明示的な破棄で猶予期間もリセットされる") {
+                self.service.lastAuthenticatedDate = Date()
+                self.service.invalidateAuthentication()
+                expect(self.service.lastAuthenticatedDate) == nil
+            }
+
+            // 猶予期間内なら再認証を省略する（既存の UX を壊さない）
+            it("猶予期間内は再認証を省略する") {
+                self.service.lastAuthenticatedDate = Date()
+                var authenticated: Bool?
+                self.service.authenticate(reason: "test") { authenticated = $0 }
+                expect(authenticated).toEventually(equal(true), timeout: .seconds(1))
+            }
+
+            // 破棄したあとは猶予が効かない（＝再認証が要求される）
+            it("破棄後は猶予期間が効かない") {
+                self.service.lastAuthenticatedDate = Date()
+                self.service.invalidateAuthentication()
+                expect(self.service.lastAuthenticatedDate) == nil
+            }
+
+            it("読み書きは認証していなくても猶予判定で失敗しない") {
+                // 認証を通していない状態でも通常の保存・読み出しは行える
+                expect(self.service.save(SecureMenuItem(itemID: "auth", title: "A"))) == true
+                expect(self.service.loadAllItems().count) == 1
+            }
+        }
+    }
+
+    // MARK: - Corrupted Data Guard
+
+    /// 「Keychain の読み出しには成功したが、内容を解釈できない」場合のガード。
+    ///
+    /// 以前はこの状態で `errSecSuccess` + nil が返り、呼び出し側のガードを素通りして
+    /// 「アイテム 0 件」と解釈されていた。その直後に保存を行うと、読めなかった
+    /// データを空で上書きして全アイテム（TOTP secret を含む）と指紋パスワードが
+    /// 失われた。破損は「読めなかった」と同義に扱い、書き込みを禁止する。
+    private static func corruptedDataGuardSpecs() {
+        describe("Corrupted data guard") {
+
+            /// user-data エントリを解釈不能なバイト列で置き換える
+            func corruptUserDataEntry() {
+                self.addLegacyEntry(account: "user-data", data: Data("{ this is not valid json".utf8))
+            }
+
+            it("Reports unreadable state when the stored data cannot be decoded") {
+                expect(self.service.save(SecureMenuItem(title: "Existing"))) == true
+                corruptUserDataEntry()
+
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+            }
+
+            // 中核の回帰テスト: 破損状態での保存が既存データを破壊しないこと
+            it("Rejects save and leaves the stored bytes untouched") {
+                expect(self.service.save(SecureMenuItem(title: "Existing"))) == true
+                corruptUserDataEntry()
+                let before = self.rawEntryData(account: "user-data")
+
+                expect(self.service.save(SecureMenuItem(title: "Should not be written"))) == false
+                expect(self.rawEntryData(account: "user-data")) == before
+            }
+
+            it("Rejects every mutating operation while the data is unreadable") {
+                corruptUserDataEntry()
+                let before = self.rawEntryData(account: "user-data")
+
+                expect(self.service.save(SecureMenuItem(title: "New"))) == false
+                expect(self.service.delete(itemID: "anything")) == false
+                expect(self.service.reorderItems([SecureMenuItem(title: "New")])) == false
+                expect(self.service.deleteAllItems()) == false
+                // 指紋パスワードの保存も user-data の read-modify-write なので同じく拒否される
+                expect(self.service.saveCryptoPassword("new-password")) == false
+                expect(self.service.deleteCryptoPassword()) == false
+
+                expect(self.rawEntryData(account: "user-data")) == before
+            }
+
+            it("Recovers once the stored data becomes readable again") {
+                corruptUserDataEntry()
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == true
+
+                self.removeEntryDirectly(account: "user-data")
+                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.isKeychainAccessDenied) == false
+                expect(self.service.save(SecureMenuItem(title: "After recovery"))) == true
+                expect(self.service.loadAllItems().first?.title) == "After recovery"
+            }
+
+            // バージョンアップ／ダウングレードで最も怖い経路。
+            // 新しいバージョンが書いた未知の kind を古いバイナリが読んだ状況を再現する。
+            // 読めるか読めないかは実装によって変わってよいが、
+            // 「保存済みの TOTP secret が失われる」ことは決してあってはならない。
+            it("Never destroys a stored TOTP secret when the field kind is unknown") {
+                let json = """
+                {"version":2,"items":[{"itemID":"future-1","title":"Future","displayOrder":0,
+                 "fields":[{"fieldID":"f1","label":"TOTP","value":"JBSWY3DPEHPK3PXP","isPassword":false,
+                 "kind":"kind-from-the-future","history":[],"createdAt":0}]}],
+                 "cryptoPassword":"fingerprint-password"}
+                """
+                self.addLegacyEntry(account: "user-data", data: Data(json.utf8))
+
+                _ = self.service.loadAllItems()
+                // 読めるなら read-modify-write で、読めないなら保存拒否で、
+                // いずれにせよ既存の値は保持されなければならない
+                _ = self.service.save(SecureMenuItem(title: "Added after reading unknown data"))
+
+                let stored = String(data: self.rawEntryData(account: "user-data") ?? Data(), encoding: .utf8) ?? ""
+                expect(stored).to(contain("JBSWY3DPEHPK3PXP"))
+                expect(stored).to(contain("fingerprint-password"))
+            }
+
+            // v1.2.0 以降は未知の種別を plain として読めるため、
+            // 将来の版が書いたデータを開いてもアプリは編集可能なまま動く
+            // （v1.1.x はここでデコードに失敗し、保存不能に陥っていた）
+            it("Degrades an unknown field kind to plain instead of locking the app") {
+                let json = """
+                {"version":2,"items":[{"itemID":"future-2","title":"Future","displayOrder":0,
+                 "fields":[{"fieldID":"f1","label":"Something","value":"kept","isPassword":false,
+                 "kind":"kind-from-the-future","history":[],"createdAt":0}]}]}
+                """
+                self.addLegacyEntry(account: "user-data", data: Data(json.utf8))
+
+                let loaded = self.service.loadAllItems()
+                expect(self.service.isKeychainAccessDenied) == false
+                expect(loaded.first?.fields.first?.kind) == SecureMenuItem.Field.Kind.plain
+                expect(loaded.first?.fields.first?.value) == "kept"
+                expect(self.service.save(SecureMenuItem(title: "Still editable"))) == true
             }
         }
     }

@@ -73,6 +73,44 @@
 
 "Secure Menu Authentication Reason" = "Access Secure Menu";
 
+"Secure Info" = "Secure Info";
+
+"Secure Info Authentication Reason" = "View secure info";
+
+"Secure Info No Selection" = "Select an item to view its details.";
+
+"Secure Info Copy Value" = "Copy";
+
+"Secure Info Reveal Value" = "Show / hide the value";
+
+"Secure Info Open URL" = "Open in browser";
+
+"Secure Info Save Failed" = "Failed to save to Keychain. Your edits are kept — press Command-S to try again. See Console.app for details (filter: SecureMenuService).";
+
+"Secure Info Title Required" = "Enter a title before saving. Your edits are kept.";
+
+"New Secure Item Title" = "New Item";
+
+"Secure Field Default Label Text" = "Text";
+
+"Secure Field Default Label Password" = "Password";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Memo";
+
+"Secure Info Add Field" = "Add Field";
+
+"Secure Info Remove Field" = "Remove Field";
+
+"Secure Info Remove Field Confirmation" = "Are you sure you want to remove this field?";
+
+"Secure Info Toggle Mask" = "Mask / unmask the value";
+
+"Secure Info External Change" = "Changed in another window.";
+
+"Secure Info Reload" = "Reload";
+
 "Secure Menu Search Placeholder" = "Search...";
 
 "Secure Menu No Results" = "No matching items";
@@ -91,11 +129,25 @@
 
 "Secure Field Value Placeholder" = "Value";
 
+"Secure Column Title" = "Title";
+
+"Secure Column Fields" = "Fields";
+
+"Secure Column Label" = "Label";
+
+"Secure Column Value" = "Value";
+
 "Import Secure Items" = "Import...";
 
 "Export Secure Items" = "Export...";
 
 "Secure Items Export Warning" = "The exported file will contain all values in plain text. Handle it with care.";
+
+"Secure Items Save Failed" = "Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).";
+
+"Secure Items Import Overwrites Crypto Password" = "This file contains a fingerprint password that differs from the one registered on this Mac. Importing replaces it, and files previously encrypted with the current password will no longer open with the stored password. Continue?";
+
+"Secure Item Title Required" = "Enter a title before saving.";
 
 "Imported Secure Items Format" = "Imported %d item(s).";
 

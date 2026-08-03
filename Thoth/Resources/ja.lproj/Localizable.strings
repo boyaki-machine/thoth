@@ -73,6 +73,44 @@
 
 "Secure Menu Authentication Reason" = "セキュアメニューにアクセス";
 
+"Secure Info" = "セキュア情報確認";
+
+"Secure Info Authentication Reason" = "セキュア情報を表示";
+
+"Secure Info No Selection" = "アイテムを選択すると詳細が表示されます。";
+
+"Secure Info Copy Value" = "コピー";
+
+"Secure Info Reveal Value" = "値の表示 / 非表示";
+
+"Secure Info Open URL" = "ブラウザで開く";
+
+"Secure Info Save Failed" = "キーチェーンへの保存に失敗しました。編集内容は保持されています。⌘S で再試行してください。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
+
+"Secure Info Title Required" = "保存するにはタイトルを入力してください。編集内容は保持されています。";
+
+"New Secure Item Title" = "新規アイテム";
+
+"Secure Field Default Label Text" = "テキスト";
+
+"Secure Field Default Label Password" = "パスワード";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "メモ";
+
+"Secure Info Add Field" = "フィールドを追加";
+
+"Secure Info Remove Field" = "フィールドを削除";
+
+"Secure Info Remove Field Confirmation" = "このフィールドを削除しますか？";
+
+"Secure Info Toggle Mask" = "値のマスクを切り替え";
+
+"Secure Info External Change" = "他の画面で変更されました。";
+
+"Secure Info Reload" = "再読込";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";
@@ -91,11 +129,25 @@
 
 "Secure Field Value Placeholder" = "値";
 
+"Secure Column Title" = "タイトル";
+
+"Secure Column Fields" = "フィールド数";
+
+"Secure Column Label" = "ラベル";
+
+"Secure Column Value" = "値";
+
 "Import Secure Items" = "インポート...";
 
 "Export Secure Items" = "エクスポート...";
 
 "Secure Items Export Warning" = "エクスポートされるファイルにはすべての値が平文で含まれます。取り扱いには十分注意してください。";
+
+"Secure Items Save Failed" = "キーチェーンへの保存に失敗しました。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
+
+"Secure Items Import Overwrites Crypto Password" = "このファイルには、この Mac に登録されている指紋パスワードとは異なるパスワードが含まれています。取り込むと置き換えられ、現在のパスワードで暗号化したファイルは保存済みパスワードでは開けなくなります。続行しますか？";
+
+"Secure Item Title Required" = "保存するにはタイトルを入力してください。";
 
 "Imported Secure Items Format" = "%d 件のアイテムをインポートしました。";
 

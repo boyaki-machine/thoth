@@ -59,6 +59,11 @@ final class CPYSecureItemsViewController: NSViewController {
     private let closeButton  = TabCapturingButton()
     private var items: [SecureMenuItem] = []
     private var keyMonitor: Any?
+    private var changeObserver: NSObjectProtocol?
+
+    deinit {
+        if let changeObserver = changeObserver { NotificationCenter.default.removeObserver(changeObserver) }
+    }
 
     override func loadView() {
         view = NSView(frame: NSRect(x: 0, y: 0, width: 520, height: 420))
@@ -78,11 +83,11 @@ final class CPYSecureItemsViewController: NSViewController {
         dragHandleColumn.maxWidth = 20
 
         let titleColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("title"))
-        titleColumn.title = "Title"
+        titleColumn.title = L10n.secureColumnTitle
         titleColumn.width = 280
 
         let fieldsColumn = NSTableColumn(identifier: NSUserInterfaceItemIdentifier("fields"))
-        fieldsColumn.title = "Fields"
+        fieldsColumn.title = L10n.secureColumnFields
         fieldsColumn.width = 100
 
         tableView.addTableColumn(dragHandleColumn)
@@ -171,6 +176,7 @@ final class CPYSecureItemsViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        installChangeObserver()
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, event.window === self.view.window else { return event }
             let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -203,13 +209,29 @@ final class CPYSecureItemsViewController: NSViewController {
     override func viewWillDisappear() {
         super.viewWillDisappear()
         if let monitor = keyMonitor { NSEvent.removeMonitor(monitor); keyMonitor = nil }
+        if let changeObserver = changeObserver {
+            NotificationCenter.default.removeObserver(changeObserver)
+            self.changeObserver = nil
+        }
     }
 
-    func reloadItems() {
+    /// 別のウィンドウ（セキュア情報確認ウィンドウ）での変更に追従する
+    private func installChangeObserver() {
+        guard changeObserver == nil else { return }
+        changeObserver = NotificationCenter.default.addObserver(forName: .secureItemsDidChange,
+                                                                object: nil, queue: .main) { [weak self] _ in
+            // 通知経由の再読込では警告を出さない（同じ警告が繰り返し積み上がるため）
+            self?.reloadItems(showsAlert: false)
+        }
+    }
+
+    /// - Parameter showsAlert: 読み出しに失敗したときに警告を表示するか。
+    ///   通知経由の再読込では false にして、同じ警告が何度も出ないようにする
+    func reloadItems(showsAlert: Bool = true) {
         items = AppEnvironment.current.secureMenuService.loadAllItems()
         tableView.reloadData()
         // アクセス拒否（バイナリ更新による Keychain ACL 不一致など）を検出したら警告を表示する
-        if AppEnvironment.current.secureMenuService.isKeychainAccessDenied {
+        if showsAlert, AppEnvironment.current.secureMenuService.isKeychainAccessDenied {
             showKeychainAccessDeniedAlert()
         }
     }
@@ -261,9 +283,14 @@ final class CPYSecureItemsViewController: NSViewController {
         presentAsSheet(editVC)
     }
 
+    /// 保存失敗を知らせる。ウィンドウがあればシート、無ければ表示しない
+    /// （ウィンドウ無しで NSAlert に nil を渡すと runModal() になり、
+    ///  画面に出ないまま操作をブロックしてしまう）
     private func showSaveError() {
-        NSAlert.showNotice(message: "Save failed",
-                           informative: "Failed to save the item to Keychain. Check Console.app for details (filter: SecureMenuService).")
+        guard let window = view.window else { return }
+        NSAlert.showNotice(message: L10n.secureItems,
+                           informative: L10n.secureItemsSaveFailed,
+                           for: window)
     }
 
     @objc private func editItemAction() {
@@ -433,33 +460,54 @@ extension CPYSecureItemsViewController {
         }
     }
 
+    /// インポートファイルを解釈する（純粋関数のためユニットテスト可能）。
+    /// 現行形式（`SecureUserData` オブジェクト）を優先し、
+    /// 旧形式（アイテムの配列のみ）もフォールバックで読み込める
+    static func parseImport(_ data: Data) throws -> (items: [SecureMenuItem], cryptoPassword: String?) {
+        if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
+            let password = (userData.cryptoPassword?.isEmpty ?? true) ? nil : userData.cryptoPassword
+            return (userData.items, password)
+        }
+        return (try JSONDecoder().decode([SecureMenuItem].self, from: data), nil)
+    }
+
     private func importItems(from url: URL) {
         do {
-            let data = try Data(contentsOf: url)
+            let parsed = try Self.parseImport(try Data(contentsOf: url))
             let service = AppEnvironment.current.secureMenuService
-            // 現行形式（SecureUserData オブジェクト）を優先し、
-            // 旧形式（アイテムの配列のみ）もフォールバックで読み込める
-            let importedItems: [SecureMenuItem]
-            if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
-                importedItems = userData.items
-                // 指紋パスワードが含まれていれば取り込む（既存の登録は上書きされる）
-                if let password = userData.cryptoPassword, !password.isEmpty {
-                    _ = service.saveCryptoPassword(password)
-                }
-            } else {
-                importedItems = try JSONDecoder().decode([SecureMenuItem].self, from: data)
+            // 指紋パスワードの上書きは、以前そのパスワードで暗号化したファイルを
+            // 開けなくすることがあるため、登録済みで内容が異なる場合だけ確認する
+            let currentPassword = service.loadCryptoPassword()
+            let replacesPassword = parsed.cryptoPassword != nil
+                && !(currentPassword ?? "").isEmpty
+                && parsed.cryptoPassword != currentPassword
+            guard replacesPassword, let window = view.window else {
+                applyImport(parsed.items, cryptoPassword: parsed.cryptoPassword)
+                return
             }
-            var savedCount = 0
-            for item in importedItems where service.save(item) {
-                savedCount += 1
+            NSAlert.showConfirmation(message: L10n.importSecureItems,
+                                     informative: L10n.secureItemsImportOverwritesCryptoPassword,
+                                     confirmTitle: L10n.importSecureItems, cancelTitle: L10n.cancel,
+                                     for: window) { [weak self] in
+                self?.applyImport(parsed.items, cryptoPassword: parsed.cryptoPassword)
             }
-            reloadItems()
-            NSAlert.showNotice(message: L10n.importSecureItems,
-                               informative: L10n.importedSecureItemsFormat(savedCount),
-                               style: .informational, for: view.window)
         } catch {
             showImportExportError(error)
         }
+    }
+
+    /// 取り込みを反映する。アイテムは 1 回の書き込みでまとめて保存する
+    /// （1 件ずつ保存すると件数分の Keychain 往復と変更通知が発生する）
+    private func applyImport(_ items: [SecureMenuItem], cryptoPassword: String?) {
+        let service = AppEnvironment.current.secureMenuService
+        if let cryptoPassword = cryptoPassword {
+            _ = service.saveCryptoPassword(cryptoPassword)
+        }
+        let saved = service.save(items)
+        reloadItems()
+        NSAlert.showNotice(message: L10n.importSecureItems,
+                           informative: L10n.importedSecureItemsFormat(saved ? items.count : 0),
+                           style: .informational, for: view.window)
     }
 
     private func showImportExportError(_ error: Error) {

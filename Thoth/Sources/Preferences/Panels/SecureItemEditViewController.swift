@@ -198,10 +198,10 @@ final class SecureItemEditViewController: NSViewController {
         dragHandleCol.title = ""; dragHandleCol.width = 20; dragHandleCol.minWidth = 20; dragHandleCol.maxWidth = 20
 
         let labelCol = NSTableColumn(identifier: ColID.label)
-        labelCol.title = "Label"; labelCol.width = 130; labelCol.minWidth = 60
+        labelCol.title = L10n.secureColumnLabel; labelCol.width = 130; labelCol.minWidth = 60
 
         let valueCol = NSTableColumn(identifier: ColID.value)
-        valueCol.title = "Value"; valueCol.width = 168; valueCol.minWidth = 60
+        valueCol.title = L10n.secureColumnValue; valueCol.width = 168; valueCol.minWidth = 60
 
         let passCol = NSTableColumn(identifier: ColID.pass)
         passCol.title = "🔒"; passCol.width = 36; passCol.minWidth = 36; passCol.maxWidth = 36
@@ -338,9 +338,11 @@ final class SecureItemEditViewController: NSViewController {
 
         let title = titleField.stringValue.trimmingCharacters(in: .whitespaces)
         guard !title.isEmpty else {
-            let alert = NSAlert()
-            alert.messageText = L10n.pleaseFillInTheContentsOfTheSnippet
-            alert.runModal()
+            // スニペット用の文言を流用していたため、セキュアアイテムの編集で
+            // 「スニペットの内容を入力してください」と表示されていた
+            NSAlert.showNotice(message: L10n.secureItems,
+                               informative: L10n.secureItemTitleRequired,
+                               for: view.window)
             return
         }
 
@@ -349,23 +351,20 @@ final class SecureItemEditViewController: NSViewController {
         for row in 0..<fields.count {
             let label = (fieldsTable.view(atColumn: 1, row: row, makeIfNecessary: false)
                             as? NSTableCellView)?.textField?.stringValue ?? fields[row].label
-            // TOTP の Value（otpauth URI / secret）はセルに表示しない設計で、
-            // セルの入力値は常に空文字になる。セルから読むと保存のたびに
-            // 秘密鍵を空文字で消してしまうため、必ずモデルの値を使う
+            // 単一行セルで編集できない種別（TOTP の secret、複数行のメモ）は
+            // セルに値を表示しない設計で、セルの入力値は常に空文字になる。
+            // セルから読むと保存のたびに secret やメモ本文を空文字で消してしまうため、
+            // 必ずモデルの値を使う
             let value: String
-            if fields[row].isTOTP {
-                value = fields[row].value
-            } else {
+            if fields[row].kind.allowsSingleLineEditing {
                 value = (fieldsTable.view(atColumn: 2, row: row, makeIfNecessary: false)
                             as? FieldValueCell)?.currentValue ?? fields[row].value
+            } else {
+                value = fields[row].value
             }
             guard !label.trimmingCharacters(in: .whitespaces).isEmpty
                     || !value.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
-            currentFields.append(SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                                      label: label, value: value,
-                                                      isPassword: fields[row].isPassword,
-                                                      kind: fields[row].kind,
-                                                      history: fields[row].history))
+            currentFields.append(fields[row].updating(label: label, value: value))
         }
 
         let saved = SecureMenuItem(itemID: editingItem.itemID, title: title, fields: currentFields,
@@ -379,33 +378,24 @@ final class SecureItemEditViewController: NSViewController {
     @objc func labelFieldChanged(_ sender: NSTextField) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: sender.stringValue,
-                                           value: fields[row].value,
-                                           isPassword: fields[row].isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(label: sender.stringValue)
     }
 
     @objc func valueFieldChanged(_ sender: NSTextField) {
         let row = fieldsTable.row(for: sender)
         guard row >= 0, row < fields.count else { return }
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: fields[row].label,
-                                           value: sender.stringValue,
-                                           isPassword: fields[row].isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(value: sender.stringValue)
     }
 
     /// クリックされた列がシングルクリックで即編集に入れる列かを判定する（純粋関数）。
-    /// ラベル列は常に編集可、値列は TOTP 行以外で編集可、それ以外
-    /// （ドラッグハンドル・🔒・履歴の各列）は編集対象外。
+    /// ラベル列は常に編集可、値列は単一行編集できる種別（plain / url）でのみ編集可、
+    /// それ以外（ドラッグハンドル・🔒・履歴の各列）は編集対象外。
     /// UI に依存しないためユニットテスト可能
-    static func isEditableColumn(_ columnID: NSUserInterfaceItemIdentifier, isTOTP: Bool) -> Bool {
+    static func isEditableColumn(_ columnID: NSUserInterfaceItemIdentifier,
+                                 kind: SecureMenuItem.Field.Kind) -> Bool {
         switch columnID {
         case ColID.label: return true
-        case ColID.value: return !isTOTP
+        case ColID.value: return kind.allowsSingleLineEditing
         default: return false
         }
     }
@@ -424,7 +414,7 @@ final class SecureItemEditViewController: NSViewController {
         let column = fieldsTable.clickedColumn
         guard row >= 0, row < fields.count, column >= 0, column < fieldsTable.numberOfColumns else { return }
         let columnID = fieldsTable.tableColumns[column].identifier
-        guard Self.isEditableColumn(columnID, isTOTP: fields[row].isTOTP) else { return }
+        guard Self.isEditableColumn(columnID, kind: fields[row].kind) else { return }
         fieldsTable.editColumn(column, row: row, with: nil, select: false)
     }
 
@@ -436,23 +426,22 @@ final class SecureItemEditViewController: NSViewController {
         let valueColumn = fieldsTable.column(withIdentifier: ColID.value)
         guard valueColumn >= 0 else { return }
         let valueCell = fieldsTable.view(atColumn: valueColumn, row: row, makeIfNecessary: false) as? FieldValueCell
-        // 画面上のセルから最新の value を取得してモデルを更新する
-        let currentValue = valueCell?.currentValue ?? fields[row].value
+        // 画面上のセルから最新の value を取得してモデルを更新する。
+        // ただし単一行セルで編集できない種別（メモ）はセルの値が常に空文字なので、
+        // ここでセルから読むと 🔒 を切り替えただけで本文が消える
+        let currentValue = fields[row].kind.allowsSingleLineEditing
+            ? (valueCell?.currentValue ?? fields[row].value)
+            : fields[row].value
         // 値欄を編集中だった場合は、フィールドの差し替え前に編集を確定して
         // フィールドエディタ（NSText）を切り離す
         if let editing = valueCell?.textField, view.window?.firstResponder != nil {
             view.window?.endEditing(for: editing)
         }
         let isPassword = sender.state == .on
-        fields[row] = SecureMenuItem.Field(fieldID: fields[row].fieldID,
-                                           label: fields[row].label,
-                                           value: currentValue,
-                                           isPassword: isPassword,
-                                           kind: fields[row].kind,
-                                           history: fields[row].history)
+        fields[row] = fields[row].updating(value: currentValue, isPassword: isPassword)
         // reload では field editor の状態次第で表示が更新されないことがあるため、
         // 既存セルを直接再構成してプレーン／セキュアフィールドの表示を即時に切り替える
-        valueCell?.configure(value: currentValue, isPassword: isPassword, isTOTP: fields[row].isTOTP,
+        valueCell?.configure(value: currentValue, isPassword: isPassword, kind: fields[row].kind,
                              createdAt: fields[row].createdAt,
                              target: self, action: #selector(valueFieldChanged(_:)))
     }
@@ -506,6 +495,28 @@ extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination 
         return .move
     }
 
+    /// ドラッグ&ドロップによる並べ替え結果を計算する（純粋関数のためユニットテスト可能）。
+    ///
+    /// NSTableView の `.above` は「その行の *上* に挿入する」意味なので、ドロップ行が
+    /// 元の行より後ろの場合は、先に取り除いた分だけ挿入位置が 1 つ手前になる。
+    ///
+    /// - Returns: 並べ替え後の配列と移動先の行。並べ替えにならない場合（同じ位置への
+    ///   ドロップ、範囲外）は nil
+    static func reorderedFields(_ fields: [SecureMenuItem.Field],
+                                from sourceRow: Int,
+                                toDropRow dropRow: Int) -> (fields: [SecureMenuItem.Field], targetRow: Int)? {
+        // 境界値チェック（.above では dropRow は 0〜count）
+        guard sourceRow >= 0, sourceRow < fields.count, dropRow >= 0, dropRow <= fields.count else { return nil }
+        // 同じ位置へのドロップ（自分の上・自分のすぐ下）は移動にならない
+        guard dropRow != sourceRow, dropRow != sourceRow + 1 else { return nil }
+
+        var reordered = fields
+        let moved = reordered.remove(at: sourceRow)
+        let targetRow = dropRow > sourceRow ? dropRow - 1 : dropRow
+        reordered.insert(moved, at: targetRow)
+        return (reordered, targetRow)
+    }
+
     /// ドロップを受け入れて行の順序を変更する
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
                    row: Int, dropOperation: NSTableView.DropOperation) -> Bool {
@@ -513,24 +524,16 @@ extension SecureItemEditViewController: NSDraggingSource, NSDraggingDestination 
             return false
         }
         let pboardStr = String(pboard)
-        guard let sourceRow = Int(pboardStr) else { return false }
+        guard let sourceRow = Int(pboardStr),
+              let result = Self.reorderedFields(fields, from: sourceRow, toDropRow: row) else { return false }
+        fields = result.fields
 
-        // 境界値チェック（.above では row は 0～count）
-        guard sourceRow >= 0, sourceRow < fields.count, row >= 0, row <= fields.count else { return false }
-
-        // 同じ行へのドロップは無視
-        if dropOperation == .above && (row == sourceRow || row == sourceRow + 1) { return false }
-
-        // 行を移動
-        let field = fields.remove(at: sourceRow)
-        let targetRow = row > sourceRow ? row - 1 : row
-        fields.insert(field, at: targetRow)
-
-        // テーブル再描画
-        let minRow = min(sourceRow, targetRow)
-        let maxRow = max(sourceRow, targetRow)
-        fieldsTable.reloadData(forRowIndexes: IndexSet(integersIn: minRow...maxRow), columnIndexes: IndexSet(0..<5))
-        fieldsTable.selectRowIndexes(IndexSet(integer: targetRow), byExtendingSelection: false)
+        // テーブル再描画（列数は列構成の変更に追従させる）
+        let minRow = min(sourceRow, result.targetRow)
+        let maxRow = max(sourceRow, result.targetRow)
+        fieldsTable.reloadData(forRowIndexes: IndexSet(integersIn: minRow...maxRow),
+                               columnIndexes: IndexSet(integersIn: 0..<fieldsTable.numberOfColumns))
+        fieldsTable.selectRowIndexes(IndexSet(integer: result.targetRow), byExtendingSelection: false)
 
         return true
     }

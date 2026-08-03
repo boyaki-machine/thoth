@@ -77,6 +77,44 @@
 
 "Secure Menu Authentication Reason" = "𓂻 𓂋 𓊃 𓅓𓈖𓅱𓏛";
 
+"Secure Info" = "𓊃 𓂋𓐍𓏛";
+
+"Secure Info Authentication Reason" = "𓄡 𓊃 𓂋𓐍𓏛";
+
+"Secure Info No Selection" = "𓋴𓏏𓊪 𓇋𓏏𓅓 𓂋 𓂋𓐍𓏛";
+
+"Secure Info Copy Value" = "𓏛𓏥";
+
+"Secure Info Reveal Value" = "𓂀 / 𓂋𓐍";
+
+"Secure Info Open URL" = "𓉿 𓅓 𓊪𓏏𓇯";
+
+"Secure Info Save Failed" = "𓅘 𓋴𓍿 𓊃𓏛";
+
+"Secure Info Title Required" = "𓂋𓈖 𓏏𓊪 𓎛𓂋𓅱";
+
+"New Secure Item Title" = "𓇋𓏏𓅓 𓎛𓅱𓏏";
+
+"Secure Field Default Label Text" = "𓏛";
+
+"Secure Field Default Label Password" = "𓊃𓏛";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "𓆓𓂧𓏛";
+
+"Secure Info Add Field" = "𓄿 𓎼𓂋𓎛";
+
+"Secure Info Remove Field" = "𓎛𓆓 𓎼𓂋𓎛";
+
+"Secure Info Remove Field Confirmation" = "𓎛𓆓 𓎼𓂋𓎛 ?";
+
+"Secure Info Toggle Mask" = "𓂀 / 𓂋𓐍 𓏛";
+
+"Secure Info External Change" = "𓎛𓈖𓂝 𓅓 𓉐 𓎡𓏏";
+
+"Secure Info Reload" = "𓂋𓈖 𓅓𓎗";
+
 "Secure Menu Search Placeholder" = "𓁹𓋴𓂋𓐍...";
 
 "Secure Menu No Results" = "𓂜 𓅠";
@@ -95,11 +133,25 @@
 
 "Secure Field Value Placeholder" = "𓆑𓃭𓅱";
 
+"Secure Column Title" = "𓏏𓊪";
+
+"Secure Column Fields" = "𓎼𓂋𓎛𓏥";
+
+"Secure Column Label" = "𓂋𓈖";
+
+"Secure Column Value" = "𓏛";
+
 "Import Secure Items" = "𓏎𓂻...";
 
 "Export Secure Items" = "𓂻𓉐...";
 
 "Secure Items Export Warning" = "𓅪 𓏛 𓂻𓉐 𓃹𓈖 𓎟 — 𓊃𓄿𓅱!";
+
+"Secure Items Save Failed" = "𓅘 𓋴𓍿 𓊃𓏛";
+
+"Secure Items Import Overwrites Crypto Password" = "𓊃𓏛 𓎡𓏏 𓅓 𓆑𓂋 ?";
+
+"Secure Item Title Required" = "𓂋𓈖 𓏏𓊪";
 
 "Imported Secure Items Format" = "𓏎𓂻 %d 𓇋𓏏𓅓𓏥. 𓄤";
 

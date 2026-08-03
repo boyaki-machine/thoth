@@ -73,6 +73,44 @@
 
 "Secure Menu Authentication Reason" = "访问安全菜单";
 
+"Secure Info" = "安全信息";
+
+"Secure Info Authentication Reason" = "查看安全信息";
+
+"Secure Info No Selection" = "选择一个项目以查看其详细信息。";
+
+"Secure Info Copy Value" = "复制";
+
+"Secure Info Reveal Value" = "显示 / 隐藏值";
+
+"Secure Info Open URL" = "在浏览器中打开";
+
+"Secure Info Save Failed" = "保存到钥匙串失败。您的编辑已保留，请按 Command-S 重试。";
+
+"Secure Info Title Required" = "保存前请输入标题。您的编辑已保留。";
+
+"New Secure Item Title" = "新建项目";
+
+"Secure Field Default Label Text" = "文本";
+
+"Secure Field Default Label Password" = "密码";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "备忘";
+
+"Secure Info Add Field" = "添加字段";
+
+"Secure Info Remove Field" = "删除字段";
+
+"Secure Info Remove Field Confirmation" = "确定要删除此字段吗？";
+
+"Secure Info Toggle Mask" = "切换值的遮蔽";
+
+"Secure Info External Change" = "已在其他窗口中修改。";
+
+"Secure Info Reload" = "重新载入";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";
@@ -91,11 +129,25 @@
 
 "Secure Field Value Placeholder" = "值";
 
+"Secure Column Title" = "标题";
+
+"Secure Column Fields" = "字段数";
+
+"Secure Column Label" = "标签";
+
+"Secure Column Value" = "值";
+
 "Import Secure Items" = "导入...";
 
 "Export Secure Items" = "导出...";
 
 "Secure Items Export Warning" = "导出的文件将以明文形式包含所有值，请妥善保管。";
+
+"Secure Items Save Failed" = "保存到钥匙串失败。详情请见 Console.app（筛选: SecureMenuService）。";
+
+"Secure Items Import Overwrites Crypto Password" = "此文件包含与本机已注册的指纹密码不同的密码。导入将替换它，之前用当前密码加密的文件将无法再用已保存的密码打开。是否继续？";
+
+"Secure Item Title Required" = "保存前请输入标题。";
 
 "Imported Secure Items Format" = "已导入 %d 个项目。";
 

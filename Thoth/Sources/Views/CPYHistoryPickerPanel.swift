@@ -132,25 +132,47 @@ final class CPYHistoryPickerPanel: NSPanel {
     }
 
     /// 下部固定行のアクション（旧メインメニューのスニペット・ツール・管理系に相当）
-    enum PanelAction {
+    enum PanelAction: CaseIterable {
         case snippets
         case generatePassword
         case crypto
+        case secureInfo
         case clearHistory
         case editSnippets
         case preferences
         case quit
 
-        var title: String {
+        /// メニュー表示中に押すと実行される単キーのショートカット（小文字）。
+        ///
+        /// **表示ラベルの "(&x)" 表記とキー処理の唯一の定義元。**
+        /// 以前はラベルの文字列とキー処理の switch が別々に書かれており、
+        /// 行を追加したときにラベルだけ付いてキーが効かない状態になっていた
+        var shortcutKey: String? {
+            switch self {
+            case .generatePassword: return "p"
+            case .crypto:           return "e"
+            case .secureInfo:       return "s"
+            case .snippets, .clearHistory, .editSnippets, .preferences, .quit: return nil
+            }
+        }
+
+        /// ショートカットを除いた表示名
+        var name: String {
             switch self {
             case .snippets:         return L10n.showSnippetMenu
-            case .generatePassword: return "\(L10n.generateNewPassword) (&p)"
-            case .crypto:           return "\(L10n.encryptDecrypt) (&E)"
+            case .generatePassword: return L10n.generateNewPassword
+            case .crypto:           return L10n.encryptDecrypt
+            case .secureInfo:       return L10n.secureInfo
             case .clearHistory:     return L10n.clearHistory
             case .editSnippets:     return L10n.editSnippets
             case .preferences:      return L10n.preferences
             case .quit:             return L10n.quitThoth
             }
+        }
+
+        var title: String {
+            guard let shortcutKey = shortcutKey else { return name }
+            return "\(name) (&\(shortcutKey))"
         }
     }
 
@@ -195,6 +217,8 @@ final class CPYHistoryPickerPanel: NSPanel {
         static let hPad: CGFloat      = 8
         static let corner: CGFloat    = 8
         static let fontSize: CGFloat  = NSFont.systemFontSize - 1
+        /// 画面の作業領域からこの分だけ余白を残す（画面いっぱいまで伸ばさない）
+        static let screenMargin: CGFloat = 40
     }
 
     // MARK: - UI
@@ -447,6 +471,7 @@ extension CPYHistoryPickerPanel {
         tableView.action                  = #selector(rowClicked)
 
         scrollView.hasVerticalScroller = true
+        // 画面に収まっているときはスクローラーを出さない
         scrollView.autohidesScrollers  = true
         scrollView.drawsBackground     = false
         scrollView.documentView        = tableView

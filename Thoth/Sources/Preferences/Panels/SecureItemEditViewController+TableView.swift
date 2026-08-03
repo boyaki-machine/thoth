@@ -42,7 +42,7 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         case ColID.value:
             let cell = (tableView.makeView(withIdentifier: ColID.value, owner: nil) as? FieldValueCell)
                        ?? FieldValueCell()
-            cell.configure(value: field.value, isPassword: field.isPassword, isTOTP: field.isTOTP,
+            cell.configure(value: field.value, isPassword: field.isPassword, kind: field.kind,
                            createdAt: field.createdAt, target: self, action: #selector(valueFieldChanged(_:)))
             return cell
 
@@ -50,7 +50,8 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
             let cellID = NSUserInterfaceItemIdentifier("editPassCell")
             let cell = (tableView.makeView(withIdentifier: cellID, owner: nil) as? NSTableCellView)
                        ?? makeCheckboxCell(identifier: cellID)
-            if field.isTOTP {
+            // マスク切り替えを持たない種別（TOTP）では列を空にする
+            if !field.kind.allowsPasswordToggle {
                 cell.subviews.forEach { $0.isHidden = true }
             } else {
                 if let button = cell.subviews.first(where: { $0 is TabCapturingButton }) as? TabCapturingButton {
@@ -66,7 +67,8 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
             let cellID = NSUserInterfaceItemIdentifier("editHistoryCell")
             let cell = (tableView.makeView(withIdentifier: cellID, owner: nil) as? NSTableCellView)
                        ?? makeHistoryButtonCell(identifier: cellID)
-            if field.isTOTP {
+            // 変更履歴を残さない種別（TOTP / メモ）では列を空にする
+            if !field.kind.retainsValueHistory {
                 cell.subviews.forEach { $0.isHidden = true }
             } else {
                 if let button = cell.subviews.first(where: { $0 is NSButton }) as? NSButton {
@@ -175,9 +177,7 @@ extension SecureItemEditViewController: NSTableViewDataSource, NSTableViewDelega
         guard historyIndex >= 0, historyIndex < field.history.count else { return }
         var history = field.history
         history.remove(at: historyIndex)
-        fields[row] = SecureMenuItem.Field(fieldID: field.fieldID, label: field.label,
-                                           value: field.value, isPassword: field.isPassword,
-                                           kind: field.kind, history: history)
+        fields[row] = field.updating(history: history)
     }
 
     /// Val 変更履歴のポップアップを開くボタンセル
@@ -284,24 +284,40 @@ final class FieldValueCell: NSTableCellView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+    /// 複数行の値を単一行セルに表示するためのプレビュー文字列を組み立てる（純粋関数）。
+    ///
+    /// メモの実際の値をセルに入れてはならない。単一行の NSTextField で編集されると
+    /// 改行が失われ、保存時に本文が壊れるため（値は常にモデル側を正とする）。
+    /// UI に依存しないためユニットテスト可能。
+    static func multilinePreview(for value: String, isPassword: Bool, maxLength: Int = 26) -> String {
+        if isPassword { return "••••••••" }
+        let lines = value.components(separatedBy: .newlines)
+        guard let firstLine = lines.first, !value.isEmpty else { return "" }
+        let hasMoreLines = lines.count > 1
+        if firstLine.count > maxLength {
+            return String(firstLine.prefix(maxLength)) + "…"
+        }
+        return hasMoreLines ? firstLine + " …" : firstLine
+    }
+
     /// フィールドの表示モードを設定する。
-    /// `isPassword` が `true` の場合は secureField を、`false` の場合は plainField を表示する。
-    /// `isTOTP` が `true` の場合は値を表示せず、プレースホルダーに作成日時を表示し、編集不可にする。
+    ///
+    /// - 値をそのまま表示しない種別（TOTP）: 値を出さず、プレースホルダーに登録日時を表示して編集不可
+    /// - 複数行の種別（メモ）: 値を出さず、プレースホルダーに 1 行目のプレビューを表示して編集不可
+    ///   （単一行セルで編集させると改行が失われるため。編集はセキュア情報確認ウィンドウで行う）
+    /// - `isPassword` が `true`: secureField を表示
+    /// - それ以外: plainField を表示
+    ///
     /// `textField` プロパティにアクティブなフィールドを設定することで
     /// Tab ナビゲーションからのフォーカスを可能にする。
-    func configure(value: String, isPassword: Bool, isTOTP: Bool = false, createdAt: Date = Date(),
-                   target: AnyObject, action: Selector) {
-        if isTOTP {
+    func configure(value: String, isPassword: Bool, kind: SecureMenuItem.Field.Kind = .plain,
+                   createdAt: Date = Date(), target: AnyObject, action: Selector) {
+        if !kind.displaysRawValue {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-            plainField.stringValue = ""
-            plainField.placeholderString = L10n.totpRegisteredAtFormat(formatter.string(from: createdAt))
-            plainField.isEditable = false
-            plainField.target = nil
-            plainField.action = nil
-            secureField.isHidden = true
-            plainField.isHidden = false
-            textField = plainField
+            configureAsReadOnly(placeholder: L10n.totpRegisteredAtFormat(formatter.string(from: createdAt)))
+        } else if kind.isMultiline {
+            configureAsReadOnly(placeholder: Self.multilinePreview(for: value, isPassword: isPassword))
         } else if isPassword {
             secureField.stringValue = value
             secureField.target = target
@@ -321,7 +337,23 @@ final class FieldValueCell: NSTableCellView {
         }
     }
 
+    /// 値を表示・編集させない種別（TOTP・メモ）の共通設定。
+    /// 実際の値は入れず、プレースホルダーだけを表示する
+    private func configureAsReadOnly(placeholder: String) {
+        plainField.stringValue = ""
+        plainField.placeholderString = placeholder
+        plainField.isEditable = false
+        plainField.target = nil
+        plainField.action = nil
+        secureField.isHidden = true
+        plainField.isHidden = false
+        textField = plainField
+    }
+
     /// 現在表示中のフィールドの入力値を返す。
+    ///
+    /// 編集不可の種別（TOTP・メモ）では常に空文字になる。呼び出し側は
+    /// `kind.allowsSingleLineEditing` を確認し、false ならモデルの値を使うこと
     var currentValue: String {
         secureField.isHidden ? plainField.stringValue : secureField.stringValue
     }

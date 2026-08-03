@@ -69,6 +69,44 @@
 
 "Secure Menu Authentication Reason" = "Ad indicem securum accedere";
 
+"Secure Info" = "Notitia secura";
+
+"Secure Info Authentication Reason" = "Notitiam securam inspicere";
+
+"Secure Info No Selection" = "Rem elige ut singula videas.";
+
+"Secure Info Copy Value" = "Exscribere";
+
+"Secure Info Reveal Value" = "Valorem ostendere / celare";
+
+"Secure Info Open URL" = "In navigatro aperire";
+
+"Secure Info Save Failed" = "In clavium anulo servare non licuit. Mutationes servantur; Command-S iterum tenta.";
+
+"Secure Info Title Required" = "Titulum inscribe antequam serves. Mutationes servantur.";
+
+"New Secure Item Title" = "Res nova";
+
+"Secure Field Default Label Text" = "Textus";
+
+"Secure Field Default Label Password" = "Tessera";
+
+"Secure Field Default Label URL" = "URL";
+
+"Secure Field Default Label Note" = "Nota";
+
+"Secure Info Add Field" = "Campum addere";
+
+"Secure Info Remove Field" = "Campum tollere";
+
+"Secure Info Remove Field Confirmation" = "Visne hunc campum tollere?";
+
+"Secure Info Toggle Mask" = "Valorem tegere / detegere";
+
+"Secure Info External Change" = "In alia fenestra mutatum est.";
+
+"Secure Info Reload" = "Relegere";
+
 "Secure Menu Search Placeholder" = "Quaerere...";
 
 "Secure Menu No Results" = "Nihil congruens inventum";
@@ -87,11 +125,25 @@
 
 "Secure Field Value Placeholder" = "Valor";
 
+"Secure Column Title" = "Titulus";
+
+"Secure Column Fields" = "Campi";
+
+"Secure Column Label" = "Index";
+
+"Secure Column Value" = "Valor";
+
 "Import Secure Items" = "Importare...";
 
 "Export Secure Items" = "Exportare...";
 
 "Secure Items Export Warning" = "Plica exportata omnes valores aperte continebit. Caute tracta.";
+
+"Secure Items Save Failed" = "In clavium anulo servare non licuit.";
+
+"Secure Items Import Overwrites Crypto Password" = "Hic fasciculus tesseram digiti aliam continet. Si importas, substituetur, et fasciculi tessera praesenti cifrati aperiri non poterunt. Pergisne?";
+
+"Secure Item Title Required" = "Titulum inscribe antequam serves.";
 
 "Imported Secure Items Format" = "%d res importatae.";
 

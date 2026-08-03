@@ -230,24 +230,20 @@ extension CPYHistoryPickerPanel {
         let searching = searchField.currentEditor() != nil
         let composing = (searchField.currentEditor() as? NSTextView)?.hasMarkedText() == true
 
-        // 旧メニューのショートカットとの互換: 非検索時の p / e / 数字キー
-        if !searching, let chars = event.charactersIgnoringModifiers,
+        // 旧メニューのショートカットとの互換: 非検索時の単キー・数字キー
+        if !searching, let chars = event.charactersIgnoringModifiers?.lowercased(),
            event.modifierFlags.isDisjoint(with: [.command, .option, .control]) {
-            switch chars {
-            case "p":
-                onAction?(.generatePassword)
+            // 固定セクションを出していないとき（コピー履歴ウィンドウ）は
+            // 対応する行が無いのでツール系のショートカットも効かせない
+            if showsFixedSections,
+               let action = PanelAction.allCases.first(where: { $0.shortcutKey == chars }) {
+                onAction?(action)
                 return true
-            case "e":
-                onAction?(.crypto)
+            }
+            // 「数字キーショートカットを付ける」設定が有効な場合のみ
+            if case "0"..."9" = chars, settings.numericKeysEnabled, let number = Int(chars) {
+                confirmClip(withDigit: number)
                 return true
-            case "0"..."9":
-                // 「数字キーショートカットを付ける」設定が有効な場合のみ
-                if settings.numericKeysEnabled, let number = Int(chars) {
-                    confirmClip(withDigit: number)
-                    return true
-                }
-            default:
-                break
             }
         }
 

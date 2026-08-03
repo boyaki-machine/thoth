@@ -84,6 +84,17 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         presentWindow(of: CPYSecureItemsWindowController.shared)
     }
 
+    /// セキュア情報確認ウィンドウを開く。
+    /// このウィンドウは値を平文で表示するため、表示前に必ず Touch ID / パスワード認証を通す
+    /// （認証成功から 30 秒以内は SecureMenuService 側で再認証が省略される）。
+    /// completion は常にメインスレッドで呼ばれる
+    @objc func showSecureInfoWindow() {
+        AppEnvironment.current.secureMenuService.authenticate(reason: L10n.secureInfoAuthenticationReason) { [weak self] success in
+            guard success, let self = self else { return }
+            self.presentWindow(of: CPYSecureInfoWindowController.shared)
+        }
+    }
+
     @objc func showPasswordGeneratorWindow() {
         presentWindow(of: CPYPasswordGeneratorWindowController.shared)
     }
