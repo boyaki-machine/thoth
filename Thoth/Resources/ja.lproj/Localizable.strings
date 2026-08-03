@@ -111,6 +111,28 @@
 
 "Secure Info Reload" = "再読込";
 
+"Secure Info Undo Format" = "%@ を取り消す";
+
+"Secure Info Redo Format" = "%@ をやり直す";
+
+"Secure Info Action Edit" = "編集";
+
+"Secure Info Action Add" = "アイテムの追加";
+
+"Secure Info Action Delete" = "アイテムの削除";
+
+"Secure Info Action Reorder" = "並べ替え";
+
+"Secure Info Action Import" = "インポート";
+
+"Secure Info Actions" = "操作";
+
+"Secure Info Move Field" = "ドラッグして並べ替え";
+
+"Secure Info Move Up" = "上へ移動";
+
+"Secure Info Move Down" = "下へ移動";
+
 "Secure Menu Search Placeholder" = "検索...";
 
 "Secure Menu No Results" = "一致するアイテムがありません";

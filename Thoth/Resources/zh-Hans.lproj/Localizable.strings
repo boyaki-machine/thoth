@@ -111,6 +111,28 @@
 
 "Secure Info Reload" = "重新载入";
 
+"Secure Info Undo Format" = "撤销%@";
+
+"Secure Info Redo Format" = "重做%@";
+
+"Secure Info Action Edit" = "编辑";
+
+"Secure Info Action Add" = "添加项目";
+
+"Secure Info Action Delete" = "删除项目";
+
+"Secure Info Action Reorder" = "重新排序";
+
+"Secure Info Action Import" = "导入";
+
+"Secure Info Actions" = "操作";
+
+"Secure Info Move Field" = "拖动以重新排序";
+
+"Secure Info Move Up" = "上移";
+
+"Secure Info Move Down" = "下移";
+
 "Secure Menu Search Placeholder" = "搜索...";
 
 "Secure Menu No Results" = "没有匹配的项目";

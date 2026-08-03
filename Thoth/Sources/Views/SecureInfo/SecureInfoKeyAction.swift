@@ -21,6 +21,7 @@ import AppKit
 /// | `⌘N` | アイテムを追加 |
 /// | `⌘Delete` | 選択中アイテムを削除 |
 /// | `⌘S` | 明示保存 |
+/// | `⌘Z` / `⌘⇧Z` | 直前の変更を取り消す / やり直す（**入力中は割り当てない**） |
 /// | `Esc` | 入力中なら編集の確定、そうでなければウィンドウを閉じる |
 /// | `⌘W` | ウィンドウを閉じる |
 enum SecureInfoKeyAction: Equatable {
@@ -34,6 +35,8 @@ enum SecureInfoKeyAction: Equatable {
     case addItem
     case deleteItem
     case save
+    case undo
+    case redo
     case endEditing
     case close
 }

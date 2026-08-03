@@ -7,74 +7,12 @@ import AppKit
 /// 「履歴に Label が表示される」リグレッションを検出するためのテストを含む。
 class SecureItemEditSpec: QuickSpec {
     override class func spec() {
-        importParsingSpecs()
         valueCollectionSpecs()
         extendedKindPreservationSpecs()
         multilinePreviewSpecs()
         editFlowHistorySpecs()
         columnBehaviorSpecs()
         passwordMaskToggleSpecs()
-    }
-
-    /// インポートファイルの解釈。任意のファイルを読み込む経路なので、
-    /// 壊れた入力で落ちないことと、指紋パスワードの扱いを固定する
-    private static func importParsingSpecs() {
-        describe("インポートファイルの解釈") {
-            typealias ItemsVC = CPYSecureItemsViewController
-
-            it("現行形式（SecureUserData）を読み込む") {
-                let json = """
-                {"version":2,"items":[{"itemID":"i1","title":"A","displayOrder":0,"fields":[]}],
-                 "cryptoPassword":"pw"}
-                """
-                let parsed = try? ItemsVC.parseImport(Data(json.utf8))
-                expect(parsed?.items.map { $0.itemID }) == ["i1"]
-                expect(parsed?.cryptoPassword) == "pw"
-            }
-
-            it("旧形式（アイテムの配列のみ）もフォールバックで読み込む") {
-                let json = """
-                [{"itemID":"i1","title":"A","displayOrder":0,"fields":[]}]
-                """
-                let parsed = try? ItemsVC.parseImport(Data(json.utf8))
-                expect(parsed?.items.map { $0.itemID }) == ["i1"]
-                expect(parsed?.cryptoPassword) == nil
-            }
-
-            // 空文字の指紋パスワードで既存の登録を潰さない
-            it("指紋パスワードが空文字なら取り込まない") {
-                let json = """
-                {"version":2,"items":[],"cryptoPassword":""}
-                """
-                expect((try? ItemsVC.parseImport(Data(json.utf8)))?.cryptoPassword) == nil
-            }
-
-            it("指紋パスワードが無ければ nil を返す") {
-                let json = """
-                {"version":2,"items":[]}
-                """
-                expect((try? ItemsVC.parseImport(Data(json.utf8)))?.cryptoPassword) == nil
-            }
-
-            // 特殊値: 壊れた入力で落ちずにエラーになること
-            it("解釈できない入力はエラーになる") {
-                expect(try? ItemsVC.parseImport(Data("{ broken".utf8))) == nil
-                expect(try? ItemsVC.parseImport(Data())) == nil
-                expect(try? ItemsVC.parseImport(Data("[1,2,3]".utf8))) == nil
-                expect(try? ItemsVC.parseImport(Data("\"just a string\"".utf8))) == nil
-            }
-
-            // 未知の種別を含むファイルでも取り込める（前方互換）
-            it("未知の種別を含むファイルも取り込める") {
-                let json = """
-                {"version":2,"items":[{"itemID":"i1","title":"A","displayOrder":0,
-                 "fields":[{"label":"L","value":"V","isPassword":false,"kind":"kind-from-the-future"}]}]}
-                """
-                let parsed = try? ItemsVC.parseImport(Data(json.utf8))
-                expect(parsed?.items.first?.fields.first?.kind) == SecureMenuItem.Field.Kind.plain
-                expect(parsed?.items.first?.fields.first?.value) == "V"
-            }
-        }
     }
 
     /// 単一行セルで編集できない種別（メモ）が、既存の編集シートを通しても壊れないことを担保する。

@@ -111,6 +111,28 @@
 
 "Secure Info Reload" = "Neu laden";
 
+"Secure Info Undo Format" = "%@ widerrufen";
+
+"Secure Info Redo Format" = "%@ wiederholen";
+
+"Secure Info Action Edit" = "Bearbeiten";
+
+"Secure Info Action Add" = "Eintrag hinzufügen";
+
+"Secure Info Action Delete" = "Eintrag löschen";
+
+"Secure Info Action Reorder" = "Neu anordnen";
+
+"Secure Info Action Import" = "Import";
+
+"Secure Info Actions" = "Aktionen";
+
+"Secure Info Move Field" = "Zum Neuordnen ziehen";
+
+"Secure Info Move Up" = "Nach oben";
+
+"Secure Info Move Down" = "Nach unten";
+
 "Secure Menu Search Placeholder" = "Suchen...";
 
 "Secure Menu No Results" = "Keine passenden Einträge";
