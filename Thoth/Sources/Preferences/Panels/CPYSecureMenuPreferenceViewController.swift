@@ -418,24 +418,18 @@ extension CPYSecureItemsViewController {
         guard let window = view.window else { return }
         let panel = NSSavePanel()
         panel.allowedFileTypes = ["json"]
-        panel.nameFieldStringValue = "clipy-secure-items.json"
+        panel.nameFieldStringValue = SecureItemsTransfer.defaultFileName
         panel.beginSheetModal(for: window) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
             self?.exportItems(to: url)
         }
     }
 
-    /// エクスポートの単位は「ユーザー自身が設定した機微情報」（SecureUserData）。
-    /// セキュアアイテムに加えて指紋パスワードも含まれる。
-    /// アプリが自動生成する環境固有の情報（DB 暗号鍵等）は対象外
     private func exportItems(to url: URL) {
         do {
             let service = AppEnvironment.current.secureMenuService
-            let userData = SecureUserData(items: service.loadAllItems(),
-                                          cryptoPassword: service.loadCryptoPassword())
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let data = try encoder.encode(userData)
+            let data = try SecureItemsTransfer.encode(items: service.loadAllItems(),
+                                                      cryptoPassword: service.loadCryptoPassword())
             try data.write(to: url, options: .atomic)
         } catch {
             showImportExportError(error)
@@ -454,27 +448,14 @@ extension CPYSecureItemsViewController {
         }
     }
 
-    /// インポートファイルを解釈する（純粋関数のためユニットテスト可能）。
-    /// 現行形式（`SecureUserData` オブジェクト）を優先し、
-    /// 旧形式（アイテムの配列のみ）もフォールバックで読み込める
-    static func parseImport(_ data: Data) throws -> (items: [SecureMenuItem], cryptoPassword: String?) {
-        if let userData = try? JSONDecoder().decode(SecureUserData.self, from: data) {
-            let password = (userData.cryptoPassword?.isEmpty ?? true) ? nil : userData.cryptoPassword
-            return (userData.items, password)
-        }
-        return (try JSONDecoder().decode([SecureMenuItem].self, from: data), nil)
-    }
-
     private func importItems(from url: URL) {
         do {
-            let parsed = try Self.parseImport(try Data(contentsOf: url))
+            let parsed = try SecureItemsTransfer.parseImport(try Data(contentsOf: url))
             let service = AppEnvironment.current.secureMenuService
             // 指紋パスワードの上書きは、以前そのパスワードで暗号化したファイルを
             // 開けなくすることがあるため、登録済みで内容が異なる場合だけ確認する
-            let currentPassword = service.loadCryptoPassword()
-            let replacesPassword = parsed.cryptoPassword != nil
-                && !(currentPassword ?? "").isEmpty
-                && parsed.cryptoPassword != currentPassword
+            let replacesPassword = SecureItemsTransfer.replacesCryptoPassword(
+                current: service.loadCryptoPassword(), incoming: parsed.cryptoPassword)
             guard replacesPassword, let window = view.window else {
                 applyImport(parsed.items, cryptoPassword: parsed.cryptoPassword)
                 return
@@ -490,14 +471,9 @@ extension CPYSecureItemsViewController {
         }
     }
 
-    /// 取り込みを反映する。アイテムは 1 回の書き込みでまとめて保存する
-    /// （1 件ずつ保存すると件数分の Keychain 往復と変更通知が発生する）
     private func applyImport(_ items: [SecureMenuItem], cryptoPassword: String?) {
         let service = AppEnvironment.current.secureMenuService
-        if let cryptoPassword = cryptoPassword {
-            _ = service.saveCryptoPassword(cryptoPassword)
-        }
-        let saved = service.save(items)
+        let saved = SecureItemsTransfer.apply(items: items, cryptoPassword: cryptoPassword, using: service)
         reloadItems()
         NSAlert.showNotice(message: L10n.importSecureItems,
                            informative: L10n.importedSecureItemsFormat(saved ? items.count : 0),

@@ -23,11 +23,21 @@ final class CPYSecureInfoListViewController: NSViewController {
     /// ドラッグ&ドロップで並べ替えが要求された（移動先は保存順に対する添字）
     var onReorderRequested: ((_ itemID: String, _ toIndex: Int) -> Void)?
 
+    /// ウィンドウ全体にかかる操作（⚙ メニュー）の要求
+    var onUndoRequested: (() -> Void)?
+    var onRedoRequested: (() -> Void)?
+    var onImportRequested: (() -> Void)?
+    var onExportRequested: (() -> Void)?
+    /// メニューを開いた時点の取り消し／やり直しの可否と表示名。
+    /// スタックは Split VC が持っているので、開くたびに聞きに行く
+    var undoState: (() -> (undo: SecureInfoUndoAction?, redo: SecureInfoUndoAction?))?
+
     private let editor: SecureInfoEditor
     let searchField = NSSearchField()
     let tableView   = NSTableView()
     let addButton    = NSButton()
     let removeButton = NSButton()
+    let actionButton = NSButton()
     private let scrollView = NSScrollView()
 
     private enum Layout {
@@ -97,7 +107,12 @@ final class CPYSecureInfoListViewController: NSViewController {
             removeButton.leadingAnchor.constraint(equalTo: addButton.trailingAnchor, constant: 2),
             removeButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             removeButton.widthAnchor.constraint(equalToConstant: Layout.buttonSize),
-            removeButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
+            removeButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize),
+
+            actionButton.leadingAnchor.constraint(equalTo: removeButton.trailingAnchor, constant: 8),
+            actionButton.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
+            actionButton.widthAnchor.constraint(equalToConstant: Layout.buttonSize),
+            actionButton.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
         ])
     }
 
@@ -113,7 +128,12 @@ final class CPYSecureInfoListViewController: NSViewController {
         removeButton.target = self
         removeButton.action = #selector(removeItemTapped)
 
-        for button in [addButton, removeButton] {
+        actionButton.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
+        actionButton.toolTip = L10n.secureInfoActions
+        actionButton.target = self
+        actionButton.action = #selector(actionMenuTapped)
+
+        for button in [addButton, removeButton, actionButton] {
             button.bezelStyle = .smallSquare
             button.isBordered = false
             button.translatesAutoresizingMaskIntoConstraints = false
@@ -127,6 +147,81 @@ final class CPYSecureInfoListViewController: NSViewController {
 
     @objc private func removeItemTapped() {
         onDeleteItemRequested?()
+    }
+
+    /// ウィンドウ全体にかかる操作のメニューを出す。
+    /// 中身は開くたびに組み立てる（取り消しの可否と表示名がその都度変わるため）
+    @objc private func actionMenuTapped() {
+        let menu = makeActionMenu()
+        let origin = NSPoint(x: 0, y: actionButton.bounds.height)
+        menu.popUp(positioning: nil, at: origin, in: actionButton)
+    }
+
+    /// ⚙ メニューを組み立てる。
+    /// 取り消し／やり直しをここにも置くのは、⌘Z が効くこと自体を見せるため
+    /// （削除ボタンがホバーでしか出ないぶん、戻せる手段は目に見えている必要がある）
+    func makeActionMenu() -> NSMenu {
+        let state = undoState?() ?? (undo: nil, redo: nil)
+        let menu = NSMenu()
+
+        let undoItem = NSMenuItem(title: Self.undoTitle(for: state.undo),
+                                  action: #selector(undoTapped), keyEquivalent: "z")
+        undoItem.target = self
+        undoItem.isEnabled = state.undo != nil
+        menu.addItem(undoItem)
+
+        let redoItem = NSMenuItem(title: Self.redoTitle(for: state.redo),
+                                  action: #selector(redoTapped), keyEquivalent: "Z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        redoItem.target = self
+        redoItem.isEnabled = state.redo != nil
+        menu.addItem(redoItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let importItem = NSMenuItem(title: L10n.importSecureItems,
+                                    action: #selector(importTapped), keyEquivalent: "")
+        importItem.target = self
+        importItem.isEnabled = !editor.isReadOnly
+        menu.addItem(importItem)
+
+        let exportItem = NSMenuItem(title: L10n.exportSecureItems,
+                                    action: #selector(exportTapped), keyEquivalent: "")
+        exportItem.target = self
+        exportItem.isEnabled = !editor.isReadOnly
+        menu.addItem(exportItem)
+
+        // 有効・無効はこちらで決める。自動判定に任せると target が
+        // validateMenuItem を実装していない場合に全部有効になる
+        menu.autoenablesItems = false
+        return menu
+    }
+
+    /// 取り消しの項目名（純粋関数）。戻せるものがあれば何が戻るのかを見せる
+    static func undoTitle(for action: SecureInfoUndoAction?) -> String {
+        guard let action = action else { return L10n.secureInfoUndoFormat("") }
+        return L10n.secureInfoUndoFormat(action.localizedName)
+    }
+
+    static func redoTitle(for action: SecureInfoUndoAction?) -> String {
+        guard let action = action else { return L10n.secureInfoRedoFormat("") }
+        return L10n.secureInfoRedoFormat(action.localizedName)
+    }
+
+    @objc private func undoTapped() {
+        onUndoRequested?()
+    }
+
+    @objc private func redoTapped() {
+        onRedoRequested?()
+    }
+
+    @objc private func importTapped() {
+        onImportRequested?()
+    }
+
+    @objc private func exportTapped() {
+        onExportRequested?()
     }
 
     /// 追加・削除ボタンの有効状態を更新する

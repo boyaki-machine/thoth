@@ -64,6 +64,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     private var onExternalChangeReload: (() -> Void)?
     let addFieldButton = NSPopUpButton()
     let addTOTPButton = NSButton()
+    /// ウィンドウを閉じるボタン。Esc / ⌘W と同じ操作をマウスからも行えるようにする
+    let closeButton = NSButton()
     let totpService = TOTPService()
     var totpTimer: Timer?
 
@@ -155,8 +157,12 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
             scrollView.bottomAnchor.constraint(equalTo: addFieldButton.topAnchor, constant: -Layout.rowSpacing),
 
+            // 「閉じる」は選択の有無に関わらず出すので、こちらを下端の基準にする
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -Layout.padding),
+            closeButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
+
             addFieldButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: Layout.padding),
-            addFieldButton.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -Layout.padding),
+            addFieldButton.centerYAnchor.constraint(equalTo: closeButton.centerYAnchor),
             addTOTPButton.leadingAnchor.constraint(equalTo: addFieldButton.trailingAnchor, constant: Layout.rowSpacing),
             addTOTPButton.centerYAnchor.constraint(equalTo: addFieldButton.centerYAnchor),
 
@@ -322,6 +328,19 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         addTOTPButton.action = #selector(addTOTPSelected)
         addTOTPButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(addTOTPButton)
+
+        closeButton.title = L10n.close
+        closeButton.bezelStyle = .rounded
+        closeButton.target = self
+        closeButton.action = #selector(closeWindowSelected)
+        // 既定ボタンにはしない。Return は右ペインへフォーカスを移す操作に
+        // 割り当て済みで、既定ボタンにすると横取りされる
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
+    }
+
+    @objc private func closeWindowSelected() {
+        view.window?.performClose(self)
     }
 
     @objc private func addFieldSelected(_ sender: NSMenuItem) {

@@ -152,6 +152,14 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         listViewController.onReorderRequested = { [weak self] itemID, toIndex in
             self?.reorderItem(itemID: itemID, toIndex: toIndex)
         }
+        listViewController.undoState = { [weak self] in
+            guard let self = self else { return (undo: nil, redo: nil) }
+            return (undo: self.undoStack.undoAction, redo: self.undoStack.redoAction)
+        }
+        listViewController.onUndoRequested = { [weak self] in self?.performUndo() }
+        listViewController.onRedoRequested = { [weak self] in self?.performRedo() }
+        listViewController.onImportRequested = { [weak self] in self?.presentImport() }
+        listViewController.onExportRequested = { [weak self] in self?.presentExport() }
     }
 
     // MARK: - Fields
