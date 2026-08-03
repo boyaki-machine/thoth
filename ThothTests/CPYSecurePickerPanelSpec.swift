@@ -169,44 +169,80 @@ class CPYSecurePickerPanelSpec: QuickSpec {
 
     /// v1.3.0 でセキュアアイテム管理ウィンドウを廃止し、この行の宛先を
     /// セキュア情報確認ウィンドウへ移した。キーもメインメニューと揃えて p → s。
-    /// 表示ラベルとキー処理は別々の場所に書かれているため、片方だけ直すと
-    /// 「(&s) と出ているのに s で開かない」状態になる
+    ///
+    /// **押す位置ではなく "s" という文字で判定する。** 表示は "(&s)" と約束しており、
+    /// キーコードで見ると Dvorak 等の配列で「s と書いてあるのに s では開かない」
+    /// 状態になる（hjkl は押す位置に意味があるのでキーコードのままでよい）
     private static func manageShortcutSpecs() {
         describe("セキュア情報確認へのショートカット") {
 
-            /// 検索欄にフォーカスが無い状態の keyDown を作る
-            func keyDown(_ keyCode: UInt16) -> NSEvent {
-                return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+            /// 検索欄にフォーカスが無い状態の keyDown を作る。
+            /// keyCode と文字を別々に渡せるようにして、配列依存を検出できるようにする
+            func keyDown(_ character: String, keyCode: UInt16,
+                         modifiers: NSEvent.ModifierFlags = []) -> NSEvent {
+                return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: modifiers,
                                         timestamp: 0, windowNumber: 0, context: nil,
-                                        characters: "", charactersIgnoringModifiers: "",
+                                        characters: character, charactersIgnoringModifiers: character,
                                         isARepeat: false, keyCode: keyCode)!
             }
 
-            it("s キーで開く") {
+            func firesManage(_ event: NSEvent) -> (handled: Bool, fired: Bool) {
                 let panel = makePanel()
                 var fired = false
                 panel.onManage = { fired = true }
-                expect(panel.handleKeyDown(keyDown(1))) == true   // s
-                expect(fired) == true
+                let handled = panel.handleKeyDown(event)
                 panel.close()
+                return (handled, fired)
+            }
+
+            it("s キーで開く") {
+                let result = firesManage(keyDown("s", keyCode: 1))
+                expect(result.handled) == true
+                expect(result.fired) == true
+            }
+
+            // QWERTY の s の位置（keyCode 1）に別の文字が来る配列でも、
+            // 打った文字が s であれば開く
+            it("キーボード配列に依存しない") {
+                // Dvorak では keyCode 1 は "o"、"s" は keyCode 41 に来る
+                let byCharacter = firesManage(keyDown("s", keyCode: 41))
+                expect(byCharacter.fired) == true
+
+                // 逆に、位置が同じでも文字が違えば開かない
+                let byPosition = firesManage(keyDown("o", keyCode: 1))
+                expect(byPosition.handled) == false
+                expect(byPosition.fired) == false
+            }
+
+            it("大文字の S でも開く") {
+                expect(firesManage(keyDown("S", keyCode: 1, modifiers: .shift)).fired) == true
+            }
+
+            // ⌘S など修飾キー付きは別の意味を持つので横取りしない
+            it("修飾キー付きでは開かない") {
+                expect(firesManage(keyDown("s", keyCode: 1, modifiers: .command)).fired) == false
+                expect(firesManage(keyDown("s", keyCode: 1, modifiers: .control)).fired) == false
+                expect(firesManage(keyDown("s", keyCode: 1, modifiers: .option)).fired) == false
             }
 
             it("旧ショートカットの p は解放されている") {
-                let panel = makePanel()
-                var fired = false
-                panel.onManage = { fired = true }
-                expect(panel.handleKeyDown(keyDown(35))) == false // p
-                expect(fired) == false
-                panel.close()
+                let result = firesManage(keyDown("p", keyCode: 35))
+                expect(result.handled) == false
+                expect(result.fired) == false
             }
 
+            // ラベルとキー処理が同じ定義元から作られていること
             it("表示ラベルがメインメニューと同じ文言・同じキーになる") {
                 let panel = makePanel()
                 guard let row = panel.rows.firstIndex(where: {
                     if case .manage = $0 { return true } else { return false }
                 }) else { fail("管理行が無い"); return }
                 let cell = panel.tableView(panel.tableView, viewFor: nil, row: row) as? NSTableCellView
-                expect(cell?.textField?.stringValue) == "\(L10n.secureInfo) (&s)"
+                expect(cell?.textField?.stringValue)
+                    == "\(L10n.secureInfo) (&\(CPYSecurePickerPanel.secureInfoShortcutKey))"
+                // メインメニュー側の (&s) と同じキーであること
+                expect(CPYSecurePickerPanel.secureInfoShortcutKey)
+                    == CPYHistoryPickerPanel.PanelAction.secureInfo.shortcutKey
                 panel.close()
             }
         }

@@ -14,7 +14,7 @@ import AppKit
 // 値そのものは決して載せない（ドラッグ中のペイストボードは他アプリからも読める）。
 extension NSPasteboard.PasteboardType {
 
-    /// セキュアアイテムの行（左ペインの一覧・管理ウィンドウの表で共有する）。
+    /// セキュアアイテムの行（確認ウィンドウ左ペインの一覧で使う）。
     /// 中身は表示中の行番号を 10 進で書いた文字列
     static let thothSecureItemRow = NSPasteboard.PasteboardType("io.github.boyaki-machine.thoth.secureItemRow")
 

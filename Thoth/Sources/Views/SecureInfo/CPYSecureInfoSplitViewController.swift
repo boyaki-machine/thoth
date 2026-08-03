@@ -15,7 +15,7 @@ import Cocoa
 ///
 /// キーボード操作用のローカルイベントモニターは **このコントローラが 1 つだけ**持つ。
 /// 左右のペインそれぞれに登録すると、アプリ全体を監視するモニターが増えて
-/// 他ウィンドウ（セキュアアイテム管理・編集シート）と干渉するため。
+/// 他ウィンドウ（セキュアアイテム選択パネルなど）と干渉するため。
 final class CPYSecureInfoSplitViewController: NSSplitViewController {
 
     let editor = SecureInfoEditor()

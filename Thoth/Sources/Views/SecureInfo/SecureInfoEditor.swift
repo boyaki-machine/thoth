@@ -227,7 +227,7 @@ final class SecureInfoEditor {
 
     /// 保存すべき内容を判定する。
     ///
-    /// ラベルも値も空のフィールドは取り除く（既存の編集シートと同じ規則）。
+    /// ラベルも値も空のフィールドは取り除く（v1.2 以前の編集シートから引き継いだ規則）。
     /// タイトルが空の場合は保存せず、編集内容も破棄しない
     func commitOutcome() -> CommitOutcome {
         guard isDirty, let draft = draft else { return .notNeeded }

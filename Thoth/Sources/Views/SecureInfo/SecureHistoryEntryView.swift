@@ -71,7 +71,7 @@ final class SecureHistoryEntryView: NSView {
         return SecureFieldRowView.maskedPlaceholder
     }
 
-    /// 置き換えられた日時の表示（純粋関数）。編集シートの履歴ポップアップと同じ書式にそろえる
+    /// 置き換えられた日時の表示（純粋関数）。yyyy/MM/dd HH:mm 固定
     static func timestampText(for date: Date) -> String {
         return timestampFormatter.string(from: date)
     }

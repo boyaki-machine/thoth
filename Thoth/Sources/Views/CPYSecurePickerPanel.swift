@@ -20,13 +20,15 @@ final class CPYSecurePickerPanel: NSPanel {
 
     // MARK: - Row Data Model
 
+    /// 末尾の「セキュア情報確認」行を呼び出す単キー。
+    /// **表示ラベルとキー処理の唯一の定義元**（`PanelAction.shortcutKey` と同じ考え方）
+    static let secureInfoShortcutKey = "s"
+
     enum Row {
         case parent(SecureMenuItem)
         case separator
         case noResults
-        /// 一覧の末尾に置く「セキュア情報確認 (&s)」の行。
-        /// v1.3.0 でセキュアアイテム管理ウィンドウを廃止し、宛先を
-        /// セキュア情報確認ウィンドウへ移した（キーも p → s）
+        /// 一覧の末尾に置く「セキュア情報確認」の行（v1.3.0 で宛先とキーを変更）
         case manage
         case pageControl
 

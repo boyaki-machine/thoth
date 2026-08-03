@@ -44,7 +44,7 @@ extension CPYSecureInfoSplitViewController {
             forName: Self.screenIsLockedNotification, object: nil, queue: .main) { [weak self] _ in
             self?.closeForSecurity()
         })
-        // 別のウィンドウ（セキュアアイテム管理）での変更に追従する
+        // 他の経路（インポートなど）で起きた変更に追従する
         windowObservers.append(center.addObserver(forName: .secureItemsDidChange,
                                                   object: nil, queue: .main) { [weak self] _ in
             self?.applyExternalChangeIfNeeded()

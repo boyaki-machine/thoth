@@ -126,14 +126,25 @@ extension CPYSecurePickerPanel {
 
         // ── グローバルホットキー（サブパネルモード問わず動作）────────────
         if !searching {
+            // s → セキュア情報確認。**キーコードではなく文字で判定する。**
+            // これは押す位置ではなく "s" という頭文字に意味がある操作で、
+            // 表示も "(&s)" と約束している。キーコードで見ると Dvorak 等の配列で
+            // 「s と書いてあるのに s では開かない」状態になる
+            // （メインメニュー側の (&s) は `PanelAction.shortcutKey` と
+            //   charactersIgnoringModifiers の突き合わせで解決している）。
+            // 一方 hjkl は押す位置に意味があるので、下のほうではキーコードのまま扱う
+            if event.modifierFlags.isDisjoint(with: [.command, .option, .control]),
+               event.charactersIgnoringModifiers?.lowercased() == Self.secureInfoShortcutKey {
+                if isVisible { close() }
+                onManage?()
+                return true
+            }
             let ctrl = event.modifierFlags.contains(.control)
             switch Int(event.keyCode) {
             case 37 where ctrl:  goToNextPage(); return true   // Ctrl+L → 次ページ
             case 124 where ctrl: goToNextPage(); return true   // Ctrl+→ → 次ページ
             case 4 where ctrl:   goToPrevPage(); return true   // Ctrl+H → 前ページ
             case 123 where ctrl: goToPrevPage(); return true   // Ctrl+← → 前ページ
-            // s → セキュア情報確認（メインメニューの (&s) と同じ宛先・同じキー）
-            case 1:              if isVisible { close() }; onManage?(); return true
             default: break
             }
         }

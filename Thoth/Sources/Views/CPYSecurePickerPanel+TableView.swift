@@ -57,7 +57,7 @@ extension CPYSecurePickerPanel: NSTableViewDelegate {
         case .manage:
             let cell = (tableView.makeView(withIdentifier: CellID.manage, owner: nil) as? NSTableCellView)
                        ?? makeTextCell(identifier: CellID.manage)
-            cell.textField?.stringValue = "\(L10n.secureInfo) (&s)"
+            cell.textField?.stringValue = "\(L10n.secureInfo) (&\(CPYSecurePickerPanel.secureInfoShortcutKey))"
             cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
             return cell
 

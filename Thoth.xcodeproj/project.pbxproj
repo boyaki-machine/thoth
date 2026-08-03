@@ -65,6 +65,7 @@
 		AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */; };
 		AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */; };
 		AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */; };
+		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
 		AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */; };
 		AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */; };
 		AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */; };
@@ -284,6 +285,7 @@
 		AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoHistorySpec.swift; sourceTree = "<group>"; };
 		AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoCommitFlowSpec.swift; sourceTree = "<group>"; };
 		AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyActionSpec.swift; sourceTree = "<group>"; };
+		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
 		AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowLifecycleSpec.swift; sourceTree = "<group>"; };
 		AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoViewSpec.swift; sourceTree = "<group>"; };
 		AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TOTPRegistrationFlowSpec.swift; sourceTree = "<group>"; };
@@ -788,6 +790,7 @@
 				AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */,
 				AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */,
 				AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */,
+				AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */,
 				AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */,
 				AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */,
 				AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */,
@@ -1230,6 +1233,7 @@
 				AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */,
 				AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */,
 				AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */,
+				AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */,
 				AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */,
 				AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */,
 				AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */,
