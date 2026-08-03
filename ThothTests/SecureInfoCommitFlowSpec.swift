@@ -240,16 +240,6 @@ class SecureInfoCommitFlowSpec: QuickSpec {
                 expect(splitViewController.detailViewControllerForTesting.externalChangeBanner.isHidden) == true
             }
 
-            // 管理ウィンドウ側も同じ通知で追従する。
-            // 通知経由では警告を出さない（同じ警告が繰り返し積み上がるため）
-            it("管理ウィンドウが警告なしで再読込できる") {
-                let itemsViewController = CPYSecureItemsViewController()
-                _ = itemsViewController.view
-                service.isKeychainAccessDenied = true
-                // 警告を出さない経路なので、ウィンドウが無くてもモーダルで止まらない
-                itemsViewController.reloadItems(showsAlert: false)
-                service.isKeychainAccessDenied = false
-            }
         }
     }
 

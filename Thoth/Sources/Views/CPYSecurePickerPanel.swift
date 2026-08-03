@@ -20,10 +20,15 @@ final class CPYSecurePickerPanel: NSPanel {
 
     // MARK: - Row Data Model
 
+    /// 末尾の「セキュア情報確認」行を呼び出す単キー。
+    /// **表示ラベルとキー処理の唯一の定義元**（`PanelAction.shortcutKey` と同じ考え方）
+    static let secureInfoShortcutKey = "s"
+
     enum Row {
         case parent(SecureMenuItem)
         case separator
         case noResults
+        /// 一覧の末尾に置く「セキュア情報確認」の行（v1.3.0 で宛先とキーを変更）
         case manage
         case pageControl
 
@@ -91,6 +96,7 @@ final class CPYSecurePickerPanel: NSPanel {
     // MARK: - Callbacks
 
     var onSelect: ((SecureFieldSelection) -> Void)?
+    /// 末尾の `.manage` 行が選ばれた（セキュア情報確認ウィンドウを開く）
     var onManage: (() -> Void)?
 
     // MARK: - Init

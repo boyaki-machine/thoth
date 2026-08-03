@@ -69,8 +69,6 @@
 
 "Secure Items" = "安全项目";
 
-"Manage Secure Items" = "管理安全项目...";
-
 "Secure Menu Authentication Reason" = "访问安全菜单";
 
 "Secure Info" = "安全信息";
@@ -110,6 +108,28 @@
 "Secure Info External Change" = "已在其他窗口中修改。";
 
 "Secure Info Reload" = "重新载入";
+
+"Secure Info Undo Format" = "撤销%@";
+
+"Secure Info Redo Format" = "重做%@";
+
+"Secure Info Action Edit" = "编辑";
+
+"Secure Info Action Add" = "添加项目";
+
+"Secure Info Action Delete" = "删除项目";
+
+"Secure Info Action Reorder" = "重新排序";
+
+"Secure Info Action Import" = "导入";
+
+"Secure Info Actions" = "操作";
+
+"Secure Info Move Field" = "拖动以重新排序";
+
+"Secure Info Move Up" = "上移";
+
+"Secure Info Move Down" = "下移";
 
 "Secure Menu Search Placeholder" = "搜索...";
 

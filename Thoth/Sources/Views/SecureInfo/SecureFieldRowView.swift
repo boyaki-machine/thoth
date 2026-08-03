@@ -27,12 +27,26 @@ import Cocoa
 /// 再利用すると「表示中（👁 ON）の状態が別のフィールドの行に残る」事故が起きうるため。
 final class SecureFieldRowView: NSView {
 
-    private enum Layout {
+    /// レイアウト定数（組み立ては +Layout.swift）
+    enum Layout {
         static let labelWidth: CGFloat    = 110
         static let spacing: CGFloat       = 8
         static let buttonSize: CGFloat    = 22
         static let singleLineHeight: CGFloat = 24
         static let noteHeight: CGFloat    = 84
+        /// コピー ⧉ と削除 🗑 のあいだに空ける幅。
+        /// 他のボタンと同じ 2pt 間隔で並べると、コピーのつもりで削除を押してしまう
+        static let deleteGap: CGFloat = 10
+        /// 並べ替えの掴み手 ≡ の幅
+        static let handleWidth: CGFloat = 16
+        /// 掴み手とラベルの間隔
+        static let handleGap: CGFloat = 4
+        /// ドラッグとみなす移動量。これ未満はクリックとして扱う
+        static let dragThreshold: CGFloat = 3
+        /// ドラッグ中に出す絵の余白
+        static let dragImagePadding: CGFloat = 6
+        /// 値エリアと、その下に展開する履歴パネルの間隔
+        static let historyGap: CGFloat = 6
     }
 
     /// マスク表示に使う伏せ字
@@ -67,8 +81,35 @@ final class SecureFieldRowView: NSView {
     var onDelete: ((SecureFieldRowView) -> Void)?
     /// 平文表示が切り替えられた（自動解除タイマーの起動に使う）
     var onRevealToggled: ((SecureFieldRowView) -> Void)?
+    /// 行を上下に動かす要求（右クリックメニュー。引数は移動量）
+    var onMove: ((SecureFieldRowView, Int) -> Void)?
+    /// 履歴の値のコピー要求
+    var onCopyHistoryValue: ((SecureFieldRowView, SecureMenuItem.FieldHistoryEntry) -> Void)?
+    /// 履歴の展開が切り替わった（行の高さが変わるので再レイアウトのきっかけに使う）
+    var onHistoryToggled: ((SecureFieldRowView) -> Void)?
+    /// 履歴の平文表示が切り替えられた（自動解除タイマーの起動に使う）
+    var onHistoryRevealToggled: ((SecureFieldRowView) -> Void)?
+
+    /// 履歴を展開中か。切り替えは +History.swift の `setHistoryExpanded(_:)` を通すこと
+    var isHistoryExpanded = false
+    var historyPanel: NSStackView?
+    /// 行の高さの基準。折りたたみ時は値エリアの下端、展開時は履歴パネルの下端
+    var collapsedBottomConstraint: NSLayoutConstraint?
+    var expandedBottomConstraint: NSLayoutConstraint?
+    /// 履歴パネルを差し込む基準になる値エリア（+History.swift から参照する）
+    var valueContainerForHistory: NSView = NSView()
+
+    /// マウスがこの行に乗っているか（削除ボタンの表示条件）
+    private(set) var isHovered = false
+    /// この行のラベルまたは値を編集中か（削除ボタンの表示条件）。
+    /// マウスを使わない操作でも削除ボタンへ到達できるようにするために見る
+    private(set) var hasEditingFocus = false
+    private var hoverTrackingArea: NSTrackingArea?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
+    /// 並べ替えの掴み手 ≡。**ここからしかドラッグを始めない**。
+    /// 行全体を掴めるようにすると、値欄のテキスト選択ドラッグと衝突する
+    let dragHandle = NSImageView()
     let labelField = NSTextField(labelWithString: "")
     let valueField = NSTextField(labelWithString: "")
     let noteTextView = NSTextView()
@@ -77,8 +118,11 @@ final class SecureFieldRowView: NSView {
     let openButton   = NSButton()
     let copyButton   = NSButton()
     let deleteButton = NSButton()
+    /// 変更履歴の展開ボタン 🕘（表示条件と中身は +History.swift）
+    let historyButton = NSButton()
 
-    private let noteScrollView = NSScrollView()
+    /// メモ用のスクロールビュー（組み立ては +Layout.swift）
+    let noteScrollView = NSScrollView()
 
     // MARK: - Init
 
@@ -117,8 +161,11 @@ final class SecureFieldRowView: NSView {
         onRevealToggled?(self)
     }
 
-    /// 平文表示を解除する（アイテムの切り替え・ウィンドウ非アクティブ化などで呼ぶ）
+    /// 平文表示を解除する（アイテムの切り替え・ウィンドウ非アクティブ化などで呼ぶ）。
+    /// **展開中の履歴も一緒に伏せ字へ戻す。** 現在値だけ戻して過去の値が
+    /// 平文のまま残ると、守っているつもりで守れていない状態になる
     func hideRevealedValue() {
+        hideRevealedHistoryValues()
         guard isRevealed else { return }
         isRevealed = false
         revealedAt = nil
@@ -183,163 +230,213 @@ final class SecureFieldRowView: NSView {
         return "\(TOTPService.groupedCode(code)) · \(remainingSeconds)s"
     }
 
-    // MARK: - UI
+    // MARK: - Dragging
 
-    private func setupUI() {
-        translatesAutoresizingMaskIntoConstraints = false
+    /// 掴み手を押した位置。ドラッグ開始の判定に使う
+    private var dragOrigin: NSPoint?
 
-        labelField.stringValue = field.label
-        labelField.textColor = .secondaryLabelColor
-        labelField.alignment = .right
-        labelField.lineBreakMode = .byTruncatingTail
-        labelField.isEditable = Self.isLabelEditable(isReadOnly: isReadOnly)
-        labelField.isBordered = false
-        labelField.drawsBackground = false
-        labelField.delegate = self
-        labelField.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(labelField)
-
-        let valueContainer = makeValueContainer()
-        let buttonStack = makeButtonStack()
-
-        NSLayoutConstraint.activate([
-            labelField.leadingAnchor.constraint(equalTo: leadingAnchor),
-            labelField.topAnchor.constraint(equalTo: topAnchor),
-            labelField.widthAnchor.constraint(equalToConstant: Layout.labelWidth),
-
-            valueContainer.leadingAnchor.constraint(equalTo: labelField.trailingAnchor, constant: Layout.spacing),
-            valueContainer.topAnchor.constraint(equalTo: topAnchor),
-            valueContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
-            valueContainer.trailingAnchor.constraint(equalTo: buttonStack.leadingAnchor, constant: -Layout.spacing),
-
-            buttonStack.trailingAnchor.constraint(equalTo: trailingAnchor),
-            buttonStack.topAnchor.constraint(equalTo: topAnchor),
-            buttonStack.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
-        ])
+    /// 掴み手の上にあるクリックは自分で受け取る。
+    /// `NSImageView` は `NSControl` の一員なので、素のままだと mouseDown を
+    /// 自分で握ってしまい、ドラッグが始まらない
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard !isReadOnly, dragHandle.superview != nil else { return super.hitTest(point) }
+        let local = convert(point, from: superview)
+        return dragHandle.frame.contains(local) ? self : super.hitTest(point)
     }
 
-    /// 値エリアを組み立てる。複数行の種別だけスクロール付きの NSTextView にする
-    private func makeValueContainer() -> NSView {
-        guard field.kind.isMultiline else {
-            // 編集できない状態でも選択・コピーはできるようにする
-            valueField.isSelectable = true
-            valueField.lineBreakMode = .byTruncatingTail
-            valueField.delegate = self
-            valueField.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(valueField)
-            valueField.heightAnchor.constraint(equalToConstant: Layout.singleLineHeight).isActive = true
-            return valueField
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        // 掴み手以外から始まったクリックには関与しない（テキスト選択などを邪魔しない）
+        guard !isReadOnly, dragHandle.superview != nil, dragHandle.frame.contains(point) else {
+            super.mouseDown(with: event)
+            return
+        }
+        dragOrigin = point
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard let origin = dragOrigin else {
+            super.mouseDragged(with: event)
+            return
+        }
+        let point = convert(event.locationInWindow, from: nil)
+        // わずかな手ぶれで並べ替えが始まらないよう、少し動かしてから開始する
+        guard hypot(point.x - origin.x, point.y - origin.y) >= Layout.dragThreshold else { return }
+        dragOrigin = nil
+        beginFieldDrag(with: event)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        dragOrigin = nil
+        super.mouseUp(with: event)
+    }
+
+    private func beginFieldDrag(with event: NSEvent) {
+        beginDraggingSession(with: [makeDraggingItem()], event: event, source: self)
+    }
+
+    /// ドラッグ 1 件分を組み立てる。**外へ出す情報はここだけで決まる**ので、
+    /// 中身をユニットテストから確認できるよう internal にしている。
+    ///
+    /// - ペイストボードに載せるのは **fieldID だけ**。値を載せると、
+    ///   ドラッグ中のペイストボードを読める他のアプリへ機微情報が漏れる
+    /// - 絵は行の写しではなく**ラベルだけ**（理由は `dragImage(label:)` を参照）
+    func makeDraggingItem() -> NSDraggingItem {
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(field.fieldID, forType: .thothSecureFieldRow)
+        let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
+        let image = Self.dragImage(label: field.label)
+        draggingItem.setDraggingFrame(NSRect(origin: .zero, size: image.size), contents: image)
+        return draggingItem
+    }
+
+    /// ドラッグ中に出す絵。**行そのものの写しは使わない。**
+    ///
+    /// ドラッグの絵は行を離れてシステム側のウィンドウに描かれるため、
+    /// このウィンドウに掛けた `NSWindow.sharingType = .none`（画面共有・収録からの除外）が
+    /// 効かない。行を丸ごと写すと、👁 で表示中のパスワードやメモの本文が
+    /// 画面収録に入りうる。**ラベルだけ**なら検索対象にも選択パネルにも出ている情報で、
+    /// どのフィールドを掴んでいるかも分かる
+    static func dragImage(label: String) -> NSImage {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .foregroundColor: NSColor.labelColor
+        ]
+        let text = label.isEmpty ? L10n.secureInfoMoveField : label
+        let attributed = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributed.size()
+        let size = NSSize(width: max(textSize.width, 1) + Layout.dragImagePadding * 2,
+                          height: max(textSize.height, 1) + Layout.dragImagePadding)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        attributed.draw(at: NSPoint(x: Layout.dragImagePadding, y: Layout.dragImagePadding / 2))
+        image.unlockFocus()
+        return image
+    }
+
+    // MARK: - Delete button
+
+    /// 削除ボタンを見せるか（純粋関数のためユニットテスト可能）。
+    ///
+    /// 既定では隠しておき、**マウスが行に乗っているとき**か
+    /// **その行を編集中のとき**だけ出す。コピー ⧉ の隣に常時置くと、
+    /// 狙いを外して不可逆な削除を押してしまう。
+    /// 編集中にも出すのは、マウスを使わない操作でも到達できるようにするため
+    /// （右クリックメニューからも削除できる）
+    static func showsDeleteButton(isReadOnly: Bool, isHovered: Bool, hasFocus: Bool) -> Bool {
+        guard !isReadOnly else { return false }
+        return isHovered || hasFocus
+    }
+
+    func updateDeleteButtonVisibility() {
+        deleteButton.isHidden = !Self.showsDeleteButton(isReadOnly: isReadOnly,
+                                                        isHovered: isHovered,
+                                                        hasFocus: hasEditingFocus)
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let hoverTrackingArea = hoverTrackingArea { removeTrackingArea(hoverTrackingArea) }
+        guard !isReadOnly else { return }
+        // .inVisibleRect にしておくと、スクロールや行の作り直しで矩形がずれない
+        let area = NSTrackingArea(rect: .zero,
+                                  options: [.mouseEnteredAndExited, .activeInKeyWindow, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        hoverTrackingArea = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        isHovered = true
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        isHovered = false
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
+    }
+
+    /// テストから hover 状態を再現するための入口（実イベントを合成せずに済ませる）
+    func setHovered(_ hovered: Bool) {
+        isHovered = hovered
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
+    }
+
+    // MARK: - Context menu
+
+    /// 右クリックメニュー。ホバーでしか出ない削除の導線を補い、
+    /// 並べ替え（Ctrl+j / Ctrl+k）にもマウスから届くようにする
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = NSMenu()
+        // 履歴の閲覧は破壊的でないので読み取り専用でも出す。
+        // 履歴が無い行では項目ごと出さない（🕘 が現れないのと揃える。
+        // 押しても何も起きない項目を灰色で見せても案内にならない）
+        if hasValueHistory {
+            let history = NSMenuItem(title: L10n.valueHistory,
+                                     action: #selector(historyTapped), keyEquivalent: "")
+            history.target = self
+            menu.addItem(history)
         }
 
-        noteTextView.isSelectable = true
-        noteTextView.isRichText = false
-        noteTextView.delegate = self
-        // メモは URL 等を自動リンク化せずそのまま見せる（誤操作で外部アプリが開くのを避ける）
-        noteTextView.isAutomaticLinkDetectionEnabled = false
-        noteTextView.enabledTextCheckingTypes = 0
-        noteTextView.drawsBackground = false
-        noteTextView.textColor = .labelColor
+        if !isReadOnly {
+            if !menu.items.isEmpty { menu.addItem(NSMenuItem.separator()) }
 
-        // コードから生成した NSTextView は、Interface Builder の「Text View」と違い
-        // スクロールビューへの載せ方が自動設定されない。この 5 行が無いと
-        // 本文が折り返されず、行数に応じたスクロールもできない
-        noteTextView.minSize = NSSize(width: 0, height: 0)
-        noteTextView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
-                                      height: CGFloat.greatestFiniteMagnitude)
-        noteTextView.isVerticallyResizable = true
-        noteTextView.isHorizontallyResizable = false
-        noteTextView.autoresizingMask = .width
-        noteTextView.textContainer?.widthTracksTextView = true
-        noteTextView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+            let moveUp = NSMenuItem(title: L10n.secureInfoMoveUp, action: #selector(moveUpSelected), keyEquivalent: "")
+            moveUp.target = self
+            menu.addItem(moveUp)
 
-        noteScrollView.documentView = noteTextView
-        noteScrollView.hasVerticalScroller = true
-        noteScrollView.borderType = .bezelBorder
-        noteScrollView.drawsBackground = false
-        noteScrollView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(noteScrollView)
-        noteScrollView.heightAnchor.constraint(equalToConstant: Layout.noteHeight).isActive = true
-        return noteScrollView
-    }
+            let moveDown = NSMenuItem(title: L10n.secureInfoMoveDown,
+                                      action: #selector(moveDownSelected), keyEquivalent: "")
+            moveDown.target = self
+            menu.addItem(moveDown)
 
-    /// 種別に応じたボタン列を組み立てる
-    private func makeButtonStack() -> NSStackView {
-        for button in [maskButton, revealButton, openButton, copyButton, deleteButton] {
-            button.bezelStyle = .smallSquare
-            button.isBordered = false
-            button.translatesAutoresizingMaskIntoConstraints = false
-            button.widthAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
-            button.heightAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
+            menu.addItem(NSMenuItem.separator())
+
+            let delete = NSMenuItem(title: L10n.secureInfoRemoveField,
+                                    action: #selector(deleteTapped), keyEquivalent: "")
+            delete.target = self
+            menu.addItem(delete)
         }
 
-        maskButton.image = NSImage(systemSymbolName: field.isPassword ? "lock.fill" : "lock.open",
-                                   accessibilityDescription: nil)
-        maskButton.toolTip = L10n.secureInfoToggleMask
-        maskButton.target = self
-        maskButton.action = #selector(maskTapped)
-
-        deleteButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
-        deleteButton.toolTip = L10n.secureInfoRemoveField
-        deleteButton.target = self
-        deleteButton.action = #selector(deleteTapped)
-
-        revealButton.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
-        revealButton.toolTip = L10n.secureInfoRevealValue
-        revealButton.target = self
-        revealButton.action = #selector(revealTapped)
-
-        openButton.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
-        openButton.toolTip = L10n.secureInfoOpenURL
-        openButton.target = self
-        openButton.action = #selector(openTapped)
-
-        copyButton.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
-        copyButton.toolTip = L10n.secureInfoCopyValue
-        copyButton.target = self
-        copyButton.action = #selector(copyTapped)
-
-        // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）
-        var buttons: [NSView] = []
-        if field.kind.allowsPasswordToggle && !isReadOnly { buttons.append(maskButton) }
-        if field.isPassword && field.kind.allowsPasswordToggle { buttons.append(revealButton) }
-        if field.kind == .url { buttons.append(openButton) }
-        buttons.append(copyButton)
-        if !isReadOnly { buttons.append(deleteButton) }
-
-        let stack = NSStackView(views: buttons)
-        stack.orientation = .horizontal
-        stack.spacing = 2
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
-        return stack
+        guard !menu.items.isEmpty else { return nil }
+        return menu
     }
+}
 
-    // MARK: - Actions
+// MARK: - NSDraggingSource
 
-    @objc private func revealTapped() {
-        toggleReveal()
-    }
+extension SecureFieldRowView: NSDraggingSource {
 
-    @objc private func openTapped() {
-        onOpenURL?(self)
-    }
-
-    @objc private func copyTapped() {
-        onCopy?(self)
-    }
-
-    @objc private func maskTapped() {
-        onMaskToggled?(self, !field.isPassword)
-    }
-
-    @objc private func deleteTapped() {
-        onDelete?(self)
+    /// **アプリ内の並べ替えだけを許す。** 行を他のアプリへ引き出せると、
+    /// ペイストボード経由で機微情報が渡る余地を作ってしまう
+    func draggingSession(_ session: NSDraggingSession,
+                         sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        return context == .withinApplication ? .move : []
     }
 }
 
 // MARK: - NSTextFieldDelegate / NSTextViewDelegate
 
 extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
+
+    // 編集の開始・終了で削除ボタンの表示を切り替える。
+    // 行の中に first responder があるかを外から見張るより、
+    // フィールドエディタの出入りを直接受け取るほうが取りこぼしが無い
+    func controlTextDidBeginEditing(_ notification: Notification) {
+        hasEditingFocus = true
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
+    }
+
+    func textDidBeginEditing(_ notification: Notification) {
+        guard (notification.object as? NSTextView) === noteTextView else { return }
+        hasEditingFocus = true
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
+    }
 
     func controlTextDidChange(_ notification: Notification) {
         guard let control = notification.object as? NSTextField else { return }
@@ -352,6 +449,9 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
     }
 
     func controlTextDidEndEditing(_ notification: Notification) {
+        hasEditingFocus = false
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
         onEditingEnded?(self)
     }
 
@@ -362,6 +462,9 @@ extension SecureFieldRowView: NSTextFieldDelegate, NSTextViewDelegate {
 
     func textDidEndEditing(_ notification: Notification) {
         guard (notification.object as? NSTextView) === noteTextView else { return }
+        hasEditingFocus = false
+        updateDeleteButtonVisibility()
+        updateHistoryButtonVisibility()
         onEditingEnded?(self)
     }
 }

@@ -65,8 +65,6 @@
 
 "Secure Items" = "Res securae";
 
-"Manage Secure Items" = "Res securas administrare...";
-
 "Secure Menu Authentication Reason" = "Ad indicem securum accedere";
 
 "Secure Info" = "Notitia secura";
@@ -106,6 +104,28 @@
 "Secure Info External Change" = "In alia fenestra mutatum est.";
 
 "Secure Info Reload" = "Relegere";
+
+"Secure Info Undo Format" = "%@ revocare";
+
+"Secure Info Redo Format" = "%@ iterare";
+
+"Secure Info Action Edit" = "Recensio";
+
+"Secure Info Action Add" = "Rei additio";
+
+"Secure Info Action Delete" = "Rei deletio";
+
+"Secure Info Action Reorder" = "Ordinis mutatio";
+
+"Secure Info Action Import" = "Importatio";
+
+"Secure Info Actions" = "Actiones";
+
+"Secure Info Move Field" = "Trahe ut ordinem mutes";
+
+"Secure Info Move Up" = "Sursum movere";
+
+"Secure Info Move Down" = "Deorsum movere";
 
 "Secure Menu Search Placeholder" = "Quaerere...";
 

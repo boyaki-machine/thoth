@@ -18,20 +18,29 @@
 		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
 		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
 		6FCC01A1B2C3D4E5F607080B /* NSAlert+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */; };
-		6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
-		AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */; };
+		AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */; };
 		AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */; };
 		AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */; };
 		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
-		AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */; };
-		AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */; };
 		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
 		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
-		AA0000EC00000000ABCDEF01 /* FlippedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EB00000000ABCDEF01 /* FlippedView.swift */; };
+		AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */; };
+		AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */; };
+		AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */; };
+		AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */; };
+		AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */; };
+		AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */; };
+		AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */; };
+		AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */; };
+		AA00011800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */; };
+		AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */; };
+		AA0000EE80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */; };
+		AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */; };
+		AA00010200000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */; };
 		AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */; };
 		AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */; };
 		AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */; };
@@ -46,17 +55,24 @@
 		AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */; };
 		AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */; };
 		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
-		AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */; };
 		AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */; };
+		AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */; };
+		AA0000F800000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */; };
+		AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */; };
+		AA0000FC00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FB00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift */; };
+		AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */; };
+		AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */; };
+		AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */; };
 		AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */; };
 		AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */; };
+		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
+		AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */; };
 		AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */; };
 		AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */; };
-		AA0000C600000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */; };
 		AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */; };
-		AA0000C200000000ABCDEF01 /* SecureItemEditTabNavigationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C100000000ABCDEF01 /* SecureItemEditTabNavigationSpec.swift */; };
 		AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A100000000ABCDEF01 /* CryptoService.swift */; };
 		AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */; };
+		AA00010600000000ABCDEF01 /* TabCapturingButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010500000000ABCDEF01 /* TabCapturingButton.swift */; };
 		AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */; };
 		AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
@@ -209,7 +225,6 @@
 		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ThothTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Thoth.swift"; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Thoth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		846004961FD5511800BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYPreferencesWindowController.strings; sourceTree = "<group>"; };
 		846004971FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -225,17 +240,27 @@
 		9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Thoth.release.xcconfig"; path = "Pods/Target Support Files/Pods-Thoth/Pods-Thoth.release.xcconfig"; sourceTree = "<group>"; };
 		AA00001100000000ABCDEF01 /* SecureMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItem.swift; sourceTree = "<group>"; };
 		AA00001200000000ABCDEF01 /* SecureMenuService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuService.swift; sourceTree = "<group>"; };
-		AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureMenuPreferenceViewController.swift; sourceTree = "<group>"; };
+		AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransfer.swift; sourceTree = "<group>"; };
 		AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecurePickerPanel.swift; sourceTree = "<group>"; };
 		AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+MenuBuilding.swift"; sourceTree = "<group>"; };
 		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
-		AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditViewController.swift; sourceTree = "<group>"; };
-		AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureItemEditViewController+TableView.swift"; sourceTree = "<group>"; };
 		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
 		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
-		AA0000EB00000000ABCDEF01 /* FlippedView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlippedView.swift; sourceTree = "<group>"; };
+		AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoStack.swift; sourceTree = "<group>"; };
+		AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldDropView.swift; sourceTree = "<group>"; };
+		AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureHistoryEntryView.swift; sourceTree = "<group>"; };
+		AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Layout.swift"; sourceTree = "<group>"; };
+		AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+History.swift"; sourceTree = "<group>"; };
+		AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Lifecycle.swift"; sourceTree = "<group>"; };
+		AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemPasteboardType.swift; sourceTree = "<group>"; };
+		AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Undo.swift"; sourceTree = "<group>"; };
+		AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Sheets.swift"; sourceTree = "<group>"; };
+		AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Observers.swift"; sourceTree = "<group>"; };
+		AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Transfer.swift"; sourceTree = "<group>"; };
+		AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+Row.swift"; sourceTree = "<group>"; };
+		AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+BottomBar.swift"; sourceTree = "<group>"; };
 		AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Keyboard.swift"; sourceTree = "<group>"; };
 		AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyAction.swift; sourceTree = "<group>"; };
 		AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoFieldTemplate.swift; sourceTree = "<group>"; };
@@ -250,17 +275,24 @@
 		AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateService.swift; sourceTree = "<group>"; };
 		AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYPasswordGeneratorWindowController.swift; sourceTree = "<group>"; };
 		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
-		AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditSpec.swift; sourceTree = "<group>"; };
 		AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditorSpec.swift; sourceTree = "<group>"; };
+		AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoSpec.swift; sourceTree = "<group>"; };
+		AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoFlowSpec.swift; sourceTree = "<group>"; };
+		AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowInteractionSpec.swift; sourceTree = "<group>"; };
+		AA0000FB00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoDragReorderSpec.swift; sourceTree = "<group>"; };
+		AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransferSpec.swift; sourceTree = "<group>"; };
+		AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoActionMenuSpec.swift; sourceTree = "<group>"; };
+		AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoHistorySpec.swift; sourceTree = "<group>"; };
 		AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoCommitFlowSpec.swift; sourceTree = "<group>"; };
 		AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyActionSpec.swift; sourceTree = "<group>"; };
+		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
+		AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowLifecycleSpec.swift; sourceTree = "<group>"; };
 		AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoViewSpec.swift; sourceTree = "<group>"; };
 		AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TOTPRegistrationFlowSpec.swift; sourceTree = "<group>"; };
-		AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemFieldReorderingSpec.swift; sourceTree = "<group>"; };
 		AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteServiceTOTPSpec.swift; sourceTree = "<group>"; };
-		AA0000C100000000ABCDEF01 /* SecureItemEditTabNavigationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemEditTabNavigationSpec.swift; sourceTree = "<group>"; };
 		AA0000A100000000ABCDEF01 /* CryptoService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
 		AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoWindowController.swift; sourceTree = "<group>"; };
+		AA00010500000000ABCDEF01 /* TabCapturingButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabCapturingButton.swift; sourceTree = "<group>"; };
 		AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoServiceSpec.swift; sourceTree = "<group>"; };
 		AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoPasswordManagerWindowController.swift; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -438,6 +470,7 @@
 				FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */,
 				FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */,
 				AA00001200000000ABCDEF01 /* SecureMenuService.swift */,
+				AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */,
 				AA00003800000000ABCDEF01 /* CodeSignService.swift */,
 				AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */,
 				AA0000A100000000ABCDEF01 /* CryptoService.swift */,
@@ -567,6 +600,7 @@
 				AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */,
 				AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */,
 				AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */,
+				AA00010500000000ABCDEF01 /* TabCapturingButton.swift */,
 				AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */,
 			);
 			path = Views;
@@ -609,7 +643,19 @@
 			isa = PBXGroup;
 			children = (
 				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
-				AA0000EB00000000ABCDEF01 /* FlippedView.swift */,
+				AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */,
+				AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */,
+				AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */,
+				AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */,
+				AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */,
+				AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */,
+				AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */,
+				AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */,
+				AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */,
+				AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */,
+				AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */,
+				AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */,
+				AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */,
 				AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */,
 				AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */,
 				AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */,
@@ -638,10 +684,6 @@
 				FA1DB4F21DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.swift */,
 				FA1DB4F31DDCB4C0007F95C8 /* CPYExcludeAppPreferenceViewController.swift */,
 				FA1DB4F41DDCB4C0007F95C8 /* CPYShortcutsPreferenceViewController.swift */,
-				AA00001300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift */,
-				AA00003300000000ABCDEF01 /* SecureItemEditViewController.swift */,
-				AA00003400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift */,
-				6FCC01A1B2C3D4E5F607080E /* SecureItemEditViewController+Keyboard.swift */,
 				FA1DB4F51DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift */,
 				FA1DB4F61DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift */,
 				FA1DB4F71DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.xib */,
@@ -738,15 +780,21 @@
 				AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */,
 				AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */,
 				AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */,
-				AA00003E00000000ABCDEF01 /* SecureItemEditSpec.swift */,
 				AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */,
+				AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */,
+				AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */,
+				AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */,
+				AA0000FB00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift */,
+				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
+				AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */,
+				AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */,
 				AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */,
 				AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */,
+				AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */,
+				AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */,
 				AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */,
 				AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */,
-				AA0000C500000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift */,
 				AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */,
-				AA0000C100000000ABCDEF01 /* SecureItemEditTabNavigationSpec.swift */,
 				FAC43DDC1B35D8B100C06102 /* Supporting Files */,
 			);
 			path = ThothTests;
@@ -1109,21 +1157,30 @@
 				FA1DB4D71DDCB479007F95C8 /* CPYSnippet.swift in Sources */,
 				AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */,
 				AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */,
+				AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */,
 				AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */,
 				AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */,
 				AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */,
-				AA00002300000000ABCDEF01 /* CPYSecureMenuPreferenceViewController.swift in Sources */,
 				AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */,
 				AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */,
 				AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */,
-				AA00004300000000ABCDEF01 /* SecureItemEditViewController.swift in Sources */,
-				AA00004400000000ABCDEF01 /* SecureItemEditViewController+TableView.swift in Sources */,
-				6FCC01A1B2C3D4E5F607080D /* SecureItemEditViewController+Keyboard.swift in Sources */,
 				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
 				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
-				AA0000EC00000000ABCDEF01 /* FlippedView.swift in Sources */,
+				AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */,
+				AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */,
+				AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */,
+				AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */,
+				AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */,
+				AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */,
+				AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */,
+				AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */,
+				AA00011800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift in Sources */,
+				AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */,
+				AA0000EE80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift in Sources */,
+				AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */,
+				AA00010200000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift in Sources */,
 				AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */,
 				AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */,
 				AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */,
@@ -1134,6 +1191,7 @@
 				AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */,
 				AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */,
 				AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */,
+				AA00010600000000ABCDEF01 /* TabCapturingButton.swift in Sources */,
 				AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */,
 				FA1DB5201DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift in Sources */,
 				FA10897E20EC22E200A3FEFC /* LocalizedStrings.swift in Sources */,
@@ -1165,15 +1223,21 @@
 				AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */,
 				AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */,
 				AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */,
-				AA00004E00000000ABCDEF01 /* SecureItemEditSpec.swift in Sources */,
 				AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */,
+				AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */,
+				AA0000F800000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift in Sources */,
+				AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */,
+				AA0000FC00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift in Sources */,
+				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
+				AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */,
+				AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */,
 				AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */,
 				AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */,
+				AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */,
+				AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */,
 				AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */,
 				AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */,
-				AA0000C600000000ABCDEF01 /* SecureItemFieldReorderingSpec.swift in Sources */,
 				AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */,
-				AA0000C200000000ABCDEF01 /* SecureItemEditTabNavigationSpec.swift in Sources */,
 				FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

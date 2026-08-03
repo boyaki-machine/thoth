@@ -69,8 +69,6 @@
 
 "Secure Items" = "Elementi sicuri";
 
-"Manage Secure Items" = "Gestisci elementi sicuri...";
-
 "Secure Menu Authentication Reason" = "Accedere al menu sicuro";
 
 "Secure Info" = "Informazioni sicure";
@@ -110,6 +108,28 @@
 "Secure Info External Change" = "Modificato in un'altra finestra.";
 
 "Secure Info Reload" = "Ricarica";
+
+"Secure Info Undo Format" = "Annulla %@";
+
+"Secure Info Redo Format" = "Ripeti %@";
+
+"Secure Info Action Edit" = "Modifica";
+
+"Secure Info Action Add" = "Aggiunta elemento";
+
+"Secure Info Action Delete" = "Eliminazione elemento";
+
+"Secure Info Action Reorder" = "Riordino";
+
+"Secure Info Action Import" = "Importazione";
+
+"Secure Info Actions" = "Azioni";
+
+"Secure Info Move Field" = "Trascina per riordinare";
+
+"Secure Info Move Up" = "Sposta su";
+
+"Secure Info Move Down" = "Sposta giù";
 
 "Secure Menu Search Placeholder" = "Cerca...";
 

@@ -69,8 +69,6 @@
 
 "Secure Items" = "Secure Items";
 
-"Manage Secure Items" = "Manage Secure Items...";
-
 "Secure Menu Authentication Reason" = "Access Secure Menu";
 
 "Secure Info" = "Secure Info";
@@ -110,6 +108,28 @@
 "Secure Info External Change" = "Changed in another window.";
 
 "Secure Info Reload" = "Reload";
+
+"Secure Info Undo Format" = "Undo %@";
+
+"Secure Info Redo Format" = "Redo %@";
+
+"Secure Info Action Edit" = "Edit";
+
+"Secure Info Action Add" = "Add Item";
+
+"Secure Info Action Delete" = "Delete Item";
+
+"Secure Info Action Reorder" = "Reorder";
+
+"Secure Info Action Import" = "Import";
+
+"Secure Info Actions" = "Actions";
+
+"Secure Info Move Field" = "Drag to reorder";
+
+"Secure Info Move Up" = "Move Up";
+
+"Secure Info Move Down" = "Move Down";
 
 "Secure Menu Search Placeholder" = "Search...";
 
