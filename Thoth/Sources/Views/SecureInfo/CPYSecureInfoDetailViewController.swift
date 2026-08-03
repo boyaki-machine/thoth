@@ -54,6 +54,8 @@ final class CPYSecureInfoDetailViewController: NSViewController {
     var onAddTOTPRequested: (() -> Void)?
 
     private let scrollView = NSScrollView()
+    /// 行を並べる入れ物であり、並べ替えドラッグの受け皿
+    let dropView = SecureFieldDropView()
     /// タイトル行と各フィールドを見分けやすくする区切り線
     let titleSeparator = NSBox()
     /// 他の画面で変更が起きたことを知らせるバー（未保存の編集がある間だけ出す）
@@ -109,11 +111,11 @@ final class CPYSecureInfoDetailViewController: NSViewController {
         rowStackView.spacing = Layout.rowSpacing
         rowStackView.translatesAutoresizingMaskIntoConstraints = false
 
-        // NSClipView は上下反転していないため、内容が可視領域より短いと
-        // ドキュメントビューが下端に寄ってしまう。上詰めにするため反転させる
-        let documentView = FlippedView()
+        // 上詰めのための座標反転に加えて、並べ替えドラッグの受け皿も兼ねる
+        let documentView = dropView
         documentView.translatesAutoresizingMaskIntoConstraints = false
         documentView.addSubview(rowStackView)
+        setupDropView()
 
         scrollView.documentView = documentView
         scrollView.hasVerticalScroller = true
@@ -172,6 +174,23 @@ final class CPYSecureInfoDetailViewController: NSViewController {
             placeholderLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             placeholderLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
+    }
+
+    /// 並べ替えドラッグの受け皿を配線する。
+    /// 行が自分の位置を知らないため、矩形の供給と添字の解決はこちらで行う
+    private func setupDropView() {
+        dropView.rowFrames = { [weak self] in
+            guard let self = self else { return [] }
+            return self.fieldRows.map { $0.convert($0.bounds, to: self.dropView) }
+        }
+        dropView.onFieldDropped = { [weak self] fieldID, gapIndex in
+            guard let self = self,
+                  let fromIndex = self.fieldRows.firstIndex(where: { $0.field.fieldID == fieldID }) else { return }
+            // すき間の番号は「取り除く前の並び」に対する位置。一覧の
+            // ドラッグ&ドロップと同じ関数で移動後の添字へ直す
+            let destination = SecureInfoEditor.dropDestinationIndex(fromRow: fromIndex, proposedRow: gapIndex)
+            self.onFieldMoveRequested?(fieldID, destination)
+        }
     }
 
     /// 他の画面での変更を知らせるバーを組み立てる。

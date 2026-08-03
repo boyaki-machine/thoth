@@ -20,6 +20,8 @@ final class CPYSecureInfoListViewController: NSViewController {
     var onAddItemRequested: (() -> Void)?
     /// 選択中アイテムの削除が要求された
     var onDeleteItemRequested: (() -> Void)?
+    /// ドラッグ&ドロップで並べ替えが要求された（移動先は保存順に対する添字）
+    var onReorderRequested: ((_ itemID: String, _ toIndex: Int) -> Void)?
 
     private let editor: SecureInfoEditor
     let searchField = NSSearchField()
@@ -65,6 +67,9 @@ final class CPYSecureInfoListViewController: NSViewController {
         // サイドバー用の外観。macOS 11+ では選択色やインセットが自動で調整される
         tableView.selectionHighlightStyle = .sourceList
         tableView.backgroundColor = .clear
+        // 並べ替えのドラッグ&ドロップ。載せるのは行番号だけで、値は載せない
+        tableView.registerForDraggedTypes([.thothSecureItemRow])
+        tableView.setDraggingSourceOperationMask(.move, forLocal: true)
 
         scrollView.documentView = tableView
         scrollView.hasVerticalScroller = true
@@ -236,6 +241,41 @@ extension CPYSecureInfoListViewController: NSTableViewDataSource, NSTableViewDel
         editor.selectRow(row)
         updateButtonStates(isReadOnly: editor.isReadOnly)
         onSelectionChange?(editor.selectedItem)
+    }
+
+    // MARK: Drag & Drop
+
+    /// 並べ替えられる状態か。絞り込み中は見えている順と保存順が食い違うため許さない
+    private var allowsReordering: Bool {
+        return SecureInfoEditor.canReorderItems(query: editor.query, isReadOnly: editor.isReadOnly)
+    }
+
+    func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> NSPasteboardWriting? {
+        guard allowsReordering else { return nil }
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(String(row), forType: .thothSecureItemRow)
+        return pasteboardItem
+    }
+
+    func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo,
+                   proposedRow row: Int,
+                   proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
+        guard allowsReordering else { return [] }
+        // 行の「上」に落とすのが並べ替え。行そのものへのドロップは受け付けない
+        if dropOperation == .on { tableView.setDropRow(row, dropOperation: .above) }
+        return .move
+    }
+
+    func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
+                   row targetRow: Int, dropOperation: NSTableView.DropOperation) -> Bool {
+        guard allowsReordering,
+              let raw = info.draggingPasteboard.pasteboardItems?.first?.string(forType: .thothSecureItemRow),
+              let fromRow = Int(raw),
+              let item = editor.visibleItems[safe: fromRow] else { return false }
+        let destination = SecureInfoEditor.dropDestinationIndex(fromRow: fromRow, proposedRow: targetRow)
+        // 保存とデータの持ち主は Split VC 側。ここは要求を投げるだけにする
+        onReorderRequested?(item.itemID, destination)
+        return true
     }
 }
 

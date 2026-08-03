@@ -149,6 +149,9 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
         listViewController.onDeleteItemRequested = { [weak self] in
             self?.confirmDeleteSelectedItem()
         }
+        listViewController.onReorderRequested = { [weak self] itemID, toIndex in
+            self?.reorderItem(itemID: itemID, toIndex: toIndex)
+        }
     }
 
     // MARK: - Fields
@@ -265,14 +268,24 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
     /// 選択中アイテムを一覧内で上下に動かす（Ctrl+j / Ctrl+k）。
     /// 絞り込み中は見えている順と保存順が一致しないため行わない
     func moveSelectedItem(by offset: Int) {
-        guard !editor.isReadOnly, editor.query.isEmpty, let item = editor.selectedItem else {
+        guard let item = editor.selectedItem,
+              let index = editor.items.firstIndex(where: { $0.itemID == item.itemID }) else {
+            NSSound.beep()
+            return
+        }
+        reorderItem(itemID: item.itemID, toIndex: index + offset)
+    }
+
+    /// アイテムを保存順の指定位置へ動かす（ドラッグ&ドロップ・Ctrl+j / Ctrl+k）
+    func reorderItem(itemID: String, toIndex: Int) {
+        guard SecureInfoEditor.canReorderItems(query: editor.query, isReadOnly: editor.isReadOnly) else {
             NSSound.beep()
             return
         }
         // reorderItems は渡した配列の内容をそのまま書き戻すため、**必ず先にコミットしてから**
         // 並びを組み立てること。順序を逆にすると、直前の編集を保存前の内容で上書きしてしまう
         commitIfNeeded()
-        guard let reordered = SecureInfoEditor.reordered(editor.items, movingItemID: item.itemID, by: offset) else {
+        guard let reordered = SecureInfoEditor.reordered(editor.items, movingItemID: itemID, toIndex: toIndex) else {
             NSSound.beep()
             return
         }
@@ -284,6 +297,8 @@ final class CPYSecureInfoSplitViewController: NSSplitViewController {
                 return
             }
             editor.setItems(service.loadAllItems())
+            // 動かしたアイテムを選んだままにする（ドロップ後に選択が飛ばない）
+            editor.selectItem(itemID: itemID)
             listViewController.reload()
         }
     }

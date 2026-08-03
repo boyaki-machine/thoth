@@ -10,12 +10,6 @@
 
 import Cocoa
 
-// MARK: - Pasteboard Type
-
-private extension NSPasteboard.PasteboardType {
-    static let clipySecureItemRow = NSPasteboard.PasteboardType("io.github.boyaki-machine.thoth.secureItemRow")
-}
-
 // MARK: - Window Controller
 
 /// セキュアアイテム管理ウィンドウのコントローラ。
@@ -99,7 +93,7 @@ final class CPYSecureItemsViewController: NSViewController {
         tableView.target = self
         tableView.usesAlternatingRowBackgroundColors = true
         tableView.allowsMultipleSelection = true
-        tableView.registerForDraggedTypes([.clipySecureItemRow])
+        tableView.registerForDraggedTypes([.thothSecureItemRow])
         tableView.setDraggingSourceOperationMask(.move, forLocal: true)
         scrollView.documentView = tableView
 
@@ -355,7 +349,7 @@ extension CPYSecureItemsViewController: NSTableViewDataSource, NSTableViewDelega
 
     func tableView(_ tableView: NSTableView, pasteboardWriterForRow row: Int) -> (NSPasteboardWriting)? {
         let pasteboardItem = NSPasteboardItem()
-        pasteboardItem.setString(String(row), forType: .clipySecureItemRow)
+        pasteboardItem.setString(String(row), forType: .thothSecureItemRow)
         return pasteboardItem
     }
 
@@ -368,7 +362,7 @@ extension CPYSecureItemsViewController: NSTableViewDataSource, NSTableViewDelega
     func tableView(_ tableView: NSTableView, acceptDrop info: NSDraggingInfo,
                    row targetRow: Int, dropOperation: NSTableView.DropOperation) -> Bool {
         let fromRows = (info.draggingPasteboard.pasteboardItems ?? [])
-            .compactMap { $0.string(forType: .clipySecureItemRow) }
+            .compactMap { $0.string(forType: .thothSecureItemRow) }
             .compactMap { Int($0) }
             .sorted()
         guard !fromRows.isEmpty else { return false }

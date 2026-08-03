@@ -27,7 +27,8 @@ import Cocoa
 /// 再利用すると「表示中（👁 ON）の状態が別のフィールドの行に残る」事故が起きうるため。
 final class SecureFieldRowView: NSView {
 
-    private enum Layout {
+    /// レイアウト定数（組み立ては +Layout.swift）
+    enum Layout {
         static let labelWidth: CGFloat    = 110
         static let spacing: CGFloat       = 8
         static let buttonSize: CGFloat    = 22
@@ -36,6 +37,12 @@ final class SecureFieldRowView: NSView {
         /// コピー ⧉ と削除 🗑 のあいだに空ける幅。
         /// 他のボタンと同じ 2pt 間隔で並べると、コピーのつもりで削除を押してしまう
         static let deleteGap: CGFloat = 10
+        /// 並べ替えの掴み手 ≡ の幅
+        static let handleWidth: CGFloat = 16
+        /// 掴み手とラベルの間隔
+        static let handleGap: CGFloat = 4
+        /// ドラッグとみなす移動量。これ未満はクリックとして扱う
+        static let dragThreshold: CGFloat = 3
     }
 
     /// マスク表示に使う伏せ字
@@ -81,6 +88,9 @@ final class SecureFieldRowView: NSView {
     private var hoverTrackingArea: NSTrackingArea?
 
     // 表示内容をユニットテストから検証できるよう internal にしている
+    /// 並べ替えの掴み手 ≡。**ここからしかドラッグを始めない**。
+    /// 行全体を掴めるようにすると、値欄のテキスト選択ドラッグと衝突する
+    let dragHandle = NSImageView()
     let labelField = NSTextField(labelWithString: "")
     let valueField = NSTextField(labelWithString: "")
     let noteTextView = NSTextView()
@@ -90,7 +100,8 @@ final class SecureFieldRowView: NSView {
     let copyButton   = NSButton()
     let deleteButton = NSButton()
 
-    private let noteScrollView = NSScrollView()
+    /// メモ用のスクロールビュー（組み立ては +Layout.swift）
+    let noteScrollView = NSScrollView()
 
     // MARK: - Init
 
@@ -195,54 +206,63 @@ final class SecureFieldRowView: NSView {
         return "\(TOTPService.groupedCode(code)) · \(remainingSeconds)s"
     }
 
-    // MARK: - UI
+    // MARK: - Dragging
 
-    private func setupUI() {
-        translatesAutoresizingMaskIntoConstraints = false
+    /// 掴み手を押した位置。ドラッグ開始の判定に使う
+    private var dragOrigin: NSPoint?
 
-        labelField.stringValue = field.label
-        labelField.textColor = .secondaryLabelColor
-        labelField.alignment = .right
-        labelField.lineBreakMode = .byTruncatingTail
-        labelField.isEditable = Self.isLabelEditable(isReadOnly: isReadOnly)
-        labelField.isBordered = false
-        labelField.drawsBackground = false
-        labelField.delegate = self
-        labelField.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(labelField)
+    /// 掴み手の上にあるクリックは自分で受け取る。
+    /// `NSImageView` は `NSControl` の一員なので、素のままだと mouseDown を
+    /// 自分で握ってしまい、ドラッグが始まらない
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard !isReadOnly, dragHandle.superview != nil else { return super.hitTest(point) }
+        let local = convert(point, from: superview)
+        return dragHandle.frame.contains(local) ? self : super.hitTest(point)
+    }
 
-        let valueContainer = makeValueContainer()
-        let buttonStack = makeButtonStack()
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        // 掴み手以外から始まったクリックには関与しない（テキスト選択などを邪魔しない）
+        guard !isReadOnly, dragHandle.superview != nil, dragHandle.frame.contains(point) else {
+            super.mouseDown(with: event)
+            return
+        }
+        dragOrigin = point
+    }
 
-        // 削除ボタンはスタックの外に置き、位置を固定する。
-        // スタックの一員のまま isHidden にすると幅が畳まれ、マウスを乗せるたびに
-        // 他のボタンが横へ動いてしまう（狙って押せなくなる）
-        let buttonStackTrailing = isReadOnly
-            ? buttonStack.trailingAnchor.constraint(equalTo: trailingAnchor)
-            : buttonStack.trailingAnchor.constraint(equalTo: deleteButton.leadingAnchor,
-                                                    constant: -Layout.deleteGap)
+    override func mouseDragged(with event: NSEvent) {
+        guard let origin = dragOrigin else {
+            super.mouseDragged(with: event)
+            return
+        }
+        let point = convert(event.locationInWindow, from: nil)
+        // わずかな手ぶれで並べ替えが始まらないよう、少し動かしてから開始する
+        guard hypot(point.x - origin.x, point.y - origin.y) >= Layout.dragThreshold else { return }
+        dragOrigin = nil
+        beginFieldDrag(with: event)
+    }
 
-        NSLayoutConstraint.activate([
-            labelField.leadingAnchor.constraint(equalTo: leadingAnchor),
-            labelField.topAnchor.constraint(equalTo: topAnchor),
-            labelField.widthAnchor.constraint(equalToConstant: Layout.labelWidth),
+    override func mouseUp(with event: NSEvent) {
+        dragOrigin = nil
+        super.mouseUp(with: event)
+    }
 
-            valueContainer.leadingAnchor.constraint(equalTo: labelField.trailingAnchor, constant: Layout.spacing),
-            valueContainer.topAnchor.constraint(equalTo: topAnchor),
-            valueContainer.bottomAnchor.constraint(equalTo: bottomAnchor),
-            valueContainer.trailingAnchor.constraint(equalTo: buttonStack.leadingAnchor, constant: -Layout.spacing),
+    /// ペイストボードに載せるのは **fieldID だけ**。値を載せると、
+    /// ドラッグ中のペイストボードを読める他のアプリへ機微情報が漏れる
+    private func beginFieldDrag(with event: NSEvent) {
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(field.fieldID, forType: .thothSecureFieldRow)
+        let draggingItem = NSDraggingItem(pasteboardWriter: pasteboardItem)
+        draggingItem.setDraggingFrame(bounds, contents: snapshotImage())
+        beginDraggingSession(with: [draggingItem], event: event, source: self)
+    }
 
-            buttonStackTrailing,
-            buttonStack.topAnchor.constraint(equalTo: topAnchor),
-            buttonStack.heightAnchor.constraint(equalToConstant: Layout.buttonSize)
-        ])
-
-        guard !isReadOnly else { return }
-        NSLayoutConstraint.activate([
-            deleteButton.trailingAnchor.constraint(equalTo: trailingAnchor),
-            deleteButton.topAnchor.constraint(equalTo: topAnchor)
-        ])
-        updateDeleteButtonVisibility()
+    private func snapshotImage() -> NSImage? {
+        guard let rep = bitmapImageRepForCachingDisplay(in: bounds) else { return nil }
+        cacheDisplay(in: bounds, to: rep)
+        let image = NSImage(size: bounds.size)
+        image.addRepresentation(rep)
+        return image
     }
 
     // MARK: - Delete button
@@ -259,7 +279,7 @@ final class SecureFieldRowView: NSView {
         return isHovered || hasFocus
     }
 
-    private func updateDeleteButtonVisibility() {
+    func updateDeleteButtonVisibility() {
         deleteButton.isHidden = !Self.showsDeleteButton(isReadOnly: isReadOnly,
                                                         isHovered: isHovered,
                                                         hasFocus: hasEditingFocus)
@@ -317,135 +337,46 @@ final class SecureFieldRowView: NSView {
         return menu
     }
 
-    /// 値エリアを組み立てる。複数行の種別だけスクロール付きの NSTextView にする
-    private func makeValueContainer() -> NSView {
-        guard field.kind.isMultiline else {
-            // 編集できない状態でも選択・コピーはできるようにする
-            valueField.isSelectable = true
-            valueField.lineBreakMode = .byTruncatingTail
-            valueField.delegate = self
-            valueField.translatesAutoresizingMaskIntoConstraints = false
-            addSubview(valueField)
-            valueField.heightAnchor.constraint(equalToConstant: Layout.singleLineHeight).isActive = true
-            return valueField
-        }
-
-        noteTextView.isSelectable = true
-        noteTextView.isRichText = false
-        // 打鍵単位の取り消しは AppKit に任せる（既定は false で ⌘Z が効かない）。
-        // 単一行のフィールドはウィンドウ共有のフィールドエディタが同じ役目を持つ。
-        // 行ビューは使い捨てなので、行を作り直せば打鍵の履歴も一緒に消える
-        noteTextView.allowsUndo = true
-        noteTextView.delegate = self
-        // メモは URL 等を自動リンク化せずそのまま見せる（誤操作で外部アプリが開くのを避ける）
-        noteTextView.isAutomaticLinkDetectionEnabled = false
-        noteTextView.enabledTextCheckingTypes = 0
-        noteTextView.drawsBackground = false
-        noteTextView.textColor = .labelColor
-
-        // コードから生成した NSTextView は、Interface Builder の「Text View」と違い
-        // スクロールビューへの載せ方が自動設定されない。この 5 行が無いと
-        // 本文が折り返されず、行数に応じたスクロールもできない
-        noteTextView.minSize = NSSize(width: 0, height: 0)
-        noteTextView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude,
-                                      height: CGFloat.greatestFiniteMagnitude)
-        noteTextView.isVerticallyResizable = true
-        noteTextView.isHorizontallyResizable = false
-        noteTextView.autoresizingMask = .width
-        noteTextView.textContainer?.widthTracksTextView = true
-        noteTextView.textContainer?.containerSize = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
-
-        noteScrollView.documentView = noteTextView
-        noteScrollView.hasVerticalScroller = true
-        noteScrollView.borderType = .bezelBorder
-        noteScrollView.drawsBackground = false
-        noteScrollView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(noteScrollView)
-        noteScrollView.heightAnchor.constraint(equalToConstant: Layout.noteHeight).isActive = true
-        return noteScrollView
-    }
-
-    /// 種別に応じたボタン列を組み立てる
-    private func makeButtonStack() -> NSStackView {
-        for button in [maskButton, revealButton, openButton, copyButton, deleteButton] {
-            button.bezelStyle = .smallSquare
-            button.isBordered = false
-            button.translatesAutoresizingMaskIntoConstraints = false
-            button.widthAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
-            button.heightAnchor.constraint(equalToConstant: Layout.buttonSize).isActive = true
-        }
-
-        maskButton.image = NSImage(systemSymbolName: field.isPassword ? "lock.fill" : "lock.open",
-                                   accessibilityDescription: nil)
-        maskButton.toolTip = L10n.secureInfoToggleMask
-        maskButton.target = self
-        maskButton.action = #selector(maskTapped)
-
-        deleteButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
-        deleteButton.toolTip = L10n.secureInfoRemoveField
-        deleteButton.target = self
-        deleteButton.action = #selector(deleteTapped)
-
-        revealButton.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
-        revealButton.toolTip = L10n.secureInfoRevealValue
-        revealButton.target = self
-        revealButton.action = #selector(revealTapped)
-
-        openButton.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
-        openButton.toolTip = L10n.secureInfoOpenURL
-        openButton.target = self
-        openButton.action = #selector(openTapped)
-
-        copyButton.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
-        copyButton.toolTip = L10n.secureInfoCopyValue
-        copyButton.target = self
-        copyButton.action = #selector(copyTapped)
-
-        // 種別ごとに使えないボタンは並べない（押せないボタンを見せない）。
-        // 削除ボタンだけはスタックに入れず、setupUI が余白を空けて別に配置する
-        var buttons: [NSView] = []
-        if field.kind.allowsPasswordToggle && !isReadOnly { buttons.append(maskButton) }
-        if field.isPassword && field.kind.allowsPasswordToggle { buttons.append(revealButton) }
-        if field.kind == .url { buttons.append(openButton) }
-        buttons.append(copyButton)
-        if !isReadOnly { addSubview(deleteButton) }
-
-        let stack = NSStackView(views: buttons)
-        stack.orientation = .horizontal
-        stack.spacing = 2
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stack)
-        return stack
-    }
-
     // MARK: - Actions
 
-    @objc private func revealTapped() {
+    @objc func revealTapped() {
         toggleReveal()
     }
 
-    @objc private func openTapped() {
+    @objc func openTapped() {
         onOpenURL?(self)
     }
 
-    @objc private func copyTapped() {
+    @objc func copyTapped() {
         onCopy?(self)
     }
 
-    @objc private func maskTapped() {
+    @objc func maskTapped() {
         onMaskToggled?(self, !field.isPassword)
     }
 
-    @objc private func deleteTapped() {
+    @objc func deleteTapped() {
         onDelete?(self)
     }
 
-    @objc private func moveUpSelected() {
+    @objc func moveUpSelected() {
         onMove?(self, -1)
     }
 
-    @objc private func moveDownSelected() {
+    @objc func moveDownSelected() {
         onMove?(self, 1)
+    }
+}
+
+// MARK: - NSDraggingSource
+
+extension SecureFieldRowView: NSDraggingSource {
+
+    /// **アプリ内の並べ替えだけを許す。** 行を他のアプリへ引き出せると、
+    /// ペイストボード経由で機微情報が渡る余地を作ってしまう
+    func draggingSession(_ session: NSDraggingSession,
+                         sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        return context == .withinApplication ? .move : []
     }
 }
 

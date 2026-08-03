@@ -197,6 +197,23 @@ final class SecureInfoEditor {
         return reordered(items, movingItemID: movingItemID, toIndex: index + offset)
     }
 
+    /// 一覧をドラッグ&ドロップで並べ替えてよいか（純粋関数）。
+    ///
+    /// **絞り込み中は許さない。** 見えている順と保存順が一致しないため、
+    /// 行番号から正しい移動先を決められない（キー操作の並べ替えも同じ理由で止めている）
+    static func canReorderItems(query: String, isReadOnly: Bool) -> Bool {
+        return !isReadOnly && query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    /// NSTableView のドロップ位置を、移動後の配列に対する添字へ直す（純粋関数）。
+    ///
+    /// `proposedRow` は**取り除く前の配列**に対する挿入位置なので、
+    /// 下方向へ動かす場合は自分が抜けたぶん 1 つ手前になる。
+    /// ここを間違えると 1 行ずつずれて落ちる
+    static func dropDestinationIndex(fromRow: Int, proposedRow: Int) -> Int {
+        return fromRow < proposedRow ? proposedRow - 1 : proposedRow
+    }
+
     /// アイテムを指定位置へ動かした並びを返す（ドラッグ&ドロップ用の純粋関数）。
     /// 範囲外・移動なし・対象が見つからない場合は nil
     static func reordered(_ items: [SecureMenuItem], movingItemID: String, toIndex destination: Int) -> [SecureMenuItem]? {
