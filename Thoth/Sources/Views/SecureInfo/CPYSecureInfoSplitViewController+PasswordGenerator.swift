@@ -16,9 +16,10 @@ import Cocoa
 // その間パスワードがクリップボードに乗り続けるうえ、貼り付け先を取り違える事故も
 // 起こりうる。ここではモデル（作業コピー）を通して直接入れる。
 //
-// 入力先は「直前にフォーカスが入っていたフィールド」。ボタンを押した時点では
-// すでに編集が終わっているため、押されてから探しに行っても間に合わない
-// （記録は `CPYSecureInfoDetailViewController.fillTargetFieldID`）。
+// **入力先はシート上の「入力先」ポップアップで選ばせる。** 直前のフォーカスから
+// 推測する作りにしていたが、マスク中の値欄はクリックしても編集が始まらないため
+// フォーカスが記録されず、結局どの欄に入るのか利用者から見えなかった
+// （詳しくは `CPYSecureInfoDetailViewController.fillCandidates`）。
 extension CPYSecureInfoSplitViewController {
 
     /// パスワード生成シートを開く（既存の生成画面を再利用する）
@@ -28,13 +29,25 @@ extension CPYSecureInfoSplitViewController {
         // 保存と、生成値の反映が前後して取り違えるのを防ぐ
         view.window?.makeFirstResponder(nil)
         let generator = CPYPasswordGeneratorViewController()
-        // 入力先が無ければ設定しない。生成シートは従来どおりコピー専用で開く
-        if let fieldID = detailViewController.fillTargetRow?.field.fieldID {
-            generator.onUse = { [weak self] password in
-                self?.applyGeneratedPassword(password, toFieldID: fieldID)
-            }
+        // 候補が無ければ渡さない。生成シートは従来どおりコピー専用で開く
+        generator.fillDestinations = detailViewController.fillCandidates.map {
+            CPYPasswordGeneratorViewController.FillDestination(
+                fieldID: $0.field.fieldID,
+                title: Self.destinationTitle(for: $0.field))
+        }
+        generator.preferredDestinationID = detailViewController.preferredFillFieldID
+        generator.onUse = { [weak self] password, fieldID in
+            self?.applyGeneratedPassword(password, toFieldID: fieldID)
         }
         presentAsSheet(generator)
+    }
+
+    /// 入力先ポップアップに出す名前（純粋関数のためユニットテスト可能）。
+    /// ラベルが空のフィールドでも選べるよう、空なら種別の既定名で代替する
+    static func destinationTitle(for field: SecureMenuItem.Field) -> String {
+        let label = field.label.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard label.isEmpty else { return label }
+        return field.isPassword ? L10n.secureFieldDefaultLabelPassword : L10n.secureFieldDefaultLabelText
     }
 
     /// 生成したパスワードをフィールドへ反映する。

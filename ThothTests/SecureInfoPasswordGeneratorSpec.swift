@@ -10,6 +10,8 @@ import AppKit
 // こちらは選択中のフィールドへ直接入れるので、そのぶん
 // 「どの行が入力先か」「マスク中でも入るか」を落とさず担保する必要がある。
 
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class SecureInfoPasswordGeneratorSpec: QuickSpec {
 
     private static let testKeychainService = "io.github.boyaki-machine.ThothTests.SecureInfoPasswordGenerator"
@@ -17,6 +19,7 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
     override class func spec() {
         acceptanceSpecs()
         fillTargetSpecs()
+        preferredDestinationSpecs()
         applySpecs()
         generatorSheetSpecs()
     }
@@ -58,10 +61,13 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
 
     // MARK: - 入力先の記憶
 
-    /// ボタンを押した時点では編集が終わっていて first responder が行から離れている。
-    /// 「直前にフォーカスが入っていた行」を覚えておかないと入力先が分からなくなる
+    /// **入力先は推測しない。** 候補を全部出して選ばせる。
+    /// 以前はフォーカスや「マスク指定が 1 つだけか」から推測していたが、
+    /// マスク中の値欄はクリックしても編集が始まらずフォーカスが記録されないうえ、
+    /// マスク欄は空でも •••••••• と表示されて入ったか確かめられないため、
+    /// 取り違えにも気づけなかった
     private static func fillTargetSpecs() {
-        describe("入力先の記憶") {
+        describe("入力先の候補") {
 
             /// 行を組み立てた右ペインを作る
             func makeDetailViewController() -> CPYSecureInfoDetailViewController {
@@ -76,66 +82,110 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                 return detailViewController
             }
 
-            it("覚えた ID から行を解決する") {
+            // マスクの有無で候補を絞らない。テキスト欄へ入れたい場面もある
+            it("受け取れるフィールドをすべて画面順で候補にする") {
                 let detailViewController = makeDetailViewController()
-                detailViewController.fillTargetFieldID = "f2"
-                expect(detailViewController.fillTargetRow?.field.fieldID) == "f2"
+                expect(detailViewController.fillCandidates.map { $0.field.fieldID }) == ["f1", "f2"]
             }
 
-            // マスク中の値欄はクリックしても編集が始まらないため、素直に
-            // パスワード欄を触ったユーザーには入力先が記録されない。
-            // ラベルを選ばないと使えない機能にしないための逃げ道
-            it("覚えが無くても、マスク指定が 1 つならそこへ入れる") {
-                let detailViewController = makeDetailViewController()
-                expect(detailViewController.fillTargetFieldID) == nil
-                expect(detailViewController.fillTargetRow?.field.fieldID) == "f2"
-            }
-
-            // どちらのパスワードを潰すかを間違えると取り返しがつきにくい
-            it("マスク指定が複数あるときは推測しない") {
+            // パスワード欄が 2 つあっても導線は消えない（以前はここで消えていた）
+            it("マスク指定が複数あっても候補は残る") {
                 let detailViewController = CPYSecureInfoDetailViewController()
                 _ = detailViewController.view
                 detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
                     SecureMenuItem.Field(fieldID: "p1", label: "Password", value: "a", isPassword: true),
                     SecureMenuItem.Field(fieldID: "p2", label: "Recovery", value: "b", isPassword: true)
                 ]))
-                expect(detailViewController.fillTargetRow) == nil
+                expect(detailViewController.fillCandidates.map { $0.field.fieldID }) == ["p1", "p2"]
             }
 
-            it("マスク指定が 1 つも無ければ推測しない") {
+            // テキスト欄しか無くても使える（以前はここでも消えていた）
+            it("マスク指定が 1 つも無くても候補は残る") {
                 let detailViewController = CPYSecureInfoDetailViewController()
                 _ = detailViewController.view
                 detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
                     SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
                 ]))
-                expect(detailViewController.fillTargetRow) == nil
+                expect(detailViewController.fillCandidates.map { $0.field.fieldID }) == ["f1"]
             }
 
-            // 行ビューは並べ替え・マスク切替のたびに作り直される。
-            // ビュー参照ではなく ID で覚えているので、作り直しても解決できる
-            it("行を作り直しても解決し直せる") {
+            it("TOTP とメモは候補にしない") {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "t1", label: "TOTP", value: "JBSWY3DPEHPK3PXP",
+                                         isPassword: false, kind: .totp),
+                    SecureMenuItem.Field(fieldID: "n1", label: "Memo", value: "hello",
+                                         isPassword: false, kind: .note)
+                ]))
+                expect(detailViewController.fillCandidates.isEmpty) == true
+            }
+
+            it("読み取り専用では候補にしない") {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.isReadOnly = true
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f2", label: "Password", value: "old", isPassword: true)
+                ]))
+                expect(detailViewController.fillCandidates.isEmpty) == true
+            }
+
+        }
+    }
+
+    /// 初期選択はあくまで手掛かり。外れていても画面上で選び直せる
+    private static func preferredDestinationSpecs() {
+        describe("入力先の初期選択") {
+
+            func makeDetailViewController() -> CPYSecureInfoDetailViewController {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice"),
+                    SecureMenuItem.Field(fieldID: "f2", label: "Password", value: "old", isPassword: true),
+                    SecureMenuItem.Field(fieldID: "f3", label: "TOTP", value: "JBSWY3DPEHPK3PXP",
+                                         isPassword: false, kind: .totp)
+                ]))
+                return detailViewController
+            }
+
+            // 直前に編集していた欄は初期選択の手掛かりにするだけ。
+            // 記録が無くても候補が消えないことが、以前との一番の違い
+            it("直前に編集していた欄を初期選択にする") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "f2"
-                let before = detailViewController.fillTargetRow
-                detailViewController.show(item: detailViewController.displayedItem)
-                let after = detailViewController.fillTargetRow
-                expect(after?.field.fieldID) == "f2"
-                // 作り直されているので別インスタンスになっている
-                expect(after !== before) == true
+                expect(detailViewController.preferredFillFieldID) == "f2"
             }
 
-            // 覚えていた行が使えない場合は、覚えを捨てて通常の判断に落ちる。
-            // TOTP の secret を生成値で潰さないことがここの要点
-            it("受け取れない種別を覚えていたら、それは入力先にしない") {
+            // ID 欄が既定になっていると、生成値で誤って潰しやすい
+            it("覚えが無ければマスク指定の先頭を初期選択にする") {
+                let detailViewController = makeDetailViewController()
+                expect(detailViewController.fillTargetFieldID) == nil
+                expect(detailViewController.preferredFillFieldID) == "f2"
+            }
+
+            it("マスク指定が無ければ初期選択も無い（候補は残る）") {
+                let detailViewController = CPYSecureInfoDetailViewController()
+                _ = detailViewController.view
+                detailViewController.show(item: SecureMenuItem(itemID: "s1", title: "GitHub", fields: [
+                    SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
+                ]))
+                expect(detailViewController.preferredFillFieldID) == nil
+                expect(detailViewController.fillCandidates.isEmpty) == false
+            }
+
+            // TOTP の secret を生成値で潰さないための境界
+            it("受け取れない種別を覚えていたら初期選択に使わない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "f3"   // TOTP
-                expect(detailViewController.fillTargetRow?.field.fieldID) != "f3"
+                expect(detailViewController.preferredFillFieldID) != "f3"
             }
 
-            it("消えたフィールドを覚えていたら、それは入力先にしない") {
+            it("消えたフィールドを覚えていたら初期選択に使わない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "missing"
-                expect(detailViewController.fillTargetRow?.field.fieldID) != "missing"
+                expect(detailViewController.preferredFillFieldID) != "missing"
             }
 
             // 別のアイテムの値へ生成値を撃ち込まないための境界
@@ -146,12 +196,10 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                     SecureMenuItem.Field(fieldID: "f9", label: "Password", value: "x", isPassword: true)
                 ]))
                 expect(detailViewController.fillTargetFieldID) == nil
-                // 移った先のフィールドだけが候補になる（前のアイテムの f2 は残らない）
-                expect(detailViewController.fillTargetRow?.field.fieldID) == "f9"
+                expect(detailViewController.fillCandidates.map { $0.field.fieldID }) == ["f9"]
             }
 
-            // フィールドの追加・削除・並べ替え・マスク切替でも show(item:) を通る。
-            // ここで忘れてしまうと、行を動かした直後に入力先を選び直す羽目になる
+            // フィールドの追加・削除・並べ替え・マスク切替でも show(item:) を通る
             it("同じアイテムの中の作り直しでは忘れない") {
                 let detailViewController = makeDetailViewController()
                 detailViewController.fillTargetFieldID = "f2"
@@ -159,8 +207,19 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
                     SecureMenuItem.Field(fieldID: "f2", label: "Password", value: "old", isPassword: true),
                     SecureMenuItem.Field(fieldID: "f1", label: "ID", value: "alice")
                 ]))
-                expect(detailViewController.fillTargetFieldID) == "f2"
-                expect(detailViewController.fillTargetRow?.field.fieldID) == "f2"
+                expect(detailViewController.preferredFillFieldID) == "f2"
+            }
+
+            // ラベルが空でもポップアップから選べる必要がある
+            it("ラベルが空なら種別の既定名で表示する") {
+                let masked = SecureMenuItem.Field(label: "  ", value: "", isPassword: true)
+                let plain  = SecureMenuItem.Field(label: "", value: "", isPassword: false)
+                expect(CPYSecureInfoSplitViewController.destinationTitle(for: masked))
+                    == L10n.secureFieldDefaultLabelPassword
+                expect(CPYSecureInfoSplitViewController.destinationTitle(for: plain))
+                    == L10n.secureFieldDefaultLabelText
+                let named = SecureMenuItem.Field(label: "Password", value: "", isPassword: true)
+                expect(CPYSecureInfoSplitViewController.destinationTitle(for: named)) == "Password"
             }
         }
     }
@@ -289,7 +348,7 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
 
                 let saved = service.loadAllItems().first { $0.itemID == "s1" }
                 expect(saved?.fields.contains { $0.fieldID == "f2" }) == true
-                expect(detail.fillTargetRow?.field.fieldID) == "f2"
+                expect(detail.fillCandidates.map { $0.field.fieldID }).to(contain("f2"))
             }
 
             it("⌘Z で生成前の値へ戻せる") {
@@ -307,32 +366,80 @@ class SecureInfoPasswordGeneratorSpec: QuickSpec {
 
     // MARK: - 生成シート側
 
-    /// 「この項目に入力」は入力先を持つ呼び出しでだけ出す。
+    /// 入力先の選択とボタンの出し入れ。
     /// 独立ウィンドウや指紋パスワード管理から開いたときに出てしまうと、
     /// 押しても何も起きないボタンになる
     private static func generatorSheetSpecs() {
-        describe("生成シートの「この項目に入力」") {
+        describe("生成シートの入力先") {
 
-            it("onUse が無ければ出さない") {
+            let destinations = [
+                CPYPasswordGeneratorViewController.FillDestination(fieldID: "f1", title: "ID"),
+                CPYPasswordGeneratorViewController.FillDestination(fieldID: "f2", title: "Password")
+            ]
+
+            it("候補が無ければ入力の導線を出さない") {
                 let generator = CPYPasswordGeneratorViewController()
+                _ = generator.view
+                expect(generator.useButton.isHidden) == true
+                expect(generator.destinationPopUp.isHidden) == true
+            }
+
+            it("候補があれば入力の導線を出す") {
+                let generator = CPYPasswordGeneratorViewController()
+                generator.fillDestinations = destinations
+                generator.onUse = { _, _ in }
+                _ = generator.view
+                expect(generator.useButton.isHidden) == false
+                expect(generator.destinationPopUp.isHidden) == false
+                expect(generator.destinationPopUp.itemTitles) == ["ID", "Password"]
+            }
+
+            // onUse を渡さない呼び出し（独立ウィンドウ）では出さない
+            it("受け取り口が無ければ候補があっても出さない") {
+                let generator = CPYPasswordGeneratorViewController()
+                generator.fillDestinations = destinations
                 _ = generator.view
                 expect(generator.useButton.isHidden) == true
             }
 
-            it("onUse があれば出す") {
+            it("覚えている欄を初期選択にする") {
                 let generator = CPYPasswordGeneratorViewController()
-                generator.onUse = { _ in }
+                generator.fillDestinations = destinations
+                generator.preferredDestinationID = "f2"
+                generator.onUse = { _, _ in }
                 _ = generator.view
-                expect(generator.useButton.isHidden) == false
+                expect(generator.selectedDestination?.fieldID) == "f2"
             }
 
-            // loadView() より後に onUse を設定しても取りこぼさない
+            it("覚えが無ければ先頭を選ぶ") {
+                let generator = CPYPasswordGeneratorViewController()
+                generator.fillDestinations = destinations
+                generator.onUse = { _, _ in }
+                _ = generator.view
+                expect(generator.selectedDestination?.fieldID) == "f1"
+            }
+
+            // ラベルが同名でも取り違えないよう、選択は添字で解決する
+            it("同名のラベルでも添字で取り違えない") {
+                let generator = CPYPasswordGeneratorViewController()
+                generator.fillDestinations = [
+                    CPYPasswordGeneratorViewController.FillDestination(fieldID: "a", title: "Password"),
+                    CPYPasswordGeneratorViewController.FillDestination(fieldID: "b", title: "Password")
+                ]
+                generator.onUse = { _, _ in }
+                _ = generator.view
+                generator.destinationPopUp.selectItem(at: 1)
+                expect(generator.selectedDestination?.fieldID) == "b"
+            }
+
+            // loadView() より後に候補を設定しても取りこぼさない
             it("表示直前の設定にも追従する") {
                 let generator = CPYPasswordGeneratorViewController()
                 _ = generator.view
                 expect(generator.useButton.isHidden) == true
-                generator.onUse = { _ in }
-                generator.updateUseButtonVisibility()
+                generator.fillDestinations = destinations
+                generator.onUse = { _, _ in }
+                generator.reloadFillDestinations()
                 expect(generator.useButton.isHidden) == false
             }
         }

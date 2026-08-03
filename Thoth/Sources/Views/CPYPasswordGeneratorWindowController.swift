@@ -45,20 +45,36 @@ final class CPYPasswordGeneratorWindowController: NSWindowController {
 /// 文字種: [x] 半角英字  [x] 数字
 ///         [ ] 記号      [x] 大文字小文字を区別
 ///         [ ] 入力しやすいパスワード
-/// [この項目に入力]      [パスワード生成] [コピー] [閉じる]
+/// 入力先: [ パスワード ▾ ] [この項目に入力]   [生成] [コピー] [閉じる]
 /// ```
-/// 左端の「この項目に入力」は `onUse` が設定されているときだけ出る。
+/// 「入力先」と「この項目に入力」は `fillDestinations` を渡した呼び出し元にだけ出る。
 final class CPYPasswordGeneratorViewController: NSViewController {
 
-    /// 生成したパスワードを呼び出し元へ渡す。
+    /// 生成値の入力先候補（画面に出す順に渡す）
+    struct FillDestination: Equatable {
+        let fieldID: String
+        /// ポップアップに出す名前（フィールドのラベル）
+        let title: String
+    }
+
+    /// 入力先の候補。空なら入力の導線を出さない（コピー専用）。
     ///
-    /// 設定されているときだけ「この項目に入力」ボタンが出る。独立ウィンドウ
-    /// （`CPYPasswordGeneratorWindowController.shared`）や指紋パスワード管理からの
-    /// 呼び出しでは設定しないため、それらの画面の挙動は従来どおり（コピーのみ）。
+    /// 独立ウィンドウ（`CPYPasswordGeneratorWindowController.shared`）や
+    /// 指紋パスワード管理からの呼び出しでは渡さないため、それらの挙動は
+    /// 従来どおり変わらない
+    var fillDestinations: [FillDestination] = []
+
+    /// 最初に選んでおく入力先。呼び出し元が「直前に編集していた欄」を知っている
+    /// 場合に渡す。該当が無ければ先頭を選ぶ
+    var preferredDestinationID: String?
+
+    /// 生成したパスワードと、選ばれた入力先の `fieldID` を呼び出し元へ渡す。
     ///
-    /// `presentAsSheet` より前に設定すること。表示直前にも見え方を作り直すので
-    /// `loadView()` との前後関係は問わない
-    var onUse: ((String) -> Void)?
+    /// **どこへ入れるかは画面上で選ばせる。** 呼び出し元がフォーカス等から
+    /// 推測すると、利用者から見て「どの欄に入ったのか分からない」状態になる。
+    /// マスク中の欄は空でも `••••••••` と表示され、入ったかどうかを目視で
+    /// 確かめられないため、なおさら推測に頼れない
+    var onUse: ((_ password: String, _ fieldID: String) -> Void)?
 
     private let service = PasswordGenerateService()
 
@@ -76,11 +92,20 @@ final class CPYPasswordGeneratorViewController: NSViewController {
     private let generateButton = NSButton()
     private let copyButton     = NSButton()
     private let closeButton    = NSButton()
-    /// 生成値を呼び出し元のフィールドへ入れるボタン（`onUse` があるときだけ出す）。
+    /// 生成値を選んだフィールドへ入れるボタン。
     /// 出し入れをユニットテストから検証できるよう internal にしている
     let useButton = NSButton()
+    /// 入力先を選ぶポップアップ
+    let destinationPopUp = NSPopUpButton()
+    private let destinationLabel = NSTextField(labelWithString: "")
+    /// 「入力先」の一行をまとめた入れ物。候補が無い呼び出し元では高さ 0 に畳んで、
+    /// 独立ウィンドウの見た目を従来どおりに保つ
+    private let destinationRow = NSStackView()
+    private var destinationRowHeight: NSLayoutConstraint?
 
     private static let defaultLength = 16
+    /// 「入力先」の行の高さ（候補が無いときは 0 に畳む）
+    private static let destinationRowHeightValue: CGFloat = 25
 
     override func loadView() {
         view = NSView(frame: NSRect(x: 0, y: 0, width: 440, height: 425))
@@ -89,15 +114,39 @@ final class CPYPasswordGeneratorViewController: NSViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
-        // onUse が loadView() より後に設定されていても取りこぼさない
-        updateUseButtonVisibility()
+        // 候補が loadView() より後に設定されていても取りこぼさない
+        reloadFillDestinations()
         // 表示のたびに条件に基づいた新しいパスワードを生成する
         generateAction()
     }
 
-    /// 「この項目に入力」の出し入れ。入力先を持たない呼び出し元では出さない
-    func updateUseButtonVisibility() {
-        useButton.isHidden = (onUse == nil)
+    /// 入力先ポップアップを組み立て直す。候補が無ければ入力の導線ごと隠す
+    func reloadFillDestinations() {
+        let hasDestinations = !fillDestinations.isEmpty && onUse != nil
+        destinationRow.isHidden = !hasDestinations
+        destinationRowHeight?.constant = hasDestinations ? Self.destinationRowHeightValue : 0
+        destinationLabel.isHidden = !hasDestinations
+        destinationPopUp.isHidden = !hasDestinations
+        useButton.isHidden = !hasDestinations
+        guard hasDestinations else { return }
+
+        // **`addItem(withTitle:)` は使わない。** NSPopUpButton のそれは同名の項目を
+        // 先に取り除く仕様で、「Password」が 2 つある持ち物では候補が 1 つに潰れる。
+        // メニューを直接組めば同名でも並び、選択は添字で解決できる
+        let menu = NSMenu()
+        for destination in fillDestinations {
+            menu.addItem(NSMenuItem(title: destination.title, action: nil, keyEquivalent: ""))
+        }
+        destinationPopUp.menu = menu
+        let index = fillDestinations.firstIndex { $0.fieldID == preferredDestinationID } ?? 0
+        destinationPopUp.selectItem(at: index)
+    }
+
+    /// いま選ばれている入力先（候補が無ければ nil）
+    var selectedDestination: FillDestination? {
+        let index = destinationPopUp.indexOfSelectedItem
+        guard index >= 0, index < fillDestinations.count else { return nil }
+        return fillDestinations[index]
     }
 
     /// Esc キーで閉じる
@@ -162,11 +211,11 @@ final class CPYPasswordGeneratorViewController: NSViewController {
     /// 秘匿マーカー付きコピーの自動クリア待ちを避ける）
     @objc private func useAction() {
         let password = passwordField.stringValue
-        guard !password.isEmpty else {
+        guard !password.isEmpty, let destination = selectedDestination else {
             NSSound.beep()
             return
         }
-        onUse?(password)
+        onUse?(password, destination.fieldID)
         closeSelf()
     }
 
@@ -278,13 +327,12 @@ fileprivate extension CPYPasswordGeneratorViewController {
         useButton.title = L10n.passwordGeneratorFillField
         useButton.target = self
         useButton.action = #selector(useAction)
-        updateUseButtonVisibility()
 
         [generateButton, copyButton, closeButton, useButton].forEach { button in
             button.bezelStyle = .rounded
             button.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(button)
         }
+        [generateButton, copyButton, closeButton].forEach { view.addSubview($0) }
 
         NSLayoutConstraint.activate([
             passwordField.topAnchor.constraint(equalTo: view.topAnchor, constant: 16),
@@ -323,10 +371,37 @@ fileprivate extension CPYPasswordGeneratorViewController {
             copyButton.trailingAnchor.constraint(equalTo: closeButton.leadingAnchor, constant: -8),
             copyButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor),
             generateButton.trailingAnchor.constraint(equalTo: copyButton.leadingAnchor, constant: -8),
-            generateButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor),
-
-            useButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            useButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor)
+            generateButton.bottomAnchor.constraint(equalTo: closeButton.bottomAnchor)
         ])
+
+        setupDestinationRow()
+    }
+
+    /// 「入力先」の一行を組み立てる。
+    /// ボタン列の 1 段上に置く（同じ行に並べると 440pt の幅に収まらない）。
+    /// 候補を渡されない呼び出し元では高さ 0 に畳んで、見た目を従来どおりに保つ
+    func setupDestinationRow() {
+        destinationLabel.stringValue = L10n.passwordGeneratorDestination
+        destinationRow.orientation = .horizontal
+        destinationRow.spacing = 8
+        destinationRow.translatesAutoresizingMaskIntoConstraints = false
+        [destinationLabel, destinationPopUp, useButton].forEach {
+            destinationRow.addArrangedSubview($0)
+        }
+        view.addSubview(destinationRow)
+
+        let heightConstraint = destinationRow.heightAnchor.constraint(
+            equalToConstant: Self.destinationRowHeightValue)
+        NSLayoutConstraint.activate([
+            destinationRow.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            destinationRow.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            destinationRow.topAnchor.constraint(greaterThanOrEqualTo: easyToTypeCheckbox.bottomAnchor,
+                                                constant: 8),
+            destinationRow.bottomAnchor.constraint(equalTo: closeButton.topAnchor, constant: -10),
+            destinationPopUp.widthAnchor.constraint(greaterThanOrEqualToConstant: 130),
+            heightConstraint
+        ])
+        destinationRowHeight = heightConstraint
+        reloadFillDestinations()
     }
 }

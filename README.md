@@ -107,7 +107,7 @@ Pick an item in the left pane and edit its contents in the right pane.
 2. Use **Add Field** at the bottom right to choose a kind (Text / Password / URL / Memo)
 3. Fill in the **label** (e.g. "Password") and the **value**
 4. To add TOTP, use **Add TOTP...** to import an otpauth URI / QR code
-5. Use **Password Generator...** (**⌘G**) to create a password. If you were editing a field just before, **Fill This Field** in the generator puts the value straight into it — never through the clipboard
+5. Use **Password Generator...** (**⌘G**) to create a password. Pick the target in **Fill into**, then **Fill This Field** writes it straight into that field — never through the clipboard
 6. Edits are saved automatically (**⌘S** saves explicitly)
 
 Export / Import live in the **⚙** menu at the bottom of the left pane, together with undo / redo.
@@ -157,7 +157,7 @@ Choose **Generate New Password** from the main menu (also launchable with the `p
 - **Copy** puts the result on the clipboard (with a concealed marker; auto-cleared after a while)
 - A **QR code** of the generated password is shown below the result so you can photograph it with your smartphone (see ["Passing the fingerprint password via QR code" in 2-4](#passing-the-fingerprint-password-via-qr-code))
 
-Password generation can also be invoked from the Secure Info window (**Password Generator...** / **⌘G**) and the fingerprint-password management window. Opened from the Secure Info window, the generator gains a **Fill This Field** button that writes the value directly into the field you were editing.
+Password generation can also be invoked from the Secure Info window (**Password Generator...** / **⌘G**) and the fingerprint-password management window. Opened from the Secure Info window, the generator gains a **Fill into** picker and a **Fill This Field** button that writes the value directly into the field you choose.
 
 ### 2-4. File Encryption / Decryption
 

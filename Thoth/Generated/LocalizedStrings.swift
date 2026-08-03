@@ -170,6 +170,8 @@ internal enum L10n {
   internal static let passwordDistinguishCase = L10n.tr("Localizable", "Password Distinguish Case")
   /// Password Generator
   internal static let passwordGenerator = L10n.tr("Localizable", "Password Generator")
+  /// Fill into:
+  internal static let passwordGeneratorDestination = L10n.tr("Localizable", "Password Generator Destination")
   /// Fill This Field
   internal static let passwordGeneratorFillField = L10n.tr("Localizable", "Password Generator Fill Field")
   /// Length:

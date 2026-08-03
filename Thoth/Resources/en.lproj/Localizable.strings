@@ -181,6 +181,8 @@
 
 "Password Generator Fill Field" = "Fill This Field";
 
+"Password Generator Destination" = "Fill into:";
+
 "Password Length" = "Length:";
 
 "Character Types" = "Character Types:";
