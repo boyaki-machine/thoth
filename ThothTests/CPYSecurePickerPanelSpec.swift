@@ -620,17 +620,17 @@ class CPYSecurePickerPanelSpec: QuickSpec {
                 let panel = makePagedPanel(itemCount: 25)
                 panel.currentPage = 2
                 panel.rebuildRows()
-                expect(parentTitles(panel).isEmpty) == false
+                expect(parentTitles(panel)).toNot(beEmpty())
 
                 panel.searchField.stringValue = "Item 1"
                 panel.rebuildRows()
-                expect(parentTitles(panel).isEmpty) == false
+                expect(parentTitles(panel)).toNot(beEmpty())
                 panel.close()
             }
 
             it("アイテムが 0 件でもセキュア情報確認の行だけは残る") {
                 let panel = makePagedPanel(itemCount: 0)
-                expect(parentTitles(panel).isEmpty) == true
+                expect(parentTitles(panel)).to(beEmpty())
                 expect(panel.rows.contains { if case .manage = $0 { return true } else { return false } }) == true
                 panel.close()
             }

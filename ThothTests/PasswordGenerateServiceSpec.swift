@@ -2,6 +2,12 @@ import Quick
 import Nimble
 @testable import Thoth
 
+// パスワード生成（`PasswordGenerateService`）の条件と出力の対応。
+//
+// 生成結果は乱数なので値そのものは固定できない。代わりに「許した文字種だけで
+// できているか」「長さが指定どおりか」「条件が不正なら nil を返すか」という
+// 不変条件で確かめる。確率的に落ちないよう、文字種の検証は 64〜128 文字で行う
+// （例: 大文字が 1 つも出ない確率は (1/2)^64）。
 class PasswordGenerateServiceSpec: QuickSpec {
 
     private static let service = PasswordGenerateService()
@@ -75,7 +81,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
     private static func characterTypeSpecs() {
         describe("Character types") {
 
-            it("Digits only") {
+            it("Digits only: the password consists solely of digits") {
                 let conditions = self.makeConditions(length: 64, useLetters: false, useDigits: true, useSymbols: false)
                 let password = self.service.generatePassword(conditions: conditions) ?? ""
                 let digits = CharacterSet(charactersIn: "0123456789")
@@ -101,7 +107,7 @@ class PasswordGenerateServiceSpec: QuickSpec {
                 expect(password.contains { $0.isLowercase }) == true
             }
 
-            it("Symbols only") {
+            it("Symbols only: the password consists solely of symbols and keeps the requested length") {
                 let conditions = self.makeConditions(length: 64, useLetters: false, useDigits: false, useSymbols: true)
                 let password = self.service.generatePassword(conditions: conditions) ?? ""
                 let symbols = CharacterSet(charactersIn: PasswordGenerateService.symbols)

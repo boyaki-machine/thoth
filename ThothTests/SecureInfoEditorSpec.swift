@@ -56,7 +56,10 @@ class SecureInfoEditorSpec: QuickSpec {
 
             it("フィールドを削除できる") {
                 let editor = editorEditingFirstItem()
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.removeField(fieldID: fieldID)) == true
                 expect(editor.draft?.fields.map { $0.label }) == ["Password"]
                 expect(editor.isDirty) == true
@@ -78,7 +81,10 @@ class SecureInfoEditorSpec: QuickSpec {
 
             it("フィールドを上下に動かせる") {
                 let editor = editorEditingFirstItem()
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.moveField(fieldID: fieldID, by: 1)) == true
                 expect(editor.draft?.fields.map { $0.label }) == ["Password", "ID"]
                 expect(editor.moveField(fieldID: fieldID, by: -1)) == true
@@ -89,7 +95,10 @@ class SecureInfoEditorSpec: QuickSpec {
             it("端を越える移動は無視される") {
                 let editor = editorEditingFirstItem()
                 guard let firstID = editor.draft?.fields.first?.fieldID,
-                      let lastID = editor.draft?.fields.last?.fieldID else { return }
+                      let lastID = editor.draft?.fields.last?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.moveField(fieldID: firstID, by: -1)) == false
                 expect(editor.moveField(fieldID: lastID, by: 1)) == false
                 expect(editor.isDirty) == false
@@ -98,7 +107,10 @@ class SecureInfoEditorSpec: QuickSpec {
 
             it("移動量 0 は無視される") {
                 let editor = editorEditingFirstItem()
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.moveField(fieldID: fieldID, by: 0)) == false
                 expect(editor.isDirty) == false
             }
@@ -107,7 +119,10 @@ class SecureInfoEditorSpec: QuickSpec {
             it("並べ替えてもフィールドの中身は保たれる") {
                 let editor = makeEditor()
                 editor.beginEditing(itemID: "aws")
-                guard let totpID = editor.draft?.fields.last?.fieldID else { return }
+                guard let totpID = editor.draft?.fields.last?.fieldID else {
+                    fail("作業コピーに TOTP フィールドが無い")
+                    return
+                }
                 let before = editor.draft?.fields.last
                 expect(editor.moveField(fieldID: totpID, by: -1)) == true
                 let after = editor.draft?.fields.first
@@ -121,7 +136,10 @@ class SecureInfoEditorSpec: QuickSpec {
                 let editor = editorEditingFirstItem()
                 editor.isReadOnly = true
                 expect(editor.addField(kind: .url, label: "URL")?.label) == nil
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.removeField(fieldID: fieldID)) == false
                 expect(editor.moveField(fieldID: fieldID, by: 1)) == false
                 expect(editor.isDirty) == false
@@ -203,8 +221,8 @@ class SecureInfoEditorSpec: QuickSpec {
 
             it("初期ラベルが空でない") {
                 for template in SecureInfoFieldTemplate.allCases {
-                    expect(template.defaultLabel.isEmpty) == false
-                    expect(template.menuTitle.isEmpty) == false
+                    expect(template.defaultLabel).toNot(beEmpty())
+                    expect(template.menuTitle).toNot(beEmpty())
                 }
             }
 
@@ -340,7 +358,10 @@ class SecureInfoEditorSpec: QuickSpec {
                 let editor = editorEditingFirstItem()
                 editor.isReadOnly = true
                 expect(editor.updateTitle("x")) == false
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 expect(editor.updateField(fieldID: fieldID, value: "x")) == false
                 expect(editor.isDirty) == false
             }
@@ -415,7 +436,10 @@ class SecureInfoEditorSpec: QuickSpec {
             // v1.2 以前の編集シートから引き継いだ規則
             it("ラベルも値も空のフィールドは保存対象から外す") {
                 let editor = editorEditingFirstItem()
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 _ = editor.updateField(fieldID: fieldID, label: "", value: "")
                 guard case .ready(let payload) = editor.commitOutcome() else {
                     fail("expected ready")
@@ -427,7 +451,10 @@ class SecureInfoEditorSpec: QuickSpec {
 
             it("ラベルだけ・値だけが残っているフィールドは保存する") {
                 let editor = editorEditingFirstItem()
-                guard let fieldID = editor.draft?.fields.first?.fieldID else { return }
+                guard let fieldID = editor.draft?.fields.first?.fieldID else {
+                    fail("作業コピーにフィールドが無い（beginEditing が効いていない）")
+                    return
+                }
                 _ = editor.updateField(fieldID: fieldID, label: "ID", value: "")
                 guard case .ready(let payload) = editor.commitOutcome() else {
                     fail("expected ready")
@@ -454,7 +481,10 @@ class SecureInfoEditorSpec: QuickSpec {
                 let editor = editorEditingFirstItem()
                 editor.selectRow(0)
                 _ = editor.updateTitle("Renamed")
-                guard case .ready(let payload) = editor.commitOutcome() else { return }
+                guard case .ready(let payload) = editor.commitOutcome() else {
+                    fail("タイトルを変えたので .ready を期待したが違った: \(editor.commitOutcome())")
+                    return
+                }
                 editor.markCommitted(payload)
                 expect(editor.items.map { $0.itemID }) == ["github", "aws", "accounting"]
                 expect(editor.selectedItem?.itemID) == "github"
@@ -511,7 +541,7 @@ class SecureInfoEditorSpec: QuickSpec {
             it("マスクを掛けた値では検索できない") {
                 let editor = makeEditor()
                 editor.setQuery("s3cr3t")
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
             }
 
             it("メモの改行をまたいだ語でもそれぞれヒットする") {
@@ -530,7 +560,7 @@ class SecureInfoEditorSpec: QuickSpec {
             it("一語でも外れると除外される") {
                 let editor = makeEditor()
                 editor.setQuery("github totp")
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
             }
 
             it("日本語のタイトルでもヒットする") {
@@ -542,14 +572,14 @@ class SecureInfoEditorSpec: QuickSpec {
             it("ヒットしないクエリでは空になる") {
                 let editor = makeEditor()
                 editor.setQuery("no-such-item")
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
             }
 
             it("アイテムが 0 件でも破綻しない") {
                 let editor = SecureInfoEditor()
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
                 editor.setQuery("anything")
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
             }
         }
     }

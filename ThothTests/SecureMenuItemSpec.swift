@@ -212,7 +212,7 @@ class SecureMenuItemSpec: QuickSpec {
                 let item = SecureMenuItem(title: "Memo only", fields: [
                     SecureMenuItem.Field(label: "Memo", value: "note", kind: .note)
                 ])
-                expect(item.pickerFields.isEmpty) == true
+                expect(item.pickerFields).to(beEmpty())
                 // 元のフィールドは失われない
                 expect(item.fields.count) == 1
             }
@@ -272,7 +272,7 @@ class SecureMenuItemSpec: QuickSpec {
 
             it("Allow clearing the history") {
                 let updated = makeField().updating(history: [])
-                expect(updated.history.isEmpty) == true
+                expect(updated.history).to(beEmpty())
                 expect(updated.createdAt) == createdAt
             }
         }
@@ -285,7 +285,7 @@ class SecureMenuItemSpec: QuickSpec {
                 let item = SecureMenuItem(title: "GitHub")
                 expect(UUID(uuidString: item.itemID)) != nil
                 expect(item.title) == "GitHub"
-                expect(item.fields.isEmpty) == true
+                expect(item.fields).to(beEmpty())
                 expect(item.displayOrder) == 0
             }
 

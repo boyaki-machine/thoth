@@ -151,6 +151,39 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
+### Reading a test failure
+
+A failure prints three things to stdout. The log is long, so `grep -E "error:|Failing tests" -A 20` is the fastest way in.
+
+1. **Where it failed, expected vs actual** — file:line / spec / describe / it / expected / actual:
+
+   ```
+   /Users/…/ThothTests/SecureItemSearchSpec.swift:188: error: -[ThothTests.SecureItemSearchSpec 絞り込み, マスクを掛けた値では探せない] : expected to be empty, got <[GitHub, AWS Console, 社内ポータル]>
+   ```
+
+2. **The list of failing tests** (end of the log):
+
+   ```
+   Failing tests:
+       SecureItemSearchSpec.絞り込み, マスクを掛けた値では探せない()
+   ```
+
+3. **The tally** — `Executed 728 tests, with 1 failure (0 unexpected)` followed by `** TEST FAILED **`
+
+### Conventions for writing specs
+
+How useful the output above is comes down almost entirely to how the spec is written.
+
+- **Name each `it` as "condition → expected result"**, so the failure list alone tells you what broke.
+  Good: "マスクを掛けた値では探せない", "Fails to decrypt with a wrong password".
+  Avoid: "検索", "Save key combos" — names that only identify the subject.
+- **Fail loudly when a precondition breaks.** `guard let x = … else { return }` makes the test go **green without verifying anything**; use `fail(…)` before returning.
+- **Assert on contents, not booleans.** `expect(items.isEmpty) == true` prints only `expected to equal <true>, got <false>`; `expect(items).to(beEmpty())` prints the actual contents
+  (keep the boolean form when the subject is Optional — `beEmpty()` treats nil as "not empty").
+- **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
+- **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
+- **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
+
 ---
 
 ## 4. Building (CLI)

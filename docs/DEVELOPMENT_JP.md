@@ -151,6 +151,40 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 
+### 失敗したテストの読み方
+
+失敗すると標準出力に次の 3 つが出ます。ログは長いので `grep -E "error:|Failing tests" -A 20` で拾うと早いです。
+
+1. **失敗した箇所と、期待と実際** — ファイル:行 / スペック名 / describe 名 / it 名 / 期待値 / 実際の値:
+
+   ```
+   /Users/…/ThothTests/SecureItemSearchSpec.swift:188: error: -[ThothTests.SecureItemSearchSpec 絞り込み, マスクを掛けた値では探せない] : expected to be empty, got <[GitHub, AWS Console, 社内ポータル]>
+   ```
+
+2. **落ちたテストの一覧**（ログ末尾）:
+
+   ```
+   Failing tests:
+       SecureItemSearchSpec.絞り込み, マスクを掛けた値では探せない()
+   ```
+
+3. **件数の集計** — `Executed 728 tests, with 1 failure (0 unexpected)` と `** TEST FAILED **`
+
+### スペックを書くときの約束
+
+上の出力が役に立つかどうかは、スペックの書き方でほぼ決まります。
+
+- **`it` の名前は「条件 → 期待結果」で書く。** 失敗の一覧を見ただけで何が壊れたか分かるようにします。
+  良い例:「マスクを掛けた値では探せない」「10 件ちょうどではページ送りが出ない」。
+  避ける例:「検索」「Save key combos」のように対象を示すだけの名前。
+- **前提が崩れたら `fail(...)` で落とす。** `guard let x = … else { return }` と書くと、前提が崩れたときにテストが**何も検証せずに緑**になります。
+- **真偽値ではなく中身を表明する。** `expect(items.isEmpty) == true` は失敗しても `expected to equal <true>, got <false>` としか出ません。`expect(items).to(beEmpty())` なら実際の中身が出ます
+  （ただし主語が Optional のときは `beEmpty()` が nil を「空ではない」と扱うため、`expect(x?.isEmpty) == false` のままにします）。
+- **ループの中で表明するときは `description:` に反復対象を入れる。** どの入力で落ちたかが出ます
+  （例: `SecureItemSearchSpec` の「画面間で条件が揃っていること」）。
+- **ファイル冒頭に、何を・どんな前提で確かめるスペックかを書く。** 共有状態（UserDefaults・キーチェーン・Realm）を使う場合は、その後始末の約束もここに書きます。
+- **新しいテストは「実装を意図的に戻すと落ちる」ことまで確認してから積む。** 何も検出しないテストが紛れ込むのを防ぎます。
+
 ---
 
 ## 4. ビルド方法（CLI）
