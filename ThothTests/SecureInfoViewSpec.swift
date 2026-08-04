@@ -163,12 +163,12 @@ class SecureInfoViewSpec: QuickSpec {
                 _ = editor.updateTitle("Edited")
 
                 editor.clearSensitiveData()
-                expect(editor.items.isEmpty) == true
+                expect(editor.items).to(beEmpty())
                 expect(editor.draft?.itemID) == nil
                 expect(editor.isDirty) == false
                 expect(editor.selectedItemID) == nil
                 expect(editor.query) == ""
-                expect(editor.visibleItems.isEmpty) == true
+                expect(editor.visibleItems).to(beEmpty())
             }
         }
     }
@@ -501,7 +501,7 @@ class SecureInfoViewSpec: QuickSpec {
             it("選択なしでは行を出さない") {
                 let detail = makeDetail()
                 detail.show(item: nil)
-                expect(detail.fieldRows.isEmpty) == true
+                expect(detail.fieldRows).to(beEmpty())
                 expect(detail.displayedItem?.itemID) == nil
             }
 
@@ -570,7 +570,7 @@ class SecureInfoViewSpec: QuickSpec {
             it("フィールドを持たないアイテムでも破綻しない") {
                 let detail = makeDetail()
                 detail.show(item: SecureMenuItem(title: "Empty"))
-                expect(detail.fieldRows.isEmpty) == true
+                expect(detail.fieldRows).to(beEmpty())
                 expect(detail.titleField.stringValue) == "Empty"
                 expect(detail.placeholderLabel.isHidden) == true
             }

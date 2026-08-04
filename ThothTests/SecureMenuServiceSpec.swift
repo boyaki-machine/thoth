@@ -157,7 +157,7 @@ class SecureMenuServiceSpec: QuickSpec {
             it("Aborts the migration and keeps the legacy entry when it cannot be decoded") {
                 self.addLegacyEntry(account: "all-items", data: Data("not json at all".utf8))
 
-                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.loadAllItems()).to(beEmpty())
                 expect(self.service.isKeychainAccessDenied) == true
                 // 旧エントリは削除されずに残っている（あとから救出できる）
                 expect(self.legacyEntryExists(account: "all-items")) == true
@@ -211,7 +211,10 @@ class SecureMenuServiceSpec: QuickSpec {
     /// 保存済みアイテムを編集画面と同じ手順（読み込み→値変更→保存）で更新するヘルパー
     private static func changeFirstFieldValue(itemID: String, to newValue: String) {
         guard let current = self.service.loadAllItems().first(where: { $0.itemID == itemID }),
-              let field = current.fields.first else { return }
+              let field = current.fields.first else {
+            fail("更新対象のアイテム（\(itemID)）またはそのフィールドが読み出せない")
+            return
+        }
         let updatedField = SecureMenuItem.Field(fieldID: field.fieldID, label: field.label,
                                                 value: newValue, isPassword: field.isPassword,
                                                 history: field.history)
@@ -335,12 +338,12 @@ class SecureMenuServiceSpec: QuickSpec {
             // メモは長文が履歴メニューの 1 行表示を壊し、
             // 上限 10 件を推敲だけで使い切ってしまうため履歴を残さない
             it("Does not record history for note fields") {
-                expect(historyAfterValueChange(kind: .note).isEmpty) == true
+                expect(historyAfterValueChange(kind: .note)).to(beEmpty())
             }
 
             // secret が極めて機微なため、TOTP は従来どおり履歴を残さない
             it("Does not record history for totp fields") {
-                expect(historyAfterValueChange(kind: .totp).isEmpty) == true
+                expect(historyAfterValueChange(kind: .totp)).to(beEmpty())
             }
 
             it("Records history for plain fields") {
@@ -449,7 +452,7 @@ class SecureMenuServiceSpec: QuickSpec {
 
             it("空配列のまとめ保存は何もせず成功を返す") {
                 expect(self.service.save([SecureMenuItem]())) == true
-                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.loadAllItems()).to(beEmpty())
             }
 
             // 拡張種別が Keychain の保存形式（JSON）を往復しても失われないこと。
@@ -616,7 +619,7 @@ class SecureMenuServiceSpec: QuickSpec {
                 expect(self.service.save(SecureMenuItem(title: "Existing"))) == true
                 corruptUserDataEntry()
 
-                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.loadAllItems()).to(beEmpty())
                 expect(self.service.isKeychainAccessDenied) == true
             }
 
@@ -647,11 +650,11 @@ class SecureMenuServiceSpec: QuickSpec {
 
             it("Recovers once the stored data becomes readable again") {
                 corruptUserDataEntry()
-                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.loadAllItems()).to(beEmpty())
                 expect(self.service.isKeychainAccessDenied) == true
 
                 self.removeEntryDirectly(account: "user-data")
-                expect(self.service.loadAllItems().isEmpty) == true
+                expect(self.service.loadAllItems()).to(beEmpty())
                 expect(self.service.isKeychainAccessDenied) == false
                 expect(self.service.save(SecureMenuItem(title: "After recovery"))) == true
                 expect(self.service.loadAllItems().first?.title) == "After recovery"

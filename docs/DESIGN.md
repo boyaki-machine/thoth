@@ -257,9 +257,31 @@ The picker panel is only reachable after authentication, so opening the Secure I
 
 **Division of labor with the picker panel (⌘⇧.)**
 
-The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste", with no room for long text. Memo (`note`) fields are excluded from it and belong to the Secure Info window. URLs are worth pasting, so they do appear in the panel, prefixed with `🔗`.
+The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste", with no room for long text. Memo (`note`) fields are excluded from it and belong to the Secure Info window (**only from the display — they are still searched**; see "Search rules" below). URLs are worth pasting, so they do appear in the panel, prefixed with `🔗`.
 
 Which fields go into the sub-panel is decided in exactly one place: `CPYSecurePickerPanel.subPanelFields(for:)`. The `fieldIndex` recorded on selection is an index into that array, and it is also used to restore "continue-paste mode". If either the display side or the open/close check used `item.fields` directly, re-opening the panel would paste a different field.
+
+**Search rules (v1.3.1) — shared with the picker panel**
+
+Filtering lives in `SecureItemSearch` (UI-independent), and **the Secure Info window's search box and the picker panel's (⌘⇧.) behave identically**. Change the rules there and nowhere else.
+
+Up to v1.3.0 each screen had its own implementation and the rules had drifted apart: the Secure Info window matched titles, labels and memo bodies, while the picker matched titles and labels only — and its multi-word AND only applied *within a single label*. The same query surfaced an item on one screen but not the other, which reads to the user as **"the thing I saved is gone"**. Hence the unification.
+
+| Item | Treatment |
+|---|---|
+| Title, every field label | Matched |
+| Values of unmasked (🔒 off) text and URL fields | Matched — lets you find "which account was it" from a login ID or a URL's domain |
+| Memo bodies | Matched — finding an account by contract number is a real use case |
+| **Masked field values** | **Not matched** |
+| **TOTP secrets** | **Not matched** |
+| Multiple words (split on whitespace/newlines) | AND; words may match across title, labels and values ("github password") |
+| Case | Ignored |
+
+Masked values and TOTP secrets stay out because there is no use case for searching by a fragment of those, and including them would invite typing secrets into a search box that does not mask what you type. Memo is a kind with no mask concept, so its body is matched even when legacy data or an imported JSON left `isPassword` set.
+
+The per-kind rule lives in `SecureMenuItem.Field.Kind.valueSearchability`, and `Field.isValueSearchable` combines it with the mask flag. Both are `default`-less switches, so adding a kind surfaces every place that needs a decision as a compile error.
+
+**Memo fields are searched from the picker panel too, even though they are not displayed there.** Filtering only reorders which parent items are listed, and neither screen shows the matched value itself, so there is no reason to vary the target per screen — and varying it would bring back the "shows up in one screen but not the other" gap. `SecureItemSearchSpec`'s "画面間で条件が揃っていること" pins the two screens to the same results.
 
 **Why the right pane is not an NSTableView**
 
@@ -332,7 +354,7 @@ The right pane (fields) is an `NSStackView`, so this is hand-rolled. A `≡` han
 
 The pasteboard carries only the `fieldID` or the row number — **never a value** — because a drag pasteboard is readable by other apps. `draggingSession(_:sourceOperationMaskFor:)` also refuses anything but `.withinApplication`, so a row cannot be dragged out of the app.
 
-**The drag image is not a snapshot of the row.** A drag image is drawn in a system-owned window, outside this window, so `NSWindow.sharingType = .none` (which keeps the window out of screen sharing and recording) does not cover it. Snapshotting the whole row would put a password revealed with 👁 — or a memo's body — into a surface that *can* be recorded. Drawing **only the label** leaks nothing beyond what already appears in search and in the picker panel, while still showing which field is being dragged. Everything that leaves the row is decided in one place: `SecureFieldRowView.makeDraggingItem()`.
+**The drag image is not a snapshot of the row.** A drag image is drawn in a system-owned window, outside this window, so `NSWindow.sharingType = .none` (which keeps the window out of screen sharing and recording) does not cover it. Snapshotting the whole row would put a password revealed with 👁 — or a memo's body — into a surface that *can* be recorded. Drawing **only the label** leaks nothing beyond what the picker panel already displays, while still showing which field is being dragged (values are searchable, but neither screen ever displays them, so that is not a justification). Everything that leaves the row is decided in one place: `SecureFieldRowView.makeDraggingItem()`.
 
 **Import / export**
 

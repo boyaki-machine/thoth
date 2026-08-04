@@ -9,7 +9,9 @@ import Foundation
 
 /// セキュア情報確認ウィンドウの UI 非依存な状態。
 ///
-/// 一覧の絞り込みと選択の追従をここに集約し、AppKit 抜きでユニットテストできるようにする。
+/// 検索クエリの保持・絞り込み結果のキャッシュ・選択の追従をここに集約し、
+/// AppKit 抜きでユニットテストできるようにする
+/// （絞り込みの条件そのものは選択パネルと共通の `SecureItemSearch`）。
 /// ビュー側（左ペイン・右ペイン）はこのオブジェクトを共有し、表示の組み立てだけを担当する。
 final class SecureInfoEditor {
 
@@ -41,10 +43,11 @@ final class SecureInfoEditor {
         cachedVisibleItems = nil
     }
 
-    /// 現在のクエリで絞り込んだ表示対象
+    /// 現在のクエリで絞り込んだ表示対象。
+    /// 絞り込みの条件は選択パネルと共通で、`SecureItemSearch` に集約している
     var visibleItems: [SecureMenuItem] {
         if let cachedVisibleItems = cachedVisibleItems { return cachedVisibleItems }
-        let filtered = Self.filter(items, query: query)
+        let filtered = SecureItemSearch.filter(items, query: query)
         cachedVisibleItems = filtered
         return filtered
     }
@@ -289,37 +292,4 @@ final class SecureInfoEditor {
         }
     }
 
-    // MARK: - Filtering
-
-    /// クエリでアイテムを絞り込む（純粋関数）。
-    ///
-    /// 空白区切りの複数語は AND 条件、大文字小文字は無視する。
-    /// 選択パネルの絞り込みと違い、語がタイトルとラベルにまたがって一致してもよい
-    /// （"github password" のような探し方ができる）。
-    static func filter(_ items: [SecureMenuItem], query: String) -> [SecureMenuItem] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return items }
-        let terms = trimmed.lowercased().components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-        guard !terms.isEmpty else { return items }
-        return items.filter { item in
-            let haystack = searchableText(of: item)
-            return terms.allSatisfy { haystack.contains($0) }
-        }
-    }
-
-    /// 1 アイテム分の検索対象テキスト（小文字化済み）。
-    ///
-    /// 対象はタイトル・全フィールドのラベル・メモ本文。
-    /// **パスワード等の値と TOTP secret は対象外**にする。値の断片で探す用途が無いうえ、
-    /// 秘密情報を検索窓へ打たせる動機を作らないため。
-    static func searchableText(of item: SecureMenuItem) -> String {
-        var parts = [item.title]
-        for field in item.fields {
-            parts.append(field.label)
-            if field.kind == .note {
-                parts.append(field.value)
-            }
-        }
-        return parts.joined(separator: "\n").lowercased()
-    }
 }

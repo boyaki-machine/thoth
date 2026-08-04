@@ -111,7 +111,10 @@ class SecureInfoUndoSpec: QuickSpec {
 
                 let first = stack.undo(current: current)
                 expect(first?.items.map { $0.title }) == ["A", "B"]
-                guard let first = first else { return }
+                guard let first = first else {
+                    fail("1 回目の取り消しが nil を返した")
+                    return
+                }
                 let second = stack.undo(current: first)
                 expect(second?.items.map { $0.title }) == ["A"]
                 expect(stack.canUndo) == false

@@ -4,6 +4,13 @@ import Magnet
 import Carbon
 @testable import Thoth
 
+// グローバルホットキー（`HotKeyService`）の永続化と移行。
+//
+// キーの組み合わせは UserDefaults に `KeyCombo` のアーカイブとして保存する。
+// 旧 Clipy 形式（`Constants.UserDefaults.hotKeys` の辞書）からの移行は
+// `migrateNewKeyCombo` フラグで一度だけ走るため、各テストは beforeEach で
+// 関係する UserDefaults のキーを消してから始め、afterEach で後始末する
+// （UserDefaults.standard を共有するので、消し忘れると他のテストへ漏れる）。
 class HotKeyServiceSpec: QuickSpec {
     override class func spec() {
         migrateHotKeySpecs()
@@ -14,7 +21,7 @@ class HotKeyServiceSpec: QuickSpec {
     }
 
     private static func migrateHotKeySpecs() {
-        describe("Migrate HotKey") {
+        describe("旧形式からの移行（setupDefaultHotKeys）") {
 
             beforeEach {
                 let defaults = UserDefaults.standard
@@ -26,7 +33,7 @@ class HotKeyServiceSpec: QuickSpec {
                 defaults.synchronize()
             }
 
-            it("Migrate default settings") {
+            it("既定設定のまま移行すると、移行済みフラグが立ち、既定のキー組み合わせが保存される") {
                 let service = HotKeyService()
                 expect(service.mainKeyCombo) == nil
                 expect(service.historyKeyCombo) == nil
@@ -57,7 +64,7 @@ class HotKeyServiceSpec: QuickSpec {
                 expect(service.snippetKeyCombo?.keyEquivalent.uppercased()) == "B"
             }
 
-            it("Migrate customize settings") {
+            it("変更済みの旧設定を移行すると、ユーザーが設定したキー組み合わせがそのまま引き継がれる") {
                 let service = HotKeyService()
                 expect(service.mainKeyCombo) == nil
                 expect(service.historyKeyCombo) == nil
@@ -106,7 +113,7 @@ class HotKeyServiceSpec: QuickSpec {
     }
 
     private static func saveHotKeySpecs() {
-        describe("Save HotKey") {
+        describe("キー組み合わせの保存・読み出し") {
 
             beforeEach {
                 let defaults = UserDefaults.standard
@@ -117,7 +124,7 @@ class HotKeyServiceSpec: QuickSpec {
                 defaults.synchronize()
             }
 
-            it("Save key combos") {
+            it("change で指定した組み合わせが UserDefaults に保存され、nil を渡すと保存も消える") {
                 let service = HotKeyService()
                 expect(service.mainKeyCombo) == nil
                 expect(service.historyKeyCombo) == nil
@@ -168,7 +175,7 @@ class HotKeyServiceSpec: QuickSpec {
                 expect(defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.mainKeyCombo)) == nil
             }
 
-            it("Unarchive saved key combos") {
+            it("保存済みのアーカイブがあれば、起動時（setupDefaultHotKeys）にそれを読み戻す") {
                 let mainKeyCombo = KeyCombo(QWERTYKeyCode: 9, carbonModifiers: 768)
                 let historyKeyCombo = KeyCombo(doubledCocoaModifiers: .command)
                 let snippetKeyCombo = KeyCombo(QWERTYKeyCode: 0, cocoaModifiers: .shift)
@@ -217,8 +224,8 @@ class HotKeyServiceSpec: QuickSpec {
     }
 
     private static func keyCombosSpecs() {
-        describe("Key comobos") {
-            it("Default key combos") {
+        describe("既定のキー組み合わせ") {
+            it("メイン ⌘⇧V・履歴 ⌘⌃V・スニペット ⌘⇧B の keyCode と修飾キーを返す") {
                 let keyCombos = HotKeyService.defaultKeyCombos
                 let mainCombos = keyCombos[Constants.Menu.clip] as? [String: Int]
                 let historyCombos = keyCombos[Constants.Menu.history] as? [String: Int]
@@ -237,14 +244,14 @@ class HotKeyServiceSpec: QuickSpec {
     }
 
     private static func clearHistoryHotKeySpecs() {
-        describe("Clear History HotKey") {
+        describe("履歴クリアのホットキー") {
             beforeEach {
                 let defaults = UserDefaults.standard
                 defaults.removeObject(forKey: Constants.HotKey.clearHistoryKeyCombo)
                 defaults.synchronize()
             }
 
-            it("Add and remove clear history hokey") {
+            it("登録すると保存され読み戻せる。nil を渡すと登録も保存も消える") {
                 let service = HotKeyService()
 
                 expect(service.clearHistoryKeyCombo) == nil
@@ -272,14 +279,14 @@ class HotKeyServiceSpec: QuickSpec {
     }
 
     private static func folderHotKeySpecs() {
-        describe("Folder HotKey") {
+        describe("スニペットフォルダのホットキー") {
             beforeEach {
                 let defaults = UserDefaults.standard
                 defaults.removeObject(forKey: Constants.HotKey.folderKeyCombos)
                 defaults.synchronize()
             }
 
-            it("Add and Remove folder hotkey") {
+            it("フォルダ識別子ごとに登録・上書き・解除ができる") {
                 let service = HotKeyService()
 
                 let identifier = NSUUID().uuidString

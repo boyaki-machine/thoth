@@ -73,7 +73,7 @@ Paste passwords, TOTP, and other sensitive values directly into any app **withou
 | Secure menu | **⌘⇧.** |
 
 - Inside the menu you can navigate with arrow keys or vim-style `hjkl` keys
-- Press `/` to move to the search box and narrow items down incrementally
+- Press `/` to move to the search box and narrow items down incrementally. The search covers titles and labels plus **the values of unmasked text / URL fields and memo bodies** (masked values and TOTP secrets are excluded). The Secure Info window's search uses the same rules
 - The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**
 
 | Feature | Detail |
@@ -94,7 +94,7 @@ An item can hold several fields, each of one of these kinds.
 | **Text** | Ordinary values such as an ID | Shown, can be pasted |
 | **Password** | Values that should be masked | Shown as `••••••••`, can be pasted |
 | **URL** | The login address | Shown with `🔗`, can be pasted. Can be opened in a browser from the Secure Info window |
-| **Memo** | Multi-line notes such as a contract number, support contact, or what the credential is for | **Not shown** (too long for the panel — Secure Info window only) |
+| **Memo** | Multi-line notes such as a contract number, support contact, or what the credential is for | **Not shown** (too long for the panel — Secure Info window only), but its body is still searchable |
 | **TOTP** | One-time password | Current code and remaining seconds are shown; typed on selection |
 
 **Step 1 — Register your credentials**

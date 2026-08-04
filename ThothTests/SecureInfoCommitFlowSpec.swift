@@ -95,7 +95,7 @@ class SecureInfoCommitFlowSpec: QuickSpec {
             it("保存に失敗したときは通知しない") {
                 _ = service.save(SecureMenuItem(itemID: "n1", title: "A"))
                 writeRawUserData(Data("{ broken".utf8))
-                expect(service.loadAllItems().isEmpty) == true
+                expect(service.loadAllItems()).to(beEmpty())
                 expect(service.isKeychainAccessDenied) == true
 
                 received = 0
@@ -160,7 +160,7 @@ class SecureInfoCommitFlowSpec: QuickSpec {
 
                 // 保存直後の通知では行ビューが作り直されない（同じインスタンスのまま）
                 let before = splitViewController.detailViewControllerForTesting.fieldRows
-                expect(before.isEmpty) == false
+                expect(before).toNot(beEmpty())
                 splitViewController.applyExternalChangeIfNeeded()
                 let after = splitViewController.detailViewControllerForTesting.fieldRows
                 expect(after.count) == before.count
@@ -474,14 +474,14 @@ class SecureInfoCommitFlowSpec: QuickSpec {
                     ])
                 ])
                 splitViewController.editor.beginEditing(itemID: "s1")
-                expect(splitViewController.editor.items.isEmpty) == false
+                expect(splitViewController.editor.items).toNot(beEmpty())
                 expect(splitViewController.editor.draft?.itemID) == "s1"
 
                 splitViewController.viewWillDisappear()
-                expect(splitViewController.editor.items.isEmpty) == true
+                expect(splitViewController.editor.items).to(beEmpty())
                 expect(splitViewController.editor.draft?.itemID) == nil
                 expect(splitViewController.editor.selectedItemID) == nil
-                expect(splitViewController.detailViewControllerForTesting.fieldRows.isEmpty) == true
+                expect(splitViewController.detailViewControllerForTesting.fieldRows).to(beEmpty())
 
                 // 開き直せば Keychain から読み直される
                 splitViewController.reloadItems()
@@ -671,7 +671,7 @@ class SecureInfoCommitFlowSpec: QuickSpec {
                 splitViewController.reloadItems()
 
                 expect(splitViewController.editor.isReadOnly) == true
-                expect(splitViewController.editor.items.isEmpty) == true
+                expect(splitViewController.editor.items).to(beEmpty())
                 splitViewController.editor.beginEditing(itemID: "e2e")
                 expect(splitViewController.editor.updateTitle("Renamed")) == false
                 expect(splitViewController.editor.isDirty) == false

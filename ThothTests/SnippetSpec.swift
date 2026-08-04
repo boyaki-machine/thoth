@@ -3,6 +3,10 @@ import Nimble
 import RealmSwift
 @testable import Thoth
 
+// スニペット（`CPYSnippet`）の Realm 同期操作。
+// インポートしたスニペットは「同じ identifier の既存レコードへ内容を反映する」
+// 形で取り込むため、merge / remove が identifier を手掛かりに正しい
+// レコードへ届くことを確かめる。DB はテストごとにインメモリで作り直す。
 class SnippetSpec: QuickSpec {
     override class func spec() {
 
@@ -10,9 +14,9 @@ class SnippetSpec: QuickSpec {
             Realm.Configuration.defaultConfiguration.inMemoryIdentifier = NSUUID().uuidString
         }
 
-        describe("Sync database") {
+        describe("Realm への同期（identifier を手掛かりにした反映）") {
 
-            it("Merge snippet") {
+            it("merge すると、同じ identifier の既存レコードへ内容が反映され、複製は DB に残らない") {
                 let snippet = CPYSnippet()
                 let realm = try! Realm()
                 realm.transaction { realm.add(snippet) }
@@ -30,7 +34,7 @@ class SnippetSpec: QuickSpec {
                 expect(snippet.content) == snippet2.content
             }
 
-            it("Remove snippet") {
+            it("remove すると、同じ identifier の既存レコードが DB から消える") {
                 let realm = try! Realm()
                 expect(realm.objects(CPYSnippet.self).count) == 0
 
