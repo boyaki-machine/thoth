@@ -21,6 +21,8 @@
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
 		AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */; };
+		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
+		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */; };
 		AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */; };
 		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
@@ -241,6 +243,8 @@
 		AA00001100000000ABCDEF01 /* SecureMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItem.swift; sourceTree = "<group>"; };
 		AA00001200000000ABCDEF01 /* SecureMenuService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuService.swift; sourceTree = "<group>"; };
 		AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransfer.swift; sourceTree = "<group>"; };
+		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
+		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecurePickerPanel.swift; sourceTree = "<group>"; };
 		AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+MenuBuilding.swift"; sourceTree = "<group>"; };
 		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
@@ -471,6 +475,7 @@
 				FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */,
 				AA00001200000000ABCDEF01 /* SecureMenuService.swift */,
 				AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */,
+				AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */,
 				AA00003800000000ABCDEF01 /* CodeSignService.swift */,
 				AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */,
 				AA0000A100000000ABCDEF01 /* CryptoService.swift */,
@@ -786,6 +791,7 @@
 				AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */,
 				AA0000FB00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift */,
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
+				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */,
 				AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */,
 				AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */,
@@ -1158,6 +1164,7 @@
 				AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */,
 				AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */,
 				AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */,
+				AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */,
 				AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */,
 				AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */,
 				AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */,
@@ -1229,6 +1236,7 @@
 				AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */,
 				AA0000FC00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift in Sources */,
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
+				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */,
 				AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */,
 				AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */,

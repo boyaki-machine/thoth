@@ -52,6 +52,16 @@ struct SecureMenuItem: Codable, Equatable {
             case note
         }
 
+        /// 検索窓の絞り込みで値を対象にする条件（種別ごとの割り当ては `Kind.valueSearchability`）
+        enum ValueSearchability {
+            /// マスク指定に関わらず対象にする
+            case always
+            /// マスク（`isPassword`）が掛かっていないときだけ対象にする
+            case unlessMasked
+            /// 対象にしない
+            case never
+        }
+
         /// フィールドの安定 ID。Label を変更しても Val の変更履歴が追従できるようにするためのもの
         let fieldID: String
         let label: String
@@ -66,6 +76,17 @@ struct SecureMenuItem: Codable, Equatable {
         let createdAt: Date
 
         var isTOTP: Bool { kind == .totp }
+
+        /// 検索窓（確認ウィンドウ・選択パネル共通）で、このフィールドの値を
+        /// 絞り込みの対象にしてよいか。
+        /// 種別ごとの規則（`Kind.valueSearchability`）とマスク指定の組み合わせで決まる
+        var isValueSearchable: Bool {
+            switch kind.valueSearchability {
+            case .always: return true
+            case .unlessMasked: return !isPassword
+            case .never: return false
+            }
+        }
 
         init(fieldID: String = UUID().uuidString, label: String, value: String,
              isPassword: Bool = false, kind: Kind = .plain, history: [FieldHistoryEntry] = [],
@@ -198,6 +219,23 @@ extension SecureMenuItem.Field.Kind {
         switch self {
         case .plain, .totp, .url: return true
         case .note: return false
+        }
+    }
+
+    /// 検索窓で、ラベルだけでなく値（`value`）も絞り込みの対象にするか。
+    /// 条件は確認ウィンドウと選択パネルで共通（`SecureItemSearch`）。
+    ///
+    /// - `.unlessMasked`: マスク（🔒）が掛かっていなければ対象にする。
+    ///   URL やユーザー ID は「どのアカウントだったか」を値の断片から探す用途があるため
+    /// - `.always`: マスクの状態に関わらず対象。メモはマスクの概念を持たない種別だが、
+    ///   旧データや取り込んだ JSON で `isPassword` が立っていることがある
+    /// - `.never`: 対象にしない。TOTP secret は値の断片で探す用途が無いうえ、
+    ///   秘密情報を検索窓へ打たせる動機を作らないため
+    var valueSearchability: SecureMenuItem.Field.ValueSearchability {
+        switch self {
+        case .plain, .url: return .unlessMasked
+        case .note: return .always
+        case .totp: return .never
         }
     }
 

@@ -3,6 +3,13 @@ import Nimble
 import RealmSwift
 @testable import Thoth
 
+// スニペットフォルダ（`CPYFolder`）の生成・Realm 同期・並び順の詰め直し。
+//
+// スニペットエディタは Realm のオブジェクトを直接編集せず、`deepCopy()` した
+// 非管理オブジェクトを画面で編集し、確定時に `merge()` で書き戻す。そのため
+// ここでは「複製が Realm から切り離されていること」「identifier を手掛かりに
+// 元のレコードへ反映されること」「index が 0 から連番に詰め直されること」を
+// 確かめる。DB はテストごとにインメモリで作り直す。
 class FolderSpec: QuickSpec {
     override class func spec() {
         beforeEach {
@@ -14,9 +21,9 @@ class FolderSpec: QuickSpec {
     }
 
     private static func createNewSpecs() {
-        describe("Create new") {
+        describe("生成と複製") {
 
-            it("deep copy object") {
+            it("deepCopy すると、Realm から切り離された同じ内容の複製が入れ子のスニペットごと得られる") {
                 // Save Value
                 let savedFolder = CPYFolder()
                 savedFolder.index = 100
@@ -53,7 +60,7 @@ class FolderSpec: QuickSpec {
                 expect(snippet.identifier) == savedSnippet.identifier
             }
 
-            it("Create folder") {
+            it("create すると既定タイトルのフォルダができ、index は既存の件数に続く番号になる") {
                 let folder = CPYFolder.create()
                 expect(folder.title) == "untitled folder"
                 expect(folder.index) == 0
@@ -65,7 +72,7 @@ class FolderSpec: QuickSpec {
                 expect(folder2.index) == 1
             }
 
-            it("Create snippet") {
+            it("createSnippet すると既定タイトルのスニペットができ、index はフォルダ内の件数に続く番号になる") {
                 let folder = CPYFolder()
                 let snippet = folder.createSnippet()
 
@@ -87,9 +94,9 @@ class FolderSpec: QuickSpec {
     }
 
     private static func syncDatabaseSpecs() {
-        describe("Sync database") {
+        describe("Realm への同期（identifier を手掛かりにした反映）") {
 
-            it("Merge snippet") {
+            it("フォルダを merge すると、配下のスニペットも同じ identifier のまま DB へ保存される") {
                 let folder = CPYFolder()
                 let realm = try! Realm()
                 realm.transaction { realm.add(folder) }
@@ -110,7 +117,7 @@ class FolderSpec: QuickSpec {
                 expect(savedSnippet2.identifier) == snippet2.identifier
             }
 
-            it("Insert snippet") {
+            it("insert すると、DB 上のフォルダにスニペットが 1 件増える") {
                 let folder = CPYFolder()
                 let realm = try! Realm()
                 realm.transaction { realm.add(folder) }
@@ -128,7 +135,7 @@ class FolderSpec: QuickSpec {
                 expect(folder.snippets.count) == 1
             }
 
-            it("Remove snippet") {
+            it("remove すると、DB 上のフォルダからそのスニペットだけが消える") {
                 let folder = CPYFolder()
                 let snippet = CPYSnippet()
                 folder.snippets.append(snippet)
@@ -143,7 +150,7 @@ class FolderSpec: QuickSpec {
                 expect(folder.snippets.count) == 0
             }
 
-            it("Merge folder") {
+            it("merge は未保存なら新規追加、保存済みなら同じ identifier のレコードを上書きする") {
                 let realm = try! Realm()
                 expect(realm.objects(CPYFolder.self).count) == 0
 
@@ -172,7 +179,7 @@ class FolderSpec: QuickSpec {
                 expect(savedFolder?.enable) == folder.enable
             }
 
-            it("Remove folder") {
+            it("フォルダを remove すると、配下のスニペットも一緒に DB から消える") {
                 let folder = CPYFolder()
                 let snippet = CPYSnippet()
                 folder.snippets.append(snippet)
@@ -199,9 +206,9 @@ class FolderSpec: QuickSpec {
     }
 
     private static func rearrangeIndexSpecs() {
-        describe("Rearrange Index") {
+        describe("並び順の詰め直し（rearrangesIndex）") {
 
-            it("Rearrange folder index") {
+            it("フォルダの index が 0 から始まる連番へ詰め直され、DB 上のレコードにも反映される") {
                 let folder = CPYFolder()
                 folder.index = 100
                 let folder2 = CPYFolder()
@@ -222,7 +229,7 @@ class FolderSpec: QuickSpec {
                 expect(folder2.index) == 1
             }
 
-            it("Rearrange snippet index") {
+            it("スニペットの index が 0 から始まる連番へ詰め直され、DB 上のレコードにも反映される") {
                 let folder = CPYFolder()
                 let snippet = CPYSnippet()
                 snippet.index = 10

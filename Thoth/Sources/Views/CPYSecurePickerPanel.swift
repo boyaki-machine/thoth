@@ -344,16 +344,15 @@ extension CPYSecurePickerPanel {
         if isVisible { updateSubPanel() }
     }
 
+    /// 検索窓のクエリで親アイテムを絞り込む。
+    ///
+    /// 条件は確認ウィンドウと共通で `SecureItemSearch` に集約している
+    /// （v1.3.1 以前はここに独自の実装があり、値では探せず、
+    /// 複数語も 1 つのラベル内でしか AND が効かなかった）。
+    /// サブパネルに出ないメモも対象に含まれるが、一致した値そのものは
+    /// パネルに表示されない（表示するのは親アイテムの一覧だけ）。
     func filteredItems() -> [SecureMenuItem] {
-        let query = searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return allItems }
-        let terms = query.lowercased().components(separatedBy: .whitespaces).filter { !$0.isEmpty }
-        return allItems.filter { item in
-            if terms.allSatisfy({ item.title.lowercased().contains($0) }) { return true }
-            return item.fields.contains { fld in
-                terms.allSatisfy { fld.label.lowercased().contains($0) }
-            }
-        }
+        return SecureItemSearch.filter(allItems, query: searchField.stringValue)
     }
 
     func sizePanel() {

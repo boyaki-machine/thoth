@@ -88,13 +88,17 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 
 ### Services レイヤー（`Thoth/Sources/Services/`）
 
-ビジネスロジックはサービス層に集約され、`AppEnvironment.current.xxxService` でアクセスします。
+ビジネスロジックはサービス層に集約されます。状態を持つものは `AppEnvironment.current.xxxService` から取得し、状態を持たないもの（`SecureItemSearch` / `SecureItemsTransfer` / `QRDecodeService` / `CryptoPasswordQRCodec`）は型に直接生えた静的メソッドとして呼びます。
 
 | サービス | 責務 |
 |---|---|
 | `ClipService` | クリップボードの監視（100ms ポーリング）と履歴の保存・削除 |
 | `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路） |
 | `SecureMenuService` | セキュアアイテム・指紋パスワードのキーチェーン管理と生体認証 |
+| `SecureItemSearch` | セキュアアイテムの絞り込み（確認ウィンドウと選択パネルで共通の検索条件） |
+| `SecureItemsTransfer` | セキュアアイテムの JSON インポート／エクスポート |
+| `ClipFullTextIndexer` | 履歴の全文検索インデックスと検索フィルタ |
+| `CryptoPasswordQRCodec` | 指紋パスワードの QR エンコード／デコード |
 | `CryptoService` | ファイル・フォルダの暗号化 / 復号（インプロセス実装） |
 | `TOTPService` | TOTP コード生成・otpauth URI / Base32 のパース |
 | `QRDecodeService` | QR コードからの otpauth URI 取り込み（Vision 使用） |
@@ -135,14 +139,51 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 |---|---|
 | クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
 | モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
-| セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート） |
+| セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
+| セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
+| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
+| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
-| 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec` |
+| 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
+
+### 失敗したテストの読み方
+
+失敗すると標準出力に次の 3 つが出ます。ログは長いので `grep -E "error:|Failing tests" -A 20` で拾うと早いです。
+
+1. **失敗した箇所と、期待と実際** — ファイル:行 / スペック名 / describe 名 / it 名 / 期待値 / 実際の値:
+
+   ```
+   /Users/…/ThothTests/SecureItemSearchSpec.swift:188: error: -[ThothTests.SecureItemSearchSpec 絞り込み, マスクを掛けた値では探せない] : expected to be empty, got <[GitHub, AWS Console, 社内ポータル]>
+   ```
+
+2. **落ちたテストの一覧**（ログ末尾）:
+
+   ```
+   Failing tests:
+       SecureItemSearchSpec.絞り込み, マスクを掛けた値では探せない()
+   ```
+
+3. **件数の集計** — `Executed 728 tests, with 1 failure (0 unexpected)` と `** TEST FAILED **`
+
+### スペックを書くときの約束
+
+上の出力が役に立つかどうかは、スペックの書き方でほぼ決まります。
+
+- **`it` の名前は「条件 → 期待結果」で書く。** 失敗の一覧を見ただけで何が壊れたか分かるようにします。
+  良い例:「マスクを掛けた値では探せない」「10 件ちょうどではページ送りが出ない」。
+  避ける例:「検索」「Save key combos」のように対象を示すだけの名前。
+- **前提が崩れたら `fail(...)` で落とす。** `guard let x = … else { return }` と書くと、前提が崩れたときにテストが**何も検証せずに緑**になります。
+- **真偽値ではなく中身を表明する。** `expect(items.isEmpty) == true` は失敗しても `expected to equal <true>, got <false>` としか出ません。`expect(items).to(beEmpty())` なら実際の中身が出ます
+  （ただし主語が Optional のときは `beEmpty()` が nil を「空ではない」と扱うため、`expect(x?.isEmpty) == false` のままにします）。
+- **ループの中で表明するときは `description:` に反復対象を入れる。** どの入力で落ちたかが出ます
+  （例: `SecureItemSearchSpec` の「画面間で条件が揃っていること」）。
+- **ファイル冒頭に、何を・どんな前提で確かめるスペックかを書く。** 共有状態（UserDefaults・キーチェーン・Realm）を使う場合は、その後始末の約束もここに書きます。
+- **新しいテストは「実装を意図的に戻すと落ちる」ことまで確認してから積む。** 何も検出しないテストが紛れ込むのを防ぎます。
 
 ---
 

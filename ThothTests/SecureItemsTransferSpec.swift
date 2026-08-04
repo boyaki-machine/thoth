@@ -57,7 +57,7 @@ class SecureItemsTransferSpec: QuickSpec {
                 expect(service.save(SecureMenuItem(itemID: "i1", title: "A"))) == true
                 // 解釈できないデータを置いて「読めない」状態を作る
                 writeRawUserData(Data("{ broken".utf8))
-                expect(service.loadAllItems().isEmpty) == true
+                expect(service.loadAllItems()).to(beEmpty())
                 expect(service.isKeychainAccessDenied) == true
 
                 expect(try? Transfer.exportData(using: service)) == nil
@@ -65,7 +65,7 @@ class SecureItemsTransferSpec: QuickSpec {
 
             // アイテムが 1 件も無い状態と、読めない状態を取り違えない
             it("本当に 0 件のときは書き出せる") {
-                expect(service.loadAllItems().isEmpty) == true
+                expect(service.loadAllItems()).to(beEmpty())
                 expect(service.isKeychainAccessDenied) == false
                 expect(try? Transfer.exportData(using: service)) != nil
             }
@@ -115,7 +115,7 @@ class SecureItemsTransferSpec: QuickSpec {
             // 指紋パスワードだけ入っていない状態に気づけない
             it("指紋パスワードの保存に失敗したら成功と報告しない") {
                 writeRawUserData(Data("{ broken".utf8))
-                expect(service.loadAllItems().isEmpty) == true
+                expect(service.loadAllItems()).to(beEmpty())
                 expect(Transfer.apply(items: [], cryptoPassword: "pw", using: service)) == false
                 removeRawUserData()
             }

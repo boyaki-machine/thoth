@@ -88,13 +88,17 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 
 ### Services Layer (`Thoth/Sources/Services/`)
 
-Business logic is concentrated in the services layer, accessed via `AppEnvironment.current.xxxService`.
+Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`) are called as static methods on the type itself.
 
 | Service | Responsibility |
 |---|---|
 | `ClipService` | Monitors the clipboard (100 ms polling) and saves/deletes history |
 | `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke) |
 | `SecureMenuService` | Keychain management of secure items and the fingerprint password, plus biometric auth |
+| `SecureItemSearch` | Filtering of secure items (search rules shared by the Secure Info window and the picker panel) |
+| `SecureItemsTransfer` | JSON import / export of secure items |
+| `ClipFullTextIndexer` | Full-text index and search filter for the clip history |
+| `CryptoPasswordQRCodec` | QR encoding / decoding of the fingerprint password |
 | `CryptoService` | File/folder encryption and decryption (in-process implementation) |
 | `TOTPService` | TOTP code generation and otpauth URI / Base32 parsing |
 | `QRDecodeService` | Import otpauth URIs from QR codes (uses Vision) |
@@ -135,14 +139,50 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
 | Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
-| Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export) |
+| Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
+| Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
+| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings), `ClipFullTextIndexerSpec` (full-text index and search filter) |
+| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
-| Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec` |
+| Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
 | Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec` |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
+
+### Reading a test failure
+
+A failure prints three things to stdout. The log is long, so `grep -E "error:|Failing tests" -A 20` is the fastest way in.
+
+1. **Where it failed, expected vs actual** — file:line / spec / describe / it / expected / actual:
+
+   ```
+   /Users/…/ThothTests/SecureItemSearchSpec.swift:188: error: -[ThothTests.SecureItemSearchSpec 絞り込み, マスクを掛けた値では探せない] : expected to be empty, got <[GitHub, AWS Console, 社内ポータル]>
+   ```
+
+2. **The list of failing tests** (end of the log):
+
+   ```
+   Failing tests:
+       SecureItemSearchSpec.絞り込み, マスクを掛けた値では探せない()
+   ```
+
+3. **The tally** — `Executed 728 tests, with 1 failure (0 unexpected)` followed by `** TEST FAILED **`
+
+### Conventions for writing specs
+
+How useful the output above is comes down almost entirely to how the spec is written.
+
+- **Name each `it` as "condition → expected result"**, so the failure list alone tells you what broke.
+  Good: "マスクを掛けた値では探せない", "Fails to decrypt with a wrong password".
+  Avoid: "検索", "Save key combos" — names that only identify the subject.
+- **Fail loudly when a precondition breaks.** `guard let x = … else { return }` makes the test go **green without verifying anything**; use `fail(…)` before returning.
+- **Assert on contents, not booleans.** `expect(items.isEmpty) == true` prints only `expected to equal <true>, got <false>`; `expect(items).to(beEmpty())` prints the actual contents
+  (keep the boolean form when the subject is Optional — `beEmpty()` treats nil as "not empty").
+- **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
+- **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
+- **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
 
 ---
 
