@@ -257,7 +257,7 @@ The picker panel is only reachable after authentication, so opening the Secure I
 
 **Division of labor with the picker panel (⌘⇧.)**
 
-The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste", with no room for long text. Memo (`note`) fields are excluded from it and belong to the Secure Info window. URLs are worth pasting, so they do appear in the panel, prefixed with `🔗`.
+The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste", with no room for long text. Memo (`note`) fields are excluded from it and belong to the Secure Info window (**only from the display — they are still searched**; see "Search rules" below). URLs are worth pasting, so they do appear in the panel, prefixed with `🔗`.
 
 Which fields go into the sub-panel is decided in exactly one place: `CPYSecurePickerPanel.subPanelFields(for:)`. The `fieldIndex` recorded on selection is an index into that array, and it is also used to restore "continue-paste mode". If either the display side or the open/close check used `item.fields` directly, re-opening the panel would paste a different field.
 
@@ -354,7 +354,7 @@ The right pane (fields) is an `NSStackView`, so this is hand-rolled. A `≡` han
 
 The pasteboard carries only the `fieldID` or the row number — **never a value** — because a drag pasteboard is readable by other apps. `draggingSession(_:sourceOperationMaskFor:)` also refuses anything but `.withinApplication`, so a row cannot be dragged out of the app.
 
-**The drag image is not a snapshot of the row.** A drag image is drawn in a system-owned window, outside this window, so `NSWindow.sharingType = .none` (which keeps the window out of screen sharing and recording) does not cover it. Snapshotting the whole row would put a password revealed with 👁 — or a memo's body — into a surface that *can* be recorded. Drawing **only the label** leaks nothing beyond what already appears in search and in the picker panel, while still showing which field is being dragged. Everything that leaves the row is decided in one place: `SecureFieldRowView.makeDraggingItem()`.
+**The drag image is not a snapshot of the row.** A drag image is drawn in a system-owned window, outside this window, so `NSWindow.sharingType = .none` (which keeps the window out of screen sharing and recording) does not cover it. Snapshotting the whole row would put a password revealed with 👁 — or a memo's body — into a surface that *can* be recorded. Drawing **only the label** leaks nothing beyond what the picker panel already displays, while still showing which field is being dragged (values are searchable, but neither screen ever displays them, so that is not a justification). Everything that leaves the row is decided in one place: `SecureFieldRowView.makeDraggingItem()`.
 
 **Import / export**
 

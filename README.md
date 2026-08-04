@@ -94,7 +94,7 @@ An item can hold several fields, each of one of these kinds.
 | **Text** | Ordinary values such as an ID | Shown, can be pasted |
 | **Password** | Values that should be masked | Shown as `••••••••`, can be pasted |
 | **URL** | The login address | Shown with `🔗`, can be pasted. Can be opened in a browser from the Secure Info window |
-| **Memo** | Multi-line notes such as a contract number, support contact, or what the credential is for | **Not shown** (too long for the panel — Secure Info window only) |
+| **Memo** | Multi-line notes such as a contract number, support contact, or what the credential is for | **Not shown** (too long for the panel — Secure Info window only), but its body is still searchable |
 | **TOTP** | One-time password | Current code and remaining seconds are shown; typed on selection |
 
 **Step 1 — Register your credentials**

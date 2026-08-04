@@ -77,7 +77,8 @@ struct SecureMenuItem: Codable, Equatable {
 
         var isTOTP: Bool { kind == .totp }
 
-        /// 確認ウィンドウの検索窓で、このフィールドの値を絞り込みの対象にしてよいか。
+        /// 検索窓（確認ウィンドウ・選択パネル共通）で、このフィールドの値を
+        /// 絞り込みの対象にしてよいか。
         /// 種別ごとの規則（`Kind.valueSearchability`）とマスク指定の組み合わせで決まる
         var isValueSearchable: Bool {
             switch kind.valueSearchability {
@@ -221,7 +222,8 @@ extension SecureMenuItem.Field.Kind {
         }
     }
 
-    /// 確認ウィンドウの検索窓で、ラベルだけでなく値（`value`）も絞り込みの対象にするか。
+    /// 検索窓で、ラベルだけでなく値（`value`）も絞り込みの対象にするか。
+    /// 条件は確認ウィンドウと選択パネルで共通（`SecureItemSearch`）。
     ///
     /// - `.unlessMasked`: マスク（🔒）が掛かっていなければ対象にする。
     ///   URL やユーザー ID は「どのアカウントだったか」を値の断片から探す用途があるため

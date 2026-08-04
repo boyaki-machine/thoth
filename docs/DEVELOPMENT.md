@@ -88,13 +88,17 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 
 ### Services Layer (`Thoth/Sources/Services/`)
 
-Business logic is concentrated in the services layer, accessed via `AppEnvironment.current.xxxService`.
+Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`) are called as static methods on the type itself.
 
 | Service | Responsibility |
 |---|---|
 | `ClipService` | Monitors the clipboard (100 ms polling) and saves/deletes history |
 | `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke) |
 | `SecureMenuService` | Keychain management of secure items and the fingerprint password, plus biometric auth |
+| `SecureItemSearch` | Filtering of secure items (search rules shared by the Secure Info window and the picker panel) |
+| `SecureItemsTransfer` | JSON import / export of secure items |
+| `ClipFullTextIndexer` | Full-text index and search filter for the clip history |
+| `CryptoPasswordQRCodec` | QR encoding / decoding of the fingerprint password |
 | `CryptoService` | File/folder encryption and decryption (in-process implementation) |
 | `TOTPService` | TOTP code generation and otpauth URI / Base32 parsing |
 | `QRDecodeService` | Import otpauth URIs from QR codes (uses Vision) |
@@ -136,10 +140,13 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
 | Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
+| Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
+| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings), `ClipFullTextIndexerSpec` (full-text index and search filter) |
+| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
-| Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec` |
+| Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
 | Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec` |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.

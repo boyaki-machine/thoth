@@ -88,13 +88,17 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 
 ### Services レイヤー（`Thoth/Sources/Services/`）
 
-ビジネスロジックはサービス層に集約され、`AppEnvironment.current.xxxService` でアクセスします。
+ビジネスロジックはサービス層に集約されます。状態を持つものは `AppEnvironment.current.xxxService` から取得し、状態を持たないもの（`SecureItemSearch` / `SecureItemsTransfer` / `QRDecodeService` / `CryptoPasswordQRCodec`）は型に直接生えた静的メソッドとして呼びます。
 
 | サービス | 責務 |
 |---|---|
 | `ClipService` | クリップボードの監視（100ms ポーリング）と履歴の保存・削除 |
 | `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路） |
 | `SecureMenuService` | セキュアアイテム・指紋パスワードのキーチェーン管理と生体認証 |
+| `SecureItemSearch` | セキュアアイテムの絞り込み（確認ウィンドウと選択パネルで共通の検索条件） |
+| `SecureItemsTransfer` | セキュアアイテムの JSON インポート／エクスポート |
+| `ClipFullTextIndexer` | 履歴の全文検索インデックスと検索フィルタ |
+| `CryptoPasswordQRCodec` | 指紋パスワードの QR エンコード／デコード |
 | `CryptoService` | ファイル・フォルダの暗号化 / 復号（インプロセス実装） |
 | `TOTPService` | TOTP コード生成・otpauth URI / Base32 のパース |
 | `QRDecodeService` | QR コードからの otpauth URI 取り込み（Vision 使用） |
@@ -136,10 +140,13 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
 | モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
+| セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
+| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
+| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
-| 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec` |
+| 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
