@@ -261,6 +261,16 @@ The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste
 
 Which fields go into the sub-panel is decided in exactly one place: `CPYSecurePickerPanel.subPanelFields(for:)`. The `fieldIndex` recorded on selection is an index into that array, and it is also used to restore "continue-paste mode". If either the display side or the open/close check used `item.fields` directly, re-opening the panel would paste a different field.
 
+**What the search box matches (v1.3.1)**
+
+The search box above the left pane matches the item title, every field label, and **the values of unmasked (🔒 off) text and URL fields plus memo bodies**. Up to v1.3.0 it looked only at titles, labels and memo bodies, so a login ID or a URL's domain could not be used to find an item.
+
+**Masked field values and TOTP secrets stay out of it.** There is no use case for searching by a fragment of those, and including them would invite typing secrets into a search box that does not mask what you type. Memo is a kind that has no mask concept, so its body is matched even when legacy data or an imported JSON left `isPassword` set.
+
+The per-kind rule lives in `SecureMenuItem.Field.Kind.valueSearchability`, and `Field.isValueSearchable` combines it with the mask flag. Both are `default`-less switches, so adding a kind surfaces every place that needs a decision as a compile error.
+
+The picker panel (⌘⇧.) keeps matching titles and labels only: it is the shortest path from authentication to a paste, not a screen for browsing a list.
+
 **Why the right pane is not an NSTableView**
 
 - A memo's `NSTextView` has a variable row height, which fits poorly with a table's automatic row heights

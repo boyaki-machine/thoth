@@ -257,6 +257,17 @@ class SecureInfoEditorSpec: QuickSpec {
         return editor
     }
 
+    /// 種別 × マスク指定の組み合わせを 1 アイテムに揃えた、検索対象の判定用フィクスチャ。
+    /// `sampleItems()` は他のスペックがフィールドの並びを固定しているため別に持つ
+    private static func searchableSampleItem() -> SecureMenuItem {
+        return SecureMenuItem(itemID: "portal", title: "社内ポータル", fields: [
+            SecureMenuItem.Field(label: "URL", value: "https://portal.example.co.jp/login", kind: .url),
+            SecureMenuItem.Field(label: "秘密の URL", value: "https://masked.example.com/x",
+                                 isPassword: true, kind: .url),
+            SecureMenuItem.Field(label: "隠しテキスト", value: "masked-plain", isPassword: true)
+        ])
+    }
+
     private static func titles(_ items: [SecureMenuItem]) -> [String] {
         return items.map { $0.title }
     }
@@ -499,6 +510,42 @@ class SecureInfoEditorSpec: QuickSpec {
                 expect(titles(editor.visibleItems)) == ["経理システム"]
             }
 
+            // v1.3.0 まではラベルとメモ本文しか見ておらず、テキスト・URL の
+            // 内容で検索してもヒットしなかった
+            it("テキストフィールドの値でもヒットする") {
+                let editor = makeEditor()
+                editor.setQuery("carol")
+                expect(titles(editor.visibleItems)) == ["経理システム"]
+            }
+
+            it("URL フィールドの値でもヒットする") {
+                let editor = SecureInfoEditor()
+                editor.setItems(sampleItems() + [searchableSampleItem()])
+                editor.setQuery("portal.example.co.jp")
+                expect(titles(editor.visibleItems)) == ["社内ポータル"]
+            }
+
+            it("値とタイトルをまたいだ複数語でもヒットする") {
+                let editor = makeEditor()
+                editor.setQuery("github alice")
+                expect(titles(editor.visibleItems)) == ["GitHub"]
+            }
+
+            it("マスクを掛けたフィールドの値では検索できない") {
+                let editor = SecureInfoEditor()
+                editor.setItems(sampleItems() + [searchableSampleItem()])
+                editor.setQuery("s3cr3t")
+                expect(editor.visibleItems.isEmpty) == true
+                editor.setQuery("masked.example.com")
+                expect(editor.visibleItems.isEmpty) == true
+            }
+
+            it("TOTP secret では検索できない") {
+                let editor = makeEditor()
+                editor.setQuery("JBSWY3DPEHPK3PXP")
+                expect(editor.visibleItems.isEmpty) == true
+            }
+
             it("メモの改行をまたいだ語でもそれぞれヒットする") {
                 let editor = makeEditor()
                 editor.setQuery("契約番号 サポート")
@@ -558,9 +605,23 @@ class SecureInfoEditorSpec: QuickSpec {
                 expect(text).toNot(contain("s3cr3t"))
             }
 
-            it("通常フィールドの値も含まない") {
+            // 「どのアカウントだったか」を ID の断片から探せるようにする
+            it("マスクを掛けていないテキストの値は含む") {
                 let text = SecureInfoEditor.searchableText(of: sampleItems()[0])
-                expect(text).toNot(contain("alice"))
+                expect(text).to(contain("alice"))
+            }
+
+            it("URL の値は含む") {
+                let text = SecureInfoEditor.searchableText(of: searchableSampleItem())
+                expect(text).to(contain("example.co.jp"))
+            }
+
+            // マスクを掛けたフィールドは種別に関わらず値を出さない
+            // （URL でもマスクは掛けられる）
+            it("マスクを掛けたテキスト・URL の値は含まない") {
+                let text = SecureInfoEditor.searchableText(of: searchableSampleItem())
+                expect(text).toNot(contain("masked-plain"))
+                expect(text).toNot(contain("masked.example.com"))
             }
 
             it("TOTP secret は含まない") {

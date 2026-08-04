@@ -294,8 +294,9 @@ final class SecureInfoEditor {
     /// クエリでアイテムを絞り込む（純粋関数）。
     ///
     /// 空白区切りの複数語は AND 条件、大文字小文字は無視する。
-    /// 選択パネルの絞り込みと違い、語がタイトルとラベルにまたがって一致してもよい
+    /// 選択パネルの絞り込みと違い、語がタイトル・ラベル・値をまたいで一致してもよい
     /// （"github password" のような探し方ができる）。
+    /// 検索対象に入る値の範囲は `searchableText(of:)` を参照。
     static func filter(_ items: [SecureMenuItem], query: String) -> [SecureMenuItem] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return items }
@@ -309,14 +310,16 @@ final class SecureInfoEditor {
 
     /// 1 アイテム分の検索対象テキスト（小文字化済み）。
     ///
-    /// 対象はタイトル・全フィールドのラベル・メモ本文。
-    /// **パスワード等の値と TOTP secret は対象外**にする。値の断片で探す用途が無いうえ、
-    /// 秘密情報を検索窓へ打たせる動機を作らないため。
+    /// 対象はタイトルと全フィールドのラベル、および値のうち
+    /// `Field.isValueSearchable` が真のもの（テキスト・URL・メモ）。
+    /// **マスク（🔒）を掛けたフィールドの値と TOTP secret は対象外**にする。
+    /// 値の断片で探す用途が無いうえ、秘密情報を検索窓へ打たせる動機を作らないため。
+    /// どの種別の値を対象にするかは `Field.Kind.valueSearchability` に集約してある。
     static func searchableText(of item: SecureMenuItem) -> String {
         var parts = [item.title]
         for field in item.fields {
             parts.append(field.label)
-            if field.kind == .note {
+            if field.isValueSearchable {
                 parts.append(field.value)
             }
         }
