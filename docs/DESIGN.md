@@ -261,15 +261,27 @@ The picker panel is a 260px-wide, 22px-per-row UI built for "pick fast and paste
 
 Which fields go into the sub-panel is decided in exactly one place: `CPYSecurePickerPanel.subPanelFields(for:)`. The `fieldIndex` recorded on selection is an index into that array, and it is also used to restore "continue-paste mode". If either the display side or the open/close check used `item.fields` directly, re-opening the panel would paste a different field.
 
-**What the search box matches (v1.3.1)**
+**Search rules (v1.3.1) — shared with the picker panel**
 
-The search box above the left pane matches the item title, every field label, and **the values of unmasked (🔒 off) text and URL fields plus memo bodies**. Up to v1.3.0 it looked only at titles, labels and memo bodies, so a login ID or a URL's domain could not be used to find an item.
+Filtering lives in `SecureItemSearch` (UI-independent), and **the Secure Info window's search box and the picker panel's (⌘⇧.) behave identically**. Change the rules there and nowhere else.
 
-**Masked field values and TOTP secrets stay out of it.** There is no use case for searching by a fragment of those, and including them would invite typing secrets into a search box that does not mask what you type. Memo is a kind that has no mask concept, so its body is matched even when legacy data or an imported JSON left `isPassword` set.
+Up to v1.3.0 each screen had its own implementation and the rules had drifted apart: the Secure Info window matched titles, labels and memo bodies, while the picker matched titles and labels only — and its multi-word AND only applied *within a single label*. The same query surfaced an item on one screen but not the other, which reads to the user as **"the thing I saved is gone"**. Hence the unification.
+
+| Item | Treatment |
+|---|---|
+| Title, every field label | Matched |
+| Values of unmasked (🔒 off) text and URL fields | Matched — lets you find "which account was it" from a login ID or a URL's domain |
+| Memo bodies | Matched — finding an account by contract number is a real use case |
+| **Masked field values** | **Not matched** |
+| **TOTP secrets** | **Not matched** |
+| Multiple words (split on whitespace/newlines) | AND; words may match across title, labels and values ("github password") |
+| Case | Ignored |
+
+Masked values and TOTP secrets stay out because there is no use case for searching by a fragment of those, and including them would invite typing secrets into a search box that does not mask what you type. Memo is a kind with no mask concept, so its body is matched even when legacy data or an imported JSON left `isPassword` set.
 
 The per-kind rule lives in `SecureMenuItem.Field.Kind.valueSearchability`, and `Field.isValueSearchable` combines it with the mask flag. Both are `default`-less switches, so adding a kind surfaces every place that needs a decision as a compile error.
 
-The picker panel (⌘⇧.) keeps matching titles and labels only: it is the shortest path from authentication to a paste, not a screen for browsing a list.
+**Memo fields are searched from the picker panel too, even though they are not displayed there.** Filtering only reorders which parent items are listed, and neither screen shows the matched value itself, so there is no reason to vary the target per screen — and varying it would bring back the "shows up in one screen but not the other" gap. `SecureItemSearchSpec`'s "画面間で条件が揃っていること" pins the two screens to the same results.
 
 **Why the right pane is not an NSTableView**
 

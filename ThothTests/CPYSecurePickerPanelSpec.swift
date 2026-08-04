@@ -28,10 +28,10 @@ class CPYSecurePickerPanelSpec: QuickSpec {
         return [
             SecureMenuItem(title: "GitHub", fields: [
                 SecureMenuItem.Field(label: "Password", value: "a", isPassword: true),
-                SecureMenuItem.Field(label: "Token", value: "b", isPassword: true)
+                SecureMenuItem.Field(label: "Token", value: "github-token", isPassword: true)
             ]),
             SecureMenuItem(title: "AWS Console", fields: [
-                SecureMenuItem.Field(label: "Login ID", value: "c", isPassword: false)
+                SecureMenuItem.Field(label: "Login ID", value: "console-user", isPassword: false)
             ])
         ]
     }
@@ -52,6 +52,9 @@ class CPYSecurePickerPanelSpec: QuickSpec {
 
     // MARK: - Search
 
+    /// 絞り込みの条件そのものは共通ロジック側（`SecureItemSearchSpec`）で固定している。
+    /// ここで見るのは「パネルが検索窓の内容を共通ロジックへ渡せているか」と、
+    /// パネル固有の入口（空クエリ・空白のみ）の扱い
     private static func searchFilterSpecs() {
         describe("インクリメンタルサーチのフィルタ") {
             it("タイトルの部分一致でヒットする（大文字小文字無視）") {
@@ -66,8 +69,32 @@ class CPYSecurePickerPanelSpec: QuickSpec {
                 panel.close()
             }
 
-            it("複数語は AND 条件（タイトル内で全語一致）になる") {
-                let panel = makePanel(query: "aws console")
+            // v1.3.1 で確認ウィンドウと条件を揃えた。
+            // それまではラベルしか見ておらず、値では探せなかった
+            it("マスクを掛けていない値でもヒットする") {
+                let panel = makePanel(query: "console-user")
+                expect(panel.filteredItems().map { $0.title }) == ["AWS Console"]
+                panel.close()
+            }
+
+            it("マスクを掛けた値・TOTP secret では探せない") {
+                let masked = makePanel(query: "github-token")
+                expect(masked.filteredItems()).to(beEmpty())
+
+                let totpItem = SecureMenuItem(title: "TOTP Item", fields: [
+                    SecureMenuItem.Field(label: "TOTP", value: "otpauth://totp/X?secret=JBSWY3DPEHPK3PXP",
+                                         kind: .totp)
+                ])
+                let totp = makePanel(items: [totpItem], query: "JBSWY3DPEHPK3PXP")
+                expect(totp.filteredItems()).to(beEmpty())
+                masked.close()
+                totp.close()
+            }
+
+            // 以前は「1 つのラベル内で全語一致」しか通らず、
+            // タイトルと値をまたいだ複数語では探せなかった
+            it("複数語はタイトル・ラベル・値をまたいで AND 一致する") {
+                let panel = makePanel(query: "aws console-user")
                 expect(panel.filteredItems().map { $0.title }) == ["AWS Console"]
                 let none = makePanel(query: "aws github")
                 expect(none.filteredItems()).to(beEmpty())

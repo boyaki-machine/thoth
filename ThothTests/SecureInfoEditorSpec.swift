@@ -13,7 +13,6 @@ class SecureInfoEditorSpec: QuickSpec {
 
     override class func spec() {
         filterSpecs()
-        searchableTextSpecs()
         selectionSpecs()
         draftEditingSpecs()
         commitOutcomeSpecs()
@@ -255,17 +254,6 @@ class SecureInfoEditorSpec: QuickSpec {
         let editor = SecureInfoEditor()
         editor.setItems(sampleItems())
         return editor
-    }
-
-    /// 種別 × マスク指定の組み合わせを 1 アイテムに揃えた、検索対象の判定用フィクスチャ。
-    /// `sampleItems()` は他のスペックがフィールドの並びを固定しているため別に持つ
-    private static func searchableSampleItem() -> SecureMenuItem {
-        return SecureMenuItem(itemID: "portal", title: "社内ポータル", fields: [
-            SecureMenuItem.Field(label: "URL", value: "https://portal.example.co.jp/login", kind: .url),
-            SecureMenuItem.Field(label: "秘密の URL", value: "https://masked.example.com/x",
-                                 isPassword: true, kind: .url),
-            SecureMenuItem.Field(label: "隠しテキスト", value: "masked-plain", isPassword: true)
-        ])
     }
 
     private static func titles(_ items: [SecureMenuItem]) -> [String] {
@@ -511,38 +499,18 @@ class SecureInfoEditorSpec: QuickSpec {
             }
 
             // v1.3.0 まではラベルとメモ本文しか見ておらず、テキスト・URL の
-            // 内容で検索してもヒットしなかった
+            // 内容で検索してもヒットしなかった。
+            // 検索条件そのものは `SecureItemSearchSpec` が固定している。
+            // ここで見るのは「エディタが共通ロジックに繋がっていること」
             it("テキストフィールドの値でもヒットする") {
                 let editor = makeEditor()
                 editor.setQuery("carol")
                 expect(titles(editor.visibleItems)) == ["経理システム"]
             }
 
-            it("URL フィールドの値でもヒットする") {
-                let editor = SecureInfoEditor()
-                editor.setItems(sampleItems() + [searchableSampleItem()])
-                editor.setQuery("portal.example.co.jp")
-                expect(titles(editor.visibleItems)) == ["社内ポータル"]
-            }
-
-            it("値とタイトルをまたいだ複数語でもヒットする") {
+            it("マスクを掛けた値では検索できない") {
                 let editor = makeEditor()
-                editor.setQuery("github alice")
-                expect(titles(editor.visibleItems)) == ["GitHub"]
-            }
-
-            it("マスクを掛けたフィールドの値では検索できない") {
-                let editor = SecureInfoEditor()
-                editor.setItems(sampleItems() + [searchableSampleItem()])
                 editor.setQuery("s3cr3t")
-                expect(editor.visibleItems.isEmpty) == true
-                editor.setQuery("masked.example.com")
-                expect(editor.visibleItems.isEmpty) == true
-            }
-
-            it("TOTP secret では検索できない") {
-                let editor = makeEditor()
-                editor.setQuery("JBSWY3DPEHPK3PXP")
                 expect(editor.visibleItems.isEmpty) == true
             }
 
@@ -582,67 +550,6 @@ class SecureInfoEditorSpec: QuickSpec {
                 expect(editor.visibleItems.isEmpty) == true
                 editor.setQuery("anything")
                 expect(editor.visibleItems.isEmpty) == true
-            }
-        }
-    }
-
-    // MARK: - Searchable text
-
-    /// 検索対象に「入れてはいけないもの」を明示的に固定する。
-    /// パスワードや TOTP secret が検索対象に入ると、値の断片を検索窓へ
-    /// 打たせる動機を作ってしまう
-    private static func searchableTextSpecs() {
-        describe("検索対象テキスト") {
-
-            it("タイトルとラベルを含む") {
-                let text = SecureInfoEditor.searchableText(of: sampleItems()[0])
-                expect(text).to(contain("github"))
-                expect(text).to(contain("password"))
-            }
-
-            it("パスワードの値は含まない") {
-                let text = SecureInfoEditor.searchableText(of: sampleItems()[0])
-                expect(text).toNot(contain("s3cr3t"))
-            }
-
-            // 「どのアカウントだったか」を ID の断片から探せるようにする
-            it("マスクを掛けていないテキストの値は含む") {
-                let text = SecureInfoEditor.searchableText(of: sampleItems()[0])
-                expect(text).to(contain("alice"))
-            }
-
-            it("URL の値は含む") {
-                let text = SecureInfoEditor.searchableText(of: searchableSampleItem())
-                expect(text).to(contain("example.co.jp"))
-            }
-
-            // マスクを掛けたフィールドは種別に関わらず値を出さない
-            // （URL でもマスクは掛けられる）
-            it("マスクを掛けたテキスト・URL の値は含まない") {
-                let text = SecureInfoEditor.searchableText(of: searchableSampleItem())
-                expect(text).toNot(contain("masked-plain"))
-                expect(text).toNot(contain("masked.example.com"))
-            }
-
-            it("TOTP secret は含まない") {
-                let text = SecureInfoEditor.searchableText(of: sampleItems()[1])
-                expect(text).toNot(contain("jbswy3dpehpk3pxp"))
-            }
-
-            it("メモ本文は含む") {
-                let text = SecureInfoEditor.searchableText(of: sampleItems()[2])
-                expect(text).to(contain("契約番号"))
-            }
-
-            // メモはマスクを持たない種別なので、旧データで isPassword が
-            // 立っていても本文は検索対象に含める
-            it("旧データでマスク指定が残っているメモも本文を検索できる") {
-                let item = SecureMenuItem(title: "T", fields: [
-                    SecureMenuItem.Field(label: "Memo", value: "contract-content", isPassword: true, kind: .note)
-                ])
-                let text = SecureInfoEditor.searchableText(of: item)
-                expect(text).to(contain("memo"))
-                expect(text).to(contain("contract-content"))
             }
         }
     }

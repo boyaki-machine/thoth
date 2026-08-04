@@ -135,7 +135,7 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
 | Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
-| Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export) |
+| Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |

@@ -73,7 +73,7 @@ Paste passwords, TOTP, and other sensitive values directly into any app **withou
 | Secure menu | **⌘⇧.** |
 
 - Inside the menu you can navigate with arrow keys or vim-style `hjkl` keys
-- Press `/` to move to the search box and narrow items down incrementally
+- Press `/` to move to the search box and narrow items down incrementally. The search covers titles and labels plus **the values of unmasked text / URL fields and memo bodies** (masked values and TOTP secrets are excluded). The Secure Info window's search uses the same rules
 - The hotkey can be changed in **Preferences → Shortcuts → Secure Menu**
 
 | Feature | Detail |
