@@ -226,9 +226,10 @@ extension MenuManager {
         image?.isTemplate = true
 
         statusItem = NSStatusBar.system.statusItem(withLength: -1)
-        statusItem?.image = image
-        statusItem?.highlightMode = true
-        statusItem?.toolTip = "\(Constants.Application.name) v\(Bundle.main.appVersion ?? "")"
+        statusItem?.button?.image = image
+        // 旧 highlightMode = true と同じ（押下中にボタンを反転表示する）
+        (statusItem?.button?.cell as? NSButtonCell)?.highlightsBy = [.pushInCellMask, .changeBackgroundCellMask]
+        statusItem?.button?.toolTip = "\(Constants.Application.name) v\(Bundle.main.appVersion ?? "")"
         // クリック時も検索ボックス一体型パネルを表示する（NSMenu は割り当てない）
         statusItem?.button?.target = self
         statusItem?.button?.action = #selector(statusItemClicked)

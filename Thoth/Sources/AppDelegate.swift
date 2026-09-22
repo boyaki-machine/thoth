@@ -311,7 +311,7 @@ extension AppDelegate: NSApplicationDelegate {
         let existingApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
             .first { $0.processIdentifier != currentProcessIdentifier && !$0.isTerminated }
         guard let runningApp = existingApp else { return }
-        runningApp.activate(options: [.activateIgnoringOtherApps])
+        runningApp.activate(options: [])
         NSApp.terminate(nil)
     }
 

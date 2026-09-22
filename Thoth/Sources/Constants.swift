@@ -107,7 +107,6 @@ struct Constants {
     }
 
     struct Xml {
-        static let fileType = "xml"
         static let type = "type"
         static let rootElement = "folders"
         static let folderElement = "folder"

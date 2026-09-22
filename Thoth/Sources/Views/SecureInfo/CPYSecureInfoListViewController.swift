@@ -74,8 +74,8 @@ final class CPYSecureInfoListViewController: NSViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.allowsMultipleSelection = false
-        // サイドバー用の外観。macOS 11+ では選択色やインセットが自動で調整される
-        tableView.selectionHighlightStyle = .sourceList
+        // サイドバー用の外観。選択色やインセットが自動で調整される
+        tableView.style = .sourceList
         tableView.backgroundColor = .clear
         // 並べ替えのドラッグ&ドロップ。載せるのは行番号だけで、値は載せない
         tableView.registerForDraggedTypes([.thothSecureItemRow])
