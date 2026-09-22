@@ -10,6 +10,17 @@
 
 ---
 
+## Table of Contents
+
+- [1. About This App](#1-about-this-app)
+- [2. Features](#2-features)
+- [3. Installation & Running](#3-installation--running)
+- [4. Settings](#4-settings)
+- [License](#license)
+- [Special Thanks](#special-thanks)
+
+---
+
 ## 1. About This App
 
 This project is a fork of **[Clipy](https://github.com/Clipy/Clipy)** (MIT licensed), an open-source clipboard extension app for macOS, extended with additional features.
@@ -34,6 +45,10 @@ This app is provided under the MIT license. The attribution and original develop
 
 > For developer information (environment, build steps), see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 > For data formats, cryptographic specifications, and design policy, see [docs/DESIGN.md](docs/DESIGN.md).
+
+### A Note from the Developer
+
+All new implementation in this application was written by an AI Agent. The only thing the developer actually wrote is this sentence — everything else was implemented by the AI Agent based on the developer's specifications. Testing and security checks were done with care, but please use this app at your own risk.
 
 ---
 
