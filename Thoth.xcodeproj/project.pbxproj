@@ -15,6 +15,7 @@
 		6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */; };
+		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
 		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
 		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
 		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
@@ -82,6 +83,7 @@
 		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
 		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
@@ -234,6 +236,7 @@
 		6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ThothTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmProvider.swift; sourceTree = "<group>"; };
+		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
 		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
 		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ThothTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
@@ -313,6 +316,7 @@
 		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
 		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -635,6 +639,7 @@
 			children = (
 				FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */,
 				6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */,
+				AA00052100000000ABCDEF01 /* FieldCipher.swift */,
 				AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */,
 				AA00051300000000ABCDEF01 /* LibraryStore.swift */,
 				AA10CAFE0000000000000012 /* LegacyMigration.swift */,
@@ -818,6 +823,7 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */,
 				AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */,
 				AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */,
 				AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */,
@@ -1150,6 +1156,7 @@
 				FAC0DCF11DE576F300309C49 /* PasteService.swift in Sources */,
 				FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */,
+				AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */,
 				AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */,
 				AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */,
 				AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */,
@@ -1270,6 +1277,7 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */,
 				AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */,
 				AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */,
 				AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */,
