@@ -257,10 +257,6 @@
 
 "Crypto Fingerprint Password Saved" = "Password con impronta digitale salvata.";
 
-"Realm Open Failed Title" = "Impossibile aprire il database della cronologia";
-"Realm Open Failed Message" = "Impossibile aprire il database della cronologia degli appunti. La chiave di cifratura potrebbe mancare o il file potrebbe essere danneggiato. Puoi uscire e riprovare, oppure ripristinare il database (questa operazione elimina tutta la cronologia e gli snippet).";
-"Realm Open Failed Quit" = "Esci";
-"Realm Open Failed Reset" = "Ripristina database";
 
 "Add TOTP" = "Aggiungi TOTP...";
 
@@ -305,3 +301,7 @@
 "Third Party Licenses" = "Licenze di terze parti";
 "Updates Third Party Licenses Button" = "Licenze di terze parti…";
 "Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";
+"Library Unavailable Title" = "Chiave di crittografia non disponibile";
+"Library Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione non verrà scritto nulla su disco, la cronologia resterà solo in memoria e gli snippet non potranno essere mostrati né modificati. I dati salvati restano intatti. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";
+"Snippets Unavailable" = "Snippet non disponibili";
+"Snippets Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione gli snippet non possono essere mostrati né modificati. Non è stato eliminato nulla. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";

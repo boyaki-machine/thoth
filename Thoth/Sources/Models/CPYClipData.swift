@@ -66,6 +66,16 @@ final class CPYClipData: NSObject {
         cachedHash = hash
         return hash
     }
+    /// .data ファイルの中身（復号済みのアーカイブ）から読み戻す。
+    /// requiresSecureCoding=false は、CPYClipData が旧式 NSCoding（NSImage 等を含む）で、
+    /// SecureCoding 化すると既存の全履歴が読めなくなるため据え置き。
+    /// 改竄検知は ClipDataStore の GCM 認証タグが担う
+    static func unarchived(from fileData: Data) -> CPYClipData? {
+        guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
+        unarchiver.requiresSecureCoding = false
+        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData
+    }
+
     var primaryType: NSPasteboard.PasteboardType? {
         return types.first
     }

@@ -257,10 +257,6 @@
 
 "Crypto Fingerprint Password Saved" = "Fingerabdruck-Passwort gesichert.";
 
-"Realm Open Failed Title" = "Verlaufsdatenbank konnte nicht geöffnet werden";
-"Realm Open Failed Message" = "Die Datenbank des Zwischenablage-Verlaufs konnte nicht geöffnet werden. Möglicherweise fehlt der Verschlüsselungsschlüssel oder die Datei ist beschädigt. Sie können beenden und es erneut versuchen oder die Datenbank zurücksetzen (dabei werden alle Verläufe und Snippets gelöscht).";
-"Realm Open Failed Quit" = "Beenden";
-"Realm Open Failed Reset" = "Datenbank zurücksetzen";
 
 "Add TOTP" = "TOTP hinzufügen...";
 
@@ -305,3 +301,7 @@
 "Third Party Licenses" = "Lizenzen von Drittanbietern";
 "Updates Third Party Licenses Button" = "Lizenzen von Drittanbietern …";
 "Third Party Licenses Load Failed" = "Die Liste der Drittanbieter-Lizenzen konnte nicht geladen werden.";
+"Library Unavailable Title" = "Verschlüsselungsschlüssel nicht verfügbar";
+"Library Unavailable Message" = "Thoth konnte seinen Verschlüsselungsschlüssel nicht lesen. In dieser Sitzung wird daher nichts auf die Festplatte geschrieben: Der Verlauf bleibt nur im Arbeitsspeicher, und Snippets können weder angezeigt noch bearbeitet werden. Ihre gespeicherten Daten bleiben unverändert. Entsperren Sie Ihren Anmeldeschlüsselbund (oder erlauben Sie den Zugriff) und starten Sie Thoth erneut.";
+"Snippets Unavailable" = "Snippets sind nicht verfügbar";
+"Snippets Unavailable Message" = "Thoth konnte seinen Verschlüsselungsschlüssel nicht lesen. In dieser Sitzung können Snippets weder angezeigt noch bearbeitet werden. Es wurde nichts gelöscht. Entsperren Sie Ihren Anmeldeschlüsselbund (oder erlauben Sie den Zugriff) und starten Sie Thoth erneut.";

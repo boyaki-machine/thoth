@@ -257,10 +257,6 @@
 
 "Crypto Fingerprint Password Saved" = "指纹密码已保存。";
 
-"Realm Open Failed Title" = "无法打开历史数据库";
-"Realm Open Failed Message" = "无法打开剪贴板历史数据库。加密密钥可能丢失，或文件可能已损坏。您可以退出后重试，或重置数据库（这将删除所有历史记录和片断）。";
-"Realm Open Failed Quit" = "退出";
-"Realm Open Failed Reset" = "重置数据库";
 
 "Add TOTP" = "添加 TOTP...";
 
@@ -305,3 +301,7 @@
 "Third Party Licenses" = "第三方许可证";
 "Updates Third Party Licenses Button" = "第三方许可证…";
 "Third Party Licenses Load Failed" = "无法加载第三方许可证列表。";
+"Library Unavailable Title" = "无法读取加密密钥";
+"Library Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行不会向磁盘写入任何内容：剪贴板历史仅保存在内存中，片段也无法显示或编辑。已保存的数据不会被改动。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";
+"Snippets Unavailable" = "无法显示片段";
+"Snippets Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行无法显示或编辑片段。没有任何内容被删除。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";

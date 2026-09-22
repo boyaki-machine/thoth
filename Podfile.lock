@@ -17,14 +17,6 @@ PODS:
     - Sauce (~> 2.4.0)
   - Nimble (14.0.0):
     - CwlPreconditionTesting (~> 2.2.0)
-  - PINCache (3.0.4):
-    - PINCache/Arc-exception-safe (= 3.0.4)
-    - PINCache/Core (= 3.0.4)
-  - PINCache/Arc-exception-safe (3.0.4):
-    - PINCache/Core
-  - PINCache/Core (3.0.4):
-    - PINOperation (~> 1.2.3)
-  - PINOperation (1.2.3)
   - Quick (7.6.2)
   - Realm (10.54.6):
     - Realm/Headers (= 10.54.6)
@@ -54,7 +46,6 @@ DEPENDENCIES:
   - LetsMove
   - Magnet
   - Nimble (~> 14.0)
-  - PINCache
   - Quick (~> 7.0)
   - RealmSwift (~> 10.54)
   - RxCocoa
@@ -78,8 +69,6 @@ SPEC REPOS:
     - LetsMove
     - Magnet
     - Nimble
-    - PINCache
-    - PINOperation
     - Quick
     - Realm
     - RealmSwift
@@ -105,8 +94,6 @@ SPEC CHECKSUMS:
   LetsMove: 7b9fe44737707d984fbd3f47af46609a9a07b461
   Magnet: d9212b3bb4fc0be22676279960185eeda6823b91
   Nimble: fcfcaab1cca78e301543f78669d70c166b4fadc3
-  PINCache: d9a87a0ff397acffe9e2f0db972ac14680441158
-  PINOperation: fb563bcc9c32c26d6c78aaff967d405aa2ee74a7
   Quick: b8bec97cd4b9f21da0472d45580f763b801fc353
   Realm: b1b3bc68162fa242132eb7eefbf91d7c40f36a85
   RealmSwift: 456cfd82a4f23dff8e3456980999331ab69bbf3e
@@ -120,6 +107,6 @@ SPEC CHECKSUMS:
   SwiftHEXColors: 1cb6e5d55c52749aa33db8f088ac55eb71ca4c7f
   SwiftLint: 7d51ad56923e88694cee5ca806dbbab30f85eaaa
 
-PODFILE CHECKSUM: 5faf92b7282ceefe30809b428e5d57be270a9982
+PODFILE CHECKSUM: dd524c1e02cdb70e066f6d2a0298c6dce15e809e
 
 COCOAPODS: 1.17.0

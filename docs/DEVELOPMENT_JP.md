@@ -33,11 +33,10 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 
 | ライブラリ | 用途 |
 |---|---|
-| RealmSwift | クリップボード履歴・スニペットの永続化（暗号化して保存） |
+| RealmSwift | v1.4.x までの履歴・スニペットの保存先。v1.5 では移行元の読み出しだけに使う（v1.6.x で削除予定） |
 | RxSwift / RxCocoa | リアクティブなイベント処理・設定監視 |
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
-| PINCache | サムネイル画像のキャッシュ |
 | RxScreeen | スクリーンショット監視 |
 | AEXML | スニペットの XML インポート/エクスポート |
 | LetsMove | 初回起動時の Applications フォルダへの移動促進 |
@@ -69,7 +68,9 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 │   │   ├── Preferences/             環境設定ウィンドウと各パネル
 │   │   ├── Services/                ビジネスロジック（下表参照）
 │   │   ├── Snippets/                スニペットエディタ（レガシー NIB ベース）
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
+│   │   ├── Utility/                 CPYUtilities / ClipDataStore / ClipThumbnail /
+│   │   │                            保存層（LibraryStore / SwiftDataLibraryStore /
+│   │   │                            FieldCipher / LibraryProvider / LibraryMigrator）
 │   │   └── Views/                   各種ウィンドウ・パネル（暗号化・パスワード生成・
 │   │       │                        セキュアピッカー等）
 │   │       └── SecureInfo/          セキュア情報確認ウィンドウ（2 ペイン）
@@ -111,7 +112,14 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 
 補助的な永続化ユーティリティ（`Thoth/Sources/Utility/`）:
 
-- `RealmProvider` — Realm 構成・スキーマ移行・暗号化・アプリ生成鍵の管理
+- `LibraryStore` — 履歴・スニペットの保存層のプロトコル（`HistoryStore` / `SnippetStore`）。UI・サービスは値型（`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`）だけを扱い、保存先には直接触れない。`AppEnvironment.current.historyStore` / `snippetStore` から取得する
+- `SwiftDataLibraryStore` / `LibraryStoreSchema` — 保存層の本番実装（SwiftData）とスキーマ。`ModelContext` は専用の直列キューの中でだけ使う
+- `FieldCipher` — 保存層の項目暗号化（AES-256-GCM）と内容キー（HMAC）。鍵は `.data` 用の鍵から HKDF で導出する
+- `LibraryProvider` — 起動時に保存層を用意する（移行の実行・鍵が使えないときの扱い）
+- `LibraryMigrator` — Realm から SwiftData への移行（読み取り専用で読み出し、照合してから完了の印を書く）
+- `ClipThumbnail` — サムネイルの生成（縮小した PNG）・表示・移行後の作り直し
+- `RealmLibraryStore` — 保存層の Realm 版。v1.5 では本番で使わず、契約テストの比較対象として残している（v1.6.x で削除）
+- `RealmProvider` — アプリ生成鍵（app-keys）の管理と、移行元の Realm を読むための構成
 - `ClipDataStore` — クリップ実データ（`.data` ファイル）の暗号化読み書き
 
 ---
@@ -138,7 +146,11 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | 分類 | スペック |
 |---|---|
 | クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
-| モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
+| モデル | `SecureMenuItemSpec` |
+| 保存層 | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec`（共通の契約 `LibraryStoreContract` を両実装で確かめる。SwiftData 版はファイルに平文が現れないことも）、`DataCleanServiceSpec`（上限超過で消す範囲） |
+| 暗号化（保存層） | `FieldCipherSpec`（鍵の導出・暗号文の形式・改ざんと取り違えの検出。固定値は Swift の実装とは独立に計算） |
+| 移行（Realm → SwiftData） | `LibraryMigrationSpec`（固定の Realm ファイルからの移行・Realm を書き換えないこと・照合の失敗・起動時の判断）、`LibraryUnavailableSpec`（暗号鍵が使えないときの扱い） |
+| サムネイル | `ClipThumbnailSpec`（実際に縮小されること・保存層との出し入れ・移行後の作り直し） |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
 | 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |

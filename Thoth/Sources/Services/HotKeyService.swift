@@ -13,7 +13,6 @@
 import Foundation
 import Cocoa
 import Magnet
-import RealmSwift
 
 /// グローバルホットキー（メニュー呼び出し・履歴クリア・スニペットフォルダ表示）を
 /// Magnet フレームワーク経由で登録・管理するサービス。
@@ -228,8 +227,10 @@ extension HotKeyService {
 
     @objc func popupSnippetFolder(_ object: AnyObject) {
         guard let hotKey = object as? HotKey else { return }
-        let realm = RealmProvider.defaultRealm()
-        guard let folder = realm.object(ofType: CPYFolder.self, forPrimaryKey: hotKey.identifier) else {
+        // 暗号鍵が使えないときはフォルダを読めない。ここで「削除された」と誤判定して
+        // ホットキーの割り当てを消してしまわないよう、何もせずに戻る
+        guard AppEnvironment.current.isLibraryUsable else { return }
+        guard let folder = AppEnvironment.current.snippetStore.folder(id: hotKey.identifier) else {
             // When already deleted folder, remove keycombos
             unregisterSnippetHotKey(with: hotKey.identifier)
             return

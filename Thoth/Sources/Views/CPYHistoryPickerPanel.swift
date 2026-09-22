@@ -72,7 +72,7 @@ final class CPYHistoryPickerPanel: NSPanel {
         }
     }
 
-    /// 履歴クリップの表示用スナップショット（Realm 非依存）
+    /// 履歴クリップの表示用スナップショット（保存層の ClipRecord から作る）
     struct ClipItem {
         /// 全履歴（未フィルタ）での元の位置。検索時のグループ判定・番号表示に使う
         let index: Int
@@ -83,12 +83,12 @@ final class CPYHistoryPickerPanel: NSPanel {
         let fullTitle: String
         /// 検索用（切り詰め前の 1 行目を小文字化）
         let lowercasedTitle: String
-        let thumbnailPath: String
+        let hasThumbnail: Bool
         let isColorCode: Bool
         let ref: ClipFullTextIndexer.ClipRef
 
         /// - Parameter maxTitleLength: 0 なら切り詰めなし
-        init(clip: CPYClip, index: Int, maxTitleLength: Int = 0) {
+        init(clip: ClipRecord, index: Int, maxTitleLength: Int = 0) {
             let primaryType = NSPasteboard.PasteboardType(rawValue: clip.primaryType)
             let firstLine = clip.title
                 .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -109,13 +109,13 @@ final class CPYHistoryPickerPanel: NSPanel {
                 display = String(display.prefix(maxTitleLength - 3)) + "..."
             }
             self.index = index
-            self.dataHash = clip.dataHash
+            self.dataHash = clip.id
             self.title = display
             self.fullTitle = clip.title
             self.lowercasedTitle = firstLine.lowercased()
-            self.thumbnailPath = clip.thumbnailPath
+            self.hasThumbnail = clip.hasThumbnail
             self.isColorCode = clip.isColorCode
-            self.ref = ClipFullTextIndexer.ClipRef(dataHash: clip.dataHash,
+            self.ref = ClipFullTextIndexer.ClipRef(dataHash: clip.id,
                                                    dataPath: clip.dataPath,
                                                    primaryType: clip.primaryType)
         }

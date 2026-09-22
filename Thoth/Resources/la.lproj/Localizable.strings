@@ -253,10 +253,6 @@
 
 "Crypto Fingerprint Password Saved" = "Signum arcanum digiti servatum.";
 
-"Realm Open Failed Title" = "Basis datorum historiae aperiri non potuit";
-"Realm Open Failed Message" = "Basis datorum historiae tabulae affixae aperiri non potuit. Clavis occultationis fortasse deest aut plica corrupta est. Exire et iterum temptare potes, aut basim datorum restituere (omnis historia et fragmenta delebuntur).";
-"Realm Open Failed Quit" = "Exire";
-"Realm Open Failed Reset" = "Basim datorum restituere";
 
 "Add TOTP" = "TOTP addere...";
 

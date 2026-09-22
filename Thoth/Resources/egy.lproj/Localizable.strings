@@ -261,10 +261,6 @@
 
 "Crypto Fingerprint Password Saved" = "𓂭𓊃 𓊪𓋴𓅱𓂋𓂧𓊃 𓄤𓏞.";
 
-"Realm Open Failed Title" = "𓅪 𓂜 𓃹𓈖 𓏛𓏛𓏛";
-"Realm Open Failed Message" = "𓂜 𓃹𓈖 𓏛𓏛𓏛 𓈖 𓉔𓇋𓋴𓏏𓂋𓏭. 𓊃𓊃 𓅠𓅪 𓂋𓊪𓅱 𓏛 𓅪. 𓂻 𓆣 𓂋𓊪𓅱 𓆣 𓏛𓏛𓏛 (𓂧𓃭𓏏𓅪 𓉔𓇋𓋴𓏏𓂋𓏭 𓎟).";
-"Realm Open Failed Quit" = "𓂻";
-"Realm Open Failed Reset" = "𓆣 𓏛𓏛𓏛";
 
 "Add TOTP" = "𓄿𓂧𓂧 𓇳𓊃 (TOTP)...";
 

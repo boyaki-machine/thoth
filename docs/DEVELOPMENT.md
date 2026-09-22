@@ -33,11 +33,10 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 
 | Library | Purpose |
 |---|---|
-| RealmSwift | Persistence of clipboard history and snippets (stored encrypted) |
+| RealmSwift | Where history and snippets were stored up to v1.4.x. In v1.5 it is only read as the migration source (to be removed in v1.6.x) |
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| PINCache | Thumbnail image caching |
 | RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
 | LetsMove | Prompt to move to the Applications folder on first launch |
@@ -69,7 +68,9 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 │   │   ├── Preferences/             Preferences window and its panels
 │   │   ├── Services/                Business logic (see table below)
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
+│   │   ├── Utility/                 CPYUtilities / ClipDataStore / ClipThumbnail /
+│   │   │                            storage layer (LibraryStore / SwiftDataLibraryStore /
+│   │   │                            FieldCipher / LibraryProvider / LibraryMigrator)
 │   │   └── Views/                   Windows and panels (encryption, password
 │   │       │                        generation, secure picker, etc.)
 │   │       └── SecureInfo/          Secure Info window (two-pane)
@@ -111,7 +112,14 @@ Business logic is concentrated in the services layer. Stateful services are obta
 
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 
-- `RealmProvider` — Realm configuration, schema migration, encryption, and app-generated key management
+- `LibraryStore` — Protocols of the storage layer for history and snippets (`HistoryStore` / `SnippetStore`). UI and services only handle value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`) and never touch the backing store directly. Obtained from `AppEnvironment.current.historyStore` / `snippetStore`
+- `SwiftDataLibraryStore` / `LibraryStoreSchema` — The production implementation (SwiftData) and its schema. The `ModelContext` is used only inside a dedicated serial queue
+- `FieldCipher` — Per-field encryption (AES-256-GCM) and the content key (HMAC) for the storage layer; keys are derived from the `.data` key with HKDF
+- `LibraryProvider` — Prepares the storage layer at launch (runs the migration, handles an unavailable key)
+- `LibraryMigrator` — Migration from Realm to SwiftData (reads read-only, verifies, then writes the completion marker)
+- `ClipThumbnail` — Thumbnail generation (downscaled PNG), display, and regeneration after migration
+- `RealmLibraryStore` — Realm implementation of the storage layer; unused in production in v1.5 and kept as the comparison target for the contract tests (removed in v1.6.x)
+- `RealmProvider` — App-generated key (app-keys) management and the configuration used to read the Realm migration source
 - `ClipDataStore` — Encrypted read/write of clip payloads (`.data` files)
 
 ---
@@ -138,7 +146,11 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Category | Specs |
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
-| Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
+| Models | `SecureMenuItemSpec` |
+| Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
+| Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
+| Migration (Realm → SwiftData) | `LibraryMigrationSpec` (migration from a fixed Realm file, the Realm file staying untouched, verification failure, startup decisions), `LibraryUnavailableSpec` (behavior when the encryption key is unavailable) |
+| Thumbnails | `ClipThumbnailSpec` (actual downscaling, round-trip through the storage layer, regeneration after migration) |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
