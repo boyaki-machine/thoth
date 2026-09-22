@@ -106,7 +106,7 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 | `DataCleanService` | 履歴の定期クリーンアップ（上限超過・孤児ファイル削除） |
 | `ExcludeAppService` | 除外アプリケーションの管理 |
 | `AccessibilityService` | アクセシビリティ権限の確認・誘導 |
-| `LoginItemService` | ログイン項目（ログイン時の自動起動）の登録・解除（`SMAppService`） |
+| `LoginItemService` | ログイン項目（ログイン時の自動起動）を設定値に揃える（`SMAppService`。揃っていれば何もしない。システム設定で利用者がオフにした項目は上書きしない） |
 | `CodeSignService` | 起動時の自己署名安定化（後述） |
 
 補助的な永続化ユーティリティ（`Thoth/Sources/Utility/`）:
@@ -141,13 +141,13 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
-| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
+| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
 | 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
-| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |
+| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 

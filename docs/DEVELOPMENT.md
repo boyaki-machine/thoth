@@ -106,7 +106,7 @@ Business logic is concentrated in the services layer. Stateful services are obta
 | `DataCleanService` | Periodic history cleanup (over-limit / orphan file deletion) |
 | `ExcludeAppService` | Management of excluded applications |
 | `AccessibilityService` | Checks and guides accessibility permission |
-| `LoginItemService` | Registers / unregisters the login item (launch at login) via `SMAppService` |
+| `LoginItemService` | Keeps the login item (launch at login) in line with the setting via `SMAppService` (does nothing when already in line; never overrides an item the user turned off in System Settings) |
 | `CodeSignService` | Self-signature stabilization at launch (see below) |
 
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
@@ -141,13 +141,13 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
-| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings), `ClipFullTextIndexerSpec` (full-text index and search filter) |
+| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
 | Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
-| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec` |
+| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
