@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		242EC2327861D35B7C3AE84E /* Pods_ThothTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00A4B450122D7FCE6BD57E77 /* Pods_ThothTests.framework */; };
+		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		6F92D636300240E900478ACF /* CPYTOTPImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */; };
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
 		6F92D63A3002411700478ACF /* QRDecodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6383002411700478ACF /* QRDecodeService.swift */; };
@@ -18,47 +19,51 @@
 		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
 		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
 		6FCC01A1B2C3D4E5F607080B /* NSAlert+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */; };
+		7D77EBDB30A3E0F6D1D09963 /* CPYThirdPartyLicensesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */; };
 		AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001100000000ABCDEF01 /* SecureMenuItem.swift */; };
 		AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001200000000ABCDEF01 /* SecureMenuService.swift */; };
-		AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */; };
-		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
-		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00002400000000ABCDEF01 /* CPYSecurePickerPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */; };
 		AA00004100000000ABCDEF01 /* MenuManager+MenuBuilding.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */; };
 		AA00004200000000ABCDEF01 /* MenuManager+Popup.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */; };
 		AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */; };
 		AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */; };
 		AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */; };
-		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
-		AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */; };
-		AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */; };
-		AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */; };
-		AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */; };
-		AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */; };
-		AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */; };
-		AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */; };
-		AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */; };
-		AA00011800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */; };
-		AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */; };
-		AA0000EE80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */; };
-		AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */; };
-		AA00010200000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */; };
-		AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */; };
-		AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */; };
-		AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */; };
-		AA0000DE00000000ABCDEF01 /* SecureFieldRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */; };
-		AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */; };
-		AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */; };
-		AA0000D800000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */; };
-		AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */; };
 		AA00004800000000ABCDEF01 /* CodeSignService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003800000000ABCDEF01 /* CodeSignService.swift */; };
 		AA00004900000000ABCDEF01 /* SecureMenuItemSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */; };
 		AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */; };
 		AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */; };
 		AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */; };
-		7D77EBDB30A3E0F6D1D09963 /* CPYThirdPartyLicensesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */; };
 		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
+		AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A100000000ABCDEF01 /* CryptoService.swift */; };
+		AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */; };
+		AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */; };
+		AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */; };
+		AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */; };
+		AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */; };
+		AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */; };
+		AA0000D400000000ABCDEF01 /* CPYSecureInfoListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */; };
+		AA0000D600000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */; };
+		AA0000D800000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */; };
+		AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */; };
 		AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */; };
+		AA0000DE00000000ABCDEF01 /* SecureFieldRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */; };
+		AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */; };
+		AA0000E200000000ABCDEF01 /* SecureInfoFieldTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */; };
+		AA0000E400000000ABCDEF01 /* SecureInfoKeyAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */; };
+		AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */; };
+		AA0000E800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */; };
+		AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */; };
+		AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */; };
+		AA0000EE10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */; };
+		AA0000EE20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */; };
+		AA0000EE30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */; };
+		AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */; };
+		AA0000EE50000000ABCDEF01 /* SecureItemPasteboardType.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */; };
+		AA0000EE60000000ABCDEF01 /* SecureFieldRowView+Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */; };
+		AA0000EE70000000ABCDEF01 /* SecureItemsTransfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */; };
+		AA0000EE80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */; };
+		AA0000EE90000000ABCDEF01 /* SecureHistoryEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */; };
+		AA0000EEA0000000ABCDEF01 /* SecureFieldRowView+History.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */; };
 		AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */; };
 		AA0000F800000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */; };
 		AA0000FA00000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */; };
@@ -66,18 +71,15 @@
 		AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */; };
 		AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */; };
 		AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */; };
-		AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */; };
-		AA0000E600000000ABCDEF01 /* SecureInfoKeyActionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */; };
-		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
-		AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */; };
-		AA0000E000000000ABCDEF01 /* SecureInfoViewSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */; };
-		AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */; };
-		AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */; };
-		AA0000B100000000ABCDEF01 /* CryptoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A100000000ABCDEF01 /* CryptoService.swift */; };
-		AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */; };
+		AA00010200000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */; };
 		AA00010600000000ABCDEF01 /* TabCapturingButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00010500000000ABCDEF01 /* TabCapturingButton.swift */; };
-		AA0000B300000000ABCDEF01 /* CryptoServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */; };
-		AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */; };
+		AA00011200000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */; };
+		AA00011600000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */; };
+		AA00011800000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */; };
+		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
+		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
+		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
+		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
 		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
 		AA20C0DE0000000000000003 /* CPYCameraQRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */; };
@@ -103,7 +105,6 @@
 		FA10898320EC2AFB00A3FEFC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA10898220EC2AFB00A3FEFC /* Colors.swift */; };
 		FA1189331E4CD58C00244F12 /* ExcludeAppService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */; };
 		FA1DB4901DDCA5D9007F95C8 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */; };
-		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		FA1DB4981DDCB2CB007F95C8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB4961DDCB2CB007F95C8 /* Localizable.strings */; };
 		FA1DB49F1DDCB417007F95C8 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB49E1DDCB417007F95C8 /* MainMenu.xib */; };
 		FA1DB4A21DDCB433007F95C8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A01DDCB433007F95C8 /* AppDelegate.swift */; };
@@ -192,6 +193,8 @@
 
 /* Begin PBXFileReference section */
 		00A4B450122D7FCE6BD57E77 /* Pods_ThothTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ThothTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
+		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
 		1C2D23FF23B07B76585DC610 /* Pods-ThothTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ThothTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ThothTests/Pods-ThothTests.release.xcconfig"; sourceTree = "<group>"; };
 		31064F137CFB046737D1709D /* Pods-Thoth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Thoth.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Thoth/Pods-Thoth.debug.xcconfig"; sourceTree = "<group>"; };
 		314B299D1EC49AD5004DD070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYSnippetsEditorWindowController.xib; sourceTree = "<group>"; };
@@ -244,45 +247,48 @@
 		9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Thoth.release.xcconfig"; path = "Pods/Target Support Files/Pods-Thoth/Pods-Thoth.release.xcconfig"; sourceTree = "<group>"; };
 		AA00001100000000ABCDEF01 /* SecureMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItem.swift; sourceTree = "<group>"; };
 		AA00001200000000ABCDEF01 /* SecureMenuService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuService.swift; sourceTree = "<group>"; };
-		AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransfer.swift; sourceTree = "<group>"; };
-		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
-		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecurePickerPanel.swift; sourceTree = "<group>"; };
 		AA00003100000000ABCDEF01 /* MenuManager+MenuBuilding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+MenuBuilding.swift"; sourceTree = "<group>"; };
 		AA00003200000000ABCDEF01 /* MenuManager+Popup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "MenuManager+Popup.swift"; sourceTree = "<group>"; };
 		AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+Keyboard.swift"; sourceTree = "<group>"; };
 		AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanel+TableView.swift"; sourceTree = "<group>"; };
 		AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureSubPanel.swift; sourceTree = "<group>"; };
-		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
-		AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoStack.swift; sourceTree = "<group>"; };
-		AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldDropView.swift; sourceTree = "<group>"; };
-		AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureHistoryEntryView.swift; sourceTree = "<group>"; };
-		AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Layout.swift"; sourceTree = "<group>"; };
-		AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+History.swift"; sourceTree = "<group>"; };
-		AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Lifecycle.swift"; sourceTree = "<group>"; };
-		AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemPasteboardType.swift; sourceTree = "<group>"; };
-		AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Undo.swift"; sourceTree = "<group>"; };
-		AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Sheets.swift"; sourceTree = "<group>"; };
-		AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Observers.swift"; sourceTree = "<group>"; };
-		AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Transfer.swift"; sourceTree = "<group>"; };
-		AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+Row.swift"; sourceTree = "<group>"; };
-		AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+BottomBar.swift"; sourceTree = "<group>"; };
-		AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Keyboard.swift"; sourceTree = "<group>"; };
-		AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyAction.swift; sourceTree = "<group>"; };
-		AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoFieldTemplate.swift; sourceTree = "<group>"; };
-		AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowView.swift; sourceTree = "<group>"; };
-		AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoListViewController.swift; sourceTree = "<group>"; };
-		AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoDetailViewController.swift; sourceTree = "<group>"; };
-		AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoSplitViewController.swift; sourceTree = "<group>"; };
-		AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoWindowController.swift; sourceTree = "<group>"; };
 		AA00003800000000ABCDEF01 /* CodeSignService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeSignService.swift; sourceTree = "<group>"; };
 		AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItemSpec.swift; sourceTree = "<group>"; };
 		AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuServiceSpec.swift; sourceTree = "<group>"; };
 		AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateService.swift; sourceTree = "<group>"; };
 		AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYPasswordGeneratorWindowController.swift; sourceTree = "<group>"; };
-		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
 		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
+		AA0000A100000000ABCDEF01 /* CryptoService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
+		AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoWindowController.swift; sourceTree = "<group>"; };
+		AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoServiceSpec.swift; sourceTree = "<group>"; };
+		AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoPasswordManagerWindowController.swift; sourceTree = "<group>"; };
+		AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteServiceTOTPSpec.swift; sourceTree = "<group>"; };
+		AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TOTPRegistrationFlowSpec.swift; sourceTree = "<group>"; };
+		AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditor.swift; sourceTree = "<group>"; };
+		AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoListViewController.swift; sourceTree = "<group>"; };
+		AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoDetailViewController.swift; sourceTree = "<group>"; };
+		AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoSplitViewController.swift; sourceTree = "<group>"; };
+		AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecureInfoWindowController.swift; sourceTree = "<group>"; };
 		AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditorSpec.swift; sourceTree = "<group>"; };
+		AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowView.swift; sourceTree = "<group>"; };
+		AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoViewSpec.swift; sourceTree = "<group>"; };
+		AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoFieldTemplate.swift; sourceTree = "<group>"; };
+		AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyAction.swift; sourceTree = "<group>"; };
+		AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyActionSpec.swift; sourceTree = "<group>"; };
+		AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Keyboard.swift"; sourceTree = "<group>"; };
+		AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoCommitFlowSpec.swift; sourceTree = "<group>"; };
+		AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoStack.swift; sourceTree = "<group>"; };
+		AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Undo.swift"; sourceTree = "<group>"; };
+		AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Observers.swift"; sourceTree = "<group>"; };
+		AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+Row.swift"; sourceTree = "<group>"; };
+		AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldDropView.swift; sourceTree = "<group>"; };
+		AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemPasteboardType.swift; sourceTree = "<group>"; };
+		AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Layout.swift"; sourceTree = "<group>"; };
+		AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransfer.swift; sourceTree = "<group>"; };
+		AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Transfer.swift"; sourceTree = "<group>"; };
+		AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureHistoryEntryView.swift; sourceTree = "<group>"; };
+		AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+History.swift"; sourceTree = "<group>"; };
 		AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoSpec.swift; sourceTree = "<group>"; };
 		AA0000F700000000ABCDEF01 /* SecureInfoUndoFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoFlowSpec.swift; sourceTree = "<group>"; };
 		AA0000F900000000ABCDEF01 /* SecureFieldRowInteractionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowInteractionSpec.swift; sourceTree = "<group>"; };
@@ -290,18 +296,15 @@
 		AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemsTransferSpec.swift; sourceTree = "<group>"; };
 		AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoActionMenuSpec.swift; sourceTree = "<group>"; };
 		AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoHistorySpec.swift; sourceTree = "<group>"; };
-		AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoCommitFlowSpec.swift; sourceTree = "<group>"; };
-		AA0000E500000000ABCDEF01 /* SecureInfoKeyActionSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoKeyActionSpec.swift; sourceTree = "<group>"; };
-		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
-		AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowLifecycleSpec.swift; sourceTree = "<group>"; };
-		AA0000DF00000000ABCDEF01 /* SecureInfoViewSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoViewSpec.swift; sourceTree = "<group>"; };
-		AA0000C700000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TOTPRegistrationFlowSpec.swift; sourceTree = "<group>"; };
-		AA0000C300000000ABCDEF01 /* PasteServiceTOTPSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteServiceTOTPSpec.swift; sourceTree = "<group>"; };
-		AA0000A100000000ABCDEF01 /* CryptoService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoService.swift; sourceTree = "<group>"; };
-		AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoWindowController.swift; sourceTree = "<group>"; };
+		AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoDetailViewController+BottomBar.swift"; sourceTree = "<group>"; };
 		AA00010500000000ABCDEF01 /* TabCapturingButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TabCapturingButton.swift; sourceTree = "<group>"; };
-		AA0000A300000000ABCDEF01 /* CryptoServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CryptoServiceSpec.swift; sourceTree = "<group>"; };
-		AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYCryptoPasswordManagerWindowController.swift; sourceTree = "<group>"; };
+		AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "SecureFieldRowView+Lifecycle.swift"; sourceTree = "<group>"; };
+		AA00011500000000ABCDEF01 /* SecureFieldRowLifecycleSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureFieldRowLifecycleSpec.swift; sourceTree = "<group>"; };
+		AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSecureInfoSplitViewController+Sheets.swift"; sourceTree = "<group>"; };
+		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
+		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
+		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
+		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000012 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
@@ -335,7 +338,6 @@
 		FA10898220EC2AFB00A3FEFC /* Colors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppService.swift; sourceTree = "<group>"; };
 		FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
 		FA1DB4931DDCB22C007F95C8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA1DB4971DDCB2CB007F95C8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA1DB4991DDCB2D0007F95C8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -446,6 +448,35 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		AA0000D000000000ABCDEF01 /* SecureInfo */ = {
+			isa = PBXGroup;
+			children = (
+				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
+				AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */,
+				AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */,
+				AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */,
+				AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */,
+				AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */,
+				AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */,
+				AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */,
+				AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */,
+				AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */,
+				AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */,
+				AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */,
+				AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */,
+				AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */,
+				AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */,
+				AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */,
+				AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */,
+				AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */,
+				AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */,
+				AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */,
+				AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */,
+				AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */,
+			);
+			path = SecureInfo;
+			sourceTree = "<group>";
+		};
 		D308B3D847EEAF20B17182CE /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -478,6 +509,7 @@
 				FAC0DCF01DE576F300309C49 /* PasteService.swift */,
 				FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */,
 				FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */,
+				AA00050100000000ABCDEF01 /* LoginItemService.swift */,
 				AA00001200000000ABCDEF01 /* SecureMenuService.swift */,
 				AA0000ED70000000ABCDEF01 /* SecureItemsTransfer.swift */,
 				AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */,
@@ -648,35 +680,6 @@
 				FA1DB4E41DDCB49C007F95C8 /* CPYPlaceHolderTextView.swift */,
 			);
 			path = TextViews;
-			sourceTree = "<group>";
-		};
-		AA0000D000000000ABCDEF01 /* SecureInfo */ = {
-			isa = PBXGroup;
-			children = (
-				AA0000D100000000ABCDEF01 /* SecureInfoEditor.swift */,
-				AA0000ED00000000ABCDEF01 /* SecureInfoUndoStack.swift */,
-				AA0000ED40000000ABCDEF01 /* SecureFieldDropView.swift */,
-				AA0000ED90000000ABCDEF01 /* SecureHistoryEntryView.swift */,
-				AA0000ED60000000ABCDEF01 /* SecureFieldRowView+Layout.swift */,
-				AA0000EDA0000000ABCDEF01 /* SecureFieldRowView+History.swift */,
-				AA00011100000000ABCDEF01 /* SecureFieldRowView+Lifecycle.swift */,
-				AA0000ED50000000ABCDEF01 /* SecureItemPasteboardType.swift */,
-				AA0000ED10000000ABCDEF01 /* CPYSecureInfoSplitViewController+Undo.swift */,
-				AA00011700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Sheets.swift */,
-				AA0000ED20000000ABCDEF01 /* CPYSecureInfoSplitViewController+Observers.swift */,
-				AA0000ED80000000ABCDEF01 /* CPYSecureInfoSplitViewController+Transfer.swift */,
-				AA0000ED30000000ABCDEF01 /* CPYSecureInfoDetailViewController+Row.swift */,
-				AA00010100000000ABCDEF01 /* CPYSecureInfoDetailViewController+BottomBar.swift */,
-				AA0000E700000000ABCDEF01 /* CPYSecureInfoSplitViewController+Keyboard.swift */,
-				AA0000E300000000ABCDEF01 /* SecureInfoKeyAction.swift */,
-				AA0000E100000000ABCDEF01 /* SecureInfoFieldTemplate.swift */,
-				AA0000DD00000000ABCDEF01 /* SecureFieldRowView.swift */,
-				AA0000D300000000ABCDEF01 /* CPYSecureInfoListViewController.swift */,
-				AA0000D500000000ABCDEF01 /* CPYSecureInfoDetailViewController.swift */,
-				AA0000D700000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift */,
-				AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */,
-			);
-			path = SecureInfo;
 			sourceTree = "<group>";
 		};
 		FA1DB4EC1DDCB4C0007F95C8 /* Preferences */ = {
@@ -960,7 +963,6 @@
 				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
 				"${BUILT_PRODUCTS_DIR}/KeyHolder/KeyHolder.framework",
 				"${BUILT_PRODUCTS_DIR}/LetsMove/LetsMove.framework",
-				"${BUILT_PRODUCTS_DIR}/LoginServiceKit/LoginServiceKit.framework",
 				"${BUILT_PRODUCTS_DIR}/Magnet/Magnet.framework",
 				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
 				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
@@ -979,7 +981,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/KeyHolder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LetsMove.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LoginServiceKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Magnet.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
@@ -1090,7 +1091,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/BartyCrouch/bartycrouch\" interfaces -p \"$PROJECT_DIR\"";
+			shellScript = "cd \"$PROJECT_DIR\" && \"${PODS_ROOT}/BartyCrouch/bartycrouch\" update";
 		};
 		FAAD02201CA98E20007C6EEE /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1136,6 +1137,7 @@
 				FA1DB4B81DDCB452007F95C8 /* NSLock+Thoth.swift in Sources */,
 				FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */,
 				FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */,
+				AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */,
 				FA1DB4D31DDCB479007F95C8 /* CPYClip.swift in Sources */,
 				FAC0DCE91DE15FD900309C49 /* DataCleanService.swift in Sources */,
 				C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */,
@@ -1457,7 +1459,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_SWIFT_FLAGS = "-D DEBUG";
@@ -1508,7 +1510,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				OTHER_SWIFT_FLAGS = "-D RELEASE";
 				SDKROOT = macosx;
@@ -1520,7 +1522,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 31064F137CFB046737D1709D /* Pods-Thoth.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -1532,7 +1533,6 @@
 				);
 				INFOPLIST_FILE = "Thoth/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.boyaki-machine.Thoth.debug";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1547,7 +1547,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "-";
@@ -1560,7 +1559,6 @@
 				);
 				INFOPLIST_FILE = "Thoth/Supporting Files/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.github.boyaki-machine.Thoth";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1575,7 +1573,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 994536AAB91CE22186C3CFB1 /* Pods-ThothTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1600,7 +1597,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1C2D23FF23B07B76585DC610 /* Pods-ThothTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (

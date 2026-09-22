@@ -13,7 +13,6 @@
 import Cocoa
 import RxCocoa
 import RxSwift
-import LoginServiceKit
 import Magnet
 import Screeen
 import RxScreeen
@@ -188,10 +187,9 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     }
 
     private func toggleAddingToLoginItems(_ isEnable: Bool) {
-        let appPath = Bundle.main.bundlePath
-        LoginServiceKit.removeLoginItems(at: appPath)
+        LoginItemService.unregister()
         guard isEnable else { return }
-        LoginServiceKit.addLoginItems(at: appPath)
+        LoginItemService.register()
     }
 
     private func reflectLoginItemState() {

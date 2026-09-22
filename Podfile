@@ -1,4 +1,4 @@
-platform :osx, '11.0'
+platform :osx, '15.0'
 use_frameworks!
 
 target 'Thoth' do
@@ -6,11 +6,10 @@ target 'Thoth' do
   # Application
   pod 'PINCache'
   pod 'Sauce'
-  # RealmSwift は 10.x 系内で最新に更新（20.x はメジャー移行で破壊的変更が大きいため回避）
+  # SwiftData への移行が済むまで 10.x に据え置く（移行時に旧データベースを読み出すために使う）
   pod 'RealmSwift', '~> 10.54'
   pod 'RxCocoa'
   pod 'RxSwift'
-  pod 'LoginServiceKit', :git => 'https://github.com/Clipy/LoginServiceKit.git'
   pod 'KeyHolder'
   pod 'Magnet'
   pod 'RxScreeen'
@@ -35,7 +34,9 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
+      config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '15.0'
+      # Apple Silicon 専用。Pods プロジェクトの既定（arm64 x86_64）のままにしない
+      config.build_settings['ARCHS'] = 'arm64'
     end
   end
 
