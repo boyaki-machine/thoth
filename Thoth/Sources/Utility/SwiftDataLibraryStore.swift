@@ -21,6 +21,13 @@ import SwiftData
 /// 復号できない行（改ざん・鍵違い）は読み飛ばし、記録を残す。
 final class SwiftDataLibrary {
 
+    /// 暗号化の付加データに入れるモデル名。**変えると保存済みのデータが読めなくなる**
+    enum Entity {
+        static let clip = "StoredClip"
+        static let folder = "StoredFolder"
+        static let snippet = "StoredSnippet"
+    }
+
     // MARK: - Properties
 
     let container: ModelContainer
@@ -77,7 +84,8 @@ final class SwiftDataLibrary {
                 NSLog("[SwiftDataLibrary] write failed: \(error)")
                 return
             }
-            DispatchQueue.main.async {
+            // 通知の処理で保存層を掴み続けない（メインキューが空くまでコンテナが解放されなくなる）
+            DispatchQueue.main.async { [weak store] in
                 NotificationCenter.default.post(name: .thothLibraryDidChange, object: store)
             }
         }
@@ -89,6 +97,25 @@ final class SwiftDataLibrary {
         created.autosaveEnabled = false
         context = created
         return created
+    }
+
+    /// 保存済みのデータを今の鍵で復号できるか（空なら true）。
+    /// キーチェーンがリセットされて別の鍵が作られたときなどに false になる
+    var isReadable: Bool {
+        return perform { context in
+            func first<T: PersistentModel>(_ type: T.Type) -> T? {
+                var descriptor = FetchDescriptor<T>()
+                descriptor.fetchLimit = 1
+                return (try? context.fetch(descriptor))?.first
+            }
+            func canOpen(_ sealed: Data, _ entity: String, _ id: String) -> Bool {
+                return cipher.open(sealed, context: FieldCipher.Context(entity: entity, id: id, field: "payload")) != nil
+            }
+            if let clip = first(StoredClip.self), !canOpen(clip.sealedPayload, Entity.clip, clip.id) { return false }
+            if let folder = first(StoredFolder.self), !canOpen(folder.sealedPayload, Entity.folder, folder.id) { return false }
+            if let snippet = first(StoredSnippet.self), !canOpen(snippet.sealedPayload, Entity.snippet, snippet.id) { return false }
+            return true
+        }
     }
 
     // MARK: - Seal / Open
@@ -111,7 +138,7 @@ final class SwiftDataLibrary {
 final class SwiftDataHistoryStore: HistoryStore {
 
     private let library: SwiftDataLibrary
-    private static let entity = "StoredClip"
+    private static let entity = SwiftDataLibrary.Entity.clip
 
     init(library: SwiftDataLibrary) {
         self.library = library
@@ -151,6 +178,18 @@ final class SwiftDataHistoryStore: HistoryStore {
                 existing.sealedPayload = sealed
             } else {
                 context.insert(StoredClip(id: clip.id, updateTime: clip.updateTime, dataPath: clip.dataPath, sealedPayload: sealed))
+            }
+        }
+    }
+
+    /// 履歴をまとめて追加する（移行用。1 回の保存で書き込む）
+    func importClips(_ clips: [ClipRecord]) {
+        library.write(notifying: self) { context in
+            for clip in clips {
+                let payload = ClipPayload(title: clip.title, primaryType: clip.primaryType,
+                                          isColorCode: clip.isColorCode, thumbnailPath: clip.thumbnailPath)
+                context.insert(StoredClip(id: clip.id, updateTime: clip.updateTime, dataPath: clip.dataPath,
+                                          sealedPayload: try library.seal(payload, entity: Self.entity, id: clip.id)))
             }
         }
     }
@@ -207,8 +246,8 @@ final class SwiftDataHistoryStore: HistoryStore {
 final class SwiftDataSnippetStore: SnippetStore {
 
     private let library: SwiftDataLibrary
-    private static let folderEntity = "StoredFolder"
-    private static let snippetEntity = "StoredSnippet"
+    private static let folderEntity = SwiftDataLibrary.Entity.folder
+    private static let snippetEntity = SwiftDataLibrary.Entity.snippet
 
     init(library: SwiftDataLibrary) {
         self.library = library

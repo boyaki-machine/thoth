@@ -95,7 +95,7 @@ final class MenuManager: NSObject {
     }
 
     /// 保存層の変更通知（履歴・スニペット）の監視を開始する。
-    /// 保存層の準備（RealmProvider.warmUp）完了後に呼ぶこと
+    /// 保存層の準備（LibraryProvider.prepare）完了後に呼ぶこと
     func bindLibraryNotifications() {
         // 変更のたびに再構築すると履歴数に比例したメインスレッド負荷がコピーごとに発生するため、
         // ここでは世代カウンターを進めるだけにして、構築はメニュー表示直前まで遅延する
@@ -180,7 +180,7 @@ extension MenuManager {
     func rebuildMenuIfNeeded(_ type: MenuType) {
         // 保存層の準備前（起動直後の暗号化移行中など）は構築しない。
         // 準備完了時に bindLibraryNotifications が世代を進めるため、次回表示時に構築される
-        guard RealmProvider.isReady else { return }
+        guard LibraryProvider.isReady else { return }
         guard builtGenerations[type] != menuGeneration else { return }
         builtGenerations[type] = menuGeneration
         switch type {

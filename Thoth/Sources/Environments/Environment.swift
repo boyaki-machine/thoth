@@ -27,7 +27,7 @@ struct Environment {
     let menuManager: MenuManager
     let secureMenuService: SecureMenuService
     let secureSelectionContext: SecureSelectionContext
-    // 保存層（履歴・スニペット）
+    // 保存層（履歴・スニペット）。起動時に LibraryProvider が用意したものへ差し替える
     let historyStore: HistoryStore
     let snippetStore: SnippetStore
 
@@ -43,8 +43,8 @@ struct Environment {
          menuManager: MenuManager = MenuManager(),
          secureMenuService: SecureMenuService = SecureMenuService(),
          secureSelectionContext: SecureSelectionContext = SecureSelectionContext(),
-         historyStore: HistoryStore = RealmHistoryStore(),
-         snippetStore: SnippetStore = RealmSnippetStore(),
+         historyStore: HistoryStore = LibraryProvider.placeholder.historyStore,
+         snippetStore: SnippetStore = LibraryProvider.placeholder.snippetStore,
          defaults: UserDefaults = .standard) {
 
         self.clipService = clipService

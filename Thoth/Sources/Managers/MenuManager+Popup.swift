@@ -92,7 +92,7 @@ extension MenuManager {
         dismissClipMenus()
         dismissSecurePicker()
         dismissHistoryPicker()
-        guard RealmProvider.isReady else { return }
+        guard LibraryProvider.isReady else { return }
 
         let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let maxTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)

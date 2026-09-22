@@ -10,6 +10,9 @@ import RealmSwift
 
 // Realm を保存先とする保存層。
 //
+// v1.5 からは本番では使わない（保存先は SwiftData 版）。保存層の契約テストで
+// SwiftData 版と挙動を揃えるための比較対象として残し、v1.6.x で Realm と合わせて削除する。
+//
 // Realm の構成（暗号鍵・スキーマ移行・テスト時のインメモリ差し替え）は
 // RealmProvider の defaultConfiguration に従う。Realm はスレッドごとに
 // インスタンスを持つため、呼び出しのたびに RealmProvider.defaultRealm() で取り直す。
