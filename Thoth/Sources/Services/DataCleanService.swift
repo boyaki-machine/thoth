@@ -12,7 +12,6 @@
 
 import Foundation
 import RxSwift
-import PINCache
 
 /// クリップボード履歴の定期クリーンアップを行うサービス。
 /// 最大履歴数（maxHistorySize）を超えた古いクリップの削除と、
@@ -37,15 +36,14 @@ final class DataCleanService {
     }
 
     // MARK: - Delete Data
-    /// 上限超過クリップの削除（サムネイルキャッシュ含む）と孤児ファイルの掃除を即時実行する
+    /// 上限超過クリップの削除と孤児ファイルの掃除を即時実行する
     func cleanDatas() {
         let historyStore = AppEnvironment.current.historyStore
         let maxHistorySize = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let clips = historyStore.clips(ascending: false)
         if let cutoff = Self.overflowCutoff(updateTimesNewestFirst: clips.map(\.updateTime), maxHistorySize: maxHistorySize) {
+            // サムネイルは履歴と一緒に消える
             historyStore.deleteClips(olderThan: cutoff)
-                .compactMap { $0.thumbnailPath.isEmpty ? nil : $0.thumbnailPath }
-                .forEach { PINCache.shared.removeObject(forKey: $0) }
         }
         cleanFiles(referencedPaths: historyStore.clips(ascending: false).map(\.dataPath))
     }

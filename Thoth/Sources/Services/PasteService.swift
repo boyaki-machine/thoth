@@ -90,14 +90,9 @@ extension PasteService {
 // MARK: - Copy
 extension PasteService {
     private static func unarchiveClipData(atPath path: String) -> CPYClipData? {
-        // ClipDataStore が暗号化形式（CLPYDAT）と旧平文形式を自動判別して読み込む。
-        // requiresSecureCoding=false は CPYClipData が旧式 NSCoding（NSImage 等を含む）で、
-        // SecureCoding 化すると既存の全履歴が読めなくなるため据え置き。
-        // 改竄検知は ClipDataStore の GCM 認証タグが担う
-        guard let fileData = ClipDataStore.shared.read(fromPath: path),
-              let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
-        unarchiver.requiresSecureCoding = false
-        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData
+        // ClipDataStore が暗号化形式（CLPYDAT）と旧平文形式を自動判別して読み込む
+        guard let fileData = ClipDataStore.shared.read(fromPath: path) else { return nil }
+        return CPYClipData.unarchived(from: fileData)
     }
 
     /// クリップをクリップボードへ書き込んでペーストする。

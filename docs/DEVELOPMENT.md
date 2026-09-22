@@ -33,11 +33,10 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 
 | Library | Purpose |
 |---|---|
-| RealmSwift | Persistence of clipboard history and snippets (stored encrypted) |
+| RealmSwift | Where history and snippets were stored up to v1.4.x. In v1.5 it is only read as the migration source (to be removed in v1.6.x) |
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| PINCache | Thumbnail image caching |
 | RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
 | LetsMove | Prompt to move to the Applications folder on first launch |

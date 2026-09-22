@@ -25,8 +25,9 @@ struct ClipRecord: Equatable {
     var primaryType: String
     /// コピーされた時刻（UNIX 時間。並び順・上限判定に使用）
     var updateTime: Int
-    /// サムネイル画像のキャッシュキー（画像クリップのみ。無ければ空）
-    var thumbnailPath: String
+    /// サムネイル（画像・カラープレビュー）があるか。保存層が返す値で、
+    /// upsert では無視される（有無は upsert の thumbnail 引数で決まる）
+    var hasThumbnail: Bool
     /// HEX カラーコードとして解釈できる内容か（カラープレビュー表示用）
     var isColorCode: Bool
 }

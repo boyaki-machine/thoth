@@ -238,6 +238,7 @@ extension AppDelegate: NSApplicationDelegate {
         LibraryProvider.prepare { [weak self] prepared in
             AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore)
             self?.startServices()
+            self?.finishLibraryMigration(prepared)
         }
     }
 
@@ -267,6 +268,20 @@ extension AppDelegate: NSApplicationDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.promptToAddLoginItems()
             }
+        }
+    }
+
+    /// 移行の後処理をバックグラウンドで行う。
+    /// サムネイルは旧キャッシュ（平文・元の解像度）から移さず .data から作り直し、旧キャッシュは消す
+    private func finishLibraryMigration(_ prepared: LibraryProvider.Prepared) {
+        let clipIDs = prepared.migrationReport?.clipIDsNeedingThumbnail ?? []
+        let historyStore = prepared.historyStore
+        DispatchQueue.global(qos: .utility).async {
+            if !clipIDs.isEmpty {
+                let count = ClipThumbnail.regenerate(clipIDs: clipIDs, in: historyStore)
+                NSLog("[AppDelegate] regenerated \(count) of \(clipIDs.count) thumbnails after migration")
+            }
+            ClipThumbnail.removeLegacyCache()
         }
     }
 

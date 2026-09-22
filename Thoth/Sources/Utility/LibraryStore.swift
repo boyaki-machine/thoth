@@ -32,8 +32,11 @@ protocol HistoryStore: AnyObject {
 
     var isEmpty: Bool { get }
 
-    /// 同じ id があれば置き換え、無ければ追加する
-    func upsert(_ clip: ClipRecord)
+    /// 同じ id があれば置き換え、無ければ追加する。
+    /// - Parameter thumbnail: 縮小済みのサムネイル（PNG）。nil ならサムネイル無しになる
+    func upsert(_ clip: ClipRecord, thumbnail: Data?)
+    /// サムネイル（縮小済みの PNG）。無ければ nil。一覧の取得では読み込まず、表示するときだけ引く
+    func thumbnail(forClipID id: String) -> Data?
     /// - Returns: 削除した履歴（無ければ nil）。サムネイルの後始末に使う
     @discardableResult
     func deleteClip(id: String) -> ClipRecord?
@@ -67,6 +70,13 @@ protocol SnippetStore: AnyObject {
     func reorderSnippets(_ ids: [String], inFolder folderID: String)
     /// フォルダをスニペットごとまとめて追加する（XML の読み込み用）
     func importFolders(_ folders: [SnippetFolderRecord])
+}
+
+extension HistoryStore {
+    /// サムネイル無しで追加・置き換えする
+    func upsert(_ clip: ClipRecord) {
+        upsert(clip, thumbnail: nil)
+    }
 }
 
 extension SnippetStore {

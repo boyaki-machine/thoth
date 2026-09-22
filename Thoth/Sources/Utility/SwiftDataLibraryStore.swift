@@ -167,18 +167,28 @@ final class SwiftDataHistoryStore: HistoryStore {
         }
     }
 
-    func upsert(_ clip: ClipRecord) {
+    func upsert(_ clip: ClipRecord, thumbnail: Data?) {
         library.write(notifying: self) { context in
-            let payload = ClipPayload(title: clip.title, primaryType: clip.primaryType,
-                                      isColorCode: clip.isColorCode, thumbnailPath: clip.thumbnailPath)
+            let payload = ClipPayload(title: clip.title, primaryType: clip.primaryType, isColorCode: clip.isColorCode)
             let sealed = try library.seal(payload, entity: Self.entity, id: clip.id)
+            let sealedThumbnail = try thumbnail.map { try library.cipher.seal($0, context: thumbnailContext(clip.id)) }
             if let existing = find(clip.id, in: context) {
                 existing.updateTime = clip.updateTime
                 existing.dataPath = clip.dataPath
                 existing.sealedPayload = sealed
+                existing.hasThumbnail = sealedThumbnail != nil
+                existing.sealedThumbnail = sealedThumbnail
             } else {
-                context.insert(StoredClip(id: clip.id, updateTime: clip.updateTime, dataPath: clip.dataPath, sealedPayload: sealed))
+                context.insert(StoredClip(id: clip.id, updateTime: clip.updateTime, dataPath: clip.dataPath,
+                                          sealedPayload: sealed, sealedThumbnail: sealedThumbnail))
             }
+        }
+    }
+
+    func thumbnail(forClipID id: String) -> Data? {
+        return library.perform { context in
+            guard let sealed = find(id, in: context)?.sealedThumbnail else { return nil }
+            return library.cipher.open(sealed, context: thumbnailContext(id))
         }
     }
 
@@ -186,8 +196,7 @@ final class SwiftDataHistoryStore: HistoryStore {
     func importClips(_ clips: [ClipRecord]) {
         library.write(notifying: self) { context in
             for clip in clips {
-                let payload = ClipPayload(title: clip.title, primaryType: clip.primaryType,
-                                          isColorCode: clip.isColorCode, thumbnailPath: clip.thumbnailPath)
+                let payload = ClipPayload(title: clip.title, primaryType: clip.primaryType, isColorCode: clip.isColorCode)
                 context.insert(StoredClip(id: clip.id, updateTime: clip.updateTime, dataPath: clip.dataPath,
                                           sealedPayload: try library.seal(payload, entity: Self.entity, id: clip.id)))
             }
@@ -227,6 +236,10 @@ final class SwiftDataHistoryStore: HistoryStore {
         return removed
     }
 
+    private func thumbnailContext(_ id: String) -> FieldCipher.Context {
+        return FieldCipher.Context(entity: Self.entity, id: id, field: "thumbnail")
+    }
+
     private func find(_ id: String, in context: ModelContext) -> StoredClip? {
         var descriptor = FetchDescriptor<StoredClip>(predicate: #Predicate { $0.id == id })
         descriptor.fetchLimit = 1
@@ -237,7 +250,7 @@ final class SwiftDataHistoryStore: HistoryStore {
         guard let payload = library.open(ClipPayload.self, from: stored.sealedPayload, entity: Self.entity, id: stored.id) else { return nil }
         return ClipRecord(id: stored.id, dataPath: stored.dataPath, title: payload.title,
                           primaryType: payload.primaryType, updateTime: stored.updateTime,
-                          thumbnailPath: payload.thumbnailPath, isColorCode: payload.isColorCode)
+                          hasThumbnail: stored.hasThumbnail, isColorCode: payload.isColorCode)
     }
 }
 

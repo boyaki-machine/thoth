@@ -41,6 +41,8 @@ enum LibraryMigrator {
         var snippetCount: Int
         /// 参照先の .data ファイルが無かった履歴の数（移行前から同じ状態のため、記録だけ残す）
         var missingDataFiles: Int
+        /// 旧版でサムネイルがあった履歴（移行後の id）。移行後に .data から作り直す
+        var clipIDsNeedingThumbnail: [String]
     }
 
     enum Failure: Error, Equatable {
@@ -111,8 +113,10 @@ enum LibraryMigrator {
         }
         try writeCompletionMarker(for: storeURL)
         let missing = snapshot.clips.filter { !fileManager.fileExists(atPath: $0.dataPath) }.count
+        let needingThumbnail = snapshot.clips.filter(\.hasThumbnail).map { cipher.contentID(for: $0.id) }
         let report = Report(clipCount: snapshot.clips.count, folderCount: snapshot.folders.count,
-                            snippetCount: snapshot.snippetCount, missingDataFiles: missing)
+                            snippetCount: snapshot.snippetCount, missingDataFiles: missing,
+                            clipIDsNeedingThumbnail: needingThumbnail)
         return Migrated(report: report, library: library)
     }
 
@@ -128,11 +132,13 @@ enum LibraryMigrator {
         try Data(body.utf8).write(to: completionMarkerURL(for: storeURL), options: .atomic)
     }
 
-    /// 移行後の履歴（id を鍵付きハッシュに置き換えたもの）
+    /// 移行後の履歴（id を鍵付きハッシュに置き換えたもの）。
+    /// サムネイルは旧キャッシュから移さず、移行後に .data から作り直すので、この時点では無し
     static func expectedClips(_ snapshot: Snapshot, cipher: FieldCipher) -> [ClipRecord] {
         return snapshot.clips.map { clip in
             var migrated = clip
             migrated.id = cipher.contentID(for: clip.id)
+            migrated.hasThumbnail = false
             return migrated
         }
     }

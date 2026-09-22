@@ -9,7 +9,6 @@
 //
 
 import Cocoa
-import PINCache
 
 // MARK: - CPYHistorySubPanel
 
@@ -52,7 +51,8 @@ final class CPYHistorySubPanel: NSPanel {
         /// ツールチップ（「ツールチップを表示」が有効な場合のみ非 nil）
         let toolTip: String?
         /// サムネイル画像のキャッシュキー（画像/カラープレビュー表示が有効な場合のみ非 nil）
-        let thumbnailPath: String?
+        /// サムネイル（画像・カラープレビュー）を出すか（設定を反映済み）
+        let showsThumbnail: Bool
         /// 種別アイコンの表示（「アイコンを表示」）
         let showsTypeIcon: Bool
     }
@@ -271,13 +271,11 @@ extension CPYHistorySubPanel: NSTableViewDataSource, NSTableViewDelegate {
         cell.textField?.font        = .systemFont(ofSize: Layout.fontSize)
         cell.toolTip = entry.toolTip
         // 画像サムネイル / カラープレビュー > 種別アイコン > なし、の優先順で表示する
-        if let thumbnailPath = entry.thumbnailPath {
+        if entry.showsThumbnail {
             cell.imageView?.image = nil
             cell.imageView?.contentTintColor = nil
-            PINCache.shared.object(forKeyAsync: thumbnailPath) { [weak cell] _, _, object in
-                DispatchQueue.main.async {
-                    cell?.imageView?.image = object as? NSImage
-                }
+            ClipThumbnail.load(clipID: entry.clip.dataHash) { [weak cell] image in
+                cell?.imageView?.image = image
             }
         } else if entry.showsTypeIcon {
             cell.imageView?.image = Self.typeIcon(for: entry.clip)

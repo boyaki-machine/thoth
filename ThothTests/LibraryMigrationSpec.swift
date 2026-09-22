@@ -114,6 +114,13 @@ class LibraryMigrationSpec: QuickSpec {
                 expect(LibraryMigrator.migrationRecord(in: library)?.sourceSnippetCount) == MigrationFixture.snapshot.snippetCount
             }
 
+            it("旧版でサムネイルがあった履歴を、作り直す対象として移行後の id で返す") {
+                let migrated = try? LibraryMigrator.migrate(MigrationFixture.snapshot, to: storeURL, cipher: cipher)
+                let expected = MigrationFixture.snapshot.clips.filter(\.hasThumbnail).map { cipher.contentID(for: $0.id) }
+                expect(expected.count) == 2
+                expect(migrated?.report.clipIDsNeedingThumbnail) == expected
+            }
+
             it("移行すると、照合に通ったあとで完了の印が書かれる") {
                 expect(FileManager.default.fileExists(atPath: LibraryMigrator.completionMarkerURL(for: storeURL).path)) == false
                 _ = try? LibraryMigrator.migrate(MigrationFixture.snapshot, to: storeURL, cipher: cipher)
@@ -272,8 +279,8 @@ enum MigrationFixture {
             clip("0", time: 1_000, title: ""),
             clip("-4611686018427387904", time: 1_001, title: String(repeating: "あ", count: 10_000)),
             clip("987654321", time: 1_002, title: "👨‍👩‍👧‍👦 家族\r\nCRLF 全角　スペース"),
-            clip("-123", time: 1_003, title: "#FF0000", thumbnailPath: "1003", isColorCode: true),
-            clip("555", time: 1_004, title: "", type: "NSTIFFPboardType", thumbnailPath: "1004"),
+            clip("-123", time: 1_003, title: "#FF0000", hasThumbnail: true, isColorCode: true),
+            clip("555", time: 1_004, title: "", type: "NSTIFFPboardType", hasThumbnail: true),
             clip("666", time: 1_005, title: "/Users/tester/a.txt", type: "NSFilenamesPboardType"),
             // 「同じ内容を上書き」がオフのときは同じ内容でも別の id（乱数）で 2 件入る
             clip("111111", time: 1_006, title: "dup"),
@@ -292,9 +299,9 @@ enum MigrationFixture {
         ])
 
     private static func clip(_ id: String, time: Int, title: String, type: String = "NSStringPboardType",
-                             thumbnailPath: String = "", isColorCode: Bool = false) -> ClipRecord {
+                             hasThumbnail: Bool = false, isColorCode: Bool = false) -> ClipRecord {
         return ClipRecord(id: id, dataPath: "/Users/tester/Library/Application Support/Thoth/\(id).data", title: title,
-                          primaryType: type, updateTime: time, thumbnailPath: thumbnailPath, isColorCode: isColorCode)
+                          primaryType: type, updateTime: time, hasThumbnail: hasThumbnail, isColorCode: isColorCode)
     }
 
     /// snapshot を Realm のファイルとして書き出す（v1.4.x までのアプリと同じスキーマ）
@@ -313,7 +320,8 @@ enum MigrationFixture {
                     clip.title = record.title
                     clip.primaryType = record.primaryType
                     clip.updateTime = record.updateTime
-                    clip.thumbnailPath = record.thumbnailPath
+                    // v1.4.x までは PINCache のキー（コピーした時刻）を入れていた
+                    clip.thumbnailPath = record.hasThumbnail ? "\(record.updateTime)" : ""
                     clip.isColorCode = record.isColorCode
                     realm.add(clip)
                 }

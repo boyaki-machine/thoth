@@ -12,7 +12,6 @@
 
 import Foundation
 import Cocoa
-import PINCache
 import RxSwift
 import RxCocoa
 
@@ -70,24 +69,16 @@ final class ClipService {
             .disposed(by: disposeBag)
     }
 
-    /// 全履歴を削除する（サムネイルキャッシュ・.data ファイル含む）
+    /// 全履歴を削除する（サムネイルは履歴と一緒に消える。.data ファイルも消す）
     func clearAll() {
-        let removed = AppEnvironment.current.historyStore.deleteAllClips()
-        // Delete saved images
-        removed
-            .compactMap { $0.thumbnailPath.isEmpty ? nil : $0.thumbnailPath }
-            .forEach { PINCache.shared.removeObject(forKey: $0) }
+        AppEnvironment.current.historyStore.deleteAllClips()
         // Delete writed datas
         AppEnvironment.current.dataCleanService.cleanDatas()
     }
 
-    /// 指定クリップを履歴から削除する
+    /// 指定クリップを履歴から削除する（サムネイルも一緒に消える）
     func delete(clipID: String) {
-        guard let removed = AppEnvironment.current.historyStore.deleteClip(id: clipID) else { return }
-        // Delete saved images
-        if !removed.thumbnailPath.isEmpty {
-            PINCache.shared.removeObject(forKey: removed.thumbnailPath)
-        }
+        AppEnvironment.current.historyStore.deleteClip(id: clipID)
     }
 
     /// キャッシュ済み changeCount を進めて「次のクリップボード変化を 1 回無視」する。
@@ -166,25 +157,16 @@ extension ClipService {
                                   title: data.stringValue[0...10000],
                                   primaryType: data.primaryType?.rawValue ?? "",
                                   updateTime: unixTime,
-                                  thumbnailPath: "",
-                                  isColorCode: false)
-
-            // Save thumbnail image
-            if let thumbnailImage = data.thumbnailImage {
-                PINCache.shared.setObjectAsync(thumbnailImage, forKey: "\(unixTime)", completion: nil)
-                clip.thumbnailPath = "\(unixTime)"
-            }
-            if let colorCodeImage = data.colorCodeImage {
-                PINCache.shared.setObjectAsync(colorCodeImage, forKey: "\(unixTime)", completion: nil)
-                clip.thumbnailPath = "\(unixTime)"
-                clip.isColorCode = true
-            }
+                                  hasThumbnail: false,
+                                  isColorCode: data.colorCodeImage != nil)
+            // サムネイル（画像・カラープレビュー）は縮小した PNG にして、保存層が暗号化して持つ
+            let thumbnail = ClipThumbnail.pngData(for: data)
             // Save history and .data file（.data は ClipDataStore が AES-GCM で暗号化する）
             if CPYUtilities.prepareSaveToPath(CPYUtilities.applicationSupportFolder()) {
                 let archiveData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: false)
                 let archived = archiveData.map { ClipDataStore.shared.write($0, toPath: savedPath) } ?? false
                 if archived {
-                    historyStore.upsert(clip)
+                    historyStore.upsert(clip, thumbnail: thumbnail)
                 }
             }
         }

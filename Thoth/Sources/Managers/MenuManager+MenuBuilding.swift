@@ -9,7 +9,6 @@
 //
 
 import Cocoa
-import PINCache
 import RxCocoa
 import RxSwift
 
@@ -133,18 +132,10 @@ extension MenuManager {
             menuItem.title = menuItemTitle("(Filenames)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
         }
 
-        if !clip.thumbnailPath.isEmpty && !clip.isColorCode && settings.isShowImage {
-            PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
-                DispatchQueue.main.async {
-                    menuItem?.image = object as? NSImage
-                }
-            }
-        }
-        if !clip.thumbnailPath.isEmpty && clip.isColorCode && settings.isShowColorCode {
-            PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
-                DispatchQueue.main.async {
-                    menuItem?.image = object as? NSImage
-                }
+        // 画像はサムネイル表示、カラーコードはカラープレビュー表示の設定に従う
+        if clip.hasThumbnail && (clip.isColorCode ? settings.isShowColorCode : settings.isShowImage) {
+            ClipThumbnail.load(clipID: clip.id) { [weak menuItem] image in
+                menuItem?.image = image
             }
         }
 

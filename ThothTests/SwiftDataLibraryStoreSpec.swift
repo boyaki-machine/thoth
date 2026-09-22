@@ -60,7 +60,7 @@ class SwiftDataLibraryStoreSpec: QuickSpec {
                 let (history, snippets) = stores(library)
                 history.upsert(ClipRecord(id: "c1", dataPath: "/tmp/PLAIN-PATH-MARKER.data", title: "CLIP-TITLE-MARKER",
                                           primaryType: "PRIMARY-TYPE-MARKER", updateTime: 1,
-                                          thumbnailPath: "", isColorCode: false))
+                                          hasThumbnail: false, isColorCode: false))
                 snippets.importFolders([SnippetFolderRecord(id: "f1", index: 0, title: "FOLDER-TITLE-MARKER", snippets: [
                     SnippetRecord(id: "s1", index: 0, title: "SNIPPET-TITLE-MARKER", content: "SNIPPET-CONTENT-MARKER")
                 ])])
@@ -87,7 +87,7 @@ class SwiftDataLibraryStoreSpec: QuickSpec {
             it("閉じて開き直しても、同じ鍵なら元どおり読める") {
                 let url = storeURL()
                 let clip = ClipRecord(id: "c1", dataPath: "/tmp/c1.data", title: "タイトル 😀", primaryType: "public.tiff",
-                                      updateTime: 42, thumbnailPath: "42", isColorCode: true)
+                                      updateTime: 42, hasThumbnail: false, isColorCode: true)
                 let folder = SnippetFolderRecord(id: "f1", index: 0, title: "フォルダ", snippets: [
                     SnippetRecord(id: "s1", index: 0, title: "a", content: "本文\r\n"),
                     SnippetRecord(id: "s2", index: 1, enable: false, title: "b", content: "")

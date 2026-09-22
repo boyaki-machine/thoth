@@ -103,7 +103,7 @@ extension CPYHistoryPickerPanel {
         return group.clips.map { clip in
             // グループ内番号 = 元の位置のグループ内オフセット + 番号開始値
             let number = clip.index - group.startIndex + settings.numberOffset
-            let thumbnailVisible = !clip.thumbnailPath.isEmpty
+            let thumbnailVisible = clip.hasThumbnail
                 && ((clip.isColorCode && settings.showColorCode)
                     || (!clip.isColorCode && settings.showImage))
             let toolTip: String? = settings.showToolTip && !clip.fullTitle.isEmpty
@@ -113,7 +113,7 @@ extension CPYHistoryPickerPanel {
                                             number: number,
                                             showsNumber: settings.markWithNumber,
                                             toolTip: toolTip,
-                                            thumbnailPath: thumbnailVisible ? clip.thumbnailPath : nil,
+                                            showsThumbnail: thumbnailVisible,
                                             showsTypeIcon: settings.showIcon)
         }
     }

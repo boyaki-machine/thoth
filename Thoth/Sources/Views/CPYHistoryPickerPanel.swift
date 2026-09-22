@@ -83,7 +83,7 @@ final class CPYHistoryPickerPanel: NSPanel {
         let fullTitle: String
         /// 検索用（切り詰め前の 1 行目を小文字化）
         let lowercasedTitle: String
-        let thumbnailPath: String
+        let hasThumbnail: Bool
         let isColorCode: Bool
         let ref: ClipFullTextIndexer.ClipRef
 
@@ -113,7 +113,7 @@ final class CPYHistoryPickerPanel: NSPanel {
             self.title = display
             self.fullTitle = clip.title
             self.lowercasedTitle = firstLine.lowercased()
-            self.thumbnailPath = clip.thumbnailPath
+            self.hasThumbnail = clip.hasThumbnail
             self.isColorCode = clip.isColorCode
             self.ref = ClipFullTextIndexer.ClipRef(dataHash: clip.id,
                                                    dataPath: clip.dataPath,

@@ -28,7 +28,7 @@ enum LibraryStoreContract: SyncDSLUser {
     static func clip(_ id: String, time: Int, title: String = "title") -> ClipRecord {
         return ClipRecord(id: id, dataPath: "/tmp/\(id).data", title: title,
                           primaryType: "public.utf8-plain-text", updateTime: time,
-                          thumbnailPath: "", isColorCode: false)
+                          hasThumbnail: false, isColorCode: false)
     }
 
     // MARK: - History
@@ -39,7 +39,7 @@ enum LibraryStoreContract: SyncDSLUser {
                 let store = make().history
                 let record = ClipRecord(id: "a", dataPath: "/tmp/a.data", title: "タイトル 😀\r\n2 行目",
                                         primaryType: "public.tiff", updateTime: 1_700_000_000,
-                                        thumbnailPath: "1700000000", isColorCode: true)
+                                        hasThumbnail: false, isColorCode: true)
                 store.upsert(record)
                 expect(store.clip(id: "a")) == record
             }

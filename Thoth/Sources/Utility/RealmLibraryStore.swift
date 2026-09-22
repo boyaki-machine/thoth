@@ -47,7 +47,8 @@ final class RealmHistoryStore: HistoryStore {
         return RealmProvider.defaultRealm().objects(CPYClip.self).isEmpty
     }
 
-    func upsert(_ clip: ClipRecord) {
+    /// Realm 版はサムネイルを保存しない（PINCache に置いていた旧方式の比較対象）
+    func upsert(_ clip: ClipRecord, thumbnail: Data?) {
         let realm = RealmProvider.defaultRealm()
         let object = CPYClip()
         object.dataHash = clip.id
@@ -55,10 +56,14 @@ final class RealmHistoryStore: HistoryStore {
         object.title = clip.title
         object.primaryType = clip.primaryType
         object.updateTime = clip.updateTime
-        object.thumbnailPath = clip.thumbnailPath
+        object.thumbnailPath = ""
         object.isColorCode = clip.isColorCode
         realm.transaction { realm.add(object, update: .all) }
         notifyLibraryDidChange(self)
+    }
+
+    func thumbnail(forClipID id: String) -> Data? {
+        return nil
     }
 
     @discardableResult
@@ -228,7 +233,8 @@ extension ClipRecord {
                   title: clip.title,
                   primaryType: clip.primaryType,
                   updateTime: clip.updateTime,
-                  thumbnailPath: clip.thumbnailPath,
+                  // v1.4.x までは PINCache のキー。空でなければサムネイルがあった
+                  hasThumbnail: !clip.thumbnailPath.isEmpty,
                   isColorCode: clip.isColorCode)
     }
 }

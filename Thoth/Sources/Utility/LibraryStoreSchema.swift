@@ -31,7 +31,9 @@ enum LibraryStoreSchemaV1: VersionedSchema {
         var dataPath: String
         /// ClipPayload を暗号化したもの
         var sealedPayload: Data
-        /// 縮小したサムネイル（PNG）を暗号化したもの。画像クリップのみ
+        /// サムネイルがあるか（一覧を作るときに外部保存のデータを読み込まずに済むよう、別に持つ）
+        var hasThumbnail: Bool
+        /// 縮小したサムネイル（PNG）を暗号化したもの。画像・カラープレビューのクリップのみ
         @Attribute(.externalStorage) var sealedThumbnail: Data?
 
         init(id: String, updateTime: Int, dataPath: String, sealedPayload: Data, sealedThumbnail: Data? = nil) {
@@ -39,6 +41,7 @@ enum LibraryStoreSchemaV1: VersionedSchema {
             self.updateTime = updateTime
             self.dataPath = dataPath
             self.sealedPayload = sealedPayload
+            self.hasThumbnail = sealedThumbnail != nil
             self.sealedThumbnail = sealedThumbnail
         }
     }
@@ -123,8 +126,6 @@ struct ClipPayload: Codable, Equatable {
     var title: String
     var primaryType: String
     var isColorCode: Bool
-    /// サムネイルのキャッシュキー（PINCache を廃止するまでの間だけ使う）
-    var thumbnailPath: String
 }
 
 struct FolderPayload: Codable, Equatable {

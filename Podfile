@@ -4,7 +4,6 @@ use_frameworks!
 target 'Thoth' do
 
   # Application
-  pod 'PINCache'
   pod 'Sauce'
   # SwiftData への移行が済むまで 10.x に据え置く（移行時に旧データベースを読み出すために使う）
   pod 'RealmSwift', '~> 10.54'

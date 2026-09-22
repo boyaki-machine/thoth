@@ -15,13 +15,6 @@
 		6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */; };
-		AA00054400000000ABCDEF01 /* LibraryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054300000000ABCDEF01 /* LibraryProvider.swift */; };
-		AA00054200000000ABCDEF01 /* LibraryMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054100000000ABCDEF01 /* LibraryMigrator.swift */; };
-		AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */; };
-		AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */; };
-		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
-		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
-		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
 		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
 		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
@@ -86,13 +79,24 @@
 		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
 		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
-		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
-		AA00055200000000ABCDEF01 /* LibraryMigrationFixture.realm in Resources */ = {isa = PBXBuildFile; fileRef = AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */; };
-		AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */; };
-		AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */; };
-		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
-		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
+		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051100000000ABCDEF01 /* LibraryRecords.swift */; };
+		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
+		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
+		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
+		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
+		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
+		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
+		AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */; };
+		AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */; };
+		AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */; };
+		AA00054200000000ABCDEF01 /* LibraryMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054100000000ABCDEF01 /* LibraryMigrator.swift */; };
+		AA00054400000000ABCDEF01 /* LibraryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054300000000ABCDEF01 /* LibraryProvider.swift */; };
+		AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */; };
+		AA00055200000000ABCDEF01 /* LibraryMigrationFixture.realm in Resources */ = {isa = PBXBuildFile; fileRef = AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */; };
+		AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056100000000ABCDEF01 /* ClipThumbnail.swift */; };
+		AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
 		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
 		AA20C0DE0000000000000003 /* CPYCameraQRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */; };
@@ -134,7 +138,6 @@
 		FA1DB4C91DDCB460007F95C8 /* MenuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4C31DDCB460007F95C8 /* MenuManager.swift */; };
 		FA1DB4D21DDCB479007F95C8 /* CPYAppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CC1DDCB479007F95C8 /* CPYAppInfo.swift */; };
 		FA1DB4D31DDCB479007F95C8 /* CPYClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CD1DDCB479007F95C8 /* CPYClip.swift */; };
-		AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051100000000ABCDEF01 /* LibraryRecords.swift */; };
 		FA1DB4D41DDCB479007F95C8 /* CPYClipData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CE1DDCB479007F95C8 /* CPYClipData.swift */; };
 		FA1DB4D51DDCB479007F95C8 /* CPYDraggedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CF1DDCB479007F95C8 /* CPYDraggedData.swift */; };
 		FA1DB4D61DDCB479007F95C8 /* CPYFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4D01DDCB479007F95C8 /* CPYFolder.swift */; };
@@ -160,7 +163,6 @@
 		FA1DB51E1DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB5011DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib */; };
 		FA1DB51F1DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB5031DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.xib */; };
 		FA1DB5201DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB50D1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift */; };
-		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
 		FA1DB5221DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB50F1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.xib */; };
 		FA3778931F3B691A003B5BAB /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3778921F3B691A003B5BAB /* AppEnvironment.swift */; };
 		FA3778951F3B6920003B5BAB /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3778941F3B6920003B5BAB /* Environment.swift */; };
@@ -243,13 +245,6 @@
 		6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ThothTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmProvider.swift; sourceTree = "<group>"; };
-		AA00054300000000ABCDEF01 /* LibraryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryProvider.swift; sourceTree = "<group>"; };
-		AA00054100000000ABCDEF01 /* LibraryMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMigrator.swift; sourceTree = "<group>"; };
-		AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStore.swift; sourceTree = "<group>"; };
-		AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStoreSchema.swift; sourceTree = "<group>"; };
-		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
-		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
-		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ThothTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ThothTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
@@ -326,13 +321,24 @@
 		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
 		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
-		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
-		AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */ = {isa = PBXFileReference; lastKnownFileType = file; name = LibraryMigrationFixture.realm; path = Fixtures/LibraryMigrationFixture.realm; sourceTree = "<group>"; };
-		AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryMigrationSpec.swift; sourceTree = "<group>"; };
-		AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStoreSpec.swift; sourceTree = "<group>"; };
-		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
-		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
+		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00051100000000ABCDEF01 /* LibraryRecords.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryRecords.swift; sourceTree = "<group>"; };
+		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
+		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
+		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
+		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
+		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
+		AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStoreSchema.swift; sourceTree = "<group>"; };
+		AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStore.swift; sourceTree = "<group>"; };
+		AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStoreSpec.swift; sourceTree = "<group>"; };
+		AA00054100000000ABCDEF01 /* LibraryMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMigrator.swift; sourceTree = "<group>"; };
+		AA00054300000000ABCDEF01 /* LibraryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryProvider.swift; sourceTree = "<group>"; };
+		AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryMigrationSpec.swift; sourceTree = "<group>"; };
+		AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */ = {isa = PBXFileReference; lastKnownFileType = file; name = LibraryMigrationFixture.realm; path = Fixtures/LibraryMigrationFixture.realm; sourceTree = "<group>"; };
+		AA00056100000000ABCDEF01 /* ClipThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipThumbnail.swift; sourceTree = "<group>"; };
+		AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClipThumbnailSpec.swift; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000012 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
@@ -384,7 +390,6 @@
 		FA1DB4C31DDCB460007F95C8 /* MenuManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuManager.swift; sourceTree = "<group>"; };
 		FA1DB4CC1DDCB479007F95C8 /* CPYAppInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYAppInfo.swift; sourceTree = "<group>"; };
 		FA1DB4CD1DDCB479007F95C8 /* CPYClip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYClip.swift; sourceTree = "<group>"; };
-		AA00051100000000ABCDEF01 /* LibraryRecords.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryRecords.swift; sourceTree = "<group>"; };
 		FA1DB4CE1DDCB479007F95C8 /* CPYClipData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYClipData.swift; sourceTree = "<group>"; };
 		FA1DB4CF1DDCB479007F95C8 /* CPYDraggedData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYDraggedData.swift; sourceTree = "<group>"; };
 		FA1DB4D01DDCB479007F95C8 /* CPYFolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYFolder.swift; sourceTree = "<group>"; };
@@ -402,7 +407,6 @@
 		FA1DB4F51DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYTypePreferenceViewController.swift; sourceTree = "<group>"; };
 		FA1DB4F61DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYUpdatesPreferenceViewController.swift; sourceTree = "<group>"; };
 		FA1DB50D1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSnippetsEditorWindowController.swift; sourceTree = "<group>"; };
-		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
 		FA3778921F3B691A003B5BAB /* AppEnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		FA3778941F3B6920003B5BAB /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Collection+Safe.swift"; sourceTree = "<group>"; };
@@ -653,6 +657,7 @@
 			children = (
 				FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */,
 				6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */,
+				AA00056100000000ABCDEF01 /* ClipThumbnail.swift */,
 				AA00054300000000ABCDEF01 /* LibraryProvider.swift */,
 				AA00054100000000ABCDEF01 /* LibraryMigrator.swift */,
 				AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */,
@@ -841,6 +846,7 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */,
 				AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */,
 				AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */,
 				AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */,
@@ -1010,8 +1016,6 @@
 				"${BUILT_PRODUCTS_DIR}/KeyHolder/KeyHolder.framework",
 				"${BUILT_PRODUCTS_DIR}/LetsMove/LetsMove.framework",
 				"${BUILT_PRODUCTS_DIR}/Magnet/Magnet.framework",
-				"${BUILT_PRODUCTS_DIR}/PINCache/PINCache.framework",
-				"${BUILT_PRODUCTS_DIR}/PINOperation/PINOperation.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
@@ -1028,8 +1032,6 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/KeyHolder.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LetsMove.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Magnet.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINCache.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/PINOperation.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
@@ -1178,6 +1180,7 @@
 				FAC0DCF11DE576F300309C49 /* PasteService.swift in Sources */,
 				FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */,
+				AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */,
 				AA00054400000000ABCDEF01 /* LibraryProvider.swift in Sources */,
 				AA00054200000000ABCDEF01 /* LibraryMigrator.swift in Sources */,
 				AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */,
@@ -1303,6 +1306,7 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */,
 				AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */,
 				AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */,
 				AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */,

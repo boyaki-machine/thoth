@@ -41,10 +41,10 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     private static func makeItem(_ hash: String, title: String, index: Int,
                           primaryType: NSPasteboard.PasteboardType = .deprecatedString,
-                          thumbnailPath: String = "", isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
+                          hasThumbnail: Bool = false, isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
         let clip = ClipRecord(id: hash, dataPath: "/tmp/\(hash).data", title: title,
                               primaryType: primaryType.rawValue, updateTime: 0,
-                              thumbnailPath: thumbnailPath, isColorCode: isColorCode)
+                              hasThumbnail: hasThumbnail, isColorCode: isColorCode)
         return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
     }
 
@@ -264,25 +264,25 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
             it("サムネイルは種別と設定の組み合わせで表示可否が決まる") {
                 let image = self.makeItem("img", title: "(Image)", index: 0,
-                                          primaryType: .deprecatedTIFF, thumbnailPath: "thumb-img")
+                                          primaryType: .deprecatedTIFF, hasThumbnail: true)
                 let color = self.makeItem("col", title: "#FF0000", index: 1,
-                                          thumbnailPath: "thumb-col", isColorCode: true)
+                                          hasThumbnail: true, isColorCode: true)
                 let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 0, title: "", clips: [image, color])
 
                 // 両方 ON → 両方サムネイル表示
                 let bothPanel = CPYHistoryPickerPanel(clips: [image, color],
                                                       settings: self.makeSettings(showImage: true, showColorCode: true))
                 let bothEntries = bothPanel.makeSubEntries(for: group)
-                expect(bothEntries[0].thumbnailPath) == "thumb-img"
-                expect(bothEntries[1].thumbnailPath) == "thumb-col"
+                expect(bothEntries[0].showsThumbnail) == true
+                expect(bothEntries[1].showsThumbnail) == true
                 bothPanel.close()
 
                 // 画像 OFF・カラー ON → 画像のみ非表示
                 let colorOnlyPanel = CPYHistoryPickerPanel(clips: [image, color],
                                                            settings: self.makeSettings(showImage: false, showColorCode: true))
                 let colorOnlyEntries = colorOnlyPanel.makeSubEntries(for: group)
-                expect(colorOnlyEntries[0].thumbnailPath).to(beNil())
-                expect(colorOnlyEntries[1].thumbnailPath) == "thumb-col"
+                expect(colorOnlyEntries[0].showsThumbnail) == false
+                expect(colorOnlyEntries[1].showsThumbnail) == true
                 colorOnlyPanel.close()
             }
 
@@ -328,7 +328,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
                 let sub = CPYHistorySubPanel()
                 sub.setEntries(clips.map {
                     CPYHistorySubPanel.Entry(clip: $0, number: $0.index, showsNumber: false,
-                                             toolTip: nil, thumbnailPath: nil, showsTypeIcon: true)
+                                             toolTip: nil, showsThumbnail: false, showsTypeIcon: true)
                 })
                 panel.subPanel = sub
                 panel.enterSubPanel()
@@ -379,7 +379,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
             func entry(_ title: String) -> CPYHistorySubPanel.Entry {
                 let clip = self.makeItem("w", title: title, index: 0)
                 return CPYHistorySubPanel.Entry(clip: clip, number: 0, showsNumber: false,
-                                                toolTip: nil, thumbnailPath: nil, showsTypeIcon: true)
+                                                toolTip: nil, showsThumbnail: false, showsTypeIcon: true)
             }
 
             it("タイトルが長いほど幅が広がる") {
