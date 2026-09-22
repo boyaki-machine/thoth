@@ -90,6 +90,12 @@ enum LibraryStoreContract: SyncDSLUser {
                 expect(store.clips(ascending: true)).to(beEmpty())
             }
 
+            it("内容ハッシュからの id は、同じ入力なら同じ値、違う入力なら違う値になる") {
+                let store = make().history
+                expect(store.clipID(forContentHash: "12345")) == store.clipID(forContentHash: "12345")
+                expect(store.clipID(forContentHash: "12345")) != store.clipID(forContentHash: "12346")
+            }
+
             it("日時で削除すると、指定より古いものだけが消え、同じ時刻のものは残る") {
                 let store = make().history
                 store.upsert(clip("old", time: 10))

@@ -22,6 +22,10 @@ extension Notification.Name {
 
 /// クリップボード履歴の保存層
 protocol HistoryStore: AnyObject {
+    /// 内容から決まる識別子（CPYClipData.hash）から、保存に使う id を作る。
+    /// 同じ内容なら同じ id になる（「同じ内容を上書き」の判定に使う）。
+    /// 保存先によっては平文で置いても手掛かりにならない値へ変換する（SwiftData 版は HMAC）
+    func clipID(forContentHash hash: String) -> String
     /// 全履歴を日時順に返す（ascending が true なら古い順）
     func clips(ascending: Bool) -> [ClipRecord]
     func clip(id: String) -> ClipRecord?

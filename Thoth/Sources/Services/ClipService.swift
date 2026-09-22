@@ -149,7 +149,7 @@ extension ClipService {
             let dataHash = data.hash
             // Copy already copied history
             let isCopySameHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.copySameHistory)
-            if historyStore.clip(id: "\(dataHash)") != nil, !isCopySameHistory { return }
+            if historyStore.clip(id: historyStore.clipID(forContentHash: "\(dataHash)")) != nil, !isCopySameHistory { return }
 
             // Don't save empty string history
             if data.isOnlyStringType && data.stringValue.isEmpty { return }
@@ -161,7 +161,7 @@ extension ClipService {
             // Saved time and path
             let unixTime = Int(Date().timeIntervalSince1970)
             let savedPath = CPYUtilities.applicationSupportFolder() + "/\(NSUUID().uuidString).data"
-            var clip = ClipRecord(id: "\(savedHash)",
+            var clip = ClipRecord(id: historyStore.clipID(forContentHash: "\(savedHash)"),
                                   dataPath: savedPath,
                                   title: data.stringValue[0...10000],
                                   primaryType: data.primaryType?.rawValue ?? "",

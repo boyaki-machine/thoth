@@ -25,6 +25,11 @@ private func notifyLibraryDidChange(_ store: AnyObject) {
 
 final class RealmHistoryStore: HistoryStore {
 
+    /// 暗号化された Realm の中に置くので、内容ハッシュをそのまま使う（従来どおり）
+    func clipID(forContentHash hash: String) -> String {
+        return hash
+    }
+
     func clips(ascending: Bool) -> [ClipRecord] {
         return RealmProvider.defaultRealm().objects(CPYClip.self)
             .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
