@@ -242,7 +242,7 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 配布バイナリは提供していないため、ソースからビルドして使用します。ビルド手順の詳細は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md) を参照してください。
 
-**動作要件:** macOS 11.0 以降 · Apple Silicon (arm64)
+**動作要件:** macOS 15.0 以降 · Apple Silicon (arm64)
 
 **概略:**
 

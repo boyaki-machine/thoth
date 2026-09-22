@@ -13,21 +13,21 @@ For how to use the app, see [../README.md](../README.md). For data formats, cryp
 
 | Item | Value |
 |---|---|
-| Supported OS | macOS 11.0 or later |
+| Supported OS | macOS 15.0 or later |
 | Architecture | Apple Silicon (arm64) only |
-| Deployment target | `MACOSX_DEPLOYMENT_TARGET = 11.0` |
+| Deployment target | `MACOSX_DEPLOYMENT_TARGET = 15.0` |
 
-macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AES-GCM etc., macOS 10.15+). Since Apple Silicon Macs cannot boot macOS earlier than 11, the project is an arm64-only build and drops 10.x support.
+macOS 15.0 is the minimum requirement so that the app only runs on macOS versions that still receive Apple's security updates (macOS 13 is out of support and 14 is close to it). Because the app handles passwords and TOTP secrets, running it on an OS that no longer gets vulnerability fixes is not supported. The build is arm64-only for Apple Silicon; Intel Macs are not supported (macOS 15 itself still runs on some Intel Macs, so it is the `ARCHS = arm64` setting that excludes them).
 
 ### Development Environment (verified)
 
 | Tool | Version |
 |---|---|
-| macOS | 26 series (Apple Silicon) |
-| Xcode | 26 series (verified with 26.6) |
+| macOS | 27 series (Apple Silicon) |
+| Xcode | 27 series (verified with 27.0) |
 | Swift | 5.3 (the project's Swift version setting) |
 | SwiftLint | Homebrew version, 0.65 series |
-| Ruby | 3.2 series (for running CocoaPods; some gems fail on 4.0) |
+| Ruby | 4.0 series (for running CocoaPods; Homebrew `ruby`) |
 
 ### Main Libraries (CocoaPods)
 
@@ -38,12 +38,11 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
 | PINCache | Thumbnail image caching |
-| LoginServiceKit | Launch at login |
 | RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
 | LetsMove | Prompt to move to the Applications folder on first launch |
 | SwiftHEXColors | HEX color preview |
-| SwiftLint / SwiftGen / BartyCrouch | Code style / code generation (L10n / assets) / localization support |
+| SwiftLint / SwiftGen / BartyCrouch | Code style / code generation (L10n / assets) / localization support (BartyCrouch is configured in `.bartycrouch.toml`) |
 | Quick / Nimble | Unit testing (BDD style) |
 
 ### Architectural Assumptions
@@ -88,7 +87,7 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 
 ### Services Layer (`Thoth/Sources/Services/`)
 
-Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`) are called as static methods on the type itself.
+Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`, `LoginItemService`) are called as static methods on the type itself.
 
 | Service | Responsibility |
 |---|---|
@@ -107,6 +106,7 @@ Business logic is concentrated in the services layer. Stateful services are obta
 | `DataCleanService` | Periodic history cleanup (over-limit / orphan file deletion) |
 | `ExcludeAppService` | Management of excluded applications |
 | `AccessibilityService` | Checks and guides accessibility permission |
+| `LoginItemService` | Registers / unregisters the login item (launch at login) via `SMAppService` |
 | `CodeSignService` | Self-signature stabilization at launch (see below) |
 
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
@@ -200,14 +200,13 @@ xcode-select --install
 # SwiftLint (for code style checking)
 brew install swiftlint
 
-# Dependencies (run under Ruby 3.x)
-export PATH="/opt/homebrew/opt/ruby@3.2/bin:$PATH"
-gem install bundler
-bundle install --path=vendor/bundle
+# Dependencies (run under Homebrew's ruby 4.0 series)
+brew install ruby
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+bundle config set --local path vendor/bundle
+bundle install
 bundle exec pod install
 ```
-
-> **Note:** Running `pod install` overwrites the manual patch to `Pods/LoginServiceKit` (the fix that uses `SMAppService` on macOS 13+). After `pod install`, verify the build/behavior and re-apply the patch if needed.
 
 ### 4-1. Unit Tests (pre-build check)
 

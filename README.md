@@ -242,7 +242,7 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed build steps.
 
-**Requirements:** macOS 11.0 or later · Apple Silicon (arm64)
+**Requirements:** macOS 15.0 or later · Apple Silicon (arm64)
 
 **Outline:**
 
