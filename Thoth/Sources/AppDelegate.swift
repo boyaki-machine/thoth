@@ -186,15 +186,9 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         }
     }
 
-    private func toggleAddingToLoginItems(_ isEnable: Bool) {
-        LoginItemService.unregister()
-        guard isEnable else { return }
-        LoginItemService.register()
-    }
-
     private func reflectLoginItemState() {
         let isInLoginItems = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.loginItem)
-        toggleAddingToLoginItems(isInLoginItems)
+        LoginItemService.sync(enabled: isInLoginItems)
     }
 }
 

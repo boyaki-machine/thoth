@@ -79,6 +79,7 @@
 		AA00012000000000ABCDEF01 /* ExcludeAppServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */; };
 		AA0001A200000000ABCDEF01 /* SecureItemSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */; };
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
+		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
 		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
@@ -304,6 +305,7 @@
 		AA00011900000000ABCDEF01 /* ExcludeAppServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppServiceSpec.swift; sourceTree = "<group>"; };
 		AA0001A100000000ABCDEF01 /* SecureItemSearch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearch.swift; sourceTree = "<group>"; };
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
+		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -801,6 +803,7 @@
 				AA0000FB00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift */,
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
+				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
 				AA0000FF00000000ABCDEF01 /* SecureInfoActionMenuSpec.swift */,
 				AA0000FF20000000ABCDEF01 /* SecureInfoHistorySpec.swift */,
 				AA0000E900000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift */,
@@ -1247,6 +1250,7 @@
 				AA0000FC00000000ABCDEF01 /* SecureInfoDragReorderSpec.swift in Sources */,
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
+				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
 				AA0000FF10000000ABCDEF01 /* SecureInfoActionMenuSpec.swift in Sources */,
 				AA0000FF30000000ABCDEF01 /* SecureInfoHistorySpec.swift in Sources */,
 				AA0000EA00000000ABCDEF01 /* SecureInfoCommitFlowSpec.swift in Sources */,

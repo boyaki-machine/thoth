@@ -17,9 +17,42 @@ import ServiceManagement
 /// そのため同じ処理をアプリ側へ移した。
 enum LoginItemService {
 
-    /// ログイン項目として有効になっているか
-    static var isRegistered: Bool {
-        return SMAppService.mainApp.status == .enabled
+    /// 設定値と現在の登録状態を揃えるために行う操作
+    enum Action: Equatable {
+        case none
+        case register
+        case unregister
+    }
+
+    /// 設定値（desired）と現在の登録状態から、行うべき操作を決める。
+    ///
+    /// 状態が既に揃っていれば何もしない（起動のたびに解除 → 再登録しない）。
+    /// システム設定で利用者がオフにした項目（`.requiresApproval`）は、
+    /// 設定値がオンでも再登録で上書きせず、利用者の判断を尊重する
+    static func action(desired: Bool, status: SMAppService.Status) -> Action {
+        switch (desired, status) {
+        case (true, .notRegistered), (true, .notFound):
+            return .register
+        case (false, .enabled), (false, .requiresApproval):
+            return .unregister
+        default:
+            return .none
+        }
+    }
+
+    /// 設定値に合わせてログイン項目の登録状態を揃える（冪等）
+    static func sync(enabled desired: Bool) {
+        let status = SMAppService.mainApp.status
+        switch action(desired: desired, status: status) {
+        case .register:
+            register()
+        case .unregister:
+            unregister()
+        case .none:
+            if desired && status == .requiresApproval {
+                NSLog("[LoginItemService] login item is turned off in System Settings; leaving it as is")
+            }
+        }
     }
 
     @discardableResult
