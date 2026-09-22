@@ -26,10 +26,9 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 | macOS | 27 系（Apple Silicon） |
 | Xcode | 27 系（27.0 で確認） |
 | Swift | 5.3（プロジェクト設定の Swift バージョン） |
-| SwiftLint | Homebrew 版 0.65 系 |
-| Ruby | 4.0 系（CocoaPods 実行用。Homebrew の `ruby`） |
+| SwiftLint / SwiftGen / BartyCrouch | 0.65.1 / 6.6.3 / 4.15.0（`scripts/tool.sh` が取得。別途のインストールは不要） |
 
-### 主要ライブラリ（CocoaPods）
+### 主要ライブラリ（Swift Package Manager）
 
 | ライブラリ | 用途 |
 |---|---|
@@ -39,15 +38,27 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
 | RxScreeen | スクリーンショット監視 |
 | AEXML | スニペットの XML インポート/エクスポート |
-| LetsMove | 初回起動時の Applications フォルダへの移動促進 |
+| LetsMove | 初回起動時の Applications フォルダへの移動促進（`Packages/LetsMove` に取り込んだローカルパッケージ） |
 | SwiftHEXColors | HEX カラープレビュー |
-| SwiftLint / SwiftGen / BartyCrouch | コード規約・コード生成（L10n / アセット）・ローカライズ補助（BartyCrouch の設定は `.bartycrouch.toml`） |
 | Quick / Nimble | ユニットテスト（BDD スタイル） |
+
+開発ツール（SwiftLint / SwiftGen / BartyCrouch）はパッケージではなく、`scripts/tool.sh` が公式リリースの zip を版と SHA-256 を固定して取得し、`.tools/`（git 管理外）に置きます。用途はコード規約・コード生成（L10n / アセット）・XIB の文言の同期（BartyCrouch の設定は `.bartycrouch.toml`）です。
+
+### 依存ライブラリの管理
+
+v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods のスペックリポジトリが 2026-12-02 に読み取り専用になるため）。Ruby・`pod install` は不要です。
+
+- **版は完全に固定する（Exact Version）。** 固定した版は `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` に記録され、コミット対象です。Xcode がプロジェクトを開いたとき・ビルド時に自動で取得します。
+- **パッケージを足したり版を変えたりしたら、`scripts/update-acknowledgements.swift` を実行して、サードパーティライセンス一覧（`Thoth/Resources/Acknowledgements.md` と `NOTICE`）を作り直してコミットする。** 忘れると `AcknowledgementsSpec` が落ちます。テストだけで使うパッケージは一覧に載せません（スクリプト冒頭の `testOnlyPackages`）。
+- **RealmSwift は動的フレームワーク**（他は静的リンク）。アプリの「Embed Frameworks」に登録して `.app` に同梱し、テストターゲットにはリンクだけします（テストが Realm を直接使うため。埋め込むとアプリの分と 2 つ読み込まれる）。動的な製品を足すときは同じ扱いが要ります。
+- **Realm は 20.0.5。** v1.5.0（CocoaPods）までは 10.54.6 でしたが、SPM 版は realm-core をソースからビルドするため、Xcode 27 でコンパイルできる 20.0.5 に上げました。移行元（10.x で書かれた Realm ファイル）を読めること・1 バイトも書き換えないことは、10.54.6 で作った固定の Realm ファイルを使う `LibraryMigrationSpec` で確かめています。
+- **LetsMove は本家が SPM に対応していないため、1.25 を `Packages/LetsMove` に取り込んでいます。** 変更点（翻訳を読むバンドルなど）は `Packages/LetsMove/README.md` を参照。
+- CocoaPods のフレームワークは AppKit などを暗黙に取り込んでいたため、その頃のファイルには `import Cocoa` / `import Foundation` が抜けているものがありました。SPM では暗黙には入らないので、使うフレームワークは各ファイルで明示的に import します。
 
 ### アーキテクチャの前提
 
 - **依存性注入**: `AppEnvironment.current` を通じてサービス群（`Environment`）へアクセスします。テストでは `AppEnvironment.push/popLast` でモック環境に差し替えられます。
-- **コード生成**: `L10n.*`（ローカライズ文字列）と `Asset.*`（画像）は SwiftGen がビルド時に自動生成します。文言・アセットを追加する場合は `Thoth/Resources/*.lproj/Localizable.strings` などの元ファイルを編集すれば、ビルド時に `Thoth/Generated/` 以下が再生成されます（生成ファイルの手編集は不要）。
+- **コード生成**: `L10n.*`（ローカライズ文字列）と `Asset.*`（画像）は SwiftGen がビルド時に自動生成します。文言・アセットを追加する場合は `Thoth/Resources/*.lproj/Localizable.strings` などの元ファイルを編集すれば、ビルド時に `Thoth/Generated/` 以下が再生成されます（生成ファイルの手編集は不要）。SwiftGen・BartyCrouch のビルドフェーズはコンパイルより前に走るため、文言を足した直後のビルドでもそのまま使えます。
 
 ---
 
@@ -78,7 +89,10 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 │   ├── Generated/                   SwiftGen 生成ファイル（L10n / Asset / Colors）
 │   └── Supporting Files/            Info.plist など
 ├── ThothTests/                      ユニットテスト（Quick + Nimble）
-├── Podfile                          CocoaPods 依存定義
+├── Packages/LetsMove/               LetsMove を取り込んだローカルパッケージ
+├── scripts/                         tool.sh（開発ツールの実行）、update-acknowledgements.swift
+│                                    （ライセンス一覧の生成）、make_dmg.sh（配布用 DMG の作成）
+├── NOTICE                           サードパーティライセンス一覧（Acknowledgements.md と同じ内容）
 ├── .swiftlint.yml                   コード規約設定
 ├── README_JP.md                     利用者向け説明
 └── docs/
@@ -129,7 +143,7 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 ユニットテスト（`ThothTests` ターゲット / Quick + Nimble）はスキームの Test アクション（Debug 構成）で実行します。
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
   -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES
 ```
 
@@ -159,6 +173,7 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
+| 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
@@ -206,20 +221,9 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 ```bash
 # Xcode Command Line Tools
 xcode-select --install
-
-# Homebrew（未導入の場合）
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# SwiftLint（コード規約チェック用）
-brew install swiftlint
-
-# 依存関係（Homebrew の ruby 4.0 系で実行する）
-brew install ruby
-export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-bundle config set --local path vendor/bundle
-bundle install
-bundle exec pod install
 ```
+
+依存ライブラリ（Swift Package）は Xcode・`xcodebuild` が自動で取得します。開発ツール（SwiftLint / SwiftGen / BartyCrouch）も初回のビルドで `scripts/tool.sh` が自動で取得します（ネットワークに繋がっているときに先に取得しておくなら `scripts/tool.sh --install`）。Homebrew・Ruby は不要です。
 
 ### 4-1. ユニットテスト（ビルド前の確認）
 
@@ -230,12 +234,12 @@ bundle exec pod install
 SwiftLint（設定: `.swiftlint.yml`、対象: `Thoth/Sources` と `ThothTests`）を実行します。
 
 ```bash
-swiftlint   # プロジェクトのルートで実行
+scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 ```
 
 `Done linting! Found 0 violations` と表示されれば規約違反はありません。
 
-> **補足:** CocoaPods 経由の `Pods/SwiftLint`（0.65 系）は Apple Silicon で正常に動作するため、Xcode ビルドのスクリプトフェーズでリントが実行されます。Homebrew 版 `swiftlint` でも同じ設定を単体実行できます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
+> **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 
 主な規約値（`.swiftlint.yml`）:
 
@@ -252,22 +256,22 @@ swiftlint   # プロジェクトのルートで実行
 
 ```bash
 # クリーン（必要に応じて）
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug clean
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release clean
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug clean
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release clean
 # 完全にクリーンな状態から始めたい場合は DerivedData も削除
 rm -rf ~/Library/Developer/Xcode/DerivedData/Thoth-*
 
 # デバッグビルド
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug build
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug build
 
 # リリースビルド
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release build
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release build
 ```
 
 成果物の出力先を明示する場合:
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
   -configuration Release build -derivedDataPath build/DerivedData
 # → build/DerivedData/Build/Products/Release/Thoth.app に生成される
 ```
@@ -290,9 +294,11 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 
 **動作内容:**
 
-1. `Release` 構成でビルド（`build/DerivedData` へ出力）
-2. `Thoth.app` と `/Applications` へのシンボリックリンクをステージング
-3. macOS 標準の `hdiutil` で圧縮 DMG（UDZO）を作成
+1. 開発ツールを用意（`scripts/tool.sh --install`。取得済みなら何もしない）
+2. Swift Package を `build/SourcePackages` へ取得し、サードパーティライセンス一覧を作り直す（`scripts/update-acknowledgements.swift`。一覧が変わったらコミットするよう警告を出す）
+3. `Release` 構成でビルド（`build/DerivedData` へ出力。`ARCHS=arm64` を渡し、パッケージも arm64 だけでビルドする）
+4. `Thoth.app` と `/Applications` へのシンボリックリンクをステージング
+5. macOS 標準の `hdiutil` で圧縮 DMG（UDZO）を作成
 
 **出力先:** `build/Thoth-<version>.dmg`（バージョンは `Info.plist` の `CFBundleShortVersionString` から自動取得。`build/` は `.gitignore` 済みのためコミットされない）
 

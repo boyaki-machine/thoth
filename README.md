@@ -247,9 +247,8 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 **Outline:**
 
 1. Clone the repository
-2. Install dependencies (`bundle exec pod install`)
-3. Build (open `Thoth.xcworkspace` in Xcode, or use `xcodebuild` from the CLI)
-4. Place the built `Thoth.app` in `/Applications` and launch it
+2. Build (open `Thoth.xcodeproj` in Xcode, or use `xcodebuild` from the CLI; dependencies and development tools are fetched automatically during the build)
+3. Place the built `Thoth.app` in `/Applications` and launch it
 
 **First-launch notes:**
 
