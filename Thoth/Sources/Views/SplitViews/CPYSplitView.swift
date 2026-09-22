@@ -15,7 +15,8 @@ import Cocoa
 class CPYSplitView: NSSplitView {
 
     // MARK: - Properties
-    @IBInspectable var separatorColor: NSColor = .scrollBarColor {
+    /// 既定値は旧 `NSColor.scrollBarColor`（macOS 11 で非推奨）と同じ固定グレー
+    @IBInspectable var separatorColor: NSColor = NSColor(white: 2.0 / 3.0, alpha: 1) {
         didSet {
             needsDisplay = true
         }

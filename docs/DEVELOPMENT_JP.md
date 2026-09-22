@@ -13,21 +13,21 @@
 
 | 項目 | 値 |
 |---|---|
-| 対応 OS | macOS 11.0 以降 |
+| 対応 OS | macOS 15.0 以降 |
 | アーキテクチャ | Apple Silicon (arm64) のみ |
-| デプロイターゲット | `MACOSX_DEPLOYMENT_TARGET = 11.0` |
+| デプロイターゲット | `MACOSX_DEPLOYMENT_TARGET = 15.0` |
 
-macOS 11.0 を最低要件としているのは、ファイル暗号化に CryptoKit（AES-GCM 等、macOS 10.15+）を利用するためです。Apple Silicon 機は macOS 11 未満を起動できないため、arm64 専用ビルドとして 10.x を切り捨てています。
+macOS 15.0 を最低要件としているのは、Apple のセキュリティ更新が続いている OS に限るためです（v1.4.0 で macOS 11.0 から引き上げ。macOS 13 はサポートが終了し、14 も終了が近い）。本アプリはパスワードや TOTP を扱うため、脆弱性の修正が届かない OS での利用は想定しません。ビルドは Apple Silicon 向けの arm64 のみで、Intel Mac は対象外です（macOS 15 自体は一部の Intel Mac でも動くため、Intel を除外しているのは `ARCHS = arm64` の設定です）。
 
 ### 開発環境（動作確認済み）
 
 | ツール | バージョン |
 |---|---|
-| macOS | 26 系（Apple Silicon） |
-| Xcode | 26 系（26.6 で確認） |
+| macOS | 27 系（Apple Silicon） |
+| Xcode | 27 系（27.0 で確認） |
 | Swift | 5.3（プロジェクト設定の Swift バージョン） |
 | SwiftLint | Homebrew 版 0.65 系 |
-| Ruby | 3.2 系（CocoaPods 実行用。4.0 系では一部 Gem が失敗） |
+| Ruby | 4.0 系（CocoaPods 実行用。Homebrew の `ruby`） |
 
 ### 主要ライブラリ（CocoaPods）
 
@@ -38,12 +38,11 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
 | PINCache | サムネイル画像のキャッシュ |
-| LoginServiceKit | ログイン時の自動起動 |
 | RxScreeen | スクリーンショット監視 |
 | AEXML | スニペットの XML インポート/エクスポート |
 | LetsMove | 初回起動時の Applications フォルダへの移動促進 |
 | SwiftHEXColors | HEX カラープレビュー |
-| SwiftLint / SwiftGen / BartyCrouch | コード規約・コード生成（L10n / アセット）・ローカライズ補助 |
+| SwiftLint / SwiftGen / BartyCrouch | コード規約・コード生成（L10n / アセット）・ローカライズ補助（BartyCrouch の設定は `.bartycrouch.toml`） |
 | Quick / Nimble | ユニットテスト（BDD スタイル） |
 
 ### アーキテクチャの前提
@@ -88,7 +87,7 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 
 ### Services レイヤー（`Thoth/Sources/Services/`）
 
-ビジネスロジックはサービス層に集約されます。状態を持つものは `AppEnvironment.current.xxxService` から取得し、状態を持たないもの（`SecureItemSearch` / `SecureItemsTransfer` / `QRDecodeService` / `CryptoPasswordQRCodec`）は型に直接生えた静的メソッドとして呼びます。
+ビジネスロジックはサービス層に集約されます。状態を持つものは `AppEnvironment.current.xxxService` から取得し、状態を持たないもの（`SecureItemSearch` / `SecureItemsTransfer` / `QRDecodeService` / `CryptoPasswordQRCodec` / `LoginItemService`）は型に直接生えた静的メソッドとして呼びます。
 
 | サービス | 責務 |
 |---|---|
@@ -107,6 +106,7 @@ macOS 11.0 を最低要件としているのは、ファイル暗号化に Crypt
 | `DataCleanService` | 履歴の定期クリーンアップ（上限超過・孤児ファイル削除） |
 | `ExcludeAppService` | 除外アプリケーションの管理 |
 | `AccessibilityService` | アクセシビリティ権限の確認・誘導 |
+| `LoginItemService` | ログイン項目（ログイン時の自動起動）を設定値に揃える（`SMAppService`。揃っていれば何もしない。システム設定で利用者がオフにした項目は上書きしない） |
 | `CodeSignService` | 起動時の自己署名安定化（後述） |
 
 補助的な永続化ユーティリティ（`Thoth/Sources/Utility/`）:
@@ -141,13 +141,13 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
-| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
+| 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
 | 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
-| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec` |
+| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 
@@ -201,14 +201,13 @@ xcode-select --install
 # SwiftLint（コード規約チェック用）
 brew install swiftlint
 
-# 依存関係（Ruby 3.x 系で実行すること）
-export PATH="/opt/homebrew/opt/ruby@3.2/bin:$PATH"
-gem install bundler
-bundle install --path=vendor/bundle
+# 依存関係（Homebrew の ruby 4.0 系で実行する）
+brew install ruby
+export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+bundle config set --local path vendor/bundle
+bundle install
 bundle exec pod install
 ```
-
-> **注意:** `pod install` を実行すると `Pods/LoginServiceKit` への手動修正（macOS 13 以降で `SMAppService` を使う対応）が上書きされます。`pod install` 後はビルド・動作を確認し、必要に応じて修正を再適用してください。
 
 ### 4-1. ユニットテスト（ビルド前の確認）
 

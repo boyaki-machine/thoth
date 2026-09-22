@@ -6,6 +6,7 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 
 // MARK: - Import / Export
 //
@@ -36,7 +37,7 @@ extension CPYSecureInfoSplitViewController {
     private func showExportPanel() {
         guard let window = view.window else { return }
         let panel = NSSavePanel()
-        panel.allowedFileTypes = ["json"]
+        panel.allowedContentTypes = [.json]
         panel.nameFieldStringValue = SecureItemsTransfer.defaultFileName
         panel.beginSheetModal(for: window) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }
@@ -68,7 +69,7 @@ extension CPYSecureInfoSplitViewController {
         guard commitIfNeeded() else { return }
 
         let panel = NSOpenPanel()
-        panel.allowedFileTypes = ["json"]
+        panel.allowedContentTypes = [.json]
         panel.allowsMultipleSelection = false
         panel.beginSheetModal(for: window) { [weak self] response in
             guard response == .OK, let url = panel.url else { return }

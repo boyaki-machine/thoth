@@ -11,6 +11,7 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 import RealmSwift
 import KeyHolder
 import Magnet
@@ -64,9 +65,7 @@ final class CPYSnippetsEditorWindowController: NSWindowController {
         super.windowDidLoad()
         self.window?.collectionBehavior = NSWindow.CollectionBehavior.canJoinAllSpaces
         self.window?.backgroundColor = NSColor(white: 0.99, alpha: 1)
-        if #available(OSX 10.10, *) {
-            self.window?.titlebarAppearsTransparent = true
-        }
+        self.window?.titlebarAppearsTransparent = true
         // HACK: Copy as an object that does not put under Realm management.
         // https://github.com/realm/realm-cocoa/issues/1734
         let realm = RealmProvider.defaultRealm()
@@ -167,7 +166,7 @@ extension CPYSnippetsEditorWindowController {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false
         panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory())
-        panel.allowedFileTypes = [Constants.Xml.fileType]
+        panel.allowedContentTypes = [.xml]
         let returnCode = panel.runModal()
 
         if returnCode != NSApplication.ModalResponse.OK { return }
@@ -243,7 +242,7 @@ extension CPYSnippetsEditorWindowController {
         let panel = NSSavePanel()
         panel.accessoryView = nil
         panel.canSelectHiddenExtension = true
-        panel.allowedFileTypes = [Constants.Xml.fileType]
+        panel.allowedContentTypes = [.xml]
         panel.allowsOtherFileTypes = false
         panel.directoryURL = URL(fileURLWithPath: NSHomeDirectory())
         panel.nameFieldStringValue = "snippets"

@@ -113,8 +113,10 @@ extension MenuManager {
             let callerApp = panel?.callerApp
             self?.dismissHistoryPicker()
             // ペースト先アプリをアクティブ化してから貼り付ける。
-            // activate は非同期で完了するため少し待ってから送出する
-            callerApp?.activate(options: [.activateIgnoringOtherApps])
+            // activate は非同期で完了するため少し待ってから送出する。
+            // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない。
+            //   呼び出し時点で Thoth がアクティブなので、他アプリへの切り替えは通る）
+            callerApp?.activate(options: [])
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 if !AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: dataHash) {
                     NSSound.beep()
@@ -229,7 +231,8 @@ extension MenuManager {
                 self?.secureCloseObserver = nil
                 // ペースト先アプリをアクティブ化してから出力する。
                 // activate は非同期で完了するため少し待ってから送出する。
-                callerApp?.activate(options: [.activateIgnoringOtherApps])
+                // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない）
+                callerApp?.activate(options: [])
                 self?.outputSecureSelection(selection)
             }
             // 選択パネルからもメインメニューと同じセキュア情報確認ウィンドウを開く。

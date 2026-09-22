@@ -463,7 +463,7 @@ extension CPYHistoryPickerPanel {
         tableView.backgroundColor         = .clear
         tableView.focusRingType           = .none
         tableView.selectionHighlightStyle = .regular
-        if #available(macOS 11.0, *) { tableView.style = .plain }
+        tableView.style = .plain
         tableView.usesAutomaticRowHeights = false
         tableView.delegate                = self
         tableView.dataSource              = self

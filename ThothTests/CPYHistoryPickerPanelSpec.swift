@@ -3,8 +3,11 @@ import Nimble
 import AppKit
 @testable import Thoth
 
-/// 履歴パネルの UI 構成（行構造・設定連動・サブパネル表示行）のスペック。
-/// パネルはヘッドレスで生成し、表示（show）は行わない
+// 履歴パネルの UI 構成（行構造・設定連動・サブパネル表示行・キー操作）のスペック。
+// パネルはヘッドレスで生成し、表示（show）は行わない
+
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - Helpers
@@ -68,6 +71,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
         rowStructureSpecs()
         subEntrySpecs()
         subPanelWidthSpecs()
+        subPanelKeySpecs()
         dismissBehaviorSpecs()
     }
 
@@ -294,6 +298,80 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
                                                   settings: self.makeSettings(markWithNumber: false))
                 expect(panel.makeSubEntries(for: group).first?.showsNumber) == false
                 panel.close()
+            }
+        }
+    }
+
+    // MARK: - Sub Panel Keys
+
+    /// サブパネルモードのキー操作。↓↑ は検索入力中もクリップ間を移動し、
+    /// j / k は検索入力中は横取りせず文字入力に譲る（通常モードと同じ約束）。
+    ///
+    /// 以前は `case 125, 38 where !searching` と 1 つの case に書き、where が
+    /// j にしか掛からないことに頼っていた（コンパイラが警告する書き方）。
+    /// 警告を「両方に where を付ける」形で消すと、検索中に ↓ が効かなくなる
+    private static func subPanelKeySpecs() {
+        describe("サブパネルモードのキー操作") {
+            func keyDown(_ character: String, keyCode: UInt16) -> NSEvent {
+                return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                        timestamp: 0, windowNumber: 0, context: nil,
+                                        characters: character, charactersIgnoringModifiers: character,
+                                        isARepeat: false, keyCode: keyCode)!
+            }
+            let downArrow = keyDown(String(UnicodeScalar(NSDownArrowFunctionKey)!), keyCode: 125)
+            let upArrow = keyDown(String(UnicodeScalar(NSUpArrowFunctionKey)!), keyCode: 126)
+            let jKey = keyDown("j", keyCode: 38)
+            let kKey = keyDown("k", keyCode: 40)
+
+            /// 3 件入りのサブパネルに入り、先頭を選んだ状態のパネルを作る。
+            /// パネル・サブパネルとも画面には出さない
+            func makePanelInSubPanelMode(searching: Bool) -> CPYHistoryPickerPanel {
+                let clips = (0..<3).map { self.makeItem("c\($0)", title: "clip \($0)", index: $0) }
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings())
+                let sub = CPYHistorySubPanel()
+                sub.setEntries(clips.map {
+                    CPYHistorySubPanel.Entry(clip: $0, number: $0.index, showsNumber: false,
+                                             toolTip: nil, thumbnailPath: nil, showsTypeIcon: true)
+                })
+                panel.subPanel = sub
+                panel.enterSubPanel()
+                if searching { panel.makeFirstResponder(panel.searchField) }
+                return panel
+            }
+
+            it("検索入力中でも ↓↑ でサブパネル内のクリップを移動する") {
+                let panel = makePanelInSubPanelMode(searching: true)
+                defer { panel.close() }
+                guard panel.searchField.currentEditor() != nil else {
+                    fail("検索欄が編集状態になっていない（前提が崩れている）")
+                    return
+                }
+                expect(panel.handleKeyDown(downArrow)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 1
+                expect(panel.handleKeyDown(upArrow)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 0
+            }
+
+            it("検索入力中の j / k は横取りせず、選択も動かさない") {
+                let panel = makePanelInSubPanelMode(searching: true)
+                defer { panel.close() }
+                guard panel.searchField.currentEditor() != nil else {
+                    fail("検索欄が編集状態になっていない（前提が崩れている）")
+                    return
+                }
+                expect(panel.handleKeyDown(jKey)) == false
+                expect(panel.handleKeyDown(kKey)) == false
+                expect(panel.subPanel?.selectedClipIndex) == 0
+            }
+
+            it("検索入力していなければ j / k でサブパネル内のクリップを移動する") {
+                let panel = makePanelInSubPanelMode(searching: false)
+                defer { panel.close() }
+                expect(panel.handleKeyDown(jKey)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 1
+                expect(panel.handleKeyDown(kKey)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 0
             }
         }
     }

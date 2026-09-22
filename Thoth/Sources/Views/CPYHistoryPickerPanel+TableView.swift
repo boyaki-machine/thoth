@@ -297,22 +297,21 @@ extension CPYHistoryPickerPanel {
     /// サブパネルモード（グループ内クリップの移動・確定）のキー処理。
     /// 端に達したら隣のグループへロールオーバーする（セキュアパネルと同じ）
     private func handleSubPanelModeKey(_ event: NSEvent, searching: Bool, composing: Bool) -> Bool {
+        // ↓↑ は検索入力中も効かせ、j / k は検索入力中は文字入力に譲る（通常モードと同じ）
         switch Int(event.keyCode) {
-        case 125, 38 where !searching:  // ↓ / j
+        case 125:                       // ↓
             if composing { return false }
-            if !(subPanel?.selectNext() ?? false) {
-                isInSubPanelMode = false
-                selectNextGroupOnly()
-                if subPanel != nil { isInSubPanelMode = true; subPanel?.selectFirst() }
-            }
+            selectNextSubClip()
             return true
-        case 126, 40 where !searching:  // ↑ / k
+        case 38 where !searching:       // j
+            selectNextSubClip()
+            return true
+        case 126:                       // ↑
             if composing { return false }
-            if !(subPanel?.selectPrev() ?? false) {
-                isInSubPanelMode = false
-                selectPrevGroupOnly()
-                if subPanel != nil { isInSubPanelMode = true; subPanel?.selectLast() }
-            }
+            selectPrevSubClip()
+            return true
+        case 40 where !searching:       // k
+            selectPrevSubClip()
             return true
         case 36, 76:                    // Enter / Numpad Enter
             if searching && composing { return false }
@@ -346,6 +345,22 @@ extension CPYHistoryPickerPanel {
         default:
             return false
         }
+    }
+
+    /// サブパネル内で次のクリップへ移動する。末尾なら次のグループへロールオーバーする
+    private func selectNextSubClip() {
+        guard !(subPanel?.selectNext() ?? false) else { return }
+        isInSubPanelMode = false
+        selectNextGroupOnly()
+        if subPanel != nil { isInSubPanelMode = true; subPanel?.selectFirst() }
+    }
+
+    /// サブパネル内で前のクリップへ移動する。先頭なら前のグループへロールオーバーする
+    private func selectPrevSubClip() {
+        guard !(subPanel?.selectPrev() ?? false) else { return }
+        isInSubPanelMode = false
+        selectPrevGroupOnly()
+        if subPanel != nil { isInSubPanelMode = true; subPanel?.selectLast() }
     }
 
     /// グループ行のみを対象に次の行へ移動する（固定行へは進まない。ロールオーバー用）

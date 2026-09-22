@@ -11,6 +11,7 @@
 //
 
 import Cocoa
+import UniformTypeIdentifiers
 
 class CPYExcludeAppPreferenceViewController: NSViewController {
     // MARK: - Properties
@@ -21,7 +22,7 @@ class CPYExcludeAppPreferenceViewController: NSViewController {
 extension CPYExcludeAppPreferenceViewController {
     @IBAction private func addAppButtonTapped(_ sender: AnyObject) {
         let openPanel = NSOpenPanel()
-        openPanel.allowedFileTypes = ["app"]
+        openPanel.allowedContentTypes = [.applicationBundle]
         openPanel.allowsMultipleSelection = true
         openPanel.resolvesAliases = true
         openPanel.prompt = L10n.add
