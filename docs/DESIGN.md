@@ -127,16 +127,39 @@ The app's decryption also auto-detects and reads these past formats (encryption 
 
 A standard file produced by `openssl enc -aes-256-cbc -pbkdf2` (without a marker) can also be decrypted as the file variant of the legacy format.
 
-### 2-3. Clipboard History Encryption (encryption at rest)
+### 2-3. Clipboard History and Snippet Encryption (encryption at rest)
 
-Clipboard history is stored in two places — a Realm database and individual `.data` files (clip payloads) — and both are encrypted. These are encrypted with app-internal keys and are **device-specific** (not included in Export, not interoperable across machines).
+History and snippets live in a SwiftData store (`Thoth.store`); clip payloads live in individual `.data` files. Both are encrypted with app-internal keys and are **device-specific** (not included in Export, not interoperable across machines).
 
 | Target | Method |
 |---|---|
-| Realm database | Realm's built-in encryption (AES-256, 64-byte key) |
+| Contents of the store (SwiftData) | AES-256-GCM per field. Format: `"TSF"(3B) + version 0x01(1B) + 12B nonce + ciphertext + 16B tag`. Authenticated data: `Thoth.store/v1\|<model>\|<id>\|<field>` |
 | Clip `.data` files | AES-256-GCM. Format: `"CLPYDAT"(7B) + version 0x01(1B) + AES-GCM combined (12B nonce + ciphertext + 16B tag)` |
 
-- Existing plaintext databases / plaintext `.data` files are migrated to the encrypted format at first launch and by background processing after launch (backward compatibility with pre-migration files is retained).
+SwiftData (SQLite underneath) has no encryption at rest, so everything shown in the UI is packed into an encrypted JSON blob (`sealedPayload`). Only the columns needed for ordering, lookup and structure stay in plaintext.
+
+| Model | Plaintext columns | Encrypted contents |
+|---|---|---|
+| `StoredClip` | id (content key), copy time, `.data` path, whether a thumbnail exists | Title, type, whether it is a color code |
+| `StoredClip` thumbnail | — | Downscaled PNG (`sealedThumbnail`) |
+| `StoredFolder` | id, index, enabled | Folder name |
+| `StoredSnippet` | id, index, enabled, owning folder | Title, body |
+
+Because the **authenticated data contains the model name, id and field name**, a ciphertext moved to another row or another field fails to decrypt instead of being silently accepted.
+
+**No new Keychain entry is created for these keys.** Two keys are derived from the `.data` key (`clipDataEncryptionKey`) with HKDF-SHA256 (salt: `io.github.boyaki-machine.Thoth.store`).
+
+| Purpose | info |
+|---|---|
+| Field encryption | `io.github.boyaki-machine.Thoth.store.seal.v1` |
+| Content key (HMAC) | `io.github.boyaki-machine.Thoth.store.content-key.v1` |
+
+**A clip's id is an HMAC-SHA256 (content key) of the content hash, not the hash itself**, so that a plaintext column cannot be used to confirm guesses for short secrets such as copied passwords. Identical content still maps to the same id, so "overwrite the same history" keeps working.
+
+The derivation constants, the shape of the authenticated data and the ciphertext format all decide whether stored data can still be read; changing them requires a migration. `FieldCipherSpec` pins them against values computed independently of the Swift implementation (HKDF/HMAC with Python's `hmac`, AES-GCM with Ruby's OpenSSL).
+
+- Thumbnails are PNGs redrawn at twice the display size in pixels. Up to v1.4.x they were not actually downscaled: the original-resolution image stayed in a plaintext cache under `~/Library/Caches` (v1.5 regenerates them encrypted and deletes the old cache).
+- Existing plaintext `.data` files are migrated to the encrypted format by background processing after launch (pre-migration files remain readable).
 - Keys are stored in the macOS Keychain (see [4. Classification of Information](#4-classification-of-information-user-configured--app-generated)).
 
 ### 2-4. TOTP
@@ -156,7 +179,7 @@ Base32 decoding does not perform RFC 4648 strict trailing-bit validation, so it 
 
 ## 3. Interoperability Conventions for Other Platforms
 
-If you later implement an app on another OS (e.g. Windows) that interoperates with this one, the following are the platform-independent compatibility points. Conversely, everything else (the Realm DB, `.data` files, the Keychain) is device-specific and out of scope for porting/sharing.
+If you later implement an app on another OS (e.g. Windows) that interoperates with this one, the following are the platform-independent compatibility points. Conversely, everything else (the SwiftData store, `.data` files, the Keychain) is device-specific and out of scope for porting/sharing.
 
 ### Interoperable Items
 
@@ -204,15 +227,16 @@ This section summarizes the overall design policy that speeds up understanding b
 
 The launch process is split into phases, prioritizing display of the menu-bar icon (see the sequence diagram comment in `AppDelegate.swift` for details).
 
-- **Lightweight synchronous work** (Realm configuration, DI, icon display) is done first so the menu-bar icon appears immediately.
-- **Heavy initialization** (schema migration, encryption migration, first open) runs in the background (`RealmProvider.warmUp`). Completion is tracked by the `RealmProvider.isReady` flag, guarding against menu rebuilds and the like touching a mid-migration Realm before it is ready.
+- **Lightweight synchronous work** (DI, icon display) is done first so the menu-bar icon appears immediately.
+- **Heavy initialization** (reading the key, opening the store, and on the first launch migrating from Realm) runs in the background (`LibraryProvider.prepare`). Completion is tracked by the `LibraryProvider.isReady` flag, guarding against menu rebuilds and the like touching the storage layer before it is ready.
 - **Self re-signing** (external commands like `codesign --deep` that take seconds) runs in the background and falls back to normal launch only on failure.
 - **The login-item confirmation dialog** (modal) is shown deferred, after service startup completes.
 
 ### 5-2. Clipboard Monitoring and Threads
 
 - Since NSPasteboard has no change-notification API, `changeCount` is **polled at 100 ms intervals** to detect changes. This resident work runs at `.utility` QoS (reading `changeCount` is extremely lightweight, so efficiency cores suffice; the upper bound of perceived latency is the 100 ms polling interval and does not depend on core speed).
-- Save processing (dedup check, thumbnail generation, archiving, file write, Realm insertion) is offloaded onto a dedicated serial queue (`.userInitiated`) so it does not block the main thread.
+- Save processing (dedup check, thumbnail generation, archiving, file write, insertion into the storage layer) is offloaded onto a dedicated serial queue (`.userInitiated`) so it does not block the main thread.
+- SwiftData's `ModelContext` cannot cross threads, so it is used only inside the storage layer's own serial queue. Callers may call from any thread and exchange value types.
 - Work the user is waiting on, such as pasting and clip loading, runs at `.userInitiated`; menu display/building runs on the main thread (`.userInteractive` equivalent).
 
 > macOS has no API to pin a specific CPU core. The use of P cores / E cores is delegated to the OS scheduler via QoS classes. The intent is "quiet on efficiency cores while idle, responsive on performance cores when operated".
@@ -408,3 +432,31 @@ The third follows from `mergeFieldHistories` taking the incoming `field.history`
 **Why undo also lives in the ⚙ menu**
 
 Since the delete button only appears on hover, the fact that deletions *are* reversible has to be visible somewhere. The menu item is titled from `undoAction` (e.g. "Undo Delete Item") so it also says what will come back.
+
+### 5-7. Migration from Realm to SwiftData (v1.5)
+
+Storage moved from Realm to SwiftData. The migration runs **once, on the first launch of v1.5.x**.
+
+1. Open Realm **read-only** and read everything into value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`)
+2. Create the new store at its final location (`Thoth.store`) and write the data encrypted (clip ids are replaced with content keys)
+3. **Read it back with a fresh `ModelContext`** and verify counts, every field and the ordering
+4. Only when verification passes, write the **completion marker** (`Thoth.store.ready`) next to it
+
+- **The Realm file is never written to.** It is kept until v1.6.x, so rolling back to v1.4.x shows the data as of the migration (changes made in v1.5.x afterwards are not visible there, and changes made in the old version are not picked up later — a known limitation).
+- **A store without the completion marker is an interrupted migration.** The app only uses stores that have the marker, so such a store holds no user data; it is deleted before opening on the next launch and the migration is retried.
+- A store that has the marker but cannot be opened is moved aside as `Thoth.store.broken-<timestamp>` instead of being deleted.
+- The migration does not write to a temporary file and then move it: SwiftData has no way to close a store, and moving files that have been opened corrupts SQLite (`SQLITE_IOERR_VNODE`).
+- Thumbnails are not carried over from the old plaintext cache; they are regenerated from the `.data` files, after which the old cache directory is deleted.
+
+**When the encryption key is unavailable, nothing is written to disk for that session.** Three situations count as unavailable:
+
+| Situation | Examples |
+|---|---|
+| The key exists but cannot be read | The login keychain is locked, access was denied, or the signature changed and no longer matches the ACL |
+| The key does not exist yet and cannot be created | Self re-signing failed, so the app is still ad-hoc signed |
+| The key is readable but does not match | The keychain was reset and a new key was created |
+
+- History is kept in memory only (still usable for pasting during that session).
+- **Snippets are neither shown nor editable.** An empty-looking list invites re-creating them, which would silently vanish at quit and duplicate after recovery. The menu shows a single row explaining why, and the editor refuses edits and explains in a sheet (the same approach as `isKeychainAccessDenied` for secure items).
+- The store is never deleted, and never overwritten with a new key. Once the cause is resolved, the next launch reads everything as before.
+- Secure items (passwords, TOTP) live in a different Keychain entry and do not use this key, so they are unaffected.

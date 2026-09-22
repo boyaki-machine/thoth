@@ -146,6 +146,14 @@ extension MenuManager {
 // MARK: - Snippets
 extension MenuManager {
     func addSnippetItems(_ menu: NSMenu, separateMenu: Bool) {
+        // 暗号鍵が使えないときは一覧が空に見えてしまうため、理由を示す 1 行だけを出す
+        guard AppEnvironment.current.isLibraryUsable else {
+            if separateMenu { menu.addItem(NSMenuItem.separator()) }
+            let item = NSMenuItem(title: L10n.snippetsUnavailable, action: nil)
+            item.isEnabled = false
+            menu.addItem(item)
+            return
+        }
         let folderRecords = AppEnvironment.current.snippetStore.folders()
         guard !folderRecords.isEmpty else { return }
         if separateMenu {

@@ -49,6 +49,7 @@ struct AppEnvironment {
                      menuManager: MenuManager = current.menuManager,
                      historyStore: HistoryStore = current.historyStore,
                      snippetStore: SnippetStore = current.snippetStore,
+                     isLibraryUsable: Bool = current.isLibraryUsable,
                      defaults: UserDefaults = current.defaults) {
         push(environment: Environment(clipService: clipService,
                                       hotKeyService: hotKeyService,
@@ -59,6 +60,7 @@ struct AppEnvironment {
                                       menuManager: menuManager,
                                       historyStore: historyStore,
                                       snippetStore: snippetStore,
+                                      isLibraryUsable: isLibraryUsable,
                                       defaults: defaults))
     }
 
@@ -71,6 +73,7 @@ struct AppEnvironment {
                                menuManager: MenuManager = current.menuManager,
                                historyStore: HistoryStore = current.historyStore,
                                snippetStore: SnippetStore = current.snippetStore,
+                               isLibraryUsable: Bool = current.isLibraryUsable,
                                defaults: UserDefaults = current.defaults) {
         replaceCurrent(environment: Environment(clipService: clipService,
                                                 hotKeyService: hotKeyService,
@@ -81,13 +84,14 @@ struct AppEnvironment {
                                                 menuManager: menuManager,
                                                 historyStore: historyStore,
                                                 snippetStore: snippetStore,
+                                                isLibraryUsable: isLibraryUsable,
                                                 defaults: defaults))
     }
 
     /// 保存層だけを差し替える（ほかのサービスはそのまま引き継ぐ）。
     /// replaceCurrent(clipService:…) はセキュア情報のサービスを引き継がず作り直すため、
     /// 起動後の差し替えにはこちらを使う
-    static func replaceLibrary(historyStore: HistoryStore, snippetStore: SnippetStore) {
+    static func replaceLibrary(historyStore: HistoryStore, snippetStore: SnippetStore, isUsable: Bool) {
         let now = current
         replaceCurrent(environment: Environment(clipService: now.clipService,
                                                 hotKeyService: now.hotKeyService,
@@ -100,6 +104,7 @@ struct AppEnvironment {
                                                 secureSelectionContext: now.secureSelectionContext,
                                                 historyStore: historyStore,
                                                 snippetStore: snippetStore,
+                                                isLibraryUsable: isUsable,
                                                 defaults: now.defaults))
     }
 
@@ -122,6 +127,7 @@ struct AppEnvironment {
                            menuManager: current.menuManager,
                            historyStore: current.historyStore,
                            snippetStore: current.snippetStore,
+                           isLibraryUsable: current.isLibraryUsable,
                            defaults: current.defaults)
     }
 

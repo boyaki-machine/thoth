@@ -257,10 +257,6 @@
 
 "Crypto Fingerprint Password Saved" = "Fingerprint password saved.";
 
-"Realm Open Failed Title" = "Failed to open the history database";
-"Realm Open Failed Message" = "The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).";
-"Realm Open Failed Quit" = "Quit";
-"Realm Open Failed Reset" = "Reset Database";
 
 "Add TOTP" = "Add TOTP...";
 
@@ -305,3 +301,7 @@
 "Third Party Licenses" = "Third Party Licenses";
 "Updates Third Party Licenses Button" = "Third-Party Licenses...";
 "Third Party Licenses Load Failed" = "Failed to load the third-party licenses list.";
+"Library Unavailable Title" = "Encryption key unavailable";
+"Library Unavailable Message" = "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.";
+"Snippets Unavailable" = "Snippets are unavailable";
+"Snippets Unavailable Message" = "Thoth could not read its encryption key, so snippets cannot be shown or edited during this session. Nothing has been deleted. Unlock your login keychain (or allow access when asked) and start Thoth again.";

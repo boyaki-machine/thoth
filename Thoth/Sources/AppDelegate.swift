@@ -236,9 +236,11 @@ extension AppDelegate: NSApplicationDelegate {
 
         // --- 重い初期化（ストアを開く・初回は Realm から移行）はバックグラウンドで ---
         LibraryProvider.prepare { [weak self] prepared in
-            AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore)
+            AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore,
+                                          isUsable: prepared.availability == .ready)
             self?.startServices()
             self?.finishLibraryMigration(prepared)
+            self?.notifyIfLibraryUnavailable(prepared)
         }
     }
 
@@ -282,6 +284,17 @@ extension AppDelegate: NSApplicationDelegate {
                 NSLog("[AppDelegate] regenerated \(count) of \(clipIDs.count) thumbnails after migration")
             }
             ClipThumbnail.removeLegacyCache()
+        }
+    }
+
+    /// 暗号鍵が使えないときに、その起動中の制限を一度だけ知らせる。
+    /// 履歴はメモリ上だけになり、スニペットは表示も編集もできない（データは消していない）
+    private func notifyIfLibraryUnavailable(_ prepared: LibraryProvider.Prepared) {
+        guard prepared.availability != .ready else { return }
+        NSLog("[AppDelegate] library unavailable: \(prepared.availability)")
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            NSAlert.showNotice(message: L10n.libraryUnavailableTitle, informative: L10n.libraryUnavailableMessage)
         }
     }
 

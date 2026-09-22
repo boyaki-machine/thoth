@@ -156,6 +156,10 @@ internal enum L10n {
   internal static let launchOnSystemStartup = L10n.tr("Localizable", "Launch on system startup", fallback: "Launch on system startup")
   /// Launch Thoth on system startup?
   internal static let launchThothOnSystemStartup = L10n.tr("Localizable", "Launch Thoth on system startup?", fallback: "Launch Thoth on system startup?")
+  /// Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.
+  internal static let libraryUnavailableMessage = L10n.tr("Localizable", "Library Unavailable Message", fallback: "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.")
+  /// Encryption key unavailable
+  internal static let libraryUnavailableTitle = L10n.tr("Localizable", "Library Unavailable Title", fallback: "Encryption key unavailable")
   /// Menu
   internal static let menu = L10n.tr("Localizable", "Menu", fallback: "Menu")
   /// New Item
@@ -186,14 +190,6 @@ internal enum L10n {
   internal static let preferences = L10n.tr("Localizable", "Preferences", fallback: "Preferences...")
   /// Quit Thoth
   internal static let quitThoth = L10n.tr("Localizable", "Quit Thoth", fallback: "Quit Thoth")
-  /// The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).
-  internal static let realmOpenFailedMessage = L10n.tr("Localizable", "Realm Open Failed Message", fallback: "The clipboard history database could not be opened. The encryption key may be missing or the file may be corrupted. You can quit and retry, or reset the database (this deletes all history and snippets).")
-  /// Quit
-  internal static let realmOpenFailedQuit = L10n.tr("Localizable", "Realm Open Failed Quit", fallback: "Quit")
-  /// Reset Database
-  internal static let realmOpenFailedReset = L10n.tr("Localizable", "Realm Open Failed Reset", fallback: "Reset Database")
-  /// Failed to open the history database
-  internal static let realmOpenFailedTitle = L10n.tr("Localizable", "Realm Open Failed Title", fallback: "Failed to open the history database")
   /// Save
   internal static let save = L10n.tr("Localizable", "Save", fallback: "Save")
   /// Copy History
@@ -302,6 +298,10 @@ internal enum L10n {
   internal static let showSnippetMenu = L10n.tr("Localizable", "Show Snippet Menu", fallback: "Show Snippet Menu")
   /// Snippet
   internal static let snippet = L10n.tr("Localizable", "Snippet", fallback: "Snippet")
+  /// Snippets are unavailable
+  internal static let snippetsUnavailable = L10n.tr("Localizable", "Snippets Unavailable", fallback: "Snippets are unavailable")
+  /// Thoth could not read its encryption key, so snippets cannot be shown or edited during this session. Nothing has been deleted. Unlock your login keychain (or allow access when asked) and start Thoth again.
+  internal static let snippetsUnavailableMessage = L10n.tr("Localizable", "Snippets Unavailable Message", fallback: "Thoth could not read its encryption key, so snippets cannot be shown or edited during this session. Nothing has been deleted. Unlock your login keychain (or allow access when asked) and start Thoth again.")
   /// Third Party Licenses
   internal static let thirdPartyLicenses = L10n.tr("Localizable", "Third Party Licenses", fallback: "Third Party Licenses")
   /// Failed to load the third-party licenses list.

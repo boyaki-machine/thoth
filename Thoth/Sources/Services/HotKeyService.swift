@@ -227,6 +227,9 @@ extension HotKeyService {
 
     @objc func popupSnippetFolder(_ object: AnyObject) {
         guard let hotKey = object as? HotKey else { return }
+        // 暗号鍵が使えないときはフォルダを読めない。ここで「削除された」と誤判定して
+        // ホットキーの割り当てを消してしまわないよう、何もせずに戻る
+        guard AppEnvironment.current.isLibraryUsable else { return }
         guard let folder = AppEnvironment.current.snippetStore.folder(id: hotKey.identifier) else {
             // When already deleted folder, remove keycombos
             unregisterSnippetHotKey(with: hotKey.identifier)

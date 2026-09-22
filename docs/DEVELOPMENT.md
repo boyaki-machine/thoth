@@ -68,8 +68,9 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 │   │   ├── Preferences/             Preferences window and its panels
 │   │   ├── Services/                Business logic (see table below)
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore /
-│   │   │                            storage layer (LibraryStore / RealmLibraryStore)
+│   │   ├── Utility/                 CPYUtilities / ClipDataStore / ClipThumbnail /
+│   │   │                            storage layer (LibraryStore / SwiftDataLibraryStore /
+│   │   │                            FieldCipher / LibraryProvider / LibraryMigrator)
 │   │   └── Views/                   Windows and panels (encryption, password
 │   │       │                        generation, secure picker, etc.)
 │   │       └── SecureInfo/          Secure Info window (two-pane)
@@ -112,8 +113,13 @@ Business logic is concentrated in the services layer. Stateful services are obta
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 
 - `LibraryStore` — Protocols of the storage layer for history and snippets (`HistoryStore` / `SnippetStore`). UI and services only handle value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`) and never touch the backing store directly. Obtained from `AppEnvironment.current.historyStore` / `snippetStore`
-- `RealmLibraryStore` — Realm implementation of the storage layer
-- `RealmProvider` — Realm configuration, schema migration, encryption, and app-generated key management
+- `SwiftDataLibraryStore` / `LibraryStoreSchema` — The production implementation (SwiftData) and its schema. The `ModelContext` is used only inside a dedicated serial queue
+- `FieldCipher` — Per-field encryption (AES-256-GCM) and the content key (HMAC) for the storage layer; keys are derived from the `.data` key with HKDF
+- `LibraryProvider` — Prepares the storage layer at launch (runs the migration, handles an unavailable key)
+- `LibraryMigrator` — Migration from Realm to SwiftData (reads read-only, verifies, then writes the completion marker)
+- `ClipThumbnail` — Thumbnail generation (downscaled PNG), display, and regeneration after migration
+- `RealmLibraryStore` — Realm implementation of the storage layer; unused in production in v1.5 and kept as the comparison target for the contract tests (removed in v1.6.x)
+- `RealmProvider` — App-generated key (app-keys) management and the configuration used to read the Realm migration source
 - `ClipDataStore` — Encrypted read/write of clip payloads (`.data` files)
 
 ---
@@ -141,7 +147,10 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
 | Models | `SecureMenuItemSpec` |
-| Storage layer | `RealmLibraryStoreSpec` (runs the storage contract `LibraryStoreContract` against the Realm implementation), `DataCleanServiceSpec` (which clips are removed when over the limit) |
+| Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
+| Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
+| Migration (Realm → SwiftData) | `LibraryMigrationSpec` (migration from a fixed Realm file, the Realm file staying untouched, verification failure, startup decisions), `LibraryUnavailableSpec` (behavior when the encryption key is unavailable) |
+| Thumbnails | `ClipThumbnailSpec` (actual downscaling, round-trip through the storage layer, regeneration after migration) |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
