@@ -17,7 +17,7 @@
 | アーキテクチャ | Apple Silicon (arm64) のみ |
 | デプロイターゲット | `MACOSX_DEPLOYMENT_TARGET = 15.0` |
 
-macOS 15.0 を最低要件としているのは、Apple のセキュリティ更新が続いている OS に限るためです（macOS 13 はサポートが終了し、14 も終了が近い）。本アプリはパスワードや TOTP を扱うため、脆弱性の修正が届かない OS での利用は想定しません。ビルドは Apple Silicon 向けの arm64 のみで、Intel Mac は対象外です（macOS 15 自体は一部の Intel Mac でも動くため、Intel を除外しているのは `ARCHS = arm64` の設定です）。
+macOS 15.0 を最低要件としているのは、Apple のセキュリティ更新が続いている OS に限るためです（v1.4.0 で macOS 11.0 から引き上げ。macOS 13 はサポートが終了し、14 も終了が近い）。本アプリはパスワードや TOTP を扱うため、脆弱性の修正が届かない OS での利用は想定しません。ビルドは Apple Silicon 向けの arm64 のみで、Intel Mac は対象外です（macOS 15 自体は一部の Intel Mac でも動くため、Intel を除外しているのは `ARCHS = arm64` の設定です）。
 
 ### 開発環境（動作確認済み）
 

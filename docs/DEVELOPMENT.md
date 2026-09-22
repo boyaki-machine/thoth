@@ -17,7 +17,7 @@ For how to use the app, see [../README.md](../README.md). For data formats, cryp
 | Architecture | Apple Silicon (arm64) only |
 | Deployment target | `MACOSX_DEPLOYMENT_TARGET = 15.0` |
 
-macOS 15.0 is the minimum requirement so that the app only runs on macOS versions that still receive Apple's security updates (macOS 13 is out of support and 14 is close to it). Because the app handles passwords and TOTP secrets, running it on an OS that no longer gets vulnerability fixes is not supported. The build is arm64-only for Apple Silicon; Intel Macs are not supported (macOS 15 itself still runs on some Intel Macs, so it is the `ARCHS = arm64` setting that excludes them).
+macOS 15.0 is the minimum requirement so that the app only runs on macOS versions that still receive Apple's security updates (raised from macOS 11.0 in v1.4.0; macOS 13 is out of support and 14 is close to it). Because the app handles passwords and TOTP secrets, running it on an OS that no longer gets vulnerability fixes is not supported. The build is arm64-only for Apple Silicon; Intel Macs are not supported (macOS 15 itself still runs on some Intel Macs, so it is the `ARCHS = arm64` setting that excludes them).
 
 ### Development Environment (verified)
 
