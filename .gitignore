@@ -160,3 +160,9 @@ Clipy.xcodeproj/
 
 # vscode settins
 .vscode/
+
+# 開発ツール（scripts/tool.sh が取得して置く）
+.tools/
+
+# ローカルパッケージで Xcode が作る作業ファイル
+Packages/*/.swiftpm/

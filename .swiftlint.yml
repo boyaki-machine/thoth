@@ -1,8 +1,6 @@
 included:
   - Thoth/Sources
   - ThothTests
-excluded:
-  - Pods
 opt_in_rules:
   - empty_count
   - explicit_init
