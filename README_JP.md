@@ -305,6 +305,8 @@ xattr -p com.apple.quarantine /Applications/Thoth.app 2>/dev/null
 
 本アプリは MIT ライセンスのもとで提供されています。詳細は LICENSE ファイルをご覧ください。アイコンの著作権は、それぞれの作者に帰属します。
 
+サードパーティライブラリのライセンス一覧は [NOTICE](NOTICE) に記載しています（アプリ内では 環境設定 > オリジナル > サードパーティライセンス からも確認できます）。
+
 ## スペシャル・サンクス
 
 **[@naotaka](https://github.com/naotaka) が OSS として [ClipMenu](https://github.com/naotaka/ClipMenu) を公開してくれたこと、そして [Clipy](https://github.com/Clipy/Clipy) の開発者の皆様に感謝します。**

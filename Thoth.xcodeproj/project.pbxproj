@@ -56,6 +56,7 @@
 		AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */; };
 		AA00004B00000000ABCDEF01 /* PasswordGenerateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */; };
 		AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */; };
+		7D77EBDB30A3E0F6D1D09963 /* CPYThirdPartyLicensesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */; };
 		AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */; };
 		AA0000DC00000000ABCDEF01 /* SecureInfoEditorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */; };
 		AA0000F600000000ABCDEF01 /* SecureInfoUndoSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */; };
@@ -102,6 +103,7 @@
 		FA10898320EC2AFB00A3FEFC /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA10898220EC2AFB00A3FEFC /* Colors.swift */; };
 		FA1189331E4CD58C00244F12 /* ExcludeAppService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */; };
 		FA1DB4901DDCA5D9007F95C8 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */; };
+		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		FA1DB4981DDCB2CB007F95C8 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB4961DDCB2CB007F95C8 /* Localizable.strings */; };
 		FA1DB49F1DDCB417007F95C8 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB49E1DDCB417007F95C8 /* MainMenu.xib */; };
 		FA1DB4A21DDCB433007F95C8 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4A01DDCB433007F95C8 /* AppDelegate.swift */; };
@@ -278,6 +280,7 @@
 		AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuServiceSpec.swift; sourceTree = "<group>"; };
 		AA00003B00000000ABCDEF01 /* PasswordGenerateService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateService.swift; sourceTree = "<group>"; };
 		AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYPasswordGeneratorWindowController.swift; sourceTree = "<group>"; };
+		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
 		AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasswordGenerateServiceSpec.swift; sourceTree = "<group>"; };
 		AA0000DB00000000ABCDEF01 /* SecureInfoEditorSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoEditorSpec.swift; sourceTree = "<group>"; };
 		AA0000F500000000ABCDEF01 /* SecureInfoUndoSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureInfoUndoSpec.swift; sourceTree = "<group>"; };
@@ -332,6 +335,7 @@
 		FA10898220EC2AFB00A3FEFC /* Colors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
 		FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppService.swift; sourceTree = "<group>"; };
 		FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
 		FA1DB4931DDCB22C007F95C8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA1DB4971DDCB2CB007F95C8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA1DB4991DDCB2D0007F95C8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -460,6 +464,7 @@
 				AA20C0DE0000000000000008 /* InfoPlist.strings */,
 				FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */,
 				FA10898020EC297000A3FEFC /* colors.txt */,
+				03308123532CF61D6AECF462 /* Acknowledgements.md */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -604,6 +609,7 @@
 				AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */,
 				AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */,
 				AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */,
+				026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */,
 				AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */,
 				AA00010500000000ABCDEF01 /* TabCapturingButton.swift */,
 				AA0000A400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift */,
@@ -919,6 +925,7 @@
 				FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */,
 				FA1DB51E1DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib in Resources */,
 				FA1DB4901DDCA5D9007F95C8 /* Images.xcassets in Resources */,
+				35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */,
 				FA1DB51D1DDCB4C0007F95C8 /* CPYShortcutsPreferenceViewController.xib in Resources */,
 				FA1DB51F1DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.xib in Resources */,
 				FA1DB51C1DDCB4C0007F95C8 /* CPYMenuPreferenceViewController.xib in Resources */,
@@ -1197,6 +1204,7 @@
 				AA0000D800000000ABCDEF01 /* CPYSecureInfoSplitViewController.swift in Sources */,
 				AA0000DA00000000ABCDEF01 /* CPYSecureInfoWindowController.swift in Sources */,
 				AA00004C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift in Sources */,
+				7D77EBDB30A3E0F6D1D09963 /* CPYThirdPartyLicensesWindowController.swift in Sources */,
 				AA0000B200000000ABCDEF01 /* CPYCryptoWindowController.swift in Sources */,
 				AA00010600000000ABCDEF01 /* TabCapturingButton.swift in Sources */,
 				AA0000B400000000ABCDEF01 /* CPYCryptoPasswordManagerWindowController.swift in Sources */,

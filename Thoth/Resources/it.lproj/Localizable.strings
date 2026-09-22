@@ -302,3 +302,6 @@
 "Updates Respect Message" = "Questa applicazione è un fork di Clipy, l'estensione open source degli appunti per macOS. Profondo rispetto e gratitudine vanno agli sviluppatori del Clipy originale e a naotaka, autore del predecessore ClipMenu. Questo progetto si fonda sul loro grande lavoro.";
 
 "Updates Original Repository Link" = "Link al repository originale di Clipy";
+"Third Party Licenses" = "Licenze di terze parti";
+"Updates Third Party Licenses Button" = "Licenze di terze parti…";
+"Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";

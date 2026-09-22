@@ -302,3 +302,6 @@
 "Updates Respect Message" = "本应用是 macOS 开源剪贴板扩展应用 Clipy 的衍生项目。向原版 Clipy 的开发者们，以及其前身 ClipMenu 的作者 naotaka 致以深深的敬意和感谢。本项目建立在前人的伟大成果之上。";
 
 "Updates Original Repository Link" = "原版 Clipy 仓库链接";
+"Third Party Licenses" = "第三方许可证";
+"Updates Third Party Licenses Button" = "第三方许可证…";
+"Third Party Licenses Load Failed" = "无法加载第三方许可证列表。";

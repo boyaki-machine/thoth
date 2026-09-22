@@ -302,3 +302,6 @@
 "Updates Respect Message" = "本アプリは、macOS 向け OSS クリップボード拡張アプリ Clipy から派生したプロジェクトです。素晴らしいアプリケーションを公開してくださったオリジナル Clipy の開発者の皆様、そしてその源流である ClipMenu の作者 naotaka さんに、深い敬意と感謝を表します。本プロジェクトは先人の偉大な成果の上に成り立っています。";
 
 "Updates Original Repository Link" = "オリジナル Clipyリポジトリへのリンク";
+"Third Party Licenses" = "サードパーティライセンス";
+"Updates Third Party Licenses Button" = "サードパーティライセンス…";
+"Third Party Licenses Load Failed" = "サードパーティライセンス一覧の読み込みに失敗しました。";

@@ -38,4 +38,13 @@ post_install do |installer|
       config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '11.0'
     end
   end
+
+  # CocoaPods が生成するサードパーティライセンス一覧を、
+  # アプリ同梱用（Thoth/Resources）とリポジトリ公開用（NOTICE）にコピーする。
+  # Podfile / Podfile.lock を変更したら `bundle exec pod install` を再実行することで
+  # 常に最新のライセンス一覧に同期される。
+  require 'fileutils'
+  generated = 'Pods/Target Support Files/Pods-Thoth/Pods-Thoth-acknowledgements.markdown'
+  FileUtils.cp(generated, 'Thoth/Resources/Acknowledgements.md')
+  FileUtils.cp(generated, 'NOTICE')
 end

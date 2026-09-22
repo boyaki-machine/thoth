@@ -41,6 +41,11 @@ else
   echo "==> リリース日: $RELEASE_DATE (タグ v.$VERSION より)"
 fi
 
+echo "==> 依存関係を同期 (bundle exec pod install)"
+# Podfile 変更（サードパーティライセンス一覧の再生成を含む）を配布物へ確実に反映するため、
+# ビルド前に毎回実行する。変更がなければ短時間で完了する。
+bundle exec pod install
+
 echo "==> Release ビルド (Thoth v$VERSION)"
 # SwiftLint はビルド時に走るが、配布ビルドを速くするためスキップする
 SKIP_SWIFTLINT=1 xcodebuild \

@@ -298,3 +298,6 @@
 "Updates Respect Message" = "Haec applicatio est propago Clipy, extensionis tabulae affixae fontis aperti pro macOS. Summa reverentia et gratia debentur creatoribus Clipy originalis atque naotaka, auctori praecursoris ClipMenu. Hoc opus in magnis eorum operibus stat.";
 
 "Updates Original Repository Link" = "Nexus ad repositorium Clipy originale";
+"Third Party Licenses" = "Licentiae Tertiarum Partium";
+"Updates Third Party Licenses Button" = "Licentiae Tertiarum Partium…";
+"Third Party Licenses Load Failed" = "Index licentiarum tertiarum partium legi non potuit.";

@@ -302,6 +302,10 @@ internal enum L10n {
   internal static let showSnippetMenu = L10n.tr("Localizable", "Show Snippet Menu")
   /// Snippet
   internal static let snippet = L10n.tr("Localizable", "Snippet")
+  /// Third Party Licenses
+  internal static let thirdPartyLicenses = L10n.tr("Localizable", "Third Party Licenses")
+  /// Failed to load the third-party licenses list.
+  internal static let thirdPartyLicensesLoadFailed = L10n.tr("Localizable", "Third Party Licenses Load Failed")
   /// To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.
   internal static let toDoThisActionPleaseAllowAccessibilityInSecurityPrivacyPreferencesLocatedInSystemPreferences = L10n.tr("Localizable", "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences")
   /// Tools
@@ -340,6 +344,8 @@ internal enum L10n {
   internal static let updatesOriginalRepositoryLink = L10n.tr("Localizable", "Updates Original Repository Link")
   /// This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.
   internal static let updatesRespectMessage = L10n.tr("Localizable", "Updates Respect Message")
+  /// Third-Party Licenses...
+  internal static let updatesThirdPartyLicensesButton = L10n.tr("Localizable", "Updates Third Party Licenses Button")
   /// Value history
   internal static let valueHistory = L10n.tr("Localizable", "Value History")
   /// Release date: %@

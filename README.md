@@ -305,6 +305,8 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 
 This app is provided under the MIT license. See the LICENSE file for details. Icons are copyrighted by their respective authors.
 
+Third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses).
+
 ## Special Thanks
 
 **Thanks to [@naotaka](https://github.com/naotaka) for publishing [ClipMenu](https://github.com/naotaka/ClipMenu) as open source, and to the developers of [Clipy](https://github.com/Clipy/Clipy).**
