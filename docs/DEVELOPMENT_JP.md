@@ -69,7 +69,8 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 │   │   ├── Preferences/             環境設定ウィンドウと各パネル
 │   │   ├── Services/                ビジネスロジック（下表参照）
 │   │   ├── Snippets/                スニペットエディタ（レガシー NIB ベース）
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
+│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore /
+│   │   │                            保存層（LibraryStore / RealmLibraryStore）
 │   │   └── Views/                   各種ウィンドウ・パネル（暗号化・パスワード生成・
 │   │       │                        セキュアピッカー等）
 │   │       └── SecureInfo/          セキュア情報確認ウィンドウ（2 ペイン）
@@ -111,6 +112,8 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 
 補助的な永続化ユーティリティ（`Thoth/Sources/Utility/`）:
 
+- `LibraryStore` — 履歴・スニペットの保存層のプロトコル（`HistoryStore` / `SnippetStore`）。UI・サービスは値型（`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`）だけを扱い、保存先には直接触れない。`AppEnvironment.current.historyStore` / `snippetStore` から取得する
+- `RealmLibraryStore` — 保存層の Realm 版
 - `RealmProvider` — Realm 構成・スキーマ移行・暗号化・アプリ生成鍵の管理
 - `ClipDataStore` — クリップ実データ（`.data` ファイル）の暗号化読み書き
 
@@ -138,7 +141,8 @@ SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
 | 分類 | スペック |
 |---|---|
 | クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
-| モデル | `FolderSpec`、`SnippetSpec`、`SecureMenuItemSpec` |
+| モデル | `SecureMenuItemSpec` |
+| 保存層 | `RealmLibraryStoreSpec`（保存層の契約 `LibraryStoreContract` を Realm 版で確かめる）、`DataCleanServiceSpec`（上限超過で消す範囲） |
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
 | 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |

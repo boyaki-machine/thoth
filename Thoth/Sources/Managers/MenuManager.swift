@@ -12,7 +12,6 @@
 
 import Cocoa
 import PINCache
-import RealmSwift
 import RxCocoa
 import RxSwift
 
@@ -52,13 +51,8 @@ final class MenuManager: NSObject {
     fileprivate let notificationCenter = NotificationCenter.default
     let kMaxKeyEquivalents = 10
     fileprivate let shortenSymbol = "..."
-    // Realm
-    // 遅延プロパティにすることで、Realm の構成・移行が完了する前
-    // （MenuManager 生成時点）にファイルを開いてしまわないようにする。
-    // 初回アクセスは bindRealmNotifications()（RealmProvider.warmUp 完了後）
-    lazy var realm: Realm = RealmProvider.defaultRealm()
-    fileprivate var clipToken: NotificationToken?
-    fileprivate var snippetToken: NotificationToken?
+    // 保存層（履歴・スニペット）の変更通知のオブザーバー
+    fileprivate var libraryObserver: NSObjectProtocol?
     // Vim key navigation
     var vimKeyEventTap: CFMachPort?
     var vimKeyRunLoopSource: CFRunLoopSource?
@@ -90,7 +84,7 @@ final class MenuManager: NSObject {
         snippetIcon.size = NSSize(width: 12, height: 13)
     }
 
-    /// ステータスアイコンの表示と設定の監視を開始する（Realm には触れない軽量処理）。
+    /// ステータスアイコンの表示と設定の監視を開始する（保存層には触れない軽量処理）。
     /// 起動直後に呼んでメニューバーへのアイコン表示を最速にする
     func setup() {
         clipMenu.delegate = self
@@ -100,19 +94,16 @@ final class MenuManager: NSObject {
         setupVimKeyEventTap()
     }
 
-    /// Realm の変更通知（履歴・スニペット）の監視を開始する。
-    /// Realm 初期化（RealmProvider.warmUp）完了後に呼ぶこと
-    func bindRealmNotifications() {
+    /// 保存層の変更通知（履歴・スニペット）の監視を開始する。
+    /// 保存層の準備（RealmProvider.warmUp）完了後に呼ぶこと
+    func bindLibraryNotifications() {
         // 変更のたびに再構築すると履歴数に比例したメインスレッド負荷がコピーごとに発生するため、
         // ここでは世代カウンターを進めるだけにして、構築はメニュー表示直前まで遅延する
-        clipToken = realm.objects(CPYClip.self)
-                        .observe { [weak self] _ in
-                            self?.setNeedsMenuRebuild()
-                        }
-        snippetToken = realm.objects(CPYFolder.self)
-                        .observe { [weak self] _ in
-                            self?.setNeedsMenuRebuild()
-                        }
+        libraryObserver = notificationCenter.addObserver(forName: .thothLibraryDidChange, object: nil, queue: .main) { [weak self] _ in
+            self?.setNeedsMenuRebuild()
+        }
+        // 準備完了前に開いたメニューは構築を見送っているため、ここで一度古い扱いにする
+        setNeedsMenuRebuild()
     }
 
 }
@@ -187,8 +178,8 @@ extension MenuManager {
 
     /// 表示対象のメニューが古い世代の場合のみ、その 1 つだけを再構築する
     func rebuildMenuIfNeeded(_ type: MenuType) {
-        // Realm の準備前（起動直後の暗号化移行中など）は構築しない。
-        // 準備完了時に Realm 通知が世代を進めるため、次回表示時に構築される
+        // 保存層の準備前（起動直後の暗号化移行中など）は構築しない。
+        // 準備完了時に bindLibraryNotifications が世代を進めるため、次回表示時に構築される
         guard RealmProvider.isReady else { return }
         guard builtGenerations[type] != menuGeneration else { return }
         builtGenerations[type] = menuGeneration

@@ -12,7 +12,6 @@
 
 import Foundation
 import Cocoa
-import RealmSwift
 import PINCache
 import RxSwift
 import RxCocoa
@@ -26,7 +25,7 @@ import RxCocoa
 /// ## 保存の流れ
 /// changeCount 変化 → create()（除外判定・型フィルタ）→ save()：
 /// 重複判定・サムネイル生成・NSKeyedArchiver シリアライズ・ファイル書き込み・
-/// Realm 追加のすべてを専用直列キュー（saveQueue）で行い、メインスレッドを塞がない。
+/// 保存層（HistoryStore）への追加のすべてを専用直列キュー（saveQueue）で行い、メインスレッドを塞がない。
 /// クリップ本体（.data）は ClipDataStore が AES-GCM で暗号化して保存する。
 ///
 /// ## 履歴に保存しないもの
@@ -73,29 +72,22 @@ final class ClipService {
 
     /// 全履歴を削除する（サムネイルキャッシュ・.data ファイル含む）
     func clearAll() {
-        let realm = RealmProvider.defaultRealm()
-        let clips = realm.objects(CPYClip.self)
-
+        let removed = AppEnvironment.current.historyStore.deleteAllClips()
         // Delete saved images
-        clips
+        removed
             .compactMap { $0.thumbnailPath.isEmpty ? nil : $0.thumbnailPath }
             .forEach { PINCache.shared.removeObject(forKey: $0) }
-        // Delete Realm
-        realm.transaction { realm.delete(clips) }
         // Delete writed datas
         AppEnvironment.current.dataCleanService.cleanDatas()
     }
 
     /// 指定クリップを履歴から削除する
-    func delete(with clip: CPYClip) {
-        let realm = RealmProvider.defaultRealm()
+    func delete(clipID: String) {
+        guard let removed = AppEnvironment.current.historyStore.deleteClip(id: clipID) else { return }
         // Delete saved images
-        let path = clip.thumbnailPath
-        if !path.isEmpty {
-            PINCache.shared.removeObject(forKey: path)
+        if !removed.thumbnailPath.isEmpty {
+            PINCache.shared.removeObject(forKey: removed.thumbnailPath)
         }
-        // Delete Realm
-        realm.transaction { realm.delete(clip) }
     }
 
     /// キャッシュ済み changeCount を進めて「次のクリップボード変化を 1 回無視」する。
@@ -150,19 +142,14 @@ extension ClipService {
 
     fileprivate func save(with data: CPYClipData) {
         // 重複判定からアーカイブ生成・ファイル書き込みまでを専用の直列キューに
-        // まとめて逃がす。Realm のオープンがスレッド毎に 1 回で済み、
-        // ポーリングスレッドを重い処理でブロックしない
+        // まとめて逃がし、ポーリングスレッドを重い処理でブロックしない
         saveQueue.async {
-            let realm = RealmProvider.defaultRealm()
+            let historyStore = AppEnvironment.current.historyStore
             // 画像クリップの場合 hash 計算に TIFF エンコードを伴うため一度だけ計算する
             let dataHash = data.hash
             // Copy already copied history
             let isCopySameHistory = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.copySameHistory)
-            if let existingClip = realm.object(ofType: CPYClip.self, forPrimaryKey: "\(dataHash)") {
-                if !isCopySameHistory { return }
-                // Don't save invalidated clip
-                if existingClip.isInvalidated { return }
-            }
+            if historyStore.clip(id: "\(dataHash)") != nil, !isCopySameHistory { return }
 
             // Don't save empty string history
             if data.isOnlyStringType && data.stringValue.isEmpty { return }
@@ -174,13 +161,13 @@ extension ClipService {
             // Saved time and path
             let unixTime = Int(Date().timeIntervalSince1970)
             let savedPath = CPYUtilities.applicationSupportFolder() + "/\(NSUUID().uuidString).data"
-            // Create Realm object
-            let clip = CPYClip()
-            clip.dataPath = savedPath
-            clip.title = data.stringValue[0...10000]
-            clip.dataHash = "\(savedHash)"
-            clip.updateTime = unixTime
-            clip.primaryType = data.primaryType?.rawValue ?? ""
+            var clip = ClipRecord(id: "\(savedHash)",
+                                  dataPath: savedPath,
+                                  title: data.stringValue[0...10000],
+                                  primaryType: data.primaryType?.rawValue ?? "",
+                                  updateTime: unixTime,
+                                  thumbnailPath: "",
+                                  isColorCode: false)
 
             // Save thumbnail image
             if let thumbnailImage = data.thumbnailImage {
@@ -192,14 +179,12 @@ extension ClipService {
                 clip.thumbnailPath = "\(unixTime)"
                 clip.isColorCode = true
             }
-            // Save Realm and .data file（.data は ClipDataStore が AES-GCM で暗号化する）
+            // Save history and .data file（.data は ClipDataStore が AES-GCM で暗号化する）
             if CPYUtilities.prepareSaveToPath(CPYUtilities.applicationSupportFolder()) {
                 let archiveData = try? NSKeyedArchiver.archivedData(withRootObject: data, requiringSecureCoding: false)
                 let archived = archiveData.map { ClipDataStore.shared.write($0, toPath: savedPath) } ?? false
                 if archived {
-                    realm.transaction {
-                        realm.add(clip, update: .all)
-                    }
+                    historyStore.upsert(clip)
                 }
             }
         }

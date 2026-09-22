@@ -16,7 +16,6 @@ import RxSwift
 import Magnet
 import Screeen
 import RxScreeen
-import RealmSwift
 import LetsMove
 
 /// アプリのエントリポイント。起動シーケンスの統括・メニュー項目のアクション受け口・
@@ -44,8 +43,7 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         if menuItem.action == #selector(AppDelegate.clearAllHistory) {
             // Realm 準備前（起動直後の暗号化移行中など）は無効にしておく
             guard RealmProvider.isReady else { return false }
-            let realm = RealmProvider.defaultRealm()
-            return !realm.objects(CPYClip.self).isEmpty
+            return !AppEnvironment.current.historyStore.isEmpty
         }
         return true
     }
@@ -249,7 +247,7 @@ extension AppDelegate: NSApplicationDelegate {
     /// Realm 準備完了後に呼ばれる。Realm に依存するサービスの起動と残りの初期化を行う
     private func startServices() {
         // 履歴・スニペットの変更監視（メニュー再構築のトリガー）
-        AppEnvironment.current.menuManager.bindRealmNotifications()
+        AppEnvironment.current.menuManager.bindLibraryNotifications()
 
         // Binding Events（スクリーンショット監視は clipService 経由で Realm に触れる）
         bind()

@@ -47,6 +47,8 @@ struct AppEnvironment {
                      excludeAppService: ExcludeAppService = current.excludeAppService,
                      accessibilityService: AccessibilityService = current.accessibilityService,
                      menuManager: MenuManager = current.menuManager,
+                     historyStore: HistoryStore = current.historyStore,
+                     snippetStore: SnippetStore = current.snippetStore,
                      defaults: UserDefaults = current.defaults) {
         push(environment: Environment(clipService: clipService,
                                       hotKeyService: hotKeyService,
@@ -55,6 +57,8 @@ struct AppEnvironment {
                                       excludeAppService: excludeAppService,
                                       accessibilityService: accessibilityService,
                                       menuManager: menuManager,
+                                      historyStore: historyStore,
+                                      snippetStore: snippetStore,
                                       defaults: defaults))
     }
 
@@ -65,6 +69,8 @@ struct AppEnvironment {
                                excludeAppService: ExcludeAppService = current.excludeAppService,
                                accessibilityService: AccessibilityService = current.accessibilityService,
                                menuManager: MenuManager = current.menuManager,
+                               historyStore: HistoryStore = current.historyStore,
+                               snippetStore: SnippetStore = current.snippetStore,
                                defaults: UserDefaults = current.defaults) {
         replaceCurrent(environment: Environment(clipService: clipService,
                                                 hotKeyService: hotKeyService,
@@ -73,6 +79,8 @@ struct AppEnvironment {
                                                 excludeAppService: excludeAppService,
                                                 accessibilityService: accessibilityService,
                                                 menuManager: menuManager,
+                                                historyStore: historyStore,
+                                                snippetStore: snippetStore,
                                                 defaults: defaults))
     }
 
@@ -93,6 +101,8 @@ struct AppEnvironment {
                            excludeAppService: excludeAppService,
                            accessibilityService: current.accessibilityService,
                            menuManager: current.menuManager,
+                           historyStore: current.historyStore,
+                           snippetStore: current.snippetStore,
                            defaults: current.defaults)
     }
 

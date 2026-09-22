@@ -14,6 +14,7 @@ import Cocoa
 import RealmSwift
 
 /// スニペット（定型文）1 件を表す Realm モデル。CPYFolder に属する。
+/// 読み書きは RealmSnippetStore を通し、アプリ側は SnippetRecord だけを扱う。
 final class CPYSnippet: Object {
 
     // MARK: - Properties
@@ -38,22 +39,4 @@ final class CPYSnippet: Object {
         return ["folder"]
     }
 
-}
-
-// MARK: - Add Snippet
-extension CPYSnippet {
-    func merge() {
-        let realm = RealmProvider.defaultRealm()
-        let copySnippet = CPYSnippet(value: self)
-        realm.transaction { realm.add(copySnippet, update: .all) }
-    }
-}
-
-// MARK: - Remove Snippet
-extension CPYSnippet {
-    func remove() {
-        let realm = RealmProvider.defaultRealm()
-        guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: identifier) else { return }
-        snippet.realm?.transaction { snippet.realm?.delete(snippet) }
-    }
 }

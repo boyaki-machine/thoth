@@ -49,13 +49,11 @@ class ClipFullTextIndexerSpec: QuickSpec {
         titleSpecs()
     }
 
-    /// テスト用 ClipItem を生成する（Realm 非管理の CPYClip から）
+    /// テスト用 ClipItem を生成する
     private static func makeItem(_ hash: String, title: String, index: Int) -> CPYHistoryPickerPanel.ClipItem {
-        let clip = CPYClip()
-        clip.dataHash = hash
-        clip.title = title
-        clip.primaryType = NSPasteboard.PasteboardType.deprecatedString.rawValue
-        clip.dataPath = "/tmp/\(hash).data"
+        let clip = ClipRecord(id: hash, dataPath: "/tmp/\(hash).data", title: title,
+                              primaryType: NSPasteboard.PasteboardType.deprecatedString.rawValue,
+                              updateTime: 0, thumbnailPath: "", isColorCode: false)
         return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
     }
 
@@ -298,11 +296,9 @@ class ClipFullTextIndexerSpec: QuickSpec {
     private static func titleSpecs() {
         describe("タイトルの最大表示文字数") {
             it("最大長を超えるタイトルは切り詰められ、検索は元の 1 行目に対して行われる") {
-                let clip = CPYClip()
-                clip.dataHash = "t1"
-                clip.title = "abcdefghijklmnopqrstuvwxyz"
-                clip.primaryType = NSPasteboard.PasteboardType.deprecatedString.rawValue
-                clip.dataPath = "/tmp/t1.data"
+                let clip = ClipRecord(id: "t1", dataPath: "/tmp/t1.data", title: "abcdefghijklmnopqrstuvwxyz",
+                                      primaryType: NSPasteboard.PasteboardType.deprecatedString.rawValue,
+                                      updateTime: 0, thumbnailPath: "", isColorCode: false)
                 let item = CPYHistoryPickerPanel.ClipItem(clip: clip, index: 0, maxTitleLength: 10)
                 expect(item.title) == "abcdefg..."
                 // 検索用の文字列は切り詰め前

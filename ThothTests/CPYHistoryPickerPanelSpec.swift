@@ -42,13 +42,9 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
     private static func makeItem(_ hash: String, title: String, index: Int,
                           primaryType: NSPasteboard.PasteboardType = .deprecatedString,
                           thumbnailPath: String = "", isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
-        let clip = CPYClip()
-        clip.dataHash = hash
-        clip.title = title
-        clip.primaryType = primaryType.rawValue
-        clip.dataPath = "/tmp/\(hash).data"
-        clip.thumbnailPath = thumbnailPath
-        clip.isColorCode = isColorCode
+        let clip = ClipRecord(id: hash, dataPath: "/tmp/\(hash).data", title: title,
+                              primaryType: primaryType.rawValue, updateTime: 0,
+                              thumbnailPath: thumbnailPath, isColorCode: isColorCode)
         return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
     }
 

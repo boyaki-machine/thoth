@@ -11,7 +11,6 @@
 //
 
 import Cocoa
-import RealmSwift
 
 /// アプリ全体で使う雑多なユーティリティ（UserDefaults 既定値の登録・
 /// 保存ディレクトリの用意・ファイル削除）。

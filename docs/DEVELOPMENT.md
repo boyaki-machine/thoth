@@ -69,7 +69,8 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 │   │   ├── Preferences/             Preferences window and its panels
 │   │   ├── Services/                Business logic (see table below)
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
+│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore /
+│   │   │                            storage layer (LibraryStore / RealmLibraryStore)
 │   │   └── Views/                   Windows and panels (encryption, password
 │   │       │                        generation, secure picker, etc.)
 │   │       └── SecureInfo/          Secure Info window (two-pane)
@@ -111,6 +112,8 @@ Business logic is concentrated in the services layer. Stateful services are obta
 
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 
+- `LibraryStore` — Protocols of the storage layer for history and snippets (`HistoryStore` / `SnippetStore`). UI and services only handle value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`) and never touch the backing store directly. Obtained from `AppEnvironment.current.historyStore` / `snippetStore`
+- `RealmLibraryStore` — Realm implementation of the storage layer
 - `RealmProvider` — Realm configuration, schema migration, encryption, and app-generated key management
 - `ClipDataStore` — Encrypted read/write of clip payloads (`.data` files)
 
@@ -138,7 +141,8 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Category | Specs |
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
-| Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
+| Models | `SecureMenuItemSpec` |
+| Storage layer | `RealmLibraryStoreSpec` (runs the storage contract `LibraryStoreContract` against the Realm implementation), `DataCleanServiceSpec` (which clips are removed when over the limit) |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |

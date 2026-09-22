@@ -97,10 +97,9 @@ extension MenuManager {
         let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let maxTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)
         let ascending = !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        let clipResults = realm.objects(CPYClip.self)
-            .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
+        let clipRecords = AppEnvironment.current.historyStore.clips(ascending: ascending)
         var clips = [CPYHistoryPickerPanel.ClipItem]()
-        for clip in clipResults {
+        for clip in clipRecords {
             clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count,
                                                         maxTitleLength: maxTitleLength))
             if clips.count >= maxHistory { break }
@@ -298,7 +297,7 @@ extension MenuManager {
         }
     }
 
-    func popUpSnippetFolder(_ folder: CPYFolder) {
+    func popUpSnippetFolder(_ folder: SnippetFolderRecord) {
         // セキュアメニュー・履歴検索パネルとは排他表示: 表示中のパネルを閉じる
         dismissSecurePicker()
         dismissHistoryPicker()
@@ -314,7 +313,6 @@ extension MenuManager {
         let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
         let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
         folder.snippets
-            .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
             .filter { $0.enable }
             .forEach { snippet in
                 let subMenuItem = makeSnippetMenuItem(snippet, listNumber: index, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)

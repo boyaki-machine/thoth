@@ -10,7 +10,6 @@
 
 import Cocoa
 import PINCache
-import RealmSwift
 import RxCocoa
 import RxSwift
 
@@ -65,12 +64,12 @@ extension MenuManager {
         var subMenuIndex = 2 + placeInLine
 
         let ascending = !defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        let clipResults = realm.objects(CPYClip.self).sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
-        let currentSize = Int(clipResults.count)
+        let clipRecords = AppEnvironment.current.historyStore.clips(ascending: ascending)
+        let currentSize = clipRecords.count
         // 表示設定をループ外で一括取得（N アイテム × 6 回の UserDefaults アクセスを 6 回に削減）
         let settings = ClipMenuItemSettings(defaults)
         var i = 0
-        for clip in clipResults {
+        for clip in clipRecords {
             if placeInLine < 1 || placeInLine - 1 < i {
                 // Folder
                 if i == subMenuCount {
@@ -102,7 +101,7 @@ extension MenuManager {
         }
     }
 
-    fileprivate func makeClipMenuItem(_ clip: CPYClip, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
+    fileprivate func makeClipMenuItem(_ clip: ClipRecord, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
         var keyEquivalent = ""
 
         if settings.addNumericKeyEquivalents && (index <= kMaxKeyEquivalents) {
@@ -119,7 +118,7 @@ extension MenuManager {
         let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
 
         let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectClipMenuItem(_:)), keyEquivalent: keyEquivalent)
-        menuItem.representedObject = clip.dataHash
+        menuItem.representedObject = clip.id
 
         if settings.isShowToolTip {
             let toIndex = min(clipString.count, settings.maxLengthOfToolTip)
@@ -156,8 +155,8 @@ extension MenuManager {
 // MARK: - Snippets
 extension MenuManager {
     func addSnippetItems(_ menu: NSMenu, separateMenu: Bool) {
-        let folderResults = realm.objects(CPYFolder.self).sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true)
-        guard !folderResults.isEmpty else { return }
+        let folderRecords = AppEnvironment.current.snippetStore.folders()
+        guard !folderRecords.isEmpty else { return }
         if separateMenu {
             menu.addItem(NSMenuItem.separator())
         }
@@ -174,7 +173,7 @@ extension MenuManager {
         let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
         let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
 
-        folderResults
+        folderRecords
             .filter { $0.enable }
             .forEach { folder in
                 let folderTitle = folder.title
@@ -184,7 +183,6 @@ extension MenuManager {
 
                 var i = firstIndex
                 folder.snippets
-                    .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
                     .filter { $0.enable }
                     .forEach { snippet in
                         let subMenuItem = makeSnippetMenuItem(snippet, listNumber: i, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)
@@ -196,12 +194,12 @@ extension MenuManager {
             }
     }
 
-    func makeSnippetMenuItem(_ snippet: CPYSnippet, listNumber: Int, isMarkWithNumber: Bool, isShowIcon: Bool) -> NSMenuItem {
+    func makeSnippetMenuItem(_ snippet: SnippetRecord, listNumber: Int, isMarkWithNumber: Bool, isShowIcon: Bool) -> NSMenuItem {
         let title = trimTitle(snippet.title)
         let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
 
         let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectSnippetMenuItem(_:)), keyEquivalent: "")
-        menuItem.representedObject = snippet.identifier
+        menuItem.representedObject = snippet.id
         menuItem.toolTip = snippet.content
         menuItem.image = (isShowIcon) ? snippetIcon : nil
 

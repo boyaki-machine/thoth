@@ -12,7 +12,6 @@
 
 import Foundation
 import Cocoa
-import RealmSwift
 import Sauce
 
 /// ペースト操作全般を担うサービス。
@@ -68,12 +67,11 @@ final class PasteService {
 // MARK: - Paste by Primary Key
 extension PasteService {
     /// 履歴クリップを主キーで取得してペーストする。
-    /// メニュー項目のアクション（AppDelegate）から Realm アクセスを分離するための入口。
+    /// メニュー項目のアクション（AppDelegate）から保存層へのアクセスを分離するための入口。
     /// - Returns: クリップが見つからなかった場合 false
     @discardableResult
     func pasteClip(withPrimaryKey primaryKey: String) -> Bool {
-        let realm = RealmProvider.defaultRealm()
-        guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: primaryKey) else { return false }
+        guard let clip = AppEnvironment.current.historyStore.clip(id: primaryKey) else { return false }
         paste(with: clip)
         return true
     }
@@ -82,8 +80,7 @@ extension PasteService {
     /// - Returns: スニペットが見つからなかった場合 false
     @discardableResult
     func pasteSnippet(withPrimaryKey primaryKey: String) -> Bool {
-        let realm = RealmProvider.defaultRealm()
-        guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: primaryKey) else { return false }
+        guard let snippet = AppEnvironment.current.snippetStore.snippet(id: primaryKey) else { return false }
         copyToPasteboard(with: snippet.content)
         paste()
         return true
@@ -106,11 +103,9 @@ extension PasteService {
     /// クリップをクリップボードへ書き込んでペーストする。
     /// アンアーカイブ（画像等は数 MB 規模）はバックグラウンドで行い UI をブロックしない。
     /// 修飾キーの押下状態に応じてプレーンテキスト化・履歴削除も行う
-    func paste(with clip: CPYClip) {
-        guard !clip.isInvalidated else { return }
-        // Realm オブジェクトはスレッドを越えられないため、必要な値を先に読み出しておく
+    func paste(with clip: ClipRecord) {
         let dataPath = clip.dataPath
-        let dataHash = clip.dataHash
+        let clipID = clip.id
 
         // Handling modifier actions（NSEvent.modifierFlags は呼び出し元スレッドで評価する）
         let isPastePlainText = self.isPastePlainText
@@ -140,9 +135,7 @@ extension PasteService {
             // Delete clip
             if isDeleteHistory || isPasteAndDeleteHistory {
                 DispatchQueue.main.async {
-                    let realm = RealmProvider.defaultRealm()
-                    guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: dataHash), !clip.isInvalidated else { return }
-                    AppEnvironment.current.clipService.delete(with: clip)
+                    AppEnvironment.current.clipService.delete(clipID: clipID)
                 }
             }
         }
@@ -188,7 +181,7 @@ extension PasteService {
         }
     }
 
-    func copyToPasteboard(with clip: CPYClip) {
+    func copyToPasteboard(with clip: ClipRecord) {
         lock.lock(); defer { lock.unlock() }
 
         guard let data = Self.unarchiveClipData(atPath: clip.dataPath) else { return }
