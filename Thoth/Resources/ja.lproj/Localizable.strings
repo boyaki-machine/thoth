@@ -41,16 +41,6 @@
 
 "Snippet" = "スニペット";
 
-"General" = "一般";
-
-"Menu" = "メニュー";
-
-"Type" = "対応形式";
-
-"Shortcuts" = "ショートカット";
-
-"Updates" = "アップデート";
-
 "Delete Item" = "スニペットを削除";
 
 "Are you sure want to delete this item?" = "本当に削除してもよろしいですか？";
@@ -64,8 +54,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "この動作を行うためにはシステム環境設定の\"セキュリティとプライバシー\"環境設定で、Thothへのアクセシビリティのアクセスを許可してください。";
 
 "Open System Preferences" = "\"システム環境設定\"を開く";
-
-"Secure Menu" = "セキュアメニュー";
 
 "Secure Items" = "セキュアアイテム";
 
@@ -101,8 +89,6 @@
 
 "Secure Info Remove Field" = "フィールドを削除";
 
-"Secure Info Remove Field Confirmation" = "このフィールドを削除しますか？";
-
 "Secure Info Toggle Mask" = "値のマスクを切り替え";
 
 "Secure Info External Change" = "他の画面で変更されました。";
@@ -137,25 +123,11 @@
 
 "Add Secure Item" = "追加";
 
-"Edit Secure Item" = "編集";
-
 "Delete Secure Item" = "削除";
 
 "Are you sure want to delete this secure item?" = "本当に削除してもよろしいですか？";
 
 "Secure Item Title Placeholder" = "タイトル（例: Gmail）";
-
-"Secure Field Label Placeholder" = "ラベル（例: ID）";
-
-"Secure Field Value Placeholder" = "値";
-
-"Secure Column Title" = "タイトル";
-
-"Secure Column Fields" = "フィールド数";
-
-"Secure Column Label" = "ラベル";
-
-"Secure Column Value" = "値";
 
 "Import Secure Items" = "インポート...";
 
@@ -163,11 +135,7 @@
 
 "Secure Items Export Warning" = "エクスポートされるファイルにはすべての値が平文で含まれます。取り扱いには十分注意してください。";
 
-"Secure Items Save Failed" = "キーチェーンへの保存に失敗しました。詳細は Console.app（フィルタ: SecureMenuService）で確認できます。";
-
 "Secure Items Import Overwrites Crypto Password" = "このファイルには、この Mac に登録されている指紋パスワードとは異なるパスワードが含まれています。取り込むと置き換えられ、現在のパスワードで暗号化したファイルは保存済みパスワードでは開けなくなります。続行しますか？";
-
-"Secure Item Title Required" = "保存するにはタイトルを入力してください。";
 
 "Imported Secure Items Format" = "%d 件のアイテムをインポートしました。";
 
@@ -195,15 +163,9 @@
 
 "Value History" = "変更履歴";
 
-"No Value History" = "履歴はありません";
-
 "Generate Password" = "パスワード生成";
 
 "Copy Password" = "コピー";
-
-"Add Field" = "フィールドを追加";
-
-"Save" = "保存";
 
 "Close" = "閉じる";
 
@@ -229,8 +191,6 @@
 
 "Crypto Decrypting" = "復号化中...";
 
-"Crypto Done" = "完了";
-
 "Crypto Error Empty Password" = "パスワードを入力してください。";
 
 "Crypto Error Empty Output Name" = "出力ファイル名を入力してください。";
@@ -254,9 +214,6 @@
 "Crypto Manage Fingerprint Password" = "指紋パスワード管理...";
 
 "Crypto Register Update" = "登録・更新";
-
-"Crypto Fingerprint Password Saved" = "指紋パスワードを保存しました。";
-
 
 "Add TOTP" = "TOTP追加...";
 

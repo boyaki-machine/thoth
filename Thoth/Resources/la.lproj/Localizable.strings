@@ -37,16 +37,6 @@
 
 "Snippet" = "Fragmentum";
 
-"General" = "Generalia";
-
-"Menu" = "Index";
-
-"Type" = "Genera";
-
-"Shortcuts" = "Claves compendiariae";
-
-"Updates" = "Renovationes";
-
 "Delete Item" = "Fragmentum delere";
 
 "Are you sure want to delete this item?" = "Visne vere hoc delere?";
@@ -60,8 +50,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Ut haec actio fiat, Accessibilitatem in optionibus Securitatis et Secreti in Praeferentiis Systematis permitte.";
 
 "Open System Preferences" = "Praeferentias Systematis aperire";
-
-"Secure Menu" = "Index securus";
 
 "Secure Items" = "Res securae";
 
@@ -97,8 +85,6 @@
 
 "Secure Info Remove Field" = "Campum tollere";
 
-"Secure Info Remove Field Confirmation" = "Visne hunc campum tollere?";
-
 "Secure Info Toggle Mask" = "Valorem tegere / detegere";
 
 "Secure Info External Change" = "In alia fenestra mutatum est.";
@@ -133,25 +119,11 @@
 
 "Add Secure Item" = "Rem addere";
 
-"Edit Secure Item" = "Rem recensere";
-
 "Delete Secure Item" = "Rem delere";
 
 "Are you sure want to delete this secure item?" = "Visne vere hanc rem delere?";
 
 "Secure Item Title Placeholder" = "Titulus (ex. Gmail)";
-
-"Secure Field Label Placeholder" = "Titulus agri (ex. ID)";
-
-"Secure Field Value Placeholder" = "Valor";
-
-"Secure Column Title" = "Titulus";
-
-"Secure Column Fields" = "Campi";
-
-"Secure Column Label" = "Index";
-
-"Secure Column Value" = "Valor";
 
 "Import Secure Items" = "Importare...";
 
@@ -159,11 +131,7 @@
 
 "Secure Items Export Warning" = "Plica exportata omnes valores aperte continebit. Caute tracta.";
 
-"Secure Items Save Failed" = "In clavium anulo servare non licuit.";
-
 "Secure Items Import Overwrites Crypto Password" = "Hic fasciculus tesseram digiti aliam continet. Si importas, substituetur, et fasciculi tessera praesenti cifrati aperiri non poterunt. Pergisne?";
-
-"Secure Item Title Required" = "Titulum inscribe antequam serves.";
 
 "Imported Secure Items Format" = "%d res importatae.";
 
@@ -191,15 +159,9 @@
 
 "Value History" = "Historia valorum";
 
-"No Value History" = "Nulla historia";
-
 "Generate Password" = "Generare";
 
 "Copy Password" = "Exscribere";
-
-"Add Field" = "Agrum addere";
-
-"Save" = "Servare";
 
 "Close" = "Claudere";
 
@@ -225,8 +187,6 @@
 
 "Crypto Decrypting" = "Revelatur...";
 
-"Crypto Done" = "Factum";
-
 "Crypto Error Empty Password" = "Quaeso signum arcanum scribe.";
 
 "Crypto Error Empty Output Name" = "Quaeso nomen plicae exitus scribe.";
@@ -250,9 +210,6 @@
 "Crypto Manage Fingerprint Password" = "Signum arcanum digiti administrare...";
 
 "Crypto Register Update" = "Registrare / Renovare";
-
-"Crypto Fingerprint Password Saved" = "Signum arcanum digiti servatum.";
-
 
 "Add TOTP" = "TOTP addere...";
 

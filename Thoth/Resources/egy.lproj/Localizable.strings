@@ -45,16 +45,6 @@
 
 "Snippet" = "𓋴𓈖𓊪𓏏𓏛";
 
-"General" = "𓎼𓈖𓂋𓃭";
-
-"Menu" = "𓅓𓈖𓅱𓏛";
-
-"Type" = "𓏏𓇋𓊪";
-
-"Shortcuts" = "𓈙𓂋𓏏𓎡𓏏𓋴";
-
-"Updates" = "𓇳𓆣";
-
 "Delete Item" = "𓂧𓃭𓏏𓅪 𓋴𓈖𓊪𓏏𓏛";
 
 "Are you sure want to delete this item?" = "𓂧𓃭𓏏𓅪?";
@@ -68,8 +58,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "𓂞 𓄿𓎡𓋴𓋴𓏛 𓅓 𓊪𓂋𓆑𓋴𓏛 𓈖 𓊃𓋴𓏏𓅓.";
 
 "Open System Preferences" = "𓃹𓈖 𓊪𓂋𓆑𓋴𓏛 𓈖 𓊃𓋴𓏏𓅓";
-
-"Secure Menu" = "𓊃 𓅓𓈖𓅱𓏛";
 
 "Secure Items" = "𓊃 𓇋𓏏𓅓𓏥";
 
@@ -105,8 +93,6 @@
 
 "Secure Info Remove Field" = "𓎛𓆓 𓎼𓂋𓎛";
 
-"Secure Info Remove Field Confirmation" = "𓎛𓆓 𓎼𓂋𓎛 ?";
-
 "Secure Info Toggle Mask" = "𓂀 / 𓂋𓐍 𓏛";
 
 "Secure Info External Change" = "𓎛𓈖𓂝 𓅓 𓉐 𓎡𓏏";
@@ -141,25 +127,11 @@
 
 "Add Secure Item" = "𓄿𓂧𓂧 𓇋𓏏𓅓";
 
-"Edit Secure Item" = "𓏞 𓇋𓏏𓅓";
-
 "Delete Secure Item" = "𓂧𓃭𓏏𓅪 𓇋𓏏𓅓";
 
 "Are you sure want to delete this secure item?" = "𓂧𓃭𓏏𓅪 𓇋𓏏𓅓?";
 
 "Secure Item Title Placeholder" = "𓏏𓇋𓏏𓃭 (Gmail)";
-
-"Secure Field Label Placeholder" = "𓃭𓃀𓃭 (ID)";
-
-"Secure Field Value Placeholder" = "𓆑𓃭𓅱";
-
-"Secure Column Title" = "𓏏𓊪";
-
-"Secure Column Fields" = "𓎼𓂋𓎛𓏥";
-
-"Secure Column Label" = "𓂋𓈖";
-
-"Secure Column Value" = "𓏛";
 
 "Import Secure Items" = "𓏎𓂻...";
 
@@ -167,11 +139,7 @@
 
 "Secure Items Export Warning" = "𓅪 𓏛 𓂻𓉐 𓃹𓈖 𓎟 — 𓊃𓄿𓅱!";
 
-"Secure Items Save Failed" = "𓅘 𓋴𓍿 𓊃𓏛";
-
 "Secure Items Import Overwrites Crypto Password" = "𓊃𓏛 𓎡𓏏 𓅓 𓆑𓂋 ?";
-
-"Secure Item Title Required" = "𓂋𓈖 𓏏𓊪";
 
 "Imported Secure Items Format" = "𓏎𓂻 %d 𓇋𓏏𓅓𓏥. 𓄤";
 
@@ -199,15 +167,9 @@
 
 "Value History" = "𓉔𓇋𓋴𓏏𓂋𓏭 𓈖 𓆑𓃭𓅱";
 
-"No Value History" = "𓂜 𓉔𓇋𓋴𓏏𓂋𓏭";
-
 "Generate Password" = "𓁹";
 
 "Copy Password" = "𓎡𓊪𓏭𓏞";
-
-"Add Field" = "𓄿𓂧𓂧 𓇏";
-
-"Save" = "𓄤𓏞";
 
 "Close" = "𓎡𓃭𓊃";
 
@@ -233,8 +195,6 @@
 
 "Crypto Decrypting" = "𓃹𓈖...";
 
-"Crypto Done" = "𓄤";
-
 "Crypto Error Empty Password" = "𓅪 𓂜 𓊪𓋴𓅱𓂋𓂧𓊃.";
 
 "Crypto Error Empty Output Name" = "𓅪 𓂜 𓂋𓈖.";
@@ -258,9 +218,6 @@
 "Crypto Manage Fingerprint Password" = "𓋴𓐍𓂋 𓂭𓊃 𓊪𓋴𓅱𓂋𓂧𓊃...";
 
 "Crypto Register Update" = "𓏞 / 𓆣";
-
-"Crypto Fingerprint Password Saved" = "𓂭𓊃 𓊪𓋴𓅱𓂋𓂧𓊃 𓄤𓏞.";
-
 
 "Add TOTP" = "𓄿𓂧𓂧 𓇳𓊃 (TOTP)...";
 

@@ -41,16 +41,6 @@
 
 "Snippet" = "Snippet";
 
-"General" = "General";
-
-"Menu" = "Menu";
-
-"Type" = "Type";
-
-"Shortcuts" = "Shortcuts";
-
-"Updates" = "Updates";
-
 "Delete Item" = "Delete Item";
 
 "Are you sure want to delete this item?" = "Are you sure want to delete this item?";
@@ -64,8 +54,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "To do this action please allow Accessibility in Security & Privacy preferences, located in System Preferences.";
 
 "Open System Preferences" = "Open System Preferences";
-
-"Secure Menu" = "Secure Menu";
 
 "Secure Items" = "Secure Items";
 
@@ -101,8 +89,6 @@
 
 "Secure Info Remove Field" = "Remove Field";
 
-"Secure Info Remove Field Confirmation" = "Are you sure you want to remove this field?";
-
 "Secure Info Toggle Mask" = "Mask / unmask the value";
 
 "Secure Info External Change" = "Changed in another window.";
@@ -137,25 +123,11 @@
 
 "Add Secure Item" = "Add Item";
 
-"Edit Secure Item" = "Edit Item";
-
 "Delete Secure Item" = "Delete Item";
 
 "Are you sure want to delete this secure item?" = "Are you sure you want to delete this item?";
 
 "Secure Item Title Placeholder" = "Title (e.g. Gmail)";
-
-"Secure Field Label Placeholder" = "Label (e.g. ID)";
-
-"Secure Field Value Placeholder" = "Value";
-
-"Secure Column Title" = "Title";
-
-"Secure Column Fields" = "Fields";
-
-"Secure Column Label" = "Label";
-
-"Secure Column Value" = "Value";
 
 "Import Secure Items" = "Import...";
 
@@ -163,11 +135,7 @@
 
 "Secure Items Export Warning" = "The exported file will contain all values in plain text. Handle it with care.";
 
-"Secure Items Save Failed" = "Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).";
-
 "Secure Items Import Overwrites Crypto Password" = "This file contains a fingerprint password that differs from the one registered on this Mac. Importing replaces it, and files previously encrypted with the current password will no longer open with the stored password. Continue?";
-
-"Secure Item Title Required" = "Enter a title before saving.";
 
 "Imported Secure Items Format" = "Imported %d item(s).";
 
@@ -195,15 +163,9 @@
 
 "Value History" = "Value history";
 
-"No Value History" = "No history";
-
 "Generate Password" = "Generate";
 
 "Copy Password" = "Copy";
-
-"Add Field" = "Add Field";
-
-"Save" = "Save";
 
 "Close" = "Close";
 
@@ -229,8 +191,6 @@
 
 "Crypto Decrypting" = "Decrypting...";
 
-"Crypto Done" = "Done";
-
 "Crypto Error Empty Password" = "Please enter a password.";
 
 "Crypto Error Empty Output Name" = "Please enter an output file name.";
@@ -254,9 +214,6 @@
 "Crypto Manage Fingerprint Password" = "Manage Fingerprint Password...";
 
 "Crypto Register Update" = "Register / Update";
-
-"Crypto Fingerprint Password Saved" = "Fingerprint password saved.";
-
 
 "Add TOTP" = "Add TOTP...";
 

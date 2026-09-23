@@ -12,8 +12,6 @@ import Foundation
 internal enum L10n {
   /// Add
   internal static let add = L10n.tr("Localizable", "Add", fallback: "Add")
-  /// Add Field
-  internal static let addField = L10n.tr("Localizable", "Add Field", fallback: "Add Field")
   /// Add Item
   internal static let addSecureItem = L10n.tr("Localizable", "Add Secure Item", fallback: "Add Item")
   /// Add TOTP...
@@ -76,8 +74,6 @@ internal enum L10n {
   internal static let cryptoDecrypt = L10n.tr("Localizable", "Crypto Decrypt", fallback: "Decrypt")
   /// Decrypting...
   internal static let cryptoDecrypting = L10n.tr("Localizable", "Crypto Decrypting", fallback: "Decrypting...")
-  /// Done
-  internal static let cryptoDone = L10n.tr("Localizable", "Crypto Done", fallback: "Done")
   /// Encrypt
   internal static let cryptoEncrypt = L10n.tr("Localizable", "Crypto Encrypt", fallback: "Encrypt")
   /// Encrypted. It can also be decrypted without Thoth using the openssl command below:
@@ -100,8 +96,6 @@ internal enum L10n {
   internal static let cryptoFingerprintApplied = L10n.tr("Localizable", "Crypto Fingerprint Applied", fallback: "Fingerprint password applied.")
   /// Authentication failed.
   internal static let cryptoFingerprintFailed = L10n.tr("Localizable", "Crypto Fingerprint Failed", fallback: "Authentication failed.")
-  /// Fingerprint password saved.
-  internal static let cryptoFingerprintPasswordSaved = L10n.tr("Localizable", "Crypto Fingerprint Password Saved", fallback: "Fingerprint password saved.")
   /// Authenticate to use the fingerprint password
   internal static let cryptoFingerprintReason = L10n.tr("Localizable", "Crypto Fingerprint Reason", fallback: "Authenticate to use the fingerprint password")
   /// Password:
@@ -134,16 +128,12 @@ internal enum L10n {
   internal static let donTLaunch = L10n.tr("Localizable", "Don't Launch", fallback: "Don't Launch")
   /// Easy-to-type password
   internal static let easyToTypePassword = L10n.tr("Localizable", "Easy To Type Password", fallback: "Easy-to-type password")
-  /// Edit Item
-  internal static let editSecureItem = L10n.tr("Localizable", "Edit Secure Item", fallback: "Edit Item")
   /// Edit Snippets...
   internal static let editSnippets = L10n.tr("Localizable", "Edit Snippets", fallback: "Edit Snippets...")
   /// Encrypt / Decrypt File
   internal static let encryptDecrypt = L10n.tr("Localizable", "Encrypt Decrypt", fallback: "Encrypt / Decrypt File")
   /// Export...
   internal static let exportSecureItems = L10n.tr("Localizable", "Export Secure Items", fallback: "Export...")
-  /// General
-  internal static let general = L10n.tr("Localizable", "General", fallback: "General")
   /// Generate New Password
   internal static let generateNewPassword = L10n.tr("Localizable", "Generate New Password", fallback: "Generate New Password")
   /// Generate
@@ -172,12 +162,8 @@ internal enum L10n {
   internal static let libraryUnavailableMessage = L10n.tr("Localizable", "Library Unavailable Message", fallback: "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.")
   /// Encryption key unavailable
   internal static let libraryUnavailableTitle = L10n.tr("Localizable", "Library Unavailable Title", fallback: "Encryption key unavailable")
-  /// Menu
-  internal static let menu = L10n.tr("Localizable", "Menu", fallback: "Menu")
   /// New Item
   internal static let newSecureItemTitle = L10n.tr("Localizable", "New Secure Item Title", fallback: "New Item")
-  /// No history
-  internal static let noValueHistory = L10n.tr("Localizable", "No Value History", fallback: "No history")
   /// Open System Preferences
   internal static let openSystemPreferences = L10n.tr("Localizable", "Open System Preferences", fallback: "Open System Preferences")
   /// Digits (0-9)
@@ -202,20 +188,10 @@ internal enum L10n {
   internal static let preferences = L10n.tr("Localizable", "Preferences", fallback: "Preferences...")
   /// Quit Thoth
   internal static let quitThoth = L10n.tr("Localizable", "Quit Thoth", fallback: "Quit Thoth")
-  /// Save
-  internal static let save = L10n.tr("Localizable", "Save", fallback: "Save")
   /// Copy History
   internal static let sectionCopyHistory = L10n.tr("Localizable", "Section Copy History", fallback: "Copy History")
   /// Settings
   internal static let sectionSettings = L10n.tr("Localizable", "Section Settings", fallback: "Settings")
-  /// Fields
-  internal static let secureColumnFields = L10n.tr("Localizable", "Secure Column Fields", fallback: "Fields")
-  /// Label
-  internal static let secureColumnLabel = L10n.tr("Localizable", "Secure Column Label", fallback: "Label")
-  /// Title
-  internal static let secureColumnTitle = L10n.tr("Localizable", "Secure Column Title", fallback: "Title")
-  /// Value
-  internal static let secureColumnValue = L10n.tr("Localizable", "Secure Column Value", fallback: "Value")
   /// Memo
   internal static let secureFieldDefaultLabelNote = L10n.tr("Localizable", "Secure Field Default Label Note", fallback: "Memo")
   /// Password
@@ -224,10 +200,6 @@ internal enum L10n {
   internal static let secureFieldDefaultLabelText = L10n.tr("Localizable", "Secure Field Default Label Text", fallback: "Text")
   /// URL
   internal static let secureFieldDefaultLabelURL = L10n.tr("Localizable", "Secure Field Default Label URL", fallback: "URL")
-  /// Label (e.g. ID)
-  internal static let secureFieldLabelPlaceholder = L10n.tr("Localizable", "Secure Field Label Placeholder", fallback: "Label (e.g. ID)")
-  /// Value
-  internal static let secureFieldValuePlaceholder = L10n.tr("Localizable", "Secure Field Value Placeholder", fallback: "Value")
   /// Secure Info
   internal static let secureInfo = L10n.tr("Localizable", "Secure Info", fallback: "Secure Info")
   /// Add Item
@@ -268,8 +240,6 @@ internal enum L10n {
   internal static let secureInfoReload = L10n.tr("Localizable", "Secure Info Reload", fallback: "Reload")
   /// Remove Field
   internal static let secureInfoRemoveField = L10n.tr("Localizable", "Secure Info Remove Field", fallback: "Remove Field")
-  /// Are you sure you want to remove this field?
-  internal static let secureInfoRemoveFieldConfirmation = L10n.tr("Localizable", "Secure Info Remove Field Confirmation", fallback: "Are you sure you want to remove this field?")
   /// Show / hide the value
   internal static let secureInfoRevealValue = L10n.tr("Localizable", "Secure Info Reveal Value", fallback: "Show / hide the value")
   /// Failed to save to Keychain. Your edits are kept — press Command-S to try again. See Console.app for details (filter: SecureMenuService).
@@ -284,8 +254,6 @@ internal enum L10n {
   }
   /// Title (e.g. Gmail)
   internal static let secureItemTitlePlaceholder = L10n.tr("Localizable", "Secure Item Title Placeholder", fallback: "Title (e.g. Gmail)")
-  /// Enter a title before saving.
-  internal static let secureItemTitleRequired = L10n.tr("Localizable", "Secure Item Title Required", fallback: "Enter a title before saving.")
   /// Secure Items
   internal static let secureItems = L10n.tr("Localizable", "Secure Items", fallback: "Secure Items")
   /// The exported file will contain all values in plain text. Handle it with care.
@@ -294,18 +262,12 @@ internal enum L10n {
   internal static let secureItemsImportOverwritesCryptoPassword = L10n.tr("Localizable", "Secure Items Import Overwrites Crypto Password", fallback: "This file contains a fingerprint password that differs from the one registered on this Mac. Importing replaces it, and files previously encrypted with the current password will no longer open with the stored password. Continue?")
   /// Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose "Always Allow". Saving is disabled to protect the existing data.
   internal static let secureItemsKeychainAccessDenied = L10n.tr("Localizable", "Secure Items Keychain Access Denied", fallback: "Failed to read secure items from Keychain. This can happen when the app binary has changed (e.g. after an update or rebuild). If macOS shows a keychain permission dialog, choose \"Always Allow\". Saving is disabled to protect the existing data.")
-  /// Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).
-  internal static let secureItemsSaveFailed = L10n.tr("Localizable", "Secure Items Save Failed", fallback: "Failed to save to Keychain. See Console.app for details (filter: SecureMenuService).")
-  /// Secure Menu
-  internal static let secureMenu = L10n.tr("Localizable", "Secure Menu", fallback: "Secure Menu")
   /// Access Secure Menu
   internal static let secureMenuAuthenticationReason = L10n.tr("Localizable", "Secure Menu Authentication Reason", fallback: "Access Secure Menu")
   /// No matching items
   internal static let secureMenuNoResults = L10n.tr("Localizable", "Secure Menu No Results", fallback: "No matching items")
   /// Search...
   internal static let secureMenuSearchPlaceholder = L10n.tr("Localizable", "Secure Menu Search Placeholder", fallback: "Search...")
-  /// Shortcuts
-  internal static let shortcuts = L10n.tr("Localizable", "Shortcuts", fallback: "Shortcuts")
   /// Show Snippet Menu
   internal static let showSnippetMenu = L10n.tr("Localizable", "Show Snippet Menu", fallback: "Show Snippet Menu")
   /// Snippet
@@ -348,10 +310,6 @@ internal enum L10n {
   internal static func totpRegisteredAtFormat(_ p1: Any) -> String {
     return L10n.tr("Localizable", "TOTP Registered At Format", String(describing: p1), fallback: "Registered %@")
   }
-  /// Type
-  internal static let type = L10n.tr("Localizable", "Type", fallback: "Type")
-  /// Updates
-  internal static let updates = L10n.tr("Localizable", "Updates", fallback: "Updates")
   /// Link to the original Clipy repository
   internal static let updatesOriginalRepositoryLink = L10n.tr("Localizable", "Updates Original Repository Link", fallback: "Link to the original Clipy repository")
   /// This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.

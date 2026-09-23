@@ -41,16 +41,6 @@
 
 "Snippet" = "Snippet";
 
-"General" = "Allgemein";
-
-"Menu" = "Menü";
-
-"Type" = "Typ";
-
-"Shortcuts" = "Tastenkombinationen";
-
-"Updates" = "Aktualisierungen";
-
 "Delete Item" = "Einträge löschen";
 
 "Are you sure want to delete this item?" = "Möchten sie diesen Eintrag wirklich löschen?";
@@ -64,8 +54,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Um diese Aktion auszuführen, erlauben Sie Thoth bitte den Zugriff auf die Bedienungshilfen in den Systemeinstellungen unter „Sicherheit & Datenschutz“.";
 
 "Open System Preferences" = "Systemeinstellungen öffnen";
-
-"Secure Menu" = "Sicheres Menü";
 
 "Secure Items" = "Sichere Einträge";
 
@@ -101,8 +89,6 @@
 
 "Secure Info Remove Field" = "Feld entfernen";
 
-"Secure Info Remove Field Confirmation" = "Möchten Sie dieses Feld wirklich entfernen?";
-
 "Secure Info Toggle Mask" = "Wert maskieren / anzeigen";
 
 "Secure Info External Change" = "In einem anderen Fenster geändert.";
@@ -137,25 +123,11 @@
 
 "Add Secure Item" = "Eintrag hinzufügen";
 
-"Edit Secure Item" = "Eintrag bearbeiten";
-
 "Delete Secure Item" = "Eintrag löschen";
 
 "Are you sure want to delete this secure item?" = "Möchten Sie diesen Eintrag wirklich löschen?";
 
 "Secure Item Title Placeholder" = "Titel (z. B. Gmail)";
-
-"Secure Field Label Placeholder" = "Bezeichnung (z. B. ID)";
-
-"Secure Field Value Placeholder" = "Wert";
-
-"Secure Column Title" = "Titel";
-
-"Secure Column Fields" = "Felder";
-
-"Secure Column Label" = "Bezeichnung";
-
-"Secure Column Value" = "Wert";
 
 "Import Secure Items" = "Importieren...";
 
@@ -163,11 +135,7 @@
 
 "Secure Items Export Warning" = "Die exportierte Datei enthält alle Werte im Klartext. Bitte gehen Sie sorgsam damit um.";
 
-"Secure Items Save Failed" = "Speichern im Schlüsselbund fehlgeschlagen. Details siehe Console.app (Filter: SecureMenuService).";
-
 "Secure Items Import Overwrites Crypto Password" = "Diese Datei enthält ein anderes Fingerabdruck-Passwort als das auf diesem Mac registrierte. Beim Import wird es ersetzt, und zuvor damit verschlüsselte Dateien lassen sich mit dem gespeicherten Passwort nicht mehr öffnen. Fortfahren?";
-
-"Secure Item Title Required" = "Geben Sie vor dem Speichern einen Titel ein.";
 
 "Imported Secure Items Format" = "%d Einträge importiert.";
 
@@ -195,15 +163,9 @@
 
 "Value History" = "Wertverlauf";
 
-"No Value History" = "Kein Verlauf";
-
 "Generate Password" = "Generieren";
 
 "Copy Password" = "Kopieren";
-
-"Add Field" = "Feld hinzufügen";
-
-"Save" = "Sichern";
 
 "Close" = "Schließen";
 
@@ -229,8 +191,6 @@
 
 "Crypto Decrypting" = "Wird entschlüsselt...";
 
-"Crypto Done" = "Fertig";
-
 "Crypto Error Empty Password" = "Bitte geben Sie ein Passwort ein.";
 
 "Crypto Error Empty Output Name" = "Bitte geben Sie einen Namen für die Ausgabedatei ein.";
@@ -254,9 +214,6 @@
 "Crypto Manage Fingerprint Password" = "Fingerabdruck-Passwort verwalten...";
 
 "Crypto Register Update" = "Registrieren / Aktualisieren";
-
-"Crypto Fingerprint Password Saved" = "Fingerabdruck-Passwort gesichert.";
-
 
 "Add TOTP" = "TOTP hinzufügen...";
 
