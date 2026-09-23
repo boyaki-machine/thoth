@@ -299,7 +299,7 @@
 
 "Updates Original Repository Link" = "Link zum ursprünglichen Clipy-Repository";
 "Third Party Licenses" = "Lizenzen von Drittanbietern";
-"Updates Third Party Licenses Button" = "Lizenzen von Drittanbietern …";
+"Updates Third Party Licenses Button" = "Lizenzen von Drittanbietern";
 "Third Party Licenses Load Failed" = "Die Liste der Drittanbieter-Lizenzen konnte nicht geladen werden.";
 "Library Unavailable Title" = "Verschlüsselungsschlüssel nicht verfügbar";
 "Library Unavailable Message" = "Thoth konnte seinen Verschlüsselungsschlüssel nicht lesen. In dieser Sitzung wird daher nichts auf die Festplatte geschrieben: Der Verlauf bleibt nur im Arbeitsspeicher, und Snippets können weder angezeigt noch bearbeitet werden. Ihre gespeicherten Daten bleiben unverändert. Entsperren Sie Ihren Anmeldeschlüsselbund (oder erlauben Sie den Zugriff) und starten Sie Thoth erneut.";

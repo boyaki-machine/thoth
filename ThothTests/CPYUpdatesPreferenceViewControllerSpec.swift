@@ -55,6 +55,12 @@ class CPYUpdatesPreferenceViewControllerSpec: QuickSpec {
                 expect(titles.values.map(fittingWidth(of:)).max() ?? 0) > UpdatesVC.licensesButtonMinWidth
             }
 
+            it("どの言語でも末尾に「…」を付けない（見切れて続きがあるように見える）") {
+                for (localization, title) in localizedButtonTitles() {
+                    expect(title.hasSuffix("…") || title.hasSuffix("...")).to(beFalse(), description: "\(localization): \(title)")
+                }
+            }
+
             it("短い文言でも最小幅を下回らず、タブより広い文言は左右の余白を残して収める") {
                 let short = UpdatesVC.licensesButtonFrame(fittingWidth: 40, containerWidth: 480, originY: 10, height: 24)
                 expect(short.width) == UpdatesVC.licensesButtonMinWidth

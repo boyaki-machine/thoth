@@ -299,7 +299,7 @@
 
 "Updates Original Repository Link" = "原版 Clipy 仓库链接";
 "Third Party Licenses" = "第三方许可证";
-"Updates Third Party Licenses Button" = "第三方许可证…";
+"Updates Third Party Licenses Button" = "第三方许可证";
 "Third Party Licenses Load Failed" = "无法加载第三方许可证列表。";
 "Library Unavailable Title" = "无法读取加密密钥";
 "Library Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行不会向磁盘写入任何内容：剪贴板历史仅保存在内存中，片段也无法显示或编辑。已保存的数据不会被改动。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";

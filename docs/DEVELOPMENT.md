@@ -329,7 +329,7 @@ A script builds the Release app and packages a DMG in one command.
 2. Fetches the Swift packages into `build/SourcePackages` and regenerates the third-party license list (`scripts/update-acknowledgements.swift`; warns you to commit it if the list changed)
 3. Builds the `Release` configuration (output under `build/DerivedData`; passes `ARCHS=arm64` so the packages are also built for arm64 only)
 4. Stages `Thoth.app`, a symlink to `/Applications`, and the window background (`scripts/make-dmg-background.swift` draws the arrow and the instructions at normal and Retina resolution; they are combined into one TIFF)
-5. Creates a writable DMG with `hdiutil`, mounts it, and has Finder (AppleScript) set the window: size 560 × 340, no toolbar, 128 pt icons, `Thoth.app` on the left of the arrow and `Applications` on the right. Finder writes this into the DMG's `.DS_Store`
+5. Creates a writable DMG with `hdiutil`, mounts it, and has Finder (AppleScript) set the window: size 560 × 370 (tall enough that the bar macOS 27 Finder shows at the bottom does not cover the instructions), no toolbar, 128 pt icons, `Thoth.app` on the left of the arrow and `Applications` on the right. Finder writes this into the DMG's `.DS_Store`
 6. Converts it to a compressed DMG (UDZO)
 
 The first run asks for permission for the terminal to control Finder (System Settings > Privacy & Security > Automation). If it is refused or fails, a DMG without the window layout is created (the contents are the same). To adjust only the look, `./scripts/make_dmg.sh --dmg-only` rebuilds the DMG from an existing `build/DerivedData/.../Release/Thoth.app` without building. On macOS 27, `hdiutil` prints deprecation warnings, but it works.

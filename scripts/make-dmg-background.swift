@@ -15,7 +15,7 @@
 import AppKit
 
 let windowWidth: CGFloat = 560
-let windowHeight: CGFloat = 400      // Finder のウィンドウより少し高く描き、下端の見切れに備える
+let windowHeight: CGFloat = 440      // Finder のウィンドウ（370）より高く描き、下端の見切れに備える
 let iconCenterY: CGFloat = 160       // 上端からの距離（Finder の座標と同じ向き）
 let appIconCenterX: CGFloat = 150
 let applicationsCenterX: CGFloat = 410

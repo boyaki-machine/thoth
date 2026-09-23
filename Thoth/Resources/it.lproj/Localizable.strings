@@ -299,7 +299,7 @@
 
 "Updates Original Repository Link" = "Link al repository originale di Clipy";
 "Third Party Licenses" = "Licenze di terze parti";
-"Updates Third Party Licenses Button" = "Licenze di terze parti…";
+"Updates Third Party Licenses Button" = "Licenze di terze parti";
 "Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";
 "Library Unavailable Title" = "Chiave di crittografia non disponibile";
 "Library Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione non verrà scritto nulla su disco, la cronologia resterà solo in memoria e gli snippet non potranno essere mostrati né modificati. I dati salvati restano intatti. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";

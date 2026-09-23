@@ -44,9 +44,11 @@ VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO
 # リリース日 = バージョンタグ v<version> をつけた日（注釈タグの tagger 日付）。
 # バージョンタブに表示するため THOTH_RELEASE_DATE としてビルドへ注入する。
 # タグが未作成の場合は空（＝リリース日ラベルは表示されない）。
-# DMG のウィンドウ。寸法とアイコンの中心は scripts/make-dmg-background.swift の定数と揃える
+# DMG のウィンドウ。寸法とアイコンの中心は scripts/make-dmg-background.swift の定数と揃える。
+# 高さは、macOS 27 の Finder が下端に出すバー（ボリューム名の表示。約 27pt。DMG 側からは消せない）が
+# 重なっても、案内文（上端から約 315pt まで）が隠れないようにしてある
 DMG_WINDOW_WIDTH=560
-DMG_WINDOW_HEIGHT=340
+DMG_WINDOW_HEIGHT=370
 DMG_ICON_SIZE=128
 DMG_ICON_Y=160
 DMG_APP_X=150
@@ -134,7 +136,9 @@ if [ -z "$MOUNT_DIR" ]; then
   exit 1
 fi
 
-# Finder の座標はウィンドウ左上が原点。bounds はタイトルバーを含むので、その分（28pt）を足す
+# Finder の座標はウィンドウ左上が原点。bounds はタイトルバーを含むので、その分を足す
+# （macOS 27 のタイトルバーは約 32pt。足りないと下端の案内文が見切れる）
+TITLE_BAR_HEIGHT=32
 WINDOW_LEFT=200
 WINDOW_TOP=120
 if osascript <<APPLESCRIPT
@@ -144,7 +148,7 @@ tell application "Finder"
     set current view of container window to icon view
     set toolbar visible of container window to false
     set statusbar visible of container window to false
-    set the bounds of container window to {$WINDOW_LEFT, $WINDOW_TOP, $((WINDOW_LEFT + DMG_WINDOW_WIDTH)), $((WINDOW_TOP + DMG_WINDOW_HEIGHT + 28))}
+    set the bounds of container window to {$WINDOW_LEFT, $WINDOW_TOP, $((WINDOW_LEFT + DMG_WINDOW_WIDTH)), $((WINDOW_TOP + DMG_WINDOW_HEIGHT + TITLE_BAR_HEIGHT))}
     set viewOptions to the icon view options of container window
     set arrangement of viewOptions to not arranged
     set icon size of viewOptions to $DMG_ICON_SIZE

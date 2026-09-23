@@ -330,7 +330,7 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 2. Swift Package を `build/SourcePackages` へ取得し、サードパーティライセンス一覧を作り直す（`scripts/update-acknowledgements.swift`。一覧が変わったらコミットするよう警告を出す）
 3. `Release` 構成でビルド（`build/DerivedData` へ出力。`ARCHS=arm64` を渡し、パッケージも arm64 だけでビルドする）
 4. `Thoth.app`、`/Applications` へのシンボリックリンク、ウィンドウの背景をステージング（背景は `scripts/make-dmg-background.swift` が矢印と案内文を通常用・Retina 用に描き、1 つの TIFF にまとめる）
-5. `hdiutil` で書き込み可能な DMG を作ってマウントし、Finder（AppleScript）にウィンドウを設定させる: 大きさ 560 × 340・ツールバーなし・アイコン 128pt・矢印の左に `Thoth.app`、右に `Applications`。Finder がこれを DMG の `.DS_Store` に書く
+5. `hdiutil` で書き込み可能な DMG を作ってマウントし、Finder（AppleScript）にウィンドウを設定させる: 大きさ 560 × 370（macOS 27 の Finder が下端に出すバーが重なっても案内文が隠れない高さ）・ツールバーなし・アイコン 128pt・矢印の左に `Thoth.app`、右に `Applications`。Finder がこれを DMG の `.DS_Store` に書く
 6. 圧縮 DMG（UDZO）に変換
 
 初回は、ターミナルから Finder を操作する許可を求められます（システム設定 > プライバシーとセキュリティ > オートメーション）。許可しない・失敗した場合は、ウィンドウの設定なしの DMG を作ります（中身は同じ）。見た目だけを調整するときは、`./scripts/make_dmg.sh --dmg-only` でビルドを省き、既存の `build/DerivedData/…/Release/Thoth.app` から DMG だけを作り直せます。macOS 27 では `hdiutil` が非推奨の警告を出しますが、動作します。

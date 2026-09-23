@@ -299,7 +299,7 @@
 
 "Updates Original Repository Link" = "オリジナル Clipyリポジトリへのリンク";
 "Third Party Licenses" = "サードパーティライセンス";
-"Updates Third Party Licenses Button" = "サードパーティライセンス…";
+"Updates Third Party Licenses Button" = "サードパーティライセンス";
 "Third Party Licenses Load Failed" = "サードパーティライセンス一覧の読み込みに失敗しました。";
 "Library Unavailable Title" = "暗号鍵を読み出せません";
 "Library Unavailable Message" = "暗号鍵を読み出せないため、この起動中はディスクに何も書き込みません。クリップボード履歴はメモリ上だけに残り、スニペットは表示も編集もできません。保存済みのデータはそのまま残っています。ログインキーチェーンのロックを解除する（または確認ダイアログで許可する）と、次の起動で元どおり読めます。";
