@@ -180,6 +180,14 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
+### Investigating on a user's machine (unified log)
+
+Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) records each step in the unified log, so right after reproducing a problem you can read it with the command below (the values being pasted and item names are never recorded).
+
+```bash
+log show --last 10m --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
+```
+
 ### Reading a test failure
 
 A failure prints three things to stdout. The log is long, so `grep -E "error:|Failing tests" -A 20` is the fastest way in.

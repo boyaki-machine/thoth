@@ -180,6 +180,14 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 
+### 利用者の環境での調査（統合ログ）
+
+貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。各段階を `Diagnostics`（`Thoth/Sources/Utility/Diagnostics.swift`）が統合ログへ残すので、再現した直後に次で読めます（貼り付ける値や項目名は記録しません）。
+
+```bash
+log show --last 10m --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
+```
+
 ### 失敗したテストの読み方
 
 失敗すると標準出力に次の 3 つが出ます。ログは長いので `grep -E "error:|Failing tests" -A 20` で拾うと早いです。
