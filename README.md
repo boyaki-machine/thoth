@@ -96,7 +96,7 @@ Paste passwords, TOTP, and other sensitive values directly into any app **withou
 | **Keychain storage** | All values are stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — never synced to iCloud |
 | **Biometric lock** | Touch ID (or login password) is required before the menu appears. Within 30 seconds of a successful authentication, re-authentication is skipped so you can pick ID / password / TOTP in a row |
 | **Two-level menu** | Select a parent item (e.g. "GitHub"), then a specific field (e.g. "Password") |
-| **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard. TOTP is typed as keystrokes directly, leaving no trace in any history |
+| **Direct paste** | The selected value is pasted straight into the app you were using when you pressed the hotkey. It stays out of Thoth's copy history, and once the paste is done the clipboard goes back to what it held before. TOTP is typed as keystrokes directly, leaving no trace in any history |
 | **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |
 | **TOTP support** | Register from an otpauth URI / QR code; a one-time code is generated and typed at selection time |
 
@@ -148,7 +148,8 @@ Export / Import live in the **⚙** menu at the bottom of the left pane, togethe
 **Security characteristics:**
 
 - Values are read from Keychain only at the moment of authentication
-- Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and it is cleared automatically after pasting
+- Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and **about 2 seconds after the paste the clipboard is restored to its previous content** (so the pasted value cannot be pasted again with ⌘V; if you copy something else in the meantime, that is kept)
+- When Thoth cannot paste for you (the “Input "⌘ + V" after menu item selection” preference is off, or Accessibility permission is missing), the value is left on the clipboard so you can paste it yourself, and cleared after 30 seconds
 - TOTP never touches the clipboard; it is typed as keystrokes directly
 - The Secure Info window shows values in plaintext, so it is protected as follows:
   - Touch ID / password authentication is required before it opens

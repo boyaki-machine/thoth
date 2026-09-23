@@ -207,11 +207,13 @@ final class CPYSecurePickerPanel: NSPanel {
 // MARK: - Show
 
 extension CPYSecurePickerPanel {
-    func show(near point: NSPoint) {
+    /// - Parameter callerApp: 貼り付け先として覚えておくアプリ（ホットキーを押した時点の最前面）。
+    ///   使えない場合（nil・Thoth 自身）は表示する時点の最前面を使う
+    func show(near point: NSPoint, callerApp hotKeyApp: NSRunningApplication? = nil) {
         #if DEBUG
         NSLog("[SecurePickerPanel] show: called")
         #endif
-        callerApp = NSWorkspace.shared.frontmostApplication
+        callerApp = CallerAppActivator.returnTarget(atHotKey: hotKeyApp, atShow: NSWorkspace.shared.frontmostApplication)
         let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
         var origin = NSPoint(x: point.x + 15, y: point.y - frame.height + 15)

@@ -111,12 +111,8 @@ extension MenuManager {
             // パネルを閉じる前にペースト先アプリを取得しておく
             let callerApp = panel?.callerApp
             self?.dismissHistoryPicker()
-            // ペースト先アプリをアクティブ化してから貼り付ける。
-            // activate は非同期で完了するため少し待ってから送出する。
-            // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない。
-            //   呼び出し時点で Thoth がアクティブなので、他アプリへの切り替えは通る）
-            callerApp?.activate(options: [])
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+            // ペースト先アプリを前面へ戻し、前面に来たのを確かめてから貼り付ける
+            CallerAppActivator.activate(callerApp) {
                 if !AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: dataHash) {
                     NSSound.beep()
                 }
@@ -209,6 +205,9 @@ extension MenuManager {
         }
         guard !isSecureMenuActive else { return }
         isSecureMenuActive = true
+        // 貼り付け先はホットキーを押した時点で覚えておく。認証ダイアログを挟むと、
+        // パネルを出す時点の最前面は元のアプリではなくなっていることがある
+        let hotKeyApp = NSWorkspace.shared.frontmostApplication
         let reason = L10n.secureMenuAuthenticationReason
         AppEnvironment.current.secureMenuService.authenticate(reason: reason) { [weak self] success in
             guard let self = self else { return }
@@ -228,11 +227,8 @@ extension MenuManager {
                 self?.isSecureMenuActive  = false
                 self?.securePickerPanel   = nil
                 self?.secureCloseObserver = nil
-                // ペースト先アプリをアクティブ化してから出力する。
-                // activate は非同期で完了するため少し待ってから送出する。
-                // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない）
-                callerApp?.activate(options: [])
-                self?.outputSecureSelection(selection)
+                // ペースト先アプリを前面へ戻し、前面に来たのを確かめてから出力する
+                self?.outputSecureSelection(selection, returningFocusTo: callerApp)
             }
             // 選択パネルからもメインメニューと同じセキュア情報確認ウィンドウを開く。
             // showSecureInfoWindow() は認証を通すが、選択パネルを開いた時点で
@@ -260,7 +256,7 @@ extension MenuManager {
             }
 
             self.securePickerPanel = panel
-            panel.show(near: NSEvent.mouseLocation)
+            panel.show(near: NSEvent.mouseLocation, callerApp: hotKeyApp)
         }
     }
 
@@ -270,30 +266,46 @@ extension MenuManager {
     /// - TOTP: クリップボードを経由せず、その時点のコードを CGEvent で直接タイプする
     ///   （OS のコピー履歴にも Clipy 履歴にも残らない）
     /// - それ以外: 秘匿マーカー付きでクリップボードに書き込んでペーストし、
-    ///   一定時間後（その間に別のコピーが無ければ）クリアする。
+    ///   少し後（その間に別のコピーが無ければ）書き込む前の内容へ戻す。
     ///   マーカーにより ClipService の履歴保存はスキップされる。
+    ///   ペーストを送れなかった場合（設定で無効・権限なし）は、利用者が自分で貼り付けられるよう
+    ///   従来どおり一定時間後にクリアする
+    ///
+    /// - Parameter callerApp: 出力の前に前面へ戻すアプリ（パネルから選んだ場合）。
+    ///   nil なら戻さない（NSMenu から選んだ場合は元のアプリが前面のまま）
     ///
     /// ※ context.clear() はここでは呼ばない。複数回選択した場合に古いタイマーが
     ///   新しい選択後の context を消してしまうため。isWithinWindow がタイムスタンプで
     ///   自動的に期限切れを判定するので明示的なクリアは不要。
-    func outputSecureSelection(_ selection: SecureFieldSelection) {
+    func outputSecureSelection(_ selection: SecureFieldSelection, returningFocusTo callerApp: NSRunningApplication? = nil) {
         let context = AppEnvironment.current.secureSelectionContext
         context.record(parentItemID: selection.parentItemID, fieldIndex: selection.fieldIndex)
+        let pasteService = AppEnvironment.current.pasteService
         if selection.isTOTP {
-            guard let params = TOTPService.parse(selection.fieldValue),
-                  let code = TOTPService().code(for: params) else {
+            guard let params = TOTPService.parse(selection.fieldValue) else {
                 NSSound.beep()
                 return
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                AppEnvironment.current.pasteService.typeString(code)
+            CallerAppActivator.activate(callerApp) {
+                // コードは送る直前に作る（前面化を待つ間に周期をまたいでも古いコードを打たない）
+                guard let code = TOTPService().code(for: params) else {
+                    NSSound.beep()
+                    return
+                }
+                pasteService.typeString(code)
             }
         } else {
-            AppEnvironment.current.pasteService.copyConcealedToPasteboard(with: selection.fieldValue)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                AppEnvironment.current.pasteService.paste()
+            let pasteboard = NSPasteboard.general
+            let snapshot = PasteboardSnapshot(pasteboard: pasteboard)
+            pasteService.copyConcealedToPasteboard(with: selection.fieldValue)
+            let writtenChangeCount = pasteboard.changeCount
+            CallerAppActivator.activate(callerApp) {
+                if pasteService.paste() {
+                    pasteService.restorePasteboard(snapshot, ifUnchangedSince: writtenChangeCount)
+                } else {
+                    pasteService.scheduleConcealedClear()
+                }
             }
-            AppEnvironment.current.pasteService.scheduleConcealedClear()
         }
     }
 
