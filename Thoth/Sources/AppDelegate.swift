@@ -13,11 +13,9 @@
 import Cocoa
 import RxCocoa
 import RxSwift
-import LoginServiceKit
 import Magnet
 import Screeen
 import RxScreeen
-import RealmSwift
 import LetsMove
 
 /// アプリのエントリポイント。起動シーケンスの統括・メニュー項目のアクション受け口・
@@ -36,17 +34,16 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     fileprivate var hasStartedApplication = false
 
     // MARK: - Init
-    // 注意: Realm の初期化はここ（awakeFromNib）では行わない。
-    // Realm 暗号鍵の作成は安定署名を前提とするため、applicationDidFinishLaunching で
-    // 再署名判定（isRelaunchPendingForResign）を通過した後に RealmProvider.setup() を呼ぶ。
+    // 注意: 保存層の準備はここ（awakeFromNib）では行わない。
+    // 暗号鍵の作成は安定署名を前提とするため、applicationDidFinishLaunching で
+    // 再署名判定（isRelaunchPendingForResign）を通過した後に LibraryProvider.prepare() を呼ぶ。
 
     // MARK: - NSMenuItem Validation
     func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
         if menuItem.action == #selector(AppDelegate.clearAllHistory) {
-            // Realm 準備前（起動直後の暗号化移行中など）は無効にしておく
-            guard RealmProvider.isReady else { return false }
-            let realm = RealmProvider.defaultRealm()
-            return !realm.objects(CPYClip.self).isEmpty
+            // 保存層の準備前（起動直後の移行中など）は無効にしておく
+            guard LibraryProvider.isReady else { return false }
+            return !AppEnvironment.current.historyStore.isEmpty
         }
         return true
     }
@@ -187,16 +184,9 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         }
     }
 
-    private func toggleAddingToLoginItems(_ isEnable: Bool) {
-        let appPath = Bundle.main.bundlePath
-        LoginServiceKit.removeLoginItems(at: appPath)
-        guard isEnable else { return }
-        LoginServiceKit.addLoginItems(at: appPath)
-    }
-
     private func reflectLoginItemState() {
         let isInLoginItems = AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.loginItem)
-        toggleAddingToLoginItems(isInLoginItems)
+        LoginItemService.sync(enabled: isInLoginItems)
     }
 }
 
@@ -212,11 +202,10 @@ extension AppDelegate: NSApplicationDelegate {
     //    │        └─ 失敗時は [main] で startApplication() を続行
     //    └─ (RELEASE) PFMoveToApplicationsFolder
     //   didFinishLaunching [main] → startApplication()
-    //    ├─ RealmProvider.setupConfiguration()       … 鍵取得 + 構成のみ（数 ms）
     //    ├─ DI・UserDefaults・メニューバーアイコン表示・アクセシビリティ確認
-    //    └─ [bg] RealmProvider.warmUp()              … スキーマ移行 + 暗号化移行
-    //         └─ [main] startServices():
-    //              Realm 通知・各サービス開始・ログイン項目アラート・.data スイープ
+    //    └─ [bg] LibraryProvider.prepare()           … 鍵取得 + ストアを開く（初回は Realm から移行）
+    //         └─ [main] 保存層の差し替え → startServices():
+    //              変更通知・各サービス開始・ログイン項目アラート・.data スイープ
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         // 再署名による再起動が予約されている場合は起動処理を行わない。
         // 再署名前（ad-hoc 署名）のバイナリがアクセシビリティ確認等で TCC に登録されると、
@@ -232,14 +221,11 @@ extension AppDelegate: NSApplicationDelegate {
         hasStartedApplication = true
 
         // --- 軽量な同期処理: メニューバーアイコン表示までを最短にする ---
-        // Realm 構成（鍵取得 + defaultConfiguration 設定のみ）。
-        // AppEnvironment のサービスが Realm に触れる前に必ず構成しておく
-        RealmProvider.setupConfiguration()
         // Environments
         AppEnvironment.replaceCurrent(environment: AppEnvironment.fromStorage())
         // UserDefaults
         CPYUtilities.registerUserDefaultKeys()
-        // ステータスバーアイコンの表示（Realm には触れない）
+        // ステータスバーアイコンの表示（保存層には触れない）
         AppEnvironment.current.menuManager.setup()
         // Check Accessibility Permission
         AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: true)
@@ -248,18 +234,22 @@ extension AppDelegate: NSApplicationDelegate {
         // modal ダイアログ等）はテストの実行を妨げるため行わない
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
 
-        // --- 重い初期化（スキーマ移行・暗号化移行）はバックグラウンドで ---
-        RealmProvider.warmUp { [weak self] in
+        // --- 重い初期化（ストアを開く・初回は Realm から移行）はバックグラウンドで ---
+        LibraryProvider.prepare { [weak self] prepared in
+            AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore,
+                                          isUsable: prepared.availability == .ready)
             self?.startServices()
+            self?.finishLibraryMigration(prepared)
+            self?.notifyIfLibraryUnavailable(prepared)
         }
     }
 
-    /// Realm 準備完了後に呼ばれる。Realm に依存するサービスの起動と残りの初期化を行う
+    /// 保存層の準備完了後に呼ばれる。保存層に依存するサービスの起動と残りの初期化を行う
     private func startServices() {
         // 履歴・スニペットの変更監視（メニュー再構築のトリガー）
-        AppEnvironment.current.menuManager.bindRealmNotifications()
+        AppEnvironment.current.menuManager.bindLibraryNotifications()
 
-        // Binding Events（スクリーンショット監視は clipService 経由で Realm に触れる）
+        // Binding Events（スクリーンショット監視は clipService 経由で保存層に触れる）
         bind()
 
         // Services
@@ -280,6 +270,31 @@ extension AppDelegate: NSApplicationDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.promptToAddLoginItems()
             }
+        }
+    }
+
+    /// 移行の後処理をバックグラウンドで行う。
+    /// サムネイルは旧キャッシュ（平文・元の解像度）から移さず .data から作り直し、旧キャッシュは消す
+    private func finishLibraryMigration(_ prepared: LibraryProvider.Prepared) {
+        let clipIDs = prepared.migrationReport?.clipIDsNeedingThumbnail ?? []
+        let historyStore = prepared.historyStore
+        DispatchQueue.global(qos: .utility).async {
+            if !clipIDs.isEmpty {
+                let count = ClipThumbnail.regenerate(clipIDs: clipIDs, in: historyStore)
+                NSLog("[AppDelegate] regenerated \(count) of \(clipIDs.count) thumbnails after migration")
+            }
+            ClipThumbnail.removeLegacyCache()
+        }
+    }
+
+    /// 暗号鍵が使えないときに、その起動中の制限を一度だけ知らせる。
+    /// 履歴はメモリ上だけになり、スニペットは表示も編集もできない（データは消していない）
+    private func notifyIfLibraryUnavailable(_ prepared: LibraryProvider.Prepared) {
+        guard prepared.availability != .ready else { return }
+        NSLog("[AppDelegate] library unavailable: \(prepared.availability)")
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            NSAlert.showNotice(message: L10n.libraryUnavailableTitle, informative: L10n.libraryUnavailableMessage)
         }
     }
 
@@ -313,7 +328,7 @@ extension AppDelegate: NSApplicationDelegate {
         let existingApp = NSRunningApplication.runningApplications(withBundleIdentifier: bundleIdentifier)
             .first { $0.processIdentifier != currentProcessIdentifier && !$0.isTerminated }
         guard let runningApp = existingApp else { return }
-        runningApp.activate(options: [.activateIgnoringOtherApps])
+        runningApp.activate(options: [])
         NSApp.terminate(nil)
     }
 

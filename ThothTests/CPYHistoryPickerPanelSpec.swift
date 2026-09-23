@@ -3,8 +3,11 @@ import Nimble
 import AppKit
 @testable import Thoth
 
-/// 履歴パネルの UI 構成（行構造・設定連動・サブパネル表示行）のスペック。
-/// パネルはヘッドレスで生成し、表示（show）は行わない
+// 履歴パネルの UI 構成（行構造・設定連動・サブパネル表示行・キー操作）のスペック。
+// パネルはヘッドレスで生成し、表示（show）は行わない
+
+// BDD スペックは多数の it ブロックを含み型本体が長くなるため型長ルールを緩める
+// swiftlint:disable:next type_body_length
 class CPYHistoryPickerPanelSpec: QuickSpec {
 
     // MARK: - Helpers
@@ -38,14 +41,10 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     private static func makeItem(_ hash: String, title: String, index: Int,
                           primaryType: NSPasteboard.PasteboardType = .deprecatedString,
-                          thumbnailPath: String = "", isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
-        let clip = CPYClip()
-        clip.dataHash = hash
-        clip.title = title
-        clip.primaryType = primaryType.rawValue
-        clip.dataPath = "/tmp/\(hash).data"
-        clip.thumbnailPath = thumbnailPath
-        clip.isColorCode = isColorCode
+                          hasThumbnail: Bool = false, isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
+        let clip = ClipRecord(id: hash, dataPath: "/tmp/\(hash).data", title: title,
+                              primaryType: primaryType.rawValue, updateTime: 0,
+                              hasThumbnail: hasThumbnail, isColorCode: isColorCode)
         return CPYHistoryPickerPanel.ClipItem(clip: clip, index: index)
     }
 
@@ -68,6 +67,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
         rowStructureSpecs()
         subEntrySpecs()
         subPanelWidthSpecs()
+        subPanelKeySpecs()
         dismissBehaviorSpecs()
     }
 
@@ -264,25 +264,25 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
             it("サムネイルは種別と設定の組み合わせで表示可否が決まる") {
                 let image = self.makeItem("img", title: "(Image)", index: 0,
-                                          primaryType: .deprecatedTIFF, thumbnailPath: "thumb-img")
+                                          primaryType: .deprecatedTIFF, hasThumbnail: true)
                 let color = self.makeItem("col", title: "#FF0000", index: 1,
-                                          thumbnailPath: "thumb-col", isColorCode: true)
+                                          hasThumbnail: true, isColorCode: true)
                 let group = CPYHistoryPickerPanel.ClipGroup(startIndex: 0, title: "", clips: [image, color])
 
                 // 両方 ON → 両方サムネイル表示
                 let bothPanel = CPYHistoryPickerPanel(clips: [image, color],
                                                       settings: self.makeSettings(showImage: true, showColorCode: true))
                 let bothEntries = bothPanel.makeSubEntries(for: group)
-                expect(bothEntries[0].thumbnailPath) == "thumb-img"
-                expect(bothEntries[1].thumbnailPath) == "thumb-col"
+                expect(bothEntries[0].showsThumbnail) == true
+                expect(bothEntries[1].showsThumbnail) == true
                 bothPanel.close()
 
                 // 画像 OFF・カラー ON → 画像のみ非表示
                 let colorOnlyPanel = CPYHistoryPickerPanel(clips: [image, color],
                                                            settings: self.makeSettings(showImage: false, showColorCode: true))
                 let colorOnlyEntries = colorOnlyPanel.makeSubEntries(for: group)
-                expect(colorOnlyEntries[0].thumbnailPath).to(beNil())
-                expect(colorOnlyEntries[1].thumbnailPath) == "thumb-col"
+                expect(colorOnlyEntries[0].showsThumbnail) == false
+                expect(colorOnlyEntries[1].showsThumbnail) == true
                 colorOnlyPanel.close()
             }
 
@@ -298,6 +298,80 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
         }
     }
 
+    // MARK: - Sub Panel Keys
+
+    /// サブパネルモードのキー操作。↓↑ は検索入力中もクリップ間を移動し、
+    /// j / k は検索入力中は横取りせず文字入力に譲る（通常モードと同じ約束）。
+    ///
+    /// 以前は `case 125, 38 where !searching` と 1 つの case に書き、where が
+    /// j にしか掛からないことに頼っていた（コンパイラが警告する書き方）。
+    /// 警告を「両方に where を付ける」形で消すと、検索中に ↓ が効かなくなる
+    private static func subPanelKeySpecs() {
+        describe("サブパネルモードのキー操作") {
+            func keyDown(_ character: String, keyCode: UInt16) -> NSEvent {
+                return NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: [],
+                                        timestamp: 0, windowNumber: 0, context: nil,
+                                        characters: character, charactersIgnoringModifiers: character,
+                                        isARepeat: false, keyCode: keyCode)!
+            }
+            let downArrow = keyDown(String(UnicodeScalar(NSDownArrowFunctionKey)!), keyCode: 125)
+            let upArrow = keyDown(String(UnicodeScalar(NSUpArrowFunctionKey)!), keyCode: 126)
+            let jKey = keyDown("j", keyCode: 38)
+            let kKey = keyDown("k", keyCode: 40)
+
+            /// 3 件入りのサブパネルに入り、先頭を選んだ状態のパネルを作る。
+            /// パネル・サブパネルとも画面には出さない
+            func makePanelInSubPanelMode(searching: Bool) -> CPYHistoryPickerPanel {
+                let clips = (0..<3).map { self.makeItem("c\($0)", title: "clip \($0)", index: $0) }
+                let panel = CPYHistoryPickerPanel(clips: clips, showsFixedSections: false,
+                                                  settings: self.makeSettings())
+                let sub = CPYHistorySubPanel()
+                sub.setEntries(clips.map {
+                    CPYHistorySubPanel.Entry(clip: $0, number: $0.index, showsNumber: false,
+                                             toolTip: nil, showsThumbnail: false, showsTypeIcon: true)
+                })
+                panel.subPanel = sub
+                panel.enterSubPanel()
+                if searching { panel.makeFirstResponder(panel.searchField) }
+                return panel
+            }
+
+            it("検索入力中でも ↓↑ でサブパネル内のクリップを移動する") {
+                let panel = makePanelInSubPanelMode(searching: true)
+                defer { panel.close() }
+                guard panel.searchField.currentEditor() != nil else {
+                    fail("検索欄が編集状態になっていない（前提が崩れている）")
+                    return
+                }
+                expect(panel.handleKeyDown(downArrow)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 1
+                expect(panel.handleKeyDown(upArrow)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 0
+            }
+
+            it("検索入力中の j / k は横取りせず、選択も動かさない") {
+                let panel = makePanelInSubPanelMode(searching: true)
+                defer { panel.close() }
+                guard panel.searchField.currentEditor() != nil else {
+                    fail("検索欄が編集状態になっていない（前提が崩れている）")
+                    return
+                }
+                expect(panel.handleKeyDown(jKey)) == false
+                expect(panel.handleKeyDown(kKey)) == false
+                expect(panel.subPanel?.selectedClipIndex) == 0
+            }
+
+            it("検索入力していなければ j / k でサブパネル内のクリップを移動する") {
+                let panel = makePanelInSubPanelMode(searching: false)
+                defer { panel.close() }
+                expect(panel.handleKeyDown(jKey)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 1
+                expect(panel.handleKeyDown(kKey)) == true
+                expect(panel.subPanel?.selectedClipIndex) == 0
+            }
+        }
+    }
+
     // MARK: - Sub Panel Width
 
     private static func subPanelWidthSpecs() {
@@ -305,7 +379,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
             func entry(_ title: String) -> CPYHistorySubPanel.Entry {
                 let clip = self.makeItem("w", title: title, index: 0)
                 return CPYHistorySubPanel.Entry(clip: clip, number: 0, showsNumber: false,
-                                                toolTip: nil, thumbnailPath: nil, showsTypeIcon: true)
+                                                toolTip: nil, showsThumbnail: false, showsTypeIcon: true)
             }
 
             it("タイトルが長いほど幅が広がる") {

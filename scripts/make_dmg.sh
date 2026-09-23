@@ -20,11 +20,13 @@ set -euo pipefail
 # リポジトリルートへ移動（scripts/ の 1 つ上）
 cd "$(cd "$(dirname "$0")/.." && pwd)"
 
-WORKSPACE="Thoth.xcworkspace"
+PROJECT="Thoth.xcodeproj"
 SCHEME="Thoth"
 APP_NAME="Thoth.app"
 BUILD_DIR="build"
 DERIVED="$BUILD_DIR/DerivedData"
+# Swift Package の取得先。ライセンス一覧の生成と共有して、同じものを 2 回取得しない
+SOURCE_PACKAGES="$BUILD_DIR/SourcePackages"
 INFO_PLIST="Thoth/Supporting Files/Info.plist"
 
 # バージョンを Info.plist（CFBundleShortVersionString）から取得
@@ -41,13 +43,29 @@ else
   echo "==> リリース日: $RELEASE_DATE (タグ v.$VERSION より)"
 fi
 
+echo "==> 開発ツールを用意 (scripts/tool.sh --install)"
+# SwiftGen・BartyCrouch はビルドフェーズで使う。取得済みなら何もしない
+scripts/tool.sh --install
+
+echo "==> サードパーティライセンス一覧を作り直す (scripts/update-acknowledgements.swift)"
+# Swift Package を取得し、その LICENSE から Acknowledgements.md と NOTICE を作る。
+# 配布物に同梱する一覧を、固定しているパッケージの版と確実に揃えるため、毎回実行する
+scripts/update-acknowledgements.swift
+if ! git diff --quiet -- Thoth/Resources/Acknowledgements.md NOTICE; then
+  echo "警告: ライセンス一覧が更新されました。Thoth/Resources/Acknowledgements.md と NOTICE をコミットしてください。" >&2
+fi
+
 echo "==> Release ビルド (Thoth v$VERSION)"
-# SwiftLint はビルド時に走るが、配布ビルドを速くするためスキップする
+# SwiftLint はビルド時に走るが、配布ビルドを速くするためスキップする。
+# ARCHS はコマンドラインで渡すと Swift Package のターゲットにも効く
+# （プロジェクトの ARCHS = arm64 はパッケージには引き継がれず、x86_64 も入ってしまう）
 SKIP_SWIFTLINT=1 xcodebuild \
-  -workspace "$WORKSPACE" \
+  -project "$PROJECT" \
   -scheme "$SCHEME" \
   -configuration Release \
   -derivedDataPath "$DERIVED" \
+  -clonedSourcePackagesDirPath "$SOURCE_PACKAGES" \
+  ARCHS=arm64 \
   THOTH_RELEASE_DATE="$RELEASE_DATE" \
   build
 

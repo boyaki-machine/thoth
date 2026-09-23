@@ -27,6 +27,12 @@ struct Environment {
     let menuManager: MenuManager
     let secureMenuService: SecureMenuService
     let secureSelectionContext: SecureSelectionContext
+    // 保存層（履歴・スニペット）。起動時に LibraryProvider が用意したものへ差し替える
+    let historyStore: HistoryStore
+    let snippetStore: SnippetStore
+    /// 保存層が使えるか。false のとき（暗号鍵を読み出せない起動）は履歴をメモリ上だけで記録し、
+    /// スニペットは表示も編集もしない（一覧が空に見えて作り直してしまうのを防ぐ）
+    let isLibraryUsable: Bool
 
     let defaults: UserDefaults
 
@@ -40,6 +46,9 @@ struct Environment {
          menuManager: MenuManager = MenuManager(),
          secureMenuService: SecureMenuService = SecureMenuService(),
          secureSelectionContext: SecureSelectionContext = SecureSelectionContext(),
+         historyStore: HistoryStore = LibraryProvider.placeholder.historyStore,
+         snippetStore: SnippetStore = LibraryProvider.placeholder.snippetStore,
+         isLibraryUsable: Bool = true,
          defaults: UserDefaults = .standard) {
 
         self.clipService = clipService
@@ -51,6 +60,9 @@ struct Environment {
         self.menuManager = menuManager
         self.secureMenuService = secureMenuService
         self.secureSelectionContext = secureSelectionContext
+        self.historyStore = historyStore
+        self.snippetStore = snippetStore
+        self.isLibraryUsable = isLibraryUsable
         self.defaults = defaults
     }
 

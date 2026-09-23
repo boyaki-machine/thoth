@@ -1,3 +1,5 @@
+import Foundation
+import Security
 import Quick
 import Nimble
 @testable import Thoth

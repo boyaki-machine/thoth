@@ -12,7 +12,6 @@
 
 import Foundation
 import Cocoa
-import RealmSwift
 import Sauce
 
 /// ペースト操作全般を担うサービス。
@@ -68,12 +67,11 @@ final class PasteService {
 // MARK: - Paste by Primary Key
 extension PasteService {
     /// 履歴クリップを主キーで取得してペーストする。
-    /// メニュー項目のアクション（AppDelegate）から Realm アクセスを分離するための入口。
+    /// メニュー項目のアクション（AppDelegate）から保存層へのアクセスを分離するための入口。
     /// - Returns: クリップが見つからなかった場合 false
     @discardableResult
     func pasteClip(withPrimaryKey primaryKey: String) -> Bool {
-        let realm = RealmProvider.defaultRealm()
-        guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: primaryKey) else { return false }
+        guard let clip = AppEnvironment.current.historyStore.clip(id: primaryKey) else { return false }
         paste(with: clip)
         return true
     }
@@ -82,8 +80,7 @@ extension PasteService {
     /// - Returns: スニペットが見つからなかった場合 false
     @discardableResult
     func pasteSnippet(withPrimaryKey primaryKey: String) -> Bool {
-        let realm = RealmProvider.defaultRealm()
-        guard let snippet = realm.object(ofType: CPYSnippet.self, forPrimaryKey: primaryKey) else { return false }
+        guard let snippet = AppEnvironment.current.snippetStore.snippet(id: primaryKey) else { return false }
         copyToPasteboard(with: snippet.content)
         paste()
         return true
@@ -93,24 +90,17 @@ extension PasteService {
 // MARK: - Copy
 extension PasteService {
     private static func unarchiveClipData(atPath path: String) -> CPYClipData? {
-        // ClipDataStore が暗号化形式（CLPYDAT）と旧平文形式を自動判別して読み込む。
-        // requiresSecureCoding=false は CPYClipData が旧式 NSCoding（NSImage 等を含む）で、
-        // SecureCoding 化すると既存の全履歴が読めなくなるため据え置き。
-        // 改竄検知は ClipDataStore の GCM 認証タグが担う
-        guard let fileData = ClipDataStore.shared.read(fromPath: path),
-              let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
-        unarchiver.requiresSecureCoding = false
-        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData
+        // ClipDataStore が暗号化形式（CLPYDAT）と旧平文形式を自動判別して読み込む
+        guard let fileData = ClipDataStore.shared.read(fromPath: path) else { return nil }
+        return CPYClipData.unarchived(from: fileData)
     }
 
     /// クリップをクリップボードへ書き込んでペーストする。
     /// アンアーカイブ（画像等は数 MB 規模）はバックグラウンドで行い UI をブロックしない。
     /// 修飾キーの押下状態に応じてプレーンテキスト化・履歴削除も行う
-    func paste(with clip: CPYClip) {
-        guard !clip.isInvalidated else { return }
-        // Realm オブジェクトはスレッドを越えられないため、必要な値を先に読み出しておく
+    func paste(with clip: ClipRecord) {
         let dataPath = clip.dataPath
-        let dataHash = clip.dataHash
+        let clipID = clip.id
 
         // Handling modifier actions（NSEvent.modifierFlags は呼び出し元スレッドで評価する）
         let isPastePlainText = self.isPastePlainText
@@ -140,9 +130,7 @@ extension PasteService {
             // Delete clip
             if isDeleteHistory || isPasteAndDeleteHistory {
                 DispatchQueue.main.async {
-                    let realm = RealmProvider.defaultRealm()
-                    guard let clip = realm.object(ofType: CPYClip.self, forPrimaryKey: dataHash), !clip.isInvalidated else { return }
-                    AppEnvironment.current.clipService.delete(with: clip)
+                    AppEnvironment.current.clipService.delete(clipID: clipID)
                 }
             }
         }
@@ -188,7 +176,7 @@ extension PasteService {
         }
     }
 
-    func copyToPasteboard(with clip: CPYClip) {
+    func copyToPasteboard(with clip: ClipRecord) {
         lock.lock(); defer { lock.unlock() }
 
         guard let data = Self.unarchiveClipData(atPath: clip.dataPath) else { return }
@@ -287,7 +275,7 @@ extension PasteService {
             return
         }
 
-        let vKeyCode = Sauce.shared.keyCode(by: .v)
+        let vKeyCode = Sauce.shared.keyCode(for: .v)
         DispatchQueue.main.async {
             let source = CGEventSource(stateID: .combinedSessionState)
             // Disable local keyboard events while pasting

@@ -13,43 +13,52 @@ For how to use the app, see [../README.md](../README.md). For data formats, cryp
 
 | Item | Value |
 |---|---|
-| Supported OS | macOS 11.0 or later |
+| Supported OS | macOS 15.0 or later |
 | Architecture | Apple Silicon (arm64) only |
-| Deployment target | `MACOSX_DEPLOYMENT_TARGET = 11.0` |
+| Deployment target | `MACOSX_DEPLOYMENT_TARGET = 15.0` |
 
-macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AES-GCM etc., macOS 10.15+). Since Apple Silicon Macs cannot boot macOS earlier than 11, the project is an arm64-only build and drops 10.x support.
+macOS 15.0 is the minimum requirement so that the app only runs on macOS versions that still receive Apple's security updates (raised from macOS 11.0 in v1.4.0; macOS 13 is out of support and 14 is close to it). Because the app handles passwords and TOTP secrets, running it on an OS that no longer gets vulnerability fixes is not supported. The build is arm64-only for Apple Silicon; Intel Macs are not supported (macOS 15 itself still runs on some Intel Macs, so it is the `ARCHS = arm64` setting that excludes them).
 
 ### Development Environment (verified)
 
 | Tool | Version |
 |---|---|
-| macOS | 26 series (Apple Silicon) |
-| Xcode | 26 series (verified with 26.6) |
+| macOS | 27 series (Apple Silicon) |
+| Xcode | 27 series (verified with 27.0) |
 | Swift | 5.3 (the project's Swift version setting) |
-| SwiftLint | Homebrew version, 0.65 series |
-| Ruby | 3.2 series (for running CocoaPods; some gems fail on 4.0) |
+| SwiftLint / SwiftGen / BartyCrouch | 0.65.1 / 6.6.3 / 4.15.0 (fetched by `scripts/tool.sh`; no separate installation needed) |
 
-### Main Libraries (CocoaPods)
+### Main Libraries (Swift Package Manager)
 
 | Library | Purpose |
 |---|---|
-| RealmSwift | Persistence of clipboard history and snippets (stored encrypted) |
+| RealmSwift | Where history and snippets were stored up to v1.4.x. In v1.5 it is only read as the migration source (to be removed in v1.6.x) |
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| PINCache | Thumbnail image caching |
-| LoginServiceKit | Launch at login |
 | RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
-| LetsMove | Prompt to move to the Applications folder on first launch |
+| LetsMove | Prompt to move to the Applications folder on first launch (vendored as the local package `Packages/LetsMove`) |
 | SwiftHEXColors | HEX color preview |
-| SwiftLint / SwiftGen / BartyCrouch | Code style / code generation (L10n / assets) / localization support |
 | Quick / Nimble | Unit testing (BDD style) |
+
+The development tools (SwiftLint / SwiftGen / BartyCrouch) are not packages: `scripts/tool.sh` downloads the official release zips, pinned by version and SHA-256, into `.tools/` (not tracked by git). They handle code style, code generation (L10n / assets) and syncing XIB strings (BartyCrouch is configured in `.bartycrouch.toml`).
+
+### Managing Dependencies
+
+v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec repository becomes read-only on 2026-12-02). Ruby and `pod install` are no longer needed.
+
+- **Versions are pinned exactly (Exact Version).** The pinned versions are recorded in `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, which is committed. Xcode fetches the packages when it opens the project and when it builds.
+- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script).
+- **RealmSwift is a dynamic framework** (everything else is linked statically). It is registered in the app's "Embed Frameworks" phase so it ships inside the `.app`, and the test target only links it (the tests use Realm directly; embedding it there too would load two copies). Any other dynamic product needs the same treatment.
+- **Realm is 20.0.5.** Up to v1.5.0 (CocoaPods) it was 10.54.6, but the SPM package builds realm-core from source, so it was raised to 20.0.5, which compiles with Xcode 27. `LibraryMigrationSpec` confirms, using a fixed Realm file created with 10.54.6, that the migration source (Realm files written by 10.x) can be read and is not changed by a single byte.
+- **LetsMove does not support SPM upstream, so version 1.25 is vendored in `Packages/LetsMove`.** See `Packages/LetsMove/README.md` for the changes (such as which bundle the translations are read from).
+- CocoaPods frameworks implicitly pulled in AppKit and friends, so some files from that era were missing `import Cocoa` / `import Foundation`. SPM does not do this, so import the frameworks each file uses explicitly.
 
 ### Architectural Assumptions
 
 - **Dependency injection**: services (`Environment`) are accessed via `AppEnvironment.current`. In tests, `AppEnvironment.push/popLast` swap in a mock environment.
-- **Code generation**: `L10n.*` (localized strings) and `Asset.*` (images) are generated by SwiftGen at build time. To add strings/assets, edit the source files (e.g. `Thoth/Resources/*.lproj/Localizable.strings`); `Thoth/Generated/` is regenerated at build time (no manual editing of generated files needed).
+- **Code generation**: `L10n.*` (localized strings) and `Asset.*` (images) are generated by SwiftGen at build time. To add strings/assets, edit the source files (e.g. `Thoth/Resources/*.lproj/Localizable.strings`); `Thoth/Generated/` is regenerated at build time (no manual editing of generated files needed). The SwiftGen and BartyCrouch build phases run before compilation, so a newly added string can be used in the very next build.
 
 ---
 
@@ -70,7 +79,9 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 │   │   ├── Preferences/             Preferences window and its panels
 │   │   ├── Services/                Business logic (see table below)
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
-│   │   ├── Utility/                 CPYUtilities / RealmProvider / ClipDataStore
+│   │   ├── Utility/                 CPYUtilities / ClipDataStore / ClipThumbnail /
+│   │   │                            storage layer (LibraryStore / SwiftDataLibraryStore /
+│   │   │                            FieldCipher / LibraryProvider / LibraryMigrator)
 │   │   └── Views/                   Windows and panels (encryption, password
 │   │       │                        generation, secure picker, etc.)
 │   │       └── SecureInfo/          Secure Info window (two-pane)
@@ -78,7 +89,10 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 │   ├── Generated/                   SwiftGen output (L10n / Asset / Colors)
 │   └── Supporting Files/            Info.plist, etc.
 ├── ThothTests/                      Unit tests (Quick + Nimble)
-├── Podfile                          CocoaPods dependency definitions
+├── Packages/LetsMove/               Local package vendoring LetsMove
+├── scripts/                         tool.sh (runs the development tools), update-acknowledgements.swift
+│                                    (generates the license list), make_dmg.sh (builds the distribution DMG)
+├── NOTICE                           Third-party license list (same content as Acknowledgements.md)
 ├── .swiftlint.yml                   Code style configuration
 ├── README.md                        User-facing overview
 └── docs/
@@ -88,7 +102,7 @@ macOS 11.0 is the minimum requirement because file encryption uses CryptoKit (AE
 
 ### Services Layer (`Thoth/Sources/Services/`)
 
-Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`) are called as static methods on the type itself.
+Business logic is concentrated in the services layer. Stateful services are obtained from `AppEnvironment.current.xxxService`; stateless ones (`SecureItemSearch`, `SecureItemsTransfer`, `QRDecodeService`, `CryptoPasswordQRCodec`, `LoginItemService`) are called as static methods on the type itself.
 
 | Service | Responsibility |
 |---|---|
@@ -107,11 +121,19 @@ Business logic is concentrated in the services layer. Stateful services are obta
 | `DataCleanService` | Periodic history cleanup (over-limit / orphan file deletion) |
 | `ExcludeAppService` | Management of excluded applications |
 | `AccessibilityService` | Checks and guides accessibility permission |
+| `LoginItemService` | Keeps the login item (launch at login) in line with the setting via `SMAppService` (does nothing when already in line; never overrides an item the user turned off in System Settings) |
 | `CodeSignService` | Self-signature stabilization at launch (see below) |
 
 Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 
-- `RealmProvider` — Realm configuration, schema migration, encryption, and app-generated key management
+- `LibraryStore` — Protocols of the storage layer for history and snippets (`HistoryStore` / `SnippetStore`). UI and services only handle value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`) and never touch the backing store directly. Obtained from `AppEnvironment.current.historyStore` / `snippetStore`
+- `SwiftDataLibraryStore` / `LibraryStoreSchema` — The production implementation (SwiftData) and its schema. The `ModelContext` is used only inside a dedicated serial queue
+- `FieldCipher` — Per-field encryption (AES-256-GCM) and the content key (HMAC) for the storage layer; keys are derived from the `.data` key with HKDF
+- `LibraryProvider` — Prepares the storage layer at launch (runs the migration, handles an unavailable key)
+- `LibraryMigrator` — Migration from Realm to SwiftData (reads read-only, verifies, then writes the completion marker)
+- `ClipThumbnail` — Thumbnail generation (downscaled PNG), display, and regeneration after migration
+- `RealmLibraryStore` — Realm implementation of the storage layer; unused in production in v1.5 and kept as the comparison target for the contract tests (removed in v1.6.x)
+- `RealmProvider` — App-generated key (app-keys) management and the configuration used to read the Realm migration source
 - `ClipDataStore` — Encrypted read/write of clip payloads (`.data` files)
 
 ---
@@ -121,7 +143,7 @@ Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 Unit tests (`ThothTests` target / Quick + Nimble) are run via the scheme's Test action (Debug configuration).
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
   -configuration Debug test -destination 'platform=macOS,arch=arm64' ENABLE_TESTABILITY=YES
 ```
 
@@ -138,16 +160,21 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Category | Specs |
 |---|---|
 | Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
-| Models | `FolderSpec`, `SnippetSpec`, `SecureMenuItemSpec` |
+| Models | `SecureMenuItemSpec` |
+| Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
+| Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
+| Migration (Realm → SwiftData) | `LibraryMigrationSpec` (migration from a fixed Realm file, the Realm file staying untouched, verification failure, startup decisions), `LibraryUnavailableSpec` (behavior when the encryption key is unavailable) |
+| Thumbnails | `ClipThumbnailSpec` (actual downscaling, round-trip through the storage layer, regeneration after migration) |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
-| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings), `ClipFullTextIndexerSpec` (full-text index and search filter) |
+| History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
 | Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
-| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec` |
+| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved` and is identical to `NOTICE`), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
+| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
@@ -190,24 +217,29 @@ How useful the output above is comes down almost entirely to how the spec is wri
 
 ### 4-0. First-time Setup
 
-```bash
-# Xcode Command Line Tools
-xcode-select --install
+1. **Install Xcode itself (27 series).** `xcodebuild` needs the full Xcode; the Command Line Tools alone are not enough.
+2. **Select that Xcode and finish its first-launch setup.**
 
-# Homebrew (if not installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```bash
+   # Check which Xcode is selected (/Applications/Xcode.app/Contents/Developer is what you want)
+   xcode-select -p
+   # If the Command Line Tools are selected, switch to the full Xcode
+   sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+   # Accept the license and install additional components (launching Xcode once does the same)
+   sudo xcodebuild -license accept
+   xcodebuild -runFirstLaunch
+   ```
 
-# SwiftLint (for code style checking)
-brew install swiftlint
+3. **Do the first build while online.** Xcode and `xcodebuild` fetch the dependencies (Swift packages), and `scripts/tool.sh` fetches the development tools (SwiftLint / SwiftGen / BartyCrouch), automatically during the build. To fetch them ahead of time:
 
-# Dependencies (run under Ruby 3.x)
-export PATH="/opt/homebrew/opt/ruby@3.2/bin:$PATH"
-gem install bundler
-bundle install --path=vendor/bundle
-bundle exec pod install
-```
+   ```bash
+   xcodebuild -resolvePackageDependencies -project Thoth.xcodeproj -scheme Thoth   # Swift packages
+   scripts/tool.sh --install                                                     # development tools
+   ```
 
-> **Note:** Running `pod install` overwrites the manual patch to `Pods/LoginServiceKit` (the fix that uses `SMAppService` on macOS 13+). After `pod install`, verify the build/behavior and re-apply the patch if needed.
+Homebrew, Ruby and CocoaPods (`bundle exec pod install`) are not needed. Open `Thoth.xcodeproj` in Xcode (there is no `Thoth.xcworkspace`).
+
+> **Switching an existing working copy from the CocoaPods era (up to v1.5.0):** the leftover `Pods/`, `vendor/` and `.bundle/` are no longer used (none of them are tracked by git, so you may delete them; building a commit from v1.5.0 or earlier again needs `bundle exec pod install` once more). If a `Thoth.xcworkspace` folder is still there, don't open it; open `Thoth.xcodeproj` instead.
 
 ### 4-1. Unit Tests (pre-build check)
 
@@ -218,12 +250,15 @@ Run the command in "3. Testing" above and confirm `** TEST SUCCEEDED **`.
 Run SwiftLint (config: `.swiftlint.yml`, targets: `Thoth/Sources` and `ThothTests`).
 
 ```bash
-swiftlint   # run from the project root
+scripts/tool.sh swiftlint   # run from the project root
 ```
 
-`Done linting! Found 0 violations` means there are no style violations.
+It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
 
-> **Note:** The CocoaPods `Pods/SwiftLint` (0.65 series) works correctly on Apple Silicon, so linting runs during the Xcode build script phase. The Homebrew `swiftlint` runs the same configuration standalone. The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
+- **`serious` (errors) must be 0.** Errors also make the build script phase fail.
+- **Existing warnings remain (70 as of v1.5.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
+
+> **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 
 Key style values (`.swiftlint.yml`):
 
@@ -236,37 +271,47 @@ Key style values (`.swiftlint.yml`):
 
 ### 4-3. Build (Debug / Release)
 
-Linting runs during the build; add `SKIP_SWIFTLINT=1` to skip it for faster CLI builds.
+Linting runs during the build; add `SKIP_SWIFTLINT=1` to skip it for faster CLI builds. SwiftGen (generating `Thoth/Generated/`) and BartyCrouch (syncing XIB strings) also run on every build, before compilation.
 
 ```bash
 # Clean (as needed)
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug clean
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release clean
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug clean
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release clean
 # For a fully clean state, also delete DerivedData
+# (this also removes the fetched Swift packages, which the next build fetches again; needs network)
 rm -rf ~/Library/Developer/Xcode/DerivedData/Thoth-*
+# Output of -derivedDataPath build/DerivedData below and of make_dmg.sh lives under build/
+rm -rf build
 
 # Debug build
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Debug build
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug build
 
 # Release build
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth -configuration Release build
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release build
 ```
 
 To specify the output location:
 
 ```bash
-SKIP_SWIFTLINT=1 xcodebuild -workspace Thoth.xcworkspace -scheme Thoth \
-  -configuration Release build -derivedDataPath build/DerivedData
+SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
+  -configuration Release build -derivedDataPath build/DerivedData ARCHS=arm64
 # → produced at build/DerivedData/Build/Products/Release/Thoth.app
 ```
+
+Passed on the command line, `ARCHS=arm64` also applies to the Swift package targets, so the bundled `RealmSwift.framework` is arm64 only too (it works without it, but then x86_64 is included and the app is larger; `make_dmg.sh` passes the same setting).
 
 Launch / install the built app:
 
 ```bash
 open build/DerivedData/Build/Products/Release/Thoth.app
-# or install into Applications
+
+# or install into Applications (quit the running Thoth and delete the old app before copying)
+osascript -e 'quit app "Thoth"'
+rm -rf /Applications/Thoth.app
 cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
+
+> **Why delete the old app first:** `cp -R` does not replace an existing `Thoth.app`; it merges into it. A `Thoth.app` from v1.5.0 or earlier (CocoaPods) has frameworks in `Contents/Frameworks/` that are no longer used, and leaving them there breaks the app's signature. Deleting the app does not delete history, snippets or secure items (`~/Library/Application Support/` and the keychain).
 
 ### 4-4. Building a Distribution DMG (for yourself / family)
 
@@ -278,14 +323,16 @@ A script builds the Release app and packages a DMG in one command.
 
 **What it does:**
 
-1. Builds the `Release` configuration (output under `build/DerivedData`)
-2. Stages `Thoth.app` plus a symlink to `/Applications`
-3. Creates a compressed DMG (UDZO) using the built-in `hdiutil`
+1. Prepares the development tools (`scripts/tool.sh --install`; does nothing if already fetched)
+2. Fetches the Swift packages into `build/SourcePackages` and regenerates the third-party license list (`scripts/update-acknowledgements.swift`; warns you to commit it if the list changed)
+3. Builds the `Release` configuration (output under `build/DerivedData`; passes `ARCHS=arm64` so the packages are also built for arm64 only)
+4. Stages `Thoth.app` plus a symlink to `/Applications`
+5. Creates a compressed DMG (UDZO) using the built-in `hdiutil`
 
 **Output:** `build/Thoth-<version>.dmg` (the version is read automatically from `CFBundleShortVersionString` in `Info.plist`; `build/` is in `.gitignore`, so it is not committed)
 
 **Release date:** the release date shown in the Version tab is derived automatically
-from the date the version tag `v<version>` was applied on `main` (the annotated tag's
+from the date the version tag `v.<version>` (e.g. `v.1.5.1`) was applied on `main` (the annotated tag's
 tagger date). `make_dmg.sh` reads that date and injects it via the `THOTH_RELEASE_DATE`
 build setting into `Info.plist`'s `ThothReleaseDate` (no manual update needed). Therefore,
 run `make_dmg.sh` **after merging `develop` into `main` and creating the tag**. A
@@ -293,11 +340,12 @@ development build without a tag leaves it empty, and the release date is not sho
 
 **Requirements:**
 
-- macOS + Xcode (`xcodebuild`). `hdiutil` ships with macOS, so no extra install is needed
+- macOS + the full Xcode (`xcodebuild`; complete the setup in 4-0 first). `hdiutil` ships with macOS, so no extra install is needed
+- Network access the first time (to fetch the development tools into `.tools/` and the Swift packages into `build/SourcePackages`)
 - Apple Silicon (arm64)-only build
 - Ad-hoc signing (no Developer ID signature or notarization)
 
-**Usage:** open the produced DMG and drag `Thoth.app` into `Applications`.
+**Usage:** quit the running Thoth, then open the produced DMG and drag `Thoth.app` into `Applications` (if it is already there, choose "Replace"; Finder's replace swaps the whole app, so nothing gets merged the way `cp -R` does).
 
 > **Note (first launch on the target Mac):** because the build is ad-hoc-signed,
 > Gatekeeper blocks it. On the target Mac, either right-click → **Open** to allow it

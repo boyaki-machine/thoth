@@ -17,6 +17,7 @@ import RealmSwift
 /// クリップの実データ（全ペーストボード型のアーカイブ）は Realm には持たず、
 /// dataPath が指す .data ファイル（ClipDataStore が暗号化管理）に保存する。
 /// Realm 側はメニュー表示に必要なメタデータのみを持つ。
+/// 読み書きは RealmHistoryStore を通し、アプリ側は ClipRecord だけを扱う。
 final class CPYClip: Object {
 
     // MARK: - Properties

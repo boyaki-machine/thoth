@@ -26,6 +26,10 @@ class CPYUpdatesPreferenceViewController: NSViewController {
     @objc private func openOriginalRepository() {
         NSWorkspace.shared.open(Constants.Application.originalRepositoryURL)
     }
+
+    @objc private func openThirdPartyLicenses() {
+        CPYThirdPartyLicensesWindowController.shared.showWindow(self)
+    }
 }
 
 // MARK: - Layout
@@ -59,5 +63,16 @@ fileprivate extension CPYUpdatesPreferenceViewController {
         linkButton.autoresizingMask = [.maxXMargin, .minYMargin]
         view.addSubview(linkButton)
         // バージョン表記は「バージョン」タブ（CPYVersionPreferenceViewController）へ移設
+
+        // サードパーティライセンス一覧を開くボタン
+        let licensesButton = NSButton(
+            title: L10n.updatesThirdPartyLicensesButton,
+            target: self,
+            action: #selector(openThirdPartyLicenses)
+        )
+        licensesButton.bezelStyle = .rounded
+        licensesButton.frame = NSRect(x: 165, y: 10, width: 150, height: 24)
+        licensesButton.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
+        view.addSubview(licensesButton)
     }
 }

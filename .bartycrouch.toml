@@ -1,0 +1,13 @@
+# BartyCrouch 4 の設定（ビルドフェーズ「BartyCrouch」から `bartycrouch update` で実行）。
+# 3.x の `bartycrouch interfaces -p $PROJECT_DIR` と同じく、Base.lproj の XIB から
+# 各言語の .strings へ文言キーを同期するだけにとどめる（code / transform / normalize は使わない）。
+[update]
+tasks = ["interfaces"]
+
+[update.interfaces]
+paths = ["Thoth"]
+subpathsToIgnore = [".git", "carthage", "pods", "build", ".build", "docs", "vendor"]
+defaultToBase = false
+ignoreEmptyStrings = false
+unstripped = false
+ignoreKeys = ["#bartycrouch-ignore!", "#bc-ignore!", "#i!"]

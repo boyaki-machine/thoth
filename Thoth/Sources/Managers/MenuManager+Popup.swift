@@ -92,15 +92,14 @@ extension MenuManager {
         dismissClipMenus()
         dismissSecurePicker()
         dismissHistoryPicker()
-        guard RealmProvider.isReady else { return }
+        guard LibraryProvider.isReady else { return }
 
         let maxHistory = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let maxTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)
         let ascending = !AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        let clipResults = realm.objects(CPYClip.self)
-            .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
+        let clipRecords = AppEnvironment.current.historyStore.clips(ascending: ascending)
         var clips = [CPYHistoryPickerPanel.ClipItem]()
-        for clip in clipResults {
+        for clip in clipRecords {
             clips.append(CPYHistoryPickerPanel.ClipItem(clip: clip, index: clips.count,
                                                         maxTitleLength: maxTitleLength))
             if clips.count >= maxHistory { break }
@@ -113,8 +112,10 @@ extension MenuManager {
             let callerApp = panel?.callerApp
             self?.dismissHistoryPicker()
             // ペースト先アプリをアクティブ化してから貼り付ける。
-            // activate は非同期で完了するため少し待ってから送出する
-            callerApp?.activate(options: [.activateIgnoringOtherApps])
+            // activate は非同期で完了するため少し待ってから送出する。
+            // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない。
+            //   呼び出し時点で Thoth がアクティブなので、他アプリへの切り替えは通る）
+            callerApp?.activate(options: [])
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 if !AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: dataHash) {
                     NSSound.beep()
@@ -229,7 +230,8 @@ extension MenuManager {
                 self?.secureCloseObserver = nil
                 // ペースト先アプリをアクティブ化してから出力する。
                 // activate は非同期で完了するため少し待ってから送出する。
-                callerApp?.activate(options: [.activateIgnoringOtherApps])
+                // （.activateIgnoringOtherApps は macOS 14 以降効果がないため指定しない）
+                callerApp?.activate(options: [])
                 self?.outputSecureSelection(selection)
             }
             // 選択パネルからもメインメニューと同じセキュア情報確認ウィンドウを開く。
@@ -295,7 +297,7 @@ extension MenuManager {
         }
     }
 
-    func popUpSnippetFolder(_ folder: CPYFolder) {
+    func popUpSnippetFolder(_ folder: SnippetFolderRecord) {
         // セキュアメニュー・履歴検索パネルとは排他表示: 表示中のパネルを閉じる
         dismissSecurePicker()
         dismissHistoryPicker()
@@ -311,7 +313,6 @@ extension MenuManager {
         let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
         let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
         folder.snippets
-            .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
             .filter { $0.enable }
             .forEach { snippet in
                 let subMenuItem = makeSnippetMenuItem(snippet, listNumber: index, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)

@@ -261,10 +261,6 @@
 
 "Crypto Fingerprint Password Saved" = "𓂭𓊃 𓊪𓋴𓅱𓂋𓂧𓊃 𓄤𓏞.";
 
-"Realm Open Failed Title" = "𓅪 𓂜 𓃹𓈖 𓏛𓏛𓏛";
-"Realm Open Failed Message" = "𓂜 𓃹𓈖 𓏛𓏛𓏛 𓈖 𓉔𓇋𓋴𓏏𓂋𓏭. 𓊃𓊃 𓅠𓅪 𓂋𓊪𓅱 𓏛 𓅪. 𓂻 𓆣 𓂋𓊪𓅱 𓆣 𓏛𓏛𓏛 (𓂧𓃭𓏏𓅪 𓉔𓇋𓋴𓏏𓂋𓏭 𓎟).";
-"Realm Open Failed Quit" = "𓂻";
-"Realm Open Failed Reset" = "𓆣 𓏛𓏛𓏛";
 
 "Add TOTP" = "𓄿𓂧𓂧 𓇳𓊃 (TOTP)...";
 
@@ -306,3 +302,6 @@
 "Updates Respect Message" = "𓊪𓄿 𓐍𓏏𓏛 𓅐 𓅓 𓍹𓎡𓃭𓇋𓊪𓇋𓍺. 𓌻𓏏𓀁 𓎟 𓂋 𓏞𓏥 𓈖 𓍹𓎡𓃭𓇋𓊪𓇋𓍺 𓂋𓊪𓅱 ClipMenu (naotaka). 𓊪𓄿 𓐍𓏏𓏛 𓁷 𓌻𓂋𓏛 𓎟 𓈖𓋴𓈖.";
 
 "Updates Original Repository Link" = "𓂻 𓂋 𓉐 𓈖 𓍹𓎡𓃭𓇋𓊪𓇋𓍺";
+"Third Party Licenses" = "𓇋𓏏𓈖 𓂋𓐍𓏏";
+"Updates Third Party Licenses Button" = "𓇋𓏏𓈖 𓂋𓐍𓏏…";
+"Third Party Licenses Load Failed" = "𓂋𓅱𓄿 𓇋𓏏𓈖 𓂋𓐍𓏏 𓈖 𓄋.";

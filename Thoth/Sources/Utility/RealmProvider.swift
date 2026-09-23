@@ -15,6 +15,11 @@ import Security
 
 /// Realm データベースの構成・スキーマ移行・保存時暗号化を一元管理するユーティリティ。
 ///
+/// v1.5 からは保存先が SwiftData に移ったため、ここは (1) アプリ生成鍵（app-keys）の管理と
+/// (2) 移行元の Realm を読むための構成（makeBaseConfiguration）にだけ使う。
+/// 起動時に Realm を開く処理（旧 warmUp・「リセット」ダイアログ）は削除した。
+/// Realm のライブラリと合わせて v1.6.x で整理する。
+///
 /// ## 暗号化の設計
 /// - クリップボード履歴・スニペットは従来ディスクに平文で保存されていた。
 ///   Realm の保存時暗号化（AES-256）を有効化し、64 バイトの暗号鍵を
@@ -105,51 +110,7 @@ enum RealmProvider {
         }
     }
 
-    // MARK: - Setup (起動時に一度だけ呼ぶ)
-
-    /// Realm の準備（warmUp）が完了したか。
-    /// 完了前にメニュー再構築などのコードが Realm に触れて
-    /// 「暗号鍵つき構成で移行前の平文ファイルを開く」事故を防ぐためのガード。
-    /// テスト実行時は各 spec が in-memory Realm を自前で用意するため常に true。
-    /// メインスレッドからのみ読み書きすること。
-    private(set) static var isReady = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-
-    /// デフォルト Realm 構成（スキーマバージョン・移行ブロック・暗号鍵）を設定する。
-    /// Keychain の鍵取得のみで数 ms で完了する軽量な同期処理。
-    /// AppEnvironment 経由で Realm に触れる前（起動処理の最初）に呼ぶこと。
-    static func setupConfiguration() {
-        var config = makeBaseConfiguration()
-
-        // テスト実行時は暗号化しない（各 spec が in-memory Realm に差し替えるため）
-        let isTesting = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        if !isTesting, let key = appEncryptionKey(for: .realmDatabase) {
-            config.encryptionKey = key
-        }
-
-        Realm.Configuration.defaultConfiguration = config
-    }
-
-    /// 重い初期化（平文→暗号化移行・スキーマ移行・初回オープン）をバックグラウンドで行い、
-    /// 完了後にメインスレッドで completion を呼ぶ。
-    /// Realm に依存するサービスの起動は completion の中で行うこと。
-    static func warmUp(completion: @escaping () -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            let config = Realm.Configuration.defaultConfiguration
-            if let key = config.encryptionKey, let fileURL = config.fileURL {
-                migrateToEncryptedIfNeeded(at: fileURL, key: key)
-            }
-            // ここで一度開いてスキーマ移行を確定させる（従来 Realm.migration() が行っていた処理）
-            let opened = autoreleasepool { (try? Realm(configuration: config)) != nil }
-            DispatchQueue.main.async {
-                if opened {
-                    isReady = true
-                    completion()
-                } else {
-                    handleUnopenableDatabase(config: config, completion: completion)
-                }
-            }
-        }
-    }
+    // MARK: - Configuration
 
     /// 既定構成の Realm を返す（Realm はスレッド毎にインスタンスをキャッシュする）。
     /// 構成（暗号鍵・スキーマ・テスト時の in-memory 差し替え）は defaultConfiguration で
@@ -206,7 +167,7 @@ enum RealmProvider {
 
     // MARK: - Encryption Key Management
 
-    /// app-keys の解決を直列化するロック（setupConfiguration はメイン、
+    /// app-keys の解決を直列化するロック（LibraryProvider.prepare はバックグラウンド、
     /// ClipDataStore.shared の初期化は保存キューから呼ばれ得るため）
     private static let appKeysLock = NSLock()
 
@@ -438,34 +399,5 @@ enum RealmProvider {
             try? fileManager.moveItem(at: backupURL, to: fileURL)
             return false
         }
-    }
-
-    // MARK: - Failure Handling
-
-    /// 暗号化データベースを開けない場合（鍵消失・破損等）の最終手段。
-    /// ユーザーに「終了して再試行」か「履歴・スニペットをリセット」を選ばせる。
-    /// リセットに成功した場合は completion を呼んで起動を続行する。
-    private static func handleUnopenableDatabase(config: Realm.Configuration, completion: @escaping () -> Void) {
-        NSLog("[RealmProvider] failed to open database")
-        let alert = NSAlert()
-        alert.messageText = L10n.realmOpenFailedTitle
-        alert.informativeText = L10n.realmOpenFailedMessage
-        alert.addButton(withTitle: L10n.realmOpenFailedQuit)
-        alert.addButton(withTitle: L10n.realmOpenFailedReset)
-        let response = alert.runModal()
-        if response == .alertSecondButtonReturn, let fileURL = config.fileURL {
-            // 履歴・スニペットを削除して新しいデータベースを作り直す
-            let fileManager = FileManager.default
-            try? fileManager.removeItem(at: fileURL)
-            for suffix in ["lock", "management", "note"] {
-                try? fileManager.removeItem(at: fileURL.appendingPathExtension(suffix))
-            }
-            if (try? Realm()) != nil {
-                isReady = true
-                completion()
-                return
-            }
-        }
-        NSApp.terminate(nil)
     }
 }

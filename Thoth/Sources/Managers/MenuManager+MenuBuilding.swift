@@ -9,8 +9,6 @@
 //
 
 import Cocoa
-import PINCache
-import RealmSwift
 import RxCocoa
 import RxSwift
 
@@ -65,12 +63,12 @@ extension MenuManager {
         var subMenuIndex = 2 + placeInLine
 
         let ascending = !defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        let clipResults = realm.objects(CPYClip.self).sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: ascending)
-        let currentSize = Int(clipResults.count)
+        let clipRecords = AppEnvironment.current.historyStore.clips(ascending: ascending)
+        let currentSize = clipRecords.count
         // 表示設定をループ外で一括取得（N アイテム × 6 回の UserDefaults アクセスを 6 回に削減）
         let settings = ClipMenuItemSettings(defaults)
         var i = 0
-        for clip in clipResults {
+        for clip in clipRecords {
             if placeInLine < 1 || placeInLine - 1 < i {
                 // Folder
                 if i == subMenuCount {
@@ -102,7 +100,7 @@ extension MenuManager {
         }
     }
 
-    fileprivate func makeClipMenuItem(_ clip: CPYClip, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
+    fileprivate func makeClipMenuItem(_ clip: ClipRecord, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
         var keyEquivalent = ""
 
         if settings.addNumericKeyEquivalents && (index <= kMaxKeyEquivalents) {
@@ -119,7 +117,7 @@ extension MenuManager {
         let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
 
         let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectClipMenuItem(_:)), keyEquivalent: keyEquivalent)
-        menuItem.representedObject = clip.dataHash
+        menuItem.representedObject = clip.id
 
         if settings.isShowToolTip {
             let toIndex = min(clipString.count, settings.maxLengthOfToolTip)
@@ -134,18 +132,10 @@ extension MenuManager {
             menuItem.title = menuItemTitle("(Filenames)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
         }
 
-        if !clip.thumbnailPath.isEmpty && !clip.isColorCode && settings.isShowImage {
-            PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
-                DispatchQueue.main.async {
-                    menuItem?.image = object as? NSImage
-                }
-            }
-        }
-        if !clip.thumbnailPath.isEmpty && clip.isColorCode && settings.isShowColorCode {
-            PINCache.shared.object(forKeyAsync: clip.thumbnailPath) { [weak menuItem] _, _, object in
-                DispatchQueue.main.async {
-                    menuItem?.image = object as? NSImage
-                }
+        // 画像はサムネイル表示、カラーコードはカラープレビュー表示の設定に従う
+        if clip.hasThumbnail && (clip.isColorCode ? settings.isShowColorCode : settings.isShowImage) {
+            ClipThumbnail.load(clipID: clip.id) { [weak menuItem] image in
+                menuItem?.image = image
             }
         }
 
@@ -156,8 +146,16 @@ extension MenuManager {
 // MARK: - Snippets
 extension MenuManager {
     func addSnippetItems(_ menu: NSMenu, separateMenu: Bool) {
-        let folderResults = realm.objects(CPYFolder.self).sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true)
-        guard !folderResults.isEmpty else { return }
+        // 暗号鍵が使えないときは一覧が空に見えてしまうため、理由を示す 1 行だけを出す
+        guard AppEnvironment.current.isLibraryUsable else {
+            if separateMenu { menu.addItem(NSMenuItem.separator()) }
+            let item = NSMenuItem(title: L10n.snippetsUnavailable, action: nil)
+            item.isEnabled = false
+            menu.addItem(item)
+            return
+        }
+        let folderRecords = AppEnvironment.current.snippetStore.folders()
+        guard !folderRecords.isEmpty else { return }
         if separateMenu {
             menu.addItem(NSMenuItem.separator())
         }
@@ -174,7 +172,7 @@ extension MenuManager {
         let isMarkWithNumber = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
         let isShowIcon = defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)
 
-        folderResults
+        folderRecords
             .filter { $0.enable }
             .forEach { folder in
                 let folderTitle = folder.title
@@ -184,7 +182,6 @@ extension MenuManager {
 
                 var i = firstIndex
                 folder.snippets
-                    .sorted(byKeyPath: #keyPath(CPYSnippet.index), ascending: true)
                     .filter { $0.enable }
                     .forEach { snippet in
                         let subMenuItem = makeSnippetMenuItem(snippet, listNumber: i, isMarkWithNumber: isMarkWithNumber, isShowIcon: isShowIcon)
@@ -196,12 +193,12 @@ extension MenuManager {
             }
     }
 
-    func makeSnippetMenuItem(_ snippet: CPYSnippet, listNumber: Int, isMarkWithNumber: Bool, isShowIcon: Bool) -> NSMenuItem {
+    func makeSnippetMenuItem(_ snippet: SnippetRecord, listNumber: Int, isMarkWithNumber: Bool, isShowIcon: Bool) -> NSMenuItem {
         let title = trimTitle(snippet.title)
         let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: isMarkWithNumber)
 
         let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectSnippetMenuItem(_:)), keyEquivalent: "")
-        menuItem.representedObject = snippet.identifier
+        menuItem.representedObject = snippet.id
         menuItem.toolTip = snippet.content
         menuItem.image = (isShowIcon) ? snippetIcon : nil
 
@@ -226,9 +223,10 @@ extension MenuManager {
         image?.isTemplate = true
 
         statusItem = NSStatusBar.system.statusItem(withLength: -1)
-        statusItem?.image = image
-        statusItem?.highlightMode = true
-        statusItem?.toolTip = "\(Constants.Application.name) v\(Bundle.main.appVersion ?? "")"
+        statusItem?.button?.image = image
+        // 旧 highlightMode = true と同じ（押下中にボタンを反転表示する）
+        (statusItem?.button?.cell as? NSButtonCell)?.highlightsBy = [.pushInCellMask, .changeBackgroundCellMask]
+        statusItem?.button?.toolTip = "\(Constants.Application.name) v\(Bundle.main.appVersion ?? "")"
         // クリック時も検索ボックス一体型パネルを表示する（NSMenu は割り当てない）
         statusItem?.button?.target = self
         statusItem?.button?.action = #selector(statusItemClicked)

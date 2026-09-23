@@ -10,6 +10,17 @@
 
 ---
 
+## 目次
+
+- [1. このアプリケーションについて](#1-このアプリケーションについて)
+- [2. 提供する機能](#2-提供する機能)
+- [3. インストール方法・実行方法](#3-インストール方法実行方法)
+- [4. 各種設定](#4-各種設定)
+- [ライセンス](#ライセンス)
+- [スペシャル・サンクス](#スペシャルサンクス)
+
+---
+
 ## 1. このアプリケーションについて
 
 本プロジェクトは、OSS として公開されている macOS 向けクリップボード拡張アプリ **[Clipy](https://github.com/Clipy/Clipy)**（MIT ライセンス）を派生（フォーク）し、機能拡張したものです。
@@ -34,6 +45,10 @@ Thoth は古代エジプト神話に登場する**書記・記録・知恵の神
 
 > 開発環境・ビルド方法など開発者向けの情報は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md) を、
 > データ形式・暗号仕様・設計方針は [docs/DESIGN_JP.md](docs/DESIGN_JP.md) を参照してください。
+
+### 開発者より
+
+このアプリケーションの新規実装部分は全てAI Agentによって作成されています。開発者が実際に書いたのはこの文章だけで、後は仕様をもとにAI Agentに実装を頼んだものです。試験やセキュリティチェックの工夫はしてみましたが、自己責任でご利用ください。
 
 ---
 
@@ -227,14 +242,13 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 配布バイナリは提供していないため、ソースからビルドして使用します。ビルド手順の詳細は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md) を参照してください。
 
-**動作要件:** macOS 11.0 以降 · Apple Silicon (arm64)
+**動作要件:** macOS 15.0 以降 · Apple Silicon (arm64)
 
 **概略:**
 
 1. リポジトリを clone
-2. 依存関係をインストール（`bundle exec pod install`）
-3. ビルド（`Thoth.xcworkspace` を Xcode で開くか、CLI で `xcodebuild`）
-4. 生成された `Thoth.app` を `/Applications` などに配置して起動
+2. ビルド（`Thoth.xcodeproj` を Xcode で開くか、CLI で `xcodebuild`。依存ライブラリと開発ツールはビルド時に自動で取得されます）
+3. 生成された `Thoth.app` を `/Applications` などに配置して起動
 
 **初回起動時の注意:**
 
@@ -304,6 +318,8 @@ xattr -p com.apple.quarantine /Applications/Thoth.app 2>/dev/null
 ## ライセンス
 
 本アプリは MIT ライセンスのもとで提供されています。詳細は LICENSE ファイルをご覧ください。アイコンの著作権は、それぞれの作者に帰属します。
+
+サードパーティライブラリのライセンス一覧は [NOTICE](NOTICE) に記載しています（アプリ内では 環境設定 > オリジナル > サードパーティライセンス からも確認できます）。
 
 ## スペシャル・サンクス
 

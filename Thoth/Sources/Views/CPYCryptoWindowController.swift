@@ -356,11 +356,7 @@ fileprivate extension CPYCryptoViewController {
         view.addSubview(passwordField)
 
         // 指紋認証で固定パスワードを入力するボタン
-        if #available(macOS 11.0, *) {
-            fingerprintButton.image = NSImage(systemSymbolName: "touchid", accessibilityDescription: L10n.cryptoFingerprint)
-        } else {
-            fingerprintButton.title = "🔑"
-        }
+        fingerprintButton.image = NSImage(systemSymbolName: "touchid", accessibilityDescription: L10n.cryptoFingerprint)
         fingerprintButton.bezelStyle = .rounded
         fingerprintButton.toolTip = L10n.cryptoFingerprint
         fingerprintButton.target = self

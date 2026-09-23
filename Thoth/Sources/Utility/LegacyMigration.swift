@@ -9,7 +9,6 @@
 //
 
 import Foundation
-import LoginServiceKit
 
 /// Clipy から Thoth への改名に伴う、旧識別子で保存されたデータの一括移行。
 ///
@@ -83,7 +82,7 @@ enum LegacyMigration {
     /// 旧 Clipy.app の登録は macOS 側でバンドル消失時に無効化されるため放置してよい
     private static func refreshLoginItemIfNeeded(defaults: UserDefaults) {
         guard defaults.bool(forKey: Constants.UserDefaults.loginItem) else { return }
-        LoginServiceKit.addLoginItems(at: Bundle.main.bundlePath)
+        LoginItemService.register()
         NSLog("[LegacyMigration] re-registered login item for renamed app")
     }
 }

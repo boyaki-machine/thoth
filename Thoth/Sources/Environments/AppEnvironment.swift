@@ -47,6 +47,9 @@ struct AppEnvironment {
                      excludeAppService: ExcludeAppService = current.excludeAppService,
                      accessibilityService: AccessibilityService = current.accessibilityService,
                      menuManager: MenuManager = current.menuManager,
+                     historyStore: HistoryStore = current.historyStore,
+                     snippetStore: SnippetStore = current.snippetStore,
+                     isLibraryUsable: Bool = current.isLibraryUsable,
                      defaults: UserDefaults = current.defaults) {
         push(environment: Environment(clipService: clipService,
                                       hotKeyService: hotKeyService,
@@ -55,6 +58,9 @@ struct AppEnvironment {
                                       excludeAppService: excludeAppService,
                                       accessibilityService: accessibilityService,
                                       menuManager: menuManager,
+                                      historyStore: historyStore,
+                                      snippetStore: snippetStore,
+                                      isLibraryUsable: isLibraryUsable,
                                       defaults: defaults))
     }
 
@@ -65,6 +71,9 @@ struct AppEnvironment {
                                excludeAppService: ExcludeAppService = current.excludeAppService,
                                accessibilityService: AccessibilityService = current.accessibilityService,
                                menuManager: MenuManager = current.menuManager,
+                               historyStore: HistoryStore = current.historyStore,
+                               snippetStore: SnippetStore = current.snippetStore,
+                               isLibraryUsable: Bool = current.isLibraryUsable,
                                defaults: UserDefaults = current.defaults) {
         replaceCurrent(environment: Environment(clipService: clipService,
                                                 hotKeyService: hotKeyService,
@@ -73,7 +82,30 @@ struct AppEnvironment {
                                                 excludeAppService: excludeAppService,
                                                 accessibilityService: accessibilityService,
                                                 menuManager: menuManager,
+                                                historyStore: historyStore,
+                                                snippetStore: snippetStore,
+                                                isLibraryUsable: isLibraryUsable,
                                                 defaults: defaults))
+    }
+
+    /// 保存層だけを差し替える（ほかのサービスはそのまま引き継ぐ）。
+    /// replaceCurrent(clipService:…) はセキュア情報のサービスを引き継がず作り直すため、
+    /// 起動後の差し替えにはこちらを使う
+    static func replaceLibrary(historyStore: HistoryStore, snippetStore: SnippetStore, isUsable: Bool) {
+        let now = current
+        replaceCurrent(environment: Environment(clipService: now.clipService,
+                                                hotKeyService: now.hotKeyService,
+                                                dataCleanService: now.dataCleanService,
+                                                pasteService: now.pasteService,
+                                                excludeAppService: now.excludeAppService,
+                                                accessibilityService: now.accessibilityService,
+                                                menuManager: now.menuManager,
+                                                secureMenuService: now.secureMenuService,
+                                                secureSelectionContext: now.secureSelectionContext,
+                                                historyStore: historyStore,
+                                                snippetStore: snippetStore,
+                                                isLibraryUsable: isUsable,
+                                                defaults: now.defaults))
     }
 
     static func fromStorage(defaults: UserDefaults = .standard) -> Environment {
@@ -93,6 +125,9 @@ struct AppEnvironment {
                            excludeAppService: excludeAppService,
                            accessibilityService: current.accessibilityService,
                            menuManager: current.menuManager,
+                           historyStore: current.historyStore,
+                           snippetStore: current.snippetStore,
+                           isLibraryUsable: current.isLibraryUsable,
                            defaults: current.defaults)
     }
 
