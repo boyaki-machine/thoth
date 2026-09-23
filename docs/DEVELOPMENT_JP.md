@@ -182,11 +182,13 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 
 ### 利用者の環境での調査（統合ログ）
 
-貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。各段階を `Diagnostics`（`Thoth/Sources/Utility/Diagnostics.swift`）が統合ログへ残すので、再現した直後に次で読めます（貼り付ける値や項目名は記録しません）。
+貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。各段階を `Diagnostics`（`Thoth/Sources/Utility/Diagnostics.swift`）が統合ログへ出すので、**利用者が再現する間に**次でリアルタイムに読みます。
 
 ```bash
-log show --last 10m --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
+log stream --info --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
 ```
+
+利用者の行動の足跡を残さないため、次を守っています。貼り付ける値・項目名も、どのアプリで使ったか（バンドル ID）も書かず、「貼り付け先が前面に来たか」のような真偽値と経過時間だけを書きます。レベルは info で、macOS はメモリ上にしか持たずディスクに残しません（後から `log show` で読むことはできません）。notice 以上にすると、「いつセキュアメニューを使ったか」が統合ログとして数日〜数週間残ってしまいます。
 
 ### 失敗したテストの読み方
 

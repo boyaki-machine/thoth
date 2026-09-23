@@ -56,7 +56,7 @@ extension HotKeyService {
     }
 
     @objc func popUpSecureMenu() {
-        Diagnostics.secureMenu.notice("hotkey received (frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil", privacy: .public), secureInput=\(IsSecureEventInputEnabled(), privacy: .public))")
+        Diagnostics.secureMenu.info("hotkey received (secureInput=\(IsSecureEventInputEnabled(), privacy: .public))")
         AppEnvironment.current.menuManager.popUpSecureMenu()
     }
 

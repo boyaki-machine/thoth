@@ -89,7 +89,7 @@ enum CallerAppActivator {
     static func activate(_ app: NSRunningApplication?, then perform: @escaping () -> Void) {
         guard let app = app,
               isReturnTarget(processIdentifier: app.processIdentifier, isTerminated: app.isTerminated) else {
-            Diagnostics.paste.notice("no return target; sending after \(fallbackDelay, privacy: .public)s")
+            Diagnostics.paste.info("no return target; sending after \(fallbackDelay, privacy: .public)s")
             DispatchQueue.main.asyncAfter(deadline: .now() + fallbackDelay, execute: perform)
             return
         }
@@ -98,17 +98,17 @@ enum CallerAppActivator {
         NSApp.yieldActivation(to: app)
         let requested = app.activate(options: [])
         let callerPID = app.processIdentifier
-        let bundleID = app.bundleIdentifier ?? "?"
         let start = Date()
-        Diagnostics.paste.notice("activate \(bundleID, privacy: .public) requested=\(requested, privacy: .public) trusted=\(AXIsProcessTrusted(), privacy: .public)")
+        Diagnostics.paste.info("activate return target: requested=\(requested, privacy: .public) trusted=\(AXIsProcessTrusted(), privacy: .public)")
         waitUntil({
             isReadyToSend(elapsed: Date().timeIntervalSince(start),
                           frontmostProcessIdentifier: NSWorkspace.shared.frontmostApplication?.processIdentifier,
                           focusedProcessIdentifier: focusedApplicationProcessIdentifier(),
                           callerProcessIdentifier: callerPID)
         }, timeout: timeout, interval: pollInterval, completion: { ready in
-            let focused = focusedApplicationProcessIdentifier().map { NSRunningApplication(processIdentifier: $0)?.bundleIdentifier ?? "pid \($0)" } ?? "unknown"
-            Diagnostics.paste.notice("ready=\(ready, privacy: .public) after \(Date().timeIntervalSince(start), privacy: .public)s frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil", privacy: .public) focused=\(focused, privacy: .public)")
+            let frontmostIsTarget = NSWorkspace.shared.frontmostApplication?.processIdentifier == callerPID
+            let focused = focusedApplicationProcessIdentifier().map { $0 == callerPID ? "target" : "other" } ?? "unknown"
+            Diagnostics.paste.info("ready=\(ready, privacy: .public) after \(Date().timeIntervalSince(start), privacy: .public)s frontmostIsTarget=\(frontmostIsTarget, privacy: .public) keyboardFocus=\(focused, privacy: .public)")
             DispatchQueue.main.asyncAfter(deadline: .now() + settleDelay, execute: perform)
         })
     }

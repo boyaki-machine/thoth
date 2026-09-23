@@ -175,7 +175,7 @@ extension MenuManager {
             guard window.isVisible else { return false }
             return window.contentViewController is CPYSecureInfoSplitViewController
         }) {
-            Diagnostics.secureMenu.notice("secure info window is visible; activating it instead of the picker")
+            Diagnostics.secureMenu.info("secure info window is visible; activating it instead of the picker")
             NSApp.activate(ignoringOtherApps: true)
             visibleWindow.makeKeyAndOrderFront(nil)
             return
@@ -184,13 +184,13 @@ extension MenuManager {
         if isSecureMenuActive {
             if let existing = securePickerPanel, existing.isVisible {
                 // パネルが既に表示中 → 前面に出して再アクティブ化して終了
-                Diagnostics.secureMenu.notice("picker already visible; re-activating it")
+                Diagnostics.secureMenu.info("picker already visible; re-activating it")
                 NSApp.activate(ignoringOtherApps: true)
                 existing.makeKeyAndOrderFront(nil)
                 return
             } else {
                 // パネルが消えているのにフラグが残っている → 強制リセット
-                Diagnostics.secureMenu.notice("stale active flag (picker not visible); resetting")
+                Diagnostics.secureMenu.info("stale active flag (picker not visible); resetting")
                 if let observer = secureCloseObserver { NotificationCenter.default.removeObserver(observer) }
                 isSecureMenuActive  = false
                 securePickerPanel   = nil
@@ -198,7 +198,7 @@ extension MenuManager {
             }
         }
         guard !isSecureMenuActive else {
-            Diagnostics.secureMenu.notice("ignored: authentication is in progress")
+            Diagnostics.secureMenu.info("ignored: authentication is in progress")
             return
         }
         isSecureMenuActive = true
@@ -208,7 +208,7 @@ extension MenuManager {
         let reason = L10n.secureMenuAuthenticationReason
         AppEnvironment.current.secureMenuService.authenticate(reason: reason) { [weak self] success in
             guard let self = self else { return }
-            Diagnostics.secureMenu.notice("authentication finished: success=\(success, privacy: .public)")
+            Diagnostics.secureMenu.info("authentication finished: success=\(success, privacy: .public)")
             guard success else {
                 self.isSecureMenuActive = false
                 return

@@ -182,11 +182,13 @@ To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
 ### Investigating on a user's machine (unified log)
 
-Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) records each step in the unified log, so right after reproducing a problem you can read it with the command below (the values being pasted and item names are never recorded).
+Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) writes each step to the unified log; read it live **while the user reproduces the problem**:
 
 ```bash
-log show --last 10m --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
+log stream --info --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
 ```
+
+To leave no trail of what the user did, it never records the values being pasted, item names, or which app they were used in (bundle IDs) — only booleans such as "the target app came to the front" and elapsed times. The level is info, which macOS keeps in memory only and never writes to disk (so it cannot be read later with `log show`). At notice or above, "when the secure menu was used" would stay in the unified log for days to weeks.
 
 ### Reading a test failure
 
