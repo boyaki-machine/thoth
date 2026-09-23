@@ -110,7 +110,12 @@ enum CallerAppActivator {
             let focus: DebugEvent.KeyboardFocus = focusedApplicationProcessIdentifier().map { $0 == callerPID ? .target : .other } ?? .unknown
             DebugLog.shared.record(.pasteReady(ready: ready, elapsed: Date().timeIntervalSince(start),
                                                frontmostIsTarget: frontmostIsTarget, keyboardFocus: focus))
-            DispatchQueue.main.asyncAfter(deadline: .now() + settleDelay, execute: perform)
+            DispatchQueue.main.asyncAfter(deadline: .now() + settleDelay) {
+                DebugLog.shared.record(.pasteSettled(
+                    thothActive: NSApp.isActive,
+                    frontmostIsTarget: NSWorkspace.shared.frontmostApplication?.processIdentifier == callerPID))
+                perform()
+            }
         })
     }
 

@@ -26,6 +26,8 @@ enum DebugEvent: Equatable {
     case pasteCommandDisabled
     case pasteAccessibilityMissing
     case pastePosted(keyCode: Int, thothActive: Bool)
+    case pasteSettled(thothActive: Bool, frontmostIsTarget: Bool)
+    case preferencesFocusRestored
 
     // MARK: セキュアメニュー（ホットキー → 認証 → パネル）
     case secureHotKeyReceived(secureInput: Bool)
@@ -45,7 +47,7 @@ enum DebugEvent: Equatable {
     var category: String {
         switch self {
         case .pasteNoReturnTarget, .pasteActivationRequested, .pasteReady, .pasteCommandDisabled,
-             .pasteAccessibilityMissing, .pastePosted:
+             .pasteAccessibilityMissing, .pastePosted, .pasteSettled, .preferencesFocusRestored:
             return "Paste"
         default:
             return "SecureMenu"
@@ -66,6 +68,10 @@ enum DebugEvent: Equatable {
             return "paste: accessibility permission is missing"
         case let .pastePosted(keyCode, thothActive):
             return "paste: posted ⌘V (keyCode \(keyCode)) thothActive=\(thothActive)"
+        case let .pasteSettled(thothActive, frontmostIsTarget):
+            return "about to send: thothActive=\(thothActive) frontmostIsTarget=\(frontmostIsTarget)"
+        case .preferencesFocusRestored:
+            return "focus returned to the Preferences window"
         case .secureHotKeyReceived(let secureInput):
             return "hotkey received (secureInput=\(secureInput))"
         case .secureInfoWindowVisible:

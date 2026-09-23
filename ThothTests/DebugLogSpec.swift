@@ -17,6 +17,8 @@ class DebugLogSpec: QuickSpec {
         .pasteCommandDisabled,
         .pasteAccessibilityMissing,
         .pastePosted(keyCode: 9, thothActive: false),
+        .pasteSettled(thothActive: false, frontmostIsTarget: true),
+        .preferencesFocusRestored,
         .secureHotKeyReceived(secureInput: true),
         .secureInfoWindowVisible,
         .securePickerAlreadyVisible,
@@ -147,7 +149,14 @@ class DebugLogSpec: QuickSpec {
                 let sectionTop = debugViews.map { $0.frame.maxY }.max() ?? 0
                 let others = view.subviews.filter { subview in !ids.contains { $0 == subview.identifier } }
                 expect(others.map { $0.frame.minY }.min() ?? 0) >= sectionTop
-                expect(view.frame.height) > 272
+                expect(view.frame.height) == 272 + BetaVC.debugLogSectionHeight
+                // どの部品もタブの中に収まる（上へ二重にずれてツールバーに重ならない）
+                for subview in view.subviews {
+                    expect(subview.frame.maxY).to(beLessThanOrEqualTo(view.bounds.height), description: "\(subview)")
+                    expect(subview.frame.minY) >= 0
+                }
+                // Xib の一番上の注意書きは、元の上端からの距離（272 - 255 = 17pt）を保つ
+                expect((others.map { $0.frame.maxY }.max() ?? 0)) == view.bounds.height - 17
             }
 
             it("説明文はどの言語でも枠に収まる（何を保存しないかが見切れない）") {

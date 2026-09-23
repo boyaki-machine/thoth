@@ -67,6 +67,7 @@ extension MenuManager {
     func restorePreferencesFocusIfNeeded() {
         guard let window = CPYPreferencesWindowController.sharedController.window,
               window.isVisible else { return }
+        DebugLog.shared.record(.preferencesFocusRestored)
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
@@ -221,22 +222,19 @@ extension MenuManager {
                 // NSApp.activate でClipyがアクティブになっているため、
                 // パネルを閉じる前にペースト先アプリを取得しておく
                 let callerApp = panel?.callerApp
-                panel?.close()
-                self?.isSecureMenuActive  = false
-                self?.securePickerPanel   = nil
-                self?.secureCloseObserver = nil
+                // 閉じる前に willClose の監視を外す（dismissSecurePicker）。外さないと
+                // 「選択なしで閉じた」扱いで設定ウィンドウへフォーカスを戻してしまい
+                // （restorePreferencesFocusIfNeeded）、設定ウィンドウを開いたままだと ⌘V が Thoth に届く
+                self?.dismissSecurePicker()
                 // ペースト先アプリを前面へ戻し、前面に来たのを確かめてから出力する
                 self?.outputSecureSelection(selection, returningFocusTo: callerApp)
             }
             // 選択パネルからもメインメニューと同じセキュア情報確認ウィンドウを開く。
             // showSecureInfoWindow() は認証を通すが、選択パネルを開いた時点で
             // 認証済みなので SecureMenuService の猶予（30 秒）に入り再要求されない
-            panel.onManage = { [weak self, weak panel] in
-                panel?.close()
+            panel.onManage = { [weak self] in
+                self?.dismissSecurePicker()
                 (NSApp.delegate as? AppDelegate)?.showSecureInfoWindow()
-                self?.isSecureMenuActive  = false
-                self?.securePickerPanel   = nil
-                self?.secureCloseObserver = nil
             }
 
             // パネルが Esc や外部クリックで閉じられた場合もフラグをリセット

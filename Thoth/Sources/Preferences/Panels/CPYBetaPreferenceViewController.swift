@@ -85,11 +85,18 @@ final class CPYBetaPreferenceViewController: NSViewController {
 
     // MARK: - Debug Log
 
-    /// Xib で組んだ部品を上へずらし、タブを下へ広げて最下段の場所を作る
+    /// タブを下へ広げ、Xib で組んだ部品を同じだけ上へずらして最下段の場所を作る。
+    ///
+    /// Xib の部品は上端からの距離を保つ設定（flexibleMinY）なので、自動配置を効かせたまま広げると
+    /// それだけで上へ動き、手でずらすと二重にずれてツールバーに重なる（v1.6.0 の動作確認で発生）。
+    /// 自動配置を止めてから広げ、ずらす量を 1 回だけにする
     private func makeRoomForDebugLogSection() {
         let extra = Self.debugLogSectionHeight
-        view.subviews.forEach { $0.frame.origin.y += extra }
+        let autoresizes = view.autoresizesSubviews
+        view.autoresizesSubviews = false
         view.setFrameSize(NSSize(width: view.frame.width, height: view.frame.height + extra))
+        view.subviews.forEach { $0.frame.origin.y += extra }
+        view.autoresizesSubviews = autoresizes
     }
 
     /// 「デバッグ情報を保存する」。利用者が知らないうちに行動を記録しないよう、既定はオフで、
