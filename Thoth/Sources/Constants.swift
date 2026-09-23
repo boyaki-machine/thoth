@@ -100,6 +100,8 @@ struct Constants {
         static let pasteAndDeleteHistory = "kCPYBetaPasteAndDeleteHistory"
         static let pasteAndDeleteHistoryModifier = "kCPYBetapasteAndDeleteHistoryModifier"
         static let observerScreenshot = "kCPYBetaObserveScreenshot"
+        /// 「デバッグ情報を保存する」。既定はオフ（DebugLog）
+        static let saveDebugLog = "kCPYBetaSaveDebugLog"
     }
 
     struct Notification {

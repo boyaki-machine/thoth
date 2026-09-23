@@ -75,6 +75,36 @@ func licenseText(in directory: URL) -> String? {
     return nil
 }
 
+/// LICENSE とは別に、配布物で表示が求められる通知のファイル（Apache-2.0 の NOTICE、同梱コードの一覧など）
+let noticeFileNames = ["NOTICE", "NOTICE.txt", "NOTICE.md", "THIRD-PARTY-NOTICES"]
+
+/// パッケージが中に取り込んでいる第三者のコードのうち、上の通知ファイルに載っていないもののライセンス。
+/// realm-core は src/external/ のコードもビルドしてアプリに入る（v1.5.1 の SPM 化から、ソースからビルドしている）。
+/// Intel の十進数ライブラリ・JSON for Modern C++・MPark.Variant は THIRD-PARTY-NOTICES に載っているが、
+/// jsonsl は載っていないので個別に足す（s2・bson は realm-core 本体と同じ Apache-2.0）
+let vendoredLicenses: [String: [(title: String, path: String)]] = [
+    "realm-core": [("jsonsl", "src/external/jsonsl/LICENSE")],
+]
+
+/// 通知ファイルと、取り込まれている第三者コードのライセンスを、LICENSE の後ろに付ける本文にする
+func additionalNotices(in directory: URL, packageName: String) -> String {
+    var parts: [String] = []
+    for name in noticeFileNames {
+        let url = directory.appendingPathComponent(name)
+        if let text = try? String(contentsOf: url, encoding: .utf8) {
+            parts.append("### \(name)\n\n\(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+        }
+    }
+    for vendored in vendoredLicenses[packageName] ?? [] {
+        let url = directory.appendingPathComponent(vendored.path)
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else {
+            fail("\(packageName) に \(vendored.path) が見つかりません（取り込まれているコードが変わった可能性があります）")
+        }
+        parts.append("### \(vendored.title) (\(vendored.path))\n\n\(text.trimmingCharacters(in: .whitespacesAndNewlines))")
+    }
+    return parts.map { "\n\n" + $0 }.joined()
+}
+
 func run(_ arguments: [String]) {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
@@ -111,10 +141,11 @@ let pins = readPins()
 var sections: [(name: String, heading: String, license: String)] = []
 
 for pin in pins where !testOnlyPackages.contains(pin.identity) {
-    guard let license = licenseText(in: checkoutsURL.appendingPathComponent(pin.name)) else {
+    let directory = checkoutsURL.appendingPathComponent(pin.name)
+    guard let license = licenseText(in: directory) else {
         fail("\(pin.name) のライセンスファイルが見つかりません（\(checkoutsURL.path)/\(pin.name)）")
     }
-    sections.append((pin.name, "\(pin.name) \(pin.version)", license))
+    sections.append((pin.name, "\(pin.name) \(pin.version)", license + additionalNotices(in: directory, packageName: pin.name)))
 }
 
 let localPackages = (try? fileManager.contentsOfDirectory(at: localPackagesURL, includingPropertiesForKeys: nil)) ?? []
@@ -123,12 +154,25 @@ for package in localPackages where fileManager.fileExists(atPath: package.append
         fail("\(package.path) にライセンスファイルがありません")
     }
     let name = package.lastPathComponent
-    sections.append((name, "\(name) (Packages/\(name))", license))
+    sections.append((name, "\(name) (Packages/\(name))", license + additionalNotices(in: package, packageName: name)))
 }
 
 sections.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-var text = "# Acknowledgements\nThis application makes use of the following third party libraries:\n"
+// Thoth の元になったアプリ（MIT）。MIT はバイナリの配布物にも著作権表示を含めることを求めるので、
+// ライブラリより先に載せる（リポジトリの LICENSE・LICENSE_CLIPMENU と同じ本文）
+let upstreams: [(heading: String, file: String)] = [
+    ("Clipy (the application Thoth is derived from)", "LICENSE"),
+    ("ClipMenu (the origin of Clipy)", "LICENSE_CLIPMENU"),
+]
+var text = "# Acknowledgements\nThis application is derived from the following open-source applications:\n"
+for upstream in upstreams {
+    guard let license = try? String(contentsOf: root.appendingPathComponent(upstream.file), encoding: .utf8) else {
+        fail("\(upstream.file) を読めません")
+    }
+    text += "\n## \(upstream.heading)\n\n\(license.trimmingCharacters(in: .whitespacesAndNewlines))\n"
+}
+text += "\nThis application makes use of the following third party libraries:\n"
 for section in sections {
     text += "\n## \(section.heading)\n\n\(section.license)\n"
 }

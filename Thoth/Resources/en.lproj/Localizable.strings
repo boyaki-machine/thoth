@@ -294,12 +294,16 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphs";
 "Beta Language Restart Message" = "The language change will take effect after restarting Thoth.";
 "Beta Language Restart Now" = "Restart Now";
+"Beta Debug Log" = "Save debug information";
+"Beta Debug Log Note" = "Records only the steps of pasting and the secure menu, with times, to ~/Library/Logs/Thoth/debug.log. Copied content, secure items and app names are never saved. Turning this off deletes the file.";
+"Beta Debug Log Show" = "Show";
+"Beta Debug Log Empty" = "No debug information has been saved yet.";
 
 "Updates Respect Message" = "This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.";
 
 "Updates Original Repository Link" = "Link to the original Clipy repository";
 "Third Party Licenses" = "Third Party Licenses";
-"Updates Third Party Licenses Button" = "Third-Party Licenses...";
+"Updates Third Party Licenses Button" = "Third-Party Licenses";
 "Third Party Licenses Load Failed" = "Failed to load the third-party licenses list.";
 "Library Unavailable Title" = "Encryption key unavailable";
 "Library Unavailable Message" = "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.";

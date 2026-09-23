@@ -51,12 +51,12 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
         let pasteboardItem = NSPasteboardItem()
         if let folder = item as? SnippetFolderNode, let index = folders.firstIndex(where: { $0 === folder }) {
             let draggedData = CPYDraggedData(type: .folder, folderIdentifier: folder.id, snippetIdentifier: nil, index: index)
-            let data = (try? NSKeyedArchiver.archivedData(withRootObject: draggedData, requiringSecureCoding: false)) ?? Data()
+            let data = draggedData.archivedData() ?? Data()
             pasteboardItem.setData(data, forType: NSPasteboard.PasteboardType(rawValue: Constants.Common.draggedDataType))
         } else if let snippet = item as? SnippetNode, let folder = outlineView.parent(forItem: snippet) as? SnippetFolderNode {
             guard let index = folder.snippets.firstIndex(where: { $0 === snippet }) else { return nil }
             let draggedData = CPYDraggedData(type: .snippet, folderIdentifier: folder.id, snippetIdentifier: snippet.id, index: index)
-            let data = (try? NSKeyedArchiver.archivedData(withRootObject: draggedData, requiringSecureCoding: false)) ?? Data()
+            let data = draggedData.archivedData() ?? Data()
             pasteboardItem.setData(data, forType: NSPasteboard.PasteboardType(rawValue: Constants.Common.draggedDataType))
         } else {
             return nil
@@ -68,9 +68,7 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
         guard isEditable else { return NSDragOperation() }
         let pasteboard = info.draggingPasteboard
         guard let data = pasteboard.data(forType: NSPasteboard.PasteboardType(rawValue: Constants.Common.draggedDataType)) else { return NSDragOperation() }
-        guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else { return NSDragOperation() }
-        unarchiver.requiresSecureCoding = false
-        guard let draggedData = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYDraggedData else { return NSDragOperation() }
+        guard let draggedData = CPYDraggedData.unarchived(from: data) else { return NSDragOperation() }
 
         switch draggedData.type {
         case .folder where item == nil:
@@ -85,17 +83,16 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
     func outlineView(_ outlineView: NSOutlineView, acceptDrop info: NSDraggingInfo, item: Any?, childIndex index: Int) -> Bool {
         let pasteboard = info.draggingPasteboard
         guard let data = pasteboard.data(forType: NSPasteboard.PasteboardType(rawValue: Constants.Common.draggedDataType)) else { return false }
-        guard let unarchiver2 = try? NSKeyedUnarchiver(forReadingFrom: data) else { return false }
-        unarchiver2.requiresSecureCoding = false
-        guard let draggedData = unarchiver2.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYDraggedData else { return false }
+        guard let draggedData = CPYDraggedData.unarchived(from: data) else { return false }
 
         switch draggedData.type {
-        case .folder where index != draggedData.index:
-            guard index >= 0 else { return false }
-            guard let folder = folders.first(where: { $0.id == draggedData.folderIdentifier }) else { return false }
-            folders.insert(folder, at: index)
-            let removedIndex = (index < draggedData.index) ? draggedData.index + 1 : draggedData.index
-            folders.remove(at: removedIndex)
+        // 動かす元の位置は、ペーストボードの index ではなく識別子から引き直す
+        // （index が今の並びとずれていると、別の項目を消したり範囲外で落ちたりする）
+        case .folder:
+            guard let source = folders.firstIndex(where: { $0.id == draggedData.folderIdentifier }),
+                  let reordered = CPYDraggedData.reordered(folders, from: source, to: index) else { return false }
+            let folder = folders[source]
+            folders = reordered
             outlineView.reloadData()
             outlineView.selectRowIndexes(IndexSet(integer: outlineView.row(forItem: folder)), byExtendingSelection: false)
             saveFolderOrder()
@@ -106,13 +103,12 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
             guard let toFolder = item as? SnippetFolderNode else { return false }
             guard let snippet = fromFolder.snippets.first(where: { $0.id == draggedData.snippetIdentifier }) else { return false }
 
+            guard let source = fromFolder.snippets.firstIndex(where: { $0 === snippet }) else { return false }
+
             if fromFolder.id == toFolder.id {
-                guard index >= 0 else { return false }
-                if index == draggedData.index { return false }
                 // Move to same folder
-                fromFolder.snippets.insert(snippet, at: index)
-                let removedIndex = (index < draggedData.index) ? draggedData.index + 1 : draggedData.index
-                fromFolder.snippets.remove(at: removedIndex)
+                guard let reordered = CPYDraggedData.reordered(fromFolder.snippets, from: source, to: index) else { return false }
+                fromFolder.snippets = reordered
                 outlineView.reloadData()
                 outlineView.selectRowIndexes(NSIndexSet(index: outlineView.row(forItem: snippet)) as IndexSet, byExtendingSelection: false)
                 saveSnippetOrder(of: fromFolder)
@@ -120,9 +116,9 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
                 return true
             } else {
                 // Move to other folder
-                let index = max(0, index)
+                let index = min(max(0, index), toFolder.snippets.count)
                 toFolder.snippets.insert(snippet, at: index)
-                fromFolder.snippets.remove(at: draggedData.index)
+                fromFolder.snippets.remove(at: source)
                 outlineView.reloadData()
                 outlineView.expandItem(toFolder)
                 outlineView.selectRowIndexes(NSIndexSet(index: outlineView.row(forItem: snippet)) as IndexSet, byExtendingSelection: false)
@@ -132,7 +128,6 @@ extension CPYSnippetsEditorWindowController: NSOutlineViewDataSource {
                 changeItemFocus()
                 return true
             }
-        default: return false
         }
     }
 }

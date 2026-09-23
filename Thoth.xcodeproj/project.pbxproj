@@ -80,12 +80,18 @@
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */; };
+		AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00670100000000ABCDEF01 /* DebugLogSpec.swift */; };
+		AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */; };
+		AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */; };
+		AA00620200000000ABCDEF01 /* CallerAppActivatorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */; };
 		AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051100000000ABCDEF01 /* LibraryRecords.swift */; };
 		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
 		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
 		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
 		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
+		AA00660200000000ABCDEF01 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00660100000000ABCDEF01 /* DebugLog.swift */; };
 		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
 		AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */; };
 		AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */; };
@@ -115,6 +121,7 @@
 		AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */; };
 		AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */; };
 		AA20C0DE0000000000000045 /* CPYVersionPreferenceViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */; };
+		AA00600200000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00600100000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift */; };
 		AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */; };
 		C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */; };
 		FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */; };
@@ -178,6 +185,8 @@
 		FAC0DCE91DE15FD900309C49 /* DataCleanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC0DCE81DE15FD900309C49 /* DataCleanService.swift */; };
 		FAC0DCEF1DE3255E00309C49 /* NSImage+NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC0DCEE1DE3255E00309C49 /* NSImage+NSColor.swift */; };
 		FAC0DCF11DE576F300309C49 /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC0DCF01DE576F300309C49 /* PasteService.swift */; };
+		AA00640200000000ABCDEF01 /* ScreenshotWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00640100000000ABCDEF01 /* ScreenshotWatcher.swift */; };
+		AA00610200000000ABCDEF01 /* CallerAppActivator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00610100000000ABCDEF01 /* CallerAppActivator.swift */; };
 		FAC43E231B35DFC800C06102 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC43E221B35DFC800C06102 /* Foundation.framework */; };
 		FAC43E251B35DFD000C06102 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC43E241B35DFD000C06102 /* AppKit.framework */; };
 		FAC43E271B35DFD300C06102 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC43E261B35DFD300C06102 /* Carbon.framework */; };
@@ -189,11 +198,9 @@
 		C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */ = {isa = PBXBuildFile; productRef = 1938DBEC244DCB10F558AC8E /* KeyHolder */; };
 		023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */ = {isa = PBXBuildFile; productRef = 0756B1CE738969E1843E4F63 /* Magnet */; };
 		39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EF29407C8D8A90E2B0EF931D /* RealmSwift */; };
-		7C2D64B4595F209442AD861B /* RxScreeen in Frameworks */ = {isa = PBXBuildFile; productRef = 126D463DF25869050ACDFE94 /* RxScreeen */; };
 		D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1B221E0B7D9C6A2CF768C1F4 /* RxSwift */; };
 		6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 8C215EB623181C3B0EF7D2F3 /* RxCocoa */; };
 		8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */ = {isa = PBXBuildFile; productRef = EF59A623C09A7FDDF0ACACB5 /* Sauce */; };
-		A831E4ADD1F7158D45D8FD72 /* Screeen in Frameworks */ = {isa = PBXBuildFile; productRef = 91D19FC412DA73CCE0C74456 /* Screeen */; };
 		F0382482DB9461EB47688363 /* SwiftHEXColors in Frameworks */ = {isa = PBXBuildFile; productRef = E938119460D36ADC6BEB6549 /* SwiftHEXColors */; };
 		CFA78390949AF0D8D7CBA8FB /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = CBBFA159A947C4864AB2793F /* Quick */; };
 		013BC32641FB0ABC539B890E /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = F7850410BD6D2FF990E9621F /* Nimble */; };
@@ -335,12 +342,18 @@
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesLayoutSpec.swift; sourceTree = "<group>"; };
+		AA00670100000000ABCDEF01 /* DebugLogSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogSpec.swift; sourceTree = "<group>"; };
+		AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcherSpec.swift; sourceTree = "<group>"; };
+		AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcealedPasteRestoreSpec.swift; sourceTree = "<group>"; };
+		AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallerAppActivatorSpec.swift; sourceTree = "<group>"; };
 		AA00051100000000ABCDEF01 /* LibraryRecords.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryRecords.swift; sourceTree = "<group>"; };
 		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
 		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
 		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
 		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
+		AA00660100000000ABCDEF01 /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
 		AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStoreSchema.swift; sourceTree = "<group>"; };
 		AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStore.swift; sourceTree = "<group>"; };
@@ -378,6 +391,7 @@
 		AA20C0DE0000000000000042 /* CPYHistoryPickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYHistoryPickerPanelSpec.swift; path = ThothTests/CPYHistoryPickerPanelSpec.swift; sourceTree = "<group>"; };
 		AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYSecurePickerPanelSpec.swift; path = ThothTests/CPYSecurePickerPanelSpec.swift; sourceTree = "<group>"; };
 		AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYVersionPreferenceViewControllerSpec.swift; path = ThothTests/CPYVersionPreferenceViewControllerSpec.swift; sourceTree = "<group>"; };
+		AA00600100000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPYUpdatesPreferenceViewControllerSpec.swift; sourceTree = "<group>"; };
 		AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CPYPreferencesWindowControllerSpec.swift; path = ThothTests/CPYPreferencesWindowControllerSpec.swift; sourceTree = "<group>"; };
 		C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSPasteboard+Deprecated.swift"; sourceTree = "<group>"; };
 		FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HotKeyServiceSpec.swift; sourceTree = "<group>"; };
@@ -447,6 +461,8 @@
 		FAC0DCE81DE15FD900309C49 /* DataCleanService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanService.swift; sourceTree = "<group>"; };
 		FAC0DCEE1DE3255E00309C49 /* NSImage+NSColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSImage+NSColor.swift"; sourceTree = "<group>"; };
 		FAC0DCF01DE576F300309C49 /* PasteService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
+		AA00640100000000ABCDEF01 /* ScreenshotWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcher.swift; sourceTree = "<group>"; };
+		AA00610100000000ABCDEF01 /* CallerAppActivator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallerAppActivator.swift; sourceTree = "<group>"; };
 		FAC43DC61B35D8B100C06102 /* Thoth.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Thoth.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAC43DD81B35D8B100C06102 /* ThothTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ThothTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAC43DDD1B35D8B100C06102 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -468,11 +484,9 @@
 				C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */,
 				023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */,
 				39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */,
-				7C2D64B4595F209442AD861B /* RxScreeen in Frameworks */,
 				D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */,
 				6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */,
 				8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */,
-				A831E4ADD1F7158D45D8FD72 /* Screeen in Frameworks */,
 				F0382482DB9461EB47688363 /* SwiftHEXColors in Frameworks */,
 				1E2B9AD954139146B8CCC427 /* LetsMove in Frameworks */,
 				FAC43E2B1B35DFDF00C06102 /* WebKit.framework in Frameworks */,
@@ -556,6 +570,8 @@
 				FAE911B81DE045E2008A4BEC /* HotKeyService.swift */,
 				FAC0DCE81DE15FD900309C49 /* DataCleanService.swift */,
 				FAC0DCF01DE576F300309C49 /* PasteService.swift */,
+				AA00640100000000ABCDEF01 /* ScreenshotWatcher.swift */,
+				AA00610100000000ABCDEF01 /* CallerAppActivator.swift */,
 				FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */,
 				FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */,
 				AA00050100000000ABCDEF01 /* LoginItemService.swift */,
@@ -678,6 +694,7 @@
 				AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */,
 				AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */,
 				AA00052100000000ABCDEF01 /* FieldCipher.swift */,
+				AA00660100000000ABCDEF01 /* DebugLog.swift */,
 				AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */,
 				AA00051300000000ABCDEF01 /* LibraryStore.swift */,
 				AA10CAFE0000000000000012 /* LegacyMigration.swift */,
@@ -861,6 +878,12 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */,
+				AA00670100000000ABCDEF01 /* DebugLogSpec.swift */,
+				AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */,
+				AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */,
+				AA00600100000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift */,
+				AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */,
 				AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */,
 				AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */,
 				AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */,
@@ -917,11 +940,9 @@
 				1938DBEC244DCB10F558AC8E /* KeyHolder */,
 				0756B1CE738969E1843E4F63 /* Magnet */,
 				EF29407C8D8A90E2B0EF931D /* RealmSwift */,
-				126D463DF25869050ACDFE94 /* RxScreeen */,
 				1B221E0B7D9C6A2CF768C1F4 /* RxSwift */,
 				8C215EB623181C3B0EF7D2F3 /* RxCocoa */,
 				EF59A623C09A7FDDF0ACACB5 /* Sauce */,
-				91D19FC412DA73CCE0C74456 /* Screeen */,
 				E938119460D36ADC6BEB6549 /* SwiftHEXColors */,
 				9B6900DA061889398274DBCD /* LetsMove */,
 			);
@@ -997,10 +1018,8 @@
 				F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */,
 				6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */,
 				9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */,
-				E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */,
 				40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */,
-				A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */,
 				852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */,
 				7BA860BC73B803449586D44E /* XCRemoteSwiftPackageReference "Quick" */,
 				09A0F67417FDE30521293F77 /* XCRemoteSwiftPackageReference "Nimble" */,
@@ -1119,6 +1138,8 @@
 				FA1DB4B31DDCB452007F95C8 /* Array+Remove.swift in Sources */,
 				FA3778931F3B691A003B5BAB /* AppEnvironment.swift in Sources */,
 				FAC0DCF11DE576F300309C49 /* PasteService.swift in Sources */,
+				AA00640200000000ABCDEF01 /* ScreenshotWatcher.swift in Sources */,
+				AA00610200000000ABCDEF01 /* CallerAppActivator.swift in Sources */,
 				FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */,
 				AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */,
@@ -1127,6 +1148,7 @@
 				AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */,
 				AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */,
 				AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */,
+				AA00660200000000ABCDEF01 /* DebugLog.swift in Sources */,
 				AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */,
 				AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */,
 				AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */,
@@ -1229,6 +1251,7 @@
 				AA20C0DE0000000000000041 /* CPYHistoryPickerPanelSpec.swift in Sources */,
 				AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */,
 				AA20C0DE0000000000000045 /* CPYVersionPreferenceViewControllerSpec.swift in Sources */,
+				AA00600200000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift in Sources */,
 				AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */,
@@ -1248,6 +1271,11 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */,
+				AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */,
+				AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */,
+				AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */,
+				AA00620200000000ABCDEF01 /* CallerAppActivatorSpec.swift in Sources */,
 				AA00057200000000ABCDEF01 /* LibraryUnavailableSpec.swift in Sources */,
 				AA00059200000000ABCDEF01 /* AcknowledgementsSpec.swift in Sources */,
 				AA0005A200000000ABCDEF01 /* LetsMoveBundleSpec.swift in Sources */,
@@ -1671,7 +1699,7 @@
 			repositoryURL = "https://github.com/Clipy/KeyHolder.git";
 			requirement = {
 				kind = exactVersion;
-				version = 4.2.0;
+				version = 4.3.0;
 			};
 		};
 		6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */ = {
@@ -1679,7 +1707,7 @@
 			repositoryURL = "https://github.com/Clipy/Magnet.git";
 			requirement = {
 				kind = exactVersion;
-				version = 3.4.0;
+				version = 3.5.0;
 			};
 		};
 		9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
@@ -1690,20 +1718,12 @@
 				version = 20.0.5;
 			};
 		};
-		E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Clipy/RxScreeen.git";
-			requirement = {
-				kind = exactVersion;
-				version = 2.2.0;
-			};
-		};
 		40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
 			requirement = {
 				kind = exactVersion;
-				version = 6.9.0;
+				version = 6.10.2;
 			};
 		};
 		FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */ = {
@@ -1711,15 +1731,7 @@
 			repositoryURL = "https://github.com/Clipy/Sauce.git";
 			requirement = {
 				kind = exactVersion;
-				version = 2.4.1;
-			};
-		};
-		A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Clipy/Screeen.git";
-			requirement = {
-				kind = exactVersion;
-				version = 2.1.0;
+				version = 2.5.2;
 			};
 		};
 		852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */ = {
@@ -1769,11 +1781,6 @@
 			package = 9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */;
 			productName = RealmSwift;
 		};
-		126D463DF25869050ACDFE94 /* RxScreeen */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */;
-			productName = RxScreeen;
-		};
 		1B221E0B7D9C6A2CF768C1F4 /* RxSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */;
@@ -1788,11 +1795,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */;
 			productName = Sauce;
-		};
-		91D19FC412DA73CCE0C74456 /* Screeen */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */;
-			productName = Screeen;
 		};
 		E938119460D36ADC6BEB6549 /* SwiftHEXColors */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -12,6 +12,7 @@
 
 import Foundation
 import Cocoa
+import Carbon
 import Magnet
 
 /// グローバルホットキー（メニュー呼び出し・履歴クリア・スニペットフォルダ表示）を
@@ -55,6 +56,7 @@ extension HotKeyService {
     }
 
     @objc func popUpSecureMenu() {
+        DebugLog.shared.record(.secureHotKeyReceived(secureInput: IsSecureEventInputEnabled()))
         AppEnvironment.current.menuManager.popUpSecureMenu()
     }
 

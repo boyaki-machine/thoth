@@ -36,7 +36,6 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
 | LetsMove | Prompt to move to the Applications folder on first launch (vendored as the local package `Packages/LetsMove`) |
 | SwiftHEXColors | HEX color preview |
@@ -49,7 +48,7 @@ The development tools (SwiftLint / SwiftGen / BartyCrouch) are not packages: `sc
 v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec repository becomes read-only on 2026-12-02). Ruby and `pod install` are no longer needed.
 
 - **Versions are pinned exactly (Exact Version).** The pinned versions are recorded in `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, which is committed. Xcode fetches the packages when it opens the project and when it builds.
-- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script).
+- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script). The list starts with `LICENSE` and `LICENSE_CLIPMENU` of Clipy and ClipMenu, which Thoth is derived from; for each package it carries, besides `LICENSE`, any `NOTICE` / `THIRD-PARTY-NOTICES` and the licenses of third-party code the package includes (`vendoredLicenses`; currently jsonsl in realm-core).
 - **RealmSwift is a dynamic framework** (everything else is linked statically). It is registered in the app's "Embed Frameworks" phase so it ships inside the `.app`, and the test target only links it (the tests use Realm directly; embedding it there too would load two copies). Any other dynamic product needs the same treatment.
 - **Realm is 20.0.5.** Up to v1.5.0 (CocoaPods) it was 10.54.6, but the SPM package builds realm-core from source, so it was raised to 20.0.5, which compiles with Xcode 27. `LibraryMigrationSpec` confirms, using a fixed Realm file created with 10.54.6, that the migration source (Realm files written by 10.x) can be read and is not changed by a single byte.
 - **LetsMove does not support SPM upstream, so version 1.25 is vendored in `Packages/LetsMove`.** See `Packages/LetsMove/README.md` for the changes (such as which bundle the translations are read from).
@@ -91,7 +90,8 @@ v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec reposit
 ├── ThothTests/                      Unit tests (Quick + Nimble)
 ├── Packages/LetsMove/               Local package vendoring LetsMove
 ├── scripts/                         tool.sh (runs the development tools), update-acknowledgements.swift
-│                                    (generates the license list), make_dmg.sh (builds the distribution DMG)
+│                                    (generates the license list), make_dmg.sh (builds the distribution DMG),
+│                                    make-dmg-background.swift (draws the DMG window background)
 ├── NOTICE                           Third-party license list (same content as Acknowledgements.md)
 ├── .swiftlint.yml                   Code style configuration
 ├── README.md                        User-facing overview
@@ -107,7 +107,9 @@ Business logic is concentrated in the services layer. Stateful services are obta
 | Service | Responsibility |
 |---|---|
 | `ClipService` | Monitors the clipboard (100 ms polling) and saves/deletes history |
-| `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke) |
+| `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke). After pasting a secret, puts the clipboard back to its previous content (`PasteboardSnapshot`) |
+| `CallerAppActivator` | Before pasting a value chosen in a panel, brings the target app (the frontmost app when the hotkey was pressed) back to the front and sends only once it is confirmed frontmost |
+| `ScreenshotWatcher` | The "Save screenshots in history" beta feature. Watches the screenshot folder with FSEvents and identifies screenshots by the `kMDItemIsScreenCapture` extended attribute (no Spotlight) |
 | `SecureMenuService` | Keychain management of secure items and the fingerprint password, plus biometric auth |
 | `SecureItemSearch` | Filtering of secure items (search rules shared by the Secure Info window and the picker panel) |
 | `SecureItemsTransfer` | JSON import / export of secure items |
@@ -159,7 +161,7 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 
 | Category | Specs |
 |---|---|
-| Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
+| Clipboard | `DraggedDataSpec` (safe decoding of drag data, reordering), `ClipboardConcealSpec`, `ConcealedPasteRestoreSpec` (restoring the clipboard after pasting a secret), `CallerAppActivatorSpec` (returning to the target app), `ScreenshotWatcherSpec` (screenshot detection) |
 | Models | `SecureMenuItemSpec` |
 | Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
 | Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
@@ -168,15 +170,26 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
-| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
+| Preferences window | `PreferencesLayoutSpec` (layout of every tab: nothing sticks out, nothing overlaps, text fits; Xib translations in every language), `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants), `CPYUpdatesPreferenceViewControllerSpec` (the license button fits its title in every language) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
-| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved` and is identical to `NOTICE`), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
-| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
+| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved`, is identical to `NOTICE`, and includes the notices of Clipy / ClipMenu and of the third-party code inside realm-core), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
+| Others | `DebugLogSpec` (debug information is recorded only when turned on, only as string-free events; permissions; deletion), `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
+
+### Investigating on a user's machine (debug information)
+
+Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) records those steps to `~/Library/Logs/Thoth/debug.log`, **only while the user has turned on Preferences > Beta > "Save debug information"**. To investigate, ask the user to turn it on, reproduce the problem, and share the file (the "Show" button in Preferences reveals it in Finder).
+
+As an open-source app that handles secure information, Thoth never records what the user does without them knowing:
+
+- **Off by default, and nothing is written while it is off** (neither to the file nor to the macOS unified log). Turning it off deletes the saved files (and anything left over is deleted at launch if it is off)
+- Only the events listed in `DebugEvent`, with booleans, numbers and timestamps, can be written. **No case takes a string**, so copied content, secure item values or names, and the names or bundle IDs of the apps used cannot get in by construction (`DebugLogSpec` checks that no case carries a string)
+- What is and is not saved is stated right under the checkbox
+- The file is readable only by the user (folder 0700, file 0600); past 512 KB it keeps one previous generation and starts a new file
 
 ### Reading a test failure
 
@@ -206,10 +219,11 @@ How useful the output above is comes down almost entirely to how the spec is wri
   Avoid: "検索", "Save key combos" — names that only identify the subject.
 - **Fail loudly when a precondition breaks.** `guard let x = … else { return }` makes the test go **green without verifying anything**; use `fail(…)` before returning.
 - **Assert on contents, not booleans.** `expect(items.isEmpty) == true` prints only `expected to equal <true>, got <false>`; `expect(items).to(beEmpty())` prints the actual contents
-  (keep the boolean form when the subject is Optional — `beEmpty()` treats nil as "not empty").
+  (keep the boolean form, `expect(x?.isEmpty) == false`, when the subject is Optional — `beEmpty()` treats nil as "not empty").
 - **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
 - **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
 - **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
+- **Check screen layout with invariants, not literal coordinates.** For the Preferences tabs, `PreferencesLayoutSpec` checks "nothing sticks out, nothing overlaps, text fits" all at once. A new tab is covered as soon as it is added to `CPYPreferencesWindowController.makeTabViewControllers()`. After translating Xib text, this also tells you whether it fits in that language (if not, widen the frame or shorten the translation).
 
 ---
 
@@ -256,7 +270,7 @@ scripts/tool.sh swiftlint   # run from the project root
 It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
 
 - **`serious` (errors) must be 0.** Errors also make the build script phase fail.
-- **Existing warnings remain (70 as of v1.5.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
+- **Existing warnings remain (70 as of v1.6.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
 
 > **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 
@@ -326,8 +340,11 @@ A script builds the Release app and packages a DMG in one command.
 1. Prepares the development tools (`scripts/tool.sh --install`; does nothing if already fetched)
 2. Fetches the Swift packages into `build/SourcePackages` and regenerates the third-party license list (`scripts/update-acknowledgements.swift`; warns you to commit it if the list changed)
 3. Builds the `Release` configuration (output under `build/DerivedData`; passes `ARCHS=arm64` so the packages are also built for arm64 only)
-4. Stages `Thoth.app` plus a symlink to `/Applications`
-5. Creates a compressed DMG (UDZO) using the built-in `hdiutil`
+4. Stages `Thoth.app`, a symlink to `/Applications`, and the window background (`scripts/make-dmg-background.swift` draws the arrow and the instructions at normal and Retina resolution; they are combined into one TIFF)
+5. Creates a writable DMG with `hdiutil`, mounts it, and has Finder (AppleScript) set the window: size 560 × 370 (tall enough that the bar macOS 27 Finder shows at the bottom does not cover the instructions), no toolbar, 128 pt icons, `Thoth.app` on the left of the arrow and `Applications` on the right. Finder writes this into the DMG's `.DS_Store`
+6. Converts it to a compressed DMG (UDZO)
+
+The first run asks for permission for the terminal to control Finder (System Settings > Privacy & Security > Automation). If it is refused or fails, a DMG without the window layout is created (the contents are the same). To adjust only the look, `./scripts/make_dmg.sh --dmg-only` rebuilds the DMG from an existing `build/DerivedData/.../Release/Thoth.app` without building. On macOS 27, `hdiutil` prints deprecation warnings, but it works.
 
 **Output:** `build/Thoth-<version>.dmg` (the version is read automatically from `CFBundleShortVersionString` in `Info.plist`; `build/` is in `.gitignore`, so it is not committed)
 
@@ -340,7 +357,7 @@ development build without a tag leaves it empty, and the release date is not sho
 
 **Requirements:**
 
-- macOS + the full Xcode (`xcodebuild`; complete the setup in 4-0 first). `hdiutil` ships with macOS, so no extra install is needed
+- macOS + the full Xcode (`xcodebuild`; complete the setup in 4-0 first). `hdiutil` and `osascript` ship with macOS, so no extra install is needed
 - Network access the first time (to fetch the development tools into `.tools/` and the Swift packages into `build/SourcePackages`)
 - Apple Silicon (arm64)-only build
 - Ad-hoc signing (no Developer ID signature or notarization)
