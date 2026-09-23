@@ -307,5 +307,7 @@
 "Third Party Licenses Load Failed" = "Die Liste der Drittanbieter-Lizenzen konnte nicht geladen werden.";
 "Library Unavailable Title" = "Verschlüsselungsschlüssel nicht verfügbar";
 "Library Unavailable Message" = "Thoth konnte seinen Verschlüsselungsschlüssel nicht lesen. In dieser Sitzung wird daher nichts auf die Festplatte geschrieben: Der Verlauf bleibt nur im Arbeitsspeicher, und Snippets können weder angezeigt noch bearbeitet werden. Ihre gespeicherten Daten bleiben unverändert. Entsperren Sie Ihren Anmeldeschlüsselbund (oder erlauben Sie den Zugriff) und starten Sie Thoth erneut.";
+"Library Legacy Data Not Migrated Title" = "Frühere Daten wurden nicht übernommen";
+"Library Legacy Data Not Migrated Message" = "Der Zwischenablageverlauf und die Textbausteine aus v1.4.x oder früher wurden noch nicht übernommen und können von dieser Version nicht mehr gelesen werden. Solange die App läuft, wird nichts auf die Festplatte geschrieben; die alten Daten bleiben erhalten. Starte Thoth v1.6.2 einmal, um die Daten zu übernehmen, und aktualisiere dann erneut auf diese Version.";
 "Snippets Unavailable" = "Snippets sind nicht verfügbar";
 "Snippets Unavailable Message" = "Thoth konnte seinen Verschlüsselungsschlüssel nicht lesen. In dieser Sitzung können Snippets weder angezeigt noch bearbeitet werden. Es wurde nichts gelöscht. Entsperren Sie Ihren Anmeldeschlüsselbund (oder erlauben Sie den Zugriff) und starten Sie Thoth erneut.";

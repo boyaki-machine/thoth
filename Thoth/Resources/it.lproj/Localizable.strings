@@ -307,5 +307,7 @@
 "Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";
 "Library Unavailable Title" = "Chiave di crittografia non disponibile";
 "Library Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione non verrà scritto nulla su disco, la cronologia resterà solo in memoria e gli snippet non potranno essere mostrati né modificati. I dati salvati restano intatti. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";
+"Library Legacy Data Not Migrated Title" = "I dati precedenti non sono stati migrati";
+"Library Legacy Data Not Migrated Message" = "La cronologia degli appunti e gli snippet della v1.4.x o precedenti non sono ancora stati migrati e questa versione non può più leggerli. Finché l'app è in esecuzione non viene scritto nulla sul disco e i vecchi dati restano intatti. Avvia una volta Thoth v1.6.2 per migrare i dati, poi aggiorna di nuovo a questa versione.";
 "Snippets Unavailable" = "Snippet non disponibili";
 "Snippets Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione gli snippet non possono essere mostrati né modificati. Non è stato eliminato nulla. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";

@@ -164,6 +164,10 @@ internal enum L10n {
   internal static let launchOnSystemStartup = L10n.tr("Localizable", "Launch on system startup", fallback: "Launch on system startup")
   /// Launch Thoth on system startup?
   internal static let launchThothOnSystemStartup = L10n.tr("Localizable", "Launch Thoth on system startup?", fallback: "Launch Thoth on system startup?")
+  /// The clipboard history and snippets from v1.4.x or earlier have not been migrated yet, and this version can no longer read them. Nothing is written to disk while this app runs, and the old data is left as it is. Start Thoth v1.6.2 once to migrate the data, then update to this version again.
+  internal static let libraryLegacyDataNotMigratedMessage = L10n.tr("Localizable", "Library Legacy Data Not Migrated Message", fallback: "The clipboard history and snippets from v1.4.x or earlier have not been migrated yet, and this version can no longer read them. Nothing is written to disk while this app runs, and the old data is left as it is. Start Thoth v1.6.2 once to migrate the data, then update to this version again.")
+  /// Previous Data Has Not Been Migrated
+  internal static let libraryLegacyDataNotMigratedTitle = L10n.tr("Localizable", "Library Legacy Data Not Migrated Title", fallback: "Previous Data Has Not Been Migrated")
   /// Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.
   internal static let libraryUnavailableMessage = L10n.tr("Localizable", "Library Unavailable Message", fallback: "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.")
   /// Encryption key unavailable

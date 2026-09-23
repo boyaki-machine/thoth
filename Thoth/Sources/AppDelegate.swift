@@ -201,7 +201,7 @@ extension AppDelegate: NSApplicationDelegate {
     //    └─ (RELEASE) PFMoveToApplicationsFolder
     //   didFinishLaunching [main] → startApplication()
     //    ├─ DI・UserDefaults・メニューバーアイコン表示・アクセシビリティ確認
-    //    └─ [bg] LibraryProvider.prepare()           … 鍵取得 + ストアを開く（初回は Realm から移行）
+    //    └─ [bg] LibraryProvider.prepare()           … 鍵取得 + ストアを開く（移行済みなら旧 Realm のファイルを消す）
     //         └─ [main] 保存層の差し替え → startServices():
     //              変更通知・各サービス開始・ログイン項目アラート・.data スイープ
     func applicationDidFinishLaunching(_ aNotification: Notification) {
@@ -232,7 +232,7 @@ extension AppDelegate: NSApplicationDelegate {
         // modal ダイアログ等）はテストの実行を妨げるため行わない
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
 
-        // --- 重い初期化（ストアを開く・初回は Realm から移行）はバックグラウンドで ---
+        // --- 重い初期化（ストアを開く・新規インストールなら作る）はバックグラウンドで ---
         LibraryProvider.prepare { [weak self] prepared in
             AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore,
                                           isUsable: prepared.availability == .ready)
@@ -290,9 +290,15 @@ extension AppDelegate: NSApplicationDelegate {
     private func notifyIfLibraryUnavailable(_ prepared: LibraryProvider.Prepared) {
         guard prepared.availability != .ready else { return }
         NSLog("[AppDelegate] library unavailable: \(prepared.availability)")
+        let isLegacyData = prepared.availability == .legacyDataNotMigrated
         DispatchQueue.main.async {
             NSApp.activate(ignoringOtherApps: true)
-            NSAlert.showNotice(message: L10n.libraryUnavailableTitle, informative: L10n.libraryUnavailableMessage)
+            if isLegacyData {
+                NSAlert.showNotice(message: L10n.libraryLegacyDataNotMigratedTitle,
+                                   informative: L10n.libraryLegacyDataNotMigratedMessage)
+            } else {
+                NSAlert.showNotice(message: L10n.libraryUnavailableTitle, informative: L10n.libraryUnavailableMessage)
+            }
         }
     }
 

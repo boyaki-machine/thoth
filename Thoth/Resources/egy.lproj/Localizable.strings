@@ -309,3 +309,5 @@
 "Third Party Licenses" = "𓇋𓏏𓈖 𓂋𓐍𓏏";
 "Updates Third Party Licenses Button" = "𓇋𓏏𓈖 𓂋𓐍𓏏";
 "Third Party Licenses Load Failed" = "𓂋𓅱𓄿 𓇋𓏏𓈖 𓂋𓐍𓏏 𓈖 𓄋.";
+"Library Legacy Data Not Migrated Title" = "Previous Data Has Not Been Migrated";
+"Library Legacy Data Not Migrated Message" = "The clipboard history and snippets from v1.4.x or earlier have not been migrated yet, and this version can no longer read them. Nothing is written to disk while this app runs, and the old data is left as it is. Start Thoth v1.6.2 once to migrate the data, then update to this version again.";

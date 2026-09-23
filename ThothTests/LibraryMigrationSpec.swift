@@ -2,17 +2,15 @@ import Foundation
 import CryptoKit
 import Quick
 import Nimble
-import RealmSwift
 @testable import Thoth
 
-// Realm → SwiftData の移行（LibraryMigrator）と、起動時の判断（LibraryProvider.makePrepared）。
+// 保存層のストアの作成と照合（LibraryMigrator）と、起動時の判断（LibraryProvider.makePrepared）。
 //
-// 移行元は MigrationFixture の定義どおりの Realm ファイルで、次の 2 通りを使う:
-// - テスト中に同じ定義から作ったファイル
-// - リポジトリに置いた固定のファイル（ThothTests/Fixtures/LibraryMigrationFixture.realm）。
-//   RealmSwift 10.54.6 で一度だけ作ったもので、実際にディスクにある形式から読めることを押さえる
-// 移行では Realm のファイルに 1 バイトも書き込まないこと、照合に失敗したら本番のストアを
-// 作らないことも確かめる。テストごとに一時フォルダを作って後で消す。
+// v1.6.2 までは Realm からの移行も確かめていた。v1.6.3 で Realm を外したので、いまは
+// - ストアの作成（照合に通ったら完了の印を書く・照合に失敗したら使わない）
+// - 起動時の判断（新規インストール・2 回目の起動・鍵が無い / 合わない・途中で止まったストア・開けないストア）
+// - 旧 Realm のファイル: 移行済みなら消し、未移行なら残してディスクに何も書かない
+// を確かめる。テストごとに一時フォルダを作って後で消す。
 class LibraryMigrationSpec: QuickSpec {
 
     private static var directory: URL!
@@ -28,10 +26,10 @@ class LibraryMigrationSpec: QuickSpec {
         afterEach {
             try? FileManager.default.removeItem(at: directory)
         }
-        readSpecs()
         migrateSpecs()
         failureSpecs()
         providerSpecs()
+        legacyRealmSpecs()
     }
 
     // MARK: - Helpers
@@ -44,53 +42,21 @@ class LibraryMigrationSpec: QuickSpec {
         return SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
     }
 
-    /// 固定の Realm ファイルを一時フォルダへ写す（Realm はファイルの隣に .lock などを作るため）
-    static func copyFixture(to url: URL) -> Bool {
-        guard let source = Bundle(for: LibraryMigrationSpec.self)
-            .url(forResource: "LibraryMigrationFixture", withExtension: "realm") else { return false }
-        return (try? FileManager.default.copyItem(at: source, to: url)) != nil
+    /// v1.5.x 以降で移行した Mac に残っている、旧 Realm のファイル一式を置く（中身は何でもよい）
+    static let legacyRealmNames = ["default.realm", "default.realm.lock", "default.realm.note",
+                                   "default.realm.backup-log", "default.v20.backup.realm"]
+
+    static func placeLegacyRealmFiles() {
+        for name in legacyRealmNames {
+            FileManager.default.createFile(atPath: directory.appendingPathComponent(name).path, contents: Data("realm \(name)".utf8))
+        }
+        try? FileManager.default.createDirectory(at: directory.appendingPathComponent("default.realm.management"),
+                                                 withIntermediateDirectories: true)
+        FileManager.default.createFile(atPath: directory.appendingPathComponent("default.realm.management/access").path, contents: Data())
     }
 
-    // MARK: - Read
-
-    private static func readSpecs() {
-        describe("Realm の読み出し") {
-            it("テスト中に作った暗号化 Realm から、定義どおりの全データを読める") {
-                expect { try MigrationFixture.writeRealm(to: realmURL) }.toNot(throwError())
-                let snapshot = try? LibraryMigrator.readRealm(at: realmURL, encryptionKey: MigrationFixture.realmKey)
-                expect(snapshot) == MigrationFixture.snapshot
-            }
-
-            it("リポジトリに置いた固定の Realm ファイルから、定義どおりの全データを読める") {
-                guard copyFixture(to: realmURL) else {
-                    fail("固定の Realm ファイルがテストバンドルに無い（前提が崩れている）")
-                    return
-                }
-                let snapshot = try? LibraryMigrator.readRealm(at: realmURL, encryptionKey: MigrationFixture.realmKey)
-                expect(snapshot) == MigrationFixture.snapshot
-            }
-
-            it("暗号化されていない古い Realm も、鍵を渡したまま読める（鍵なしで開き直す）") {
-                expect { try MigrationFixture.writeRealm(to: realmURL, key: nil) }.toNot(throwError())
-                let snapshot = try? LibraryMigrator.readRealm(at: realmURL, encryptionKey: MigrationFixture.realmKey)
-                expect(snapshot) == MigrationFixture.snapshot
-            }
-
-            it("鍵が違えば読めず、sourceUnreadable を投げる") {
-                expect { try MigrationFixture.writeRealm(to: realmURL) }.toNot(throwError())
-                expect { try LibraryMigrator.readRealm(at: realmURL, encryptionKey: Data(repeating: 9, count: 64)) }
-                    .to(throwError(LibraryMigrator.Failure.sourceUnreadable))
-            }
-
-            it("読み出しても Realm のファイルは 1 バイトも変わらない") {
-                guard copyFixture(to: realmURL), let before = sha256(of: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
-                }
-                _ = try? LibraryMigrator.readRealm(at: realmURL, encryptionKey: MigrationFixture.realmKey)
-                expect(sha256(of: realmURL)) == before
-            }
-        }
+    static func existingNames() -> Set<String> {
+        return Set((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? [])
     }
 
     // MARK: - Migrate
@@ -166,102 +132,111 @@ class LibraryMigrationSpec: QuickSpec {
 
     private static func providerSpecs() {
         describe("起動時の判断") {
-            it("初回起動（ストアなし・Realm あり）では移行し、移行の結果を返す。Realm は変わらない") {
-                guard copyFixture(to: realmURL), let before = sha256(of: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
-                }
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey,
-                                                            realmKey: { MigrationFixture.realmKey })
-                expect(prepared.availability) == .ready
-                expect(prepared.migrationReport?.clipCount) == MigrationFixture.snapshot.clips.count
-                expect(prepared.snippetStore.folders()) == MigrationFixture.snapshot.folders
-                expect(sha256(of: realmURL)) == before
-            }
-
-            it("2 回目の起動では移行せず、Realm を読まない（前回の移行後の変更が残る）") {
-                guard copyFixture(to: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
-                }
-                var realmKeyCalls = 0
-                let first = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey,
-                                                         realmKey: { realmKeyCalls += 1; return MigrationFixture.realmKey })
-                first.snippetStore.saveFolder(SnippetFolderRecord(id: "after-migration", index: 99, title: "移行後に追加"))
-                let second = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey,
-                                                          realmKey: { realmKeyCalls += 1; return MigrationFixture.realmKey })
-                expect(second.migrationReport) == nil
-                expect(realmKeyCalls) == 1
-                expect(second.snippetStore.folder(id: "after-migration")?.title) == "移行後に追加"
-            }
-
-            it("新規インストール（ストアも Realm も無い）では、空のストアを作る") {
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey, realmKey: { nil })
+            it("新規インストール（ストアも旧 Realm も無い）では、空のストアを作り、完了の印を書く") {
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
                 expect(prepared.availability) == .ready
                 expect(prepared.historyStore.isEmpty) == true
                 expect(FileManager.default.fileExists(atPath: storeURL.path)) == true
+                expect(FileManager.default.fileExists(atPath: LibraryMigrator.completionMarkerURL(for: storeURL).path)) == true
+            }
+
+            it("2 回目の起動では作り直さず、前回の変更が残る") {
+                let first = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                first.snippetStore.saveFolder(SnippetFolderRecord(id: "kept", index: 99, title: "前回追加"))
+                let second = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                expect(second.migrationReport) == nil
+                expect(second.snippetStore.folder(id: "kept")?.title) == "前回追加"
             }
 
             it("鍵が無ければ、メモリ上だけで動き、ディスクには何も作らない") {
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: nil, realmKey: { nil })
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: nil)
                 expect(prepared.availability) == .keyUnavailable
                 prepared.historyStore.upsert(LibraryStoreContract.clip("c1", time: 1))
                 expect(prepared.historyStore.clip(id: "c1")?.id) == "c1"
-                expect((try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []).to(beEmpty())
+                expect(existingNames()).to(beEmpty())
             }
 
             it("別の鍵で保存されたストアなら keyMismatch で、ストアは消さずに残す") {
-                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey, realmKey: { nil })
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
                     .snippetStore.saveFolder(SnippetFolderRecord(id: "f1", index: 0, title: "keep"))
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: Data(repeating: 0x7F, count: 32),
-                                                            realmKey: { nil })
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: Data(repeating: 0x7F, count: 32))
                 expect(prepared.availability) == .keyMismatch
-                let reopened = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey, realmKey: { nil })
+                let reopened = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
                 expect(reopened.snippetStore.folder(id: "f1")?.title) == "keep"
             }
 
-            it("完了の印が無いストア（移行の途中で止まったもの）は、消して Realm から移行し直す") {
-                guard copyFixture(to: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
-                }
+            it("完了の印が無いストア（作成の途中で止まったもの）は、消して作り直す") {
                 // 前回の起動で、照合に失敗して印の無いストアが残った状態を作る
                 autoreleasepool {
-                    _ = try? LibraryMigrator.migrate(LibraryMigrator.Snapshot.empty, to: storeURL, cipher: cipher,
+                    _ = try? LibraryMigrator.migrate(MigrationFixture.snapshot, to: storeURL, cipher: cipher,
                                                      verifier: { _, _, _ in "interrupted" })
                 }
                 expect(FileManager.default.fileExists(atPath: storeURL.path)) == true
-                let prepared = autoreleasepool {
-                    LibraryProvider.makePrepared(directory: directory, rootKey: rootKey, realmKey: { MigrationFixture.realmKey })
-                }
+                let prepared = autoreleasepool { LibraryProvider.makePrepared(directory: directory, rootKey: rootKey) }
                 expect(prepared.availability) == .ready
-                expect(prepared.snippetStore.folders()) == MigrationFixture.snapshot.folders
+                // 印の無いストアの中身（途中まで書いたもの）は使わない
+                expect(prepared.snippetStore.folders()).to(beEmpty())
             }
 
-            it("完了の印があるのに開けないストアは、削除せず別名へ退避し、Realm から移行し直す") {
-                guard copyFixture(to: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
-                }
+            it("完了の印があるのに開けないストアは、削除せず別名へ退避して作り直す") {
                 FileManager.default.createFile(atPath: storeURL.path, contents: Data("not a database".utf8))
                 FileManager.default.createFile(atPath: LibraryMigrator.completionMarkerURL(for: storeURL).path, contents: Data())
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey,
-                                                            realmKey: { MigrationFixture.realmKey })
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
                 expect(prepared.availability) == .ready
-                expect(prepared.snippetStore.folders()) == MigrationFixture.snapshot.folders
-                let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
-                expect(names.contains { $0.hasPrefix("\(LibraryProvider.storeFileName).broken-") }) == true
+                expect(existingNames().contains { $0.hasPrefix("\(LibraryProvider.storeFileName).broken-") }) == true
+            }
+        }
+    }
+
+    // MARK: - Legacy Realm files
+
+    private static func legacyRealmSpecs() {
+        describe("旧 Realm のファイル（v1.4.x までの保存先）") {
+            it("移行済み（完了の印があるストアを読めた）なら、旧 Realm のファイル一式を消す") {
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                    .snippetStore.saveFolder(SnippetFolderRecord(id: "f1", index: 0, title: "移行後のデータ"))
+                placeLegacyRealmFiles()
+                expect(LibraryProvider.legacyRealmFiles(in: directory).count) == legacyRealmNames.count + 1
+
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                expect(prepared.availability) == .ready
+                expect(LibraryProvider.legacyRealmFiles(in: directory)).to(beEmpty())
+                // ストアと、移行後のデータは消さない
+                expect(prepared.snippetStore.folder(id: "f1")?.title) == "移行後のデータ"
+                expect(existingNames()).to(contain(LibraryProvider.storeFileName))
             }
 
-            it("Realm の鍵が違って移行できなければ migrationFailed で、ストアを作らない") {
-                guard copyFixture(to: realmURL) else {
-                    fail("固定の Realm ファイルを用意できない（前提が崩れている）")
-                    return
+            it("旧 Realm と名前が似ていても、別のファイル（ストア・.data など）は消さない") {
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                placeLegacyRealmFiles()
+                let others = ["ABCD-1234.data", "my.default.realm.txt", "realm-notes.txt"]
+                for name in others {
+                    FileManager.default.createFile(atPath: directory.appendingPathComponent(name).path, contents: Data("keep".utf8))
                 }
-                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey,
-                                                            realmKey: { Data(repeating: 9, count: 64) })
-                expect(prepared.availability) == .migrationFailed
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                expect(existingNames().isSuperset(of: others)) == true
+            }
+
+            it("未移行（旧 Realm だけがある）なら、メモリ上だけで動き、旧ファイルも残してストアを作らない") {
+                placeLegacyRealmFiles()
+                let before = sha256(of: realmURL)
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                expect(prepared.availability) == .legacyDataNotMigrated
                 expect(FileManager.default.fileExists(atPath: storeURL.path)) == false
+                expect(sha256(of: realmURL)) == before
+                // 次の起動でも「移行済み」と誤って判断して旧ファイルを消さない
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                expect(LibraryProvider.legacyRealmFiles(in: directory).count) == legacyRealmNames.count + 1
+            }
+
+            it("鍵が合わず移行済みのストアを読めないときは、旧 Realm のファイルを消さない") {
+                // 空のストアはどの鍵でも「読める」ので、データを入れておく
+                _ = LibraryProvider.makePrepared(directory: directory, rootKey: rootKey)
+                    .snippetStore.saveFolder(SnippetFolderRecord(id: "f1", index: 0, title: "keep"))
+                placeLegacyRealmFiles()
+                let prepared = LibraryProvider.makePrepared(directory: directory, rootKey: Data(repeating: 0x7F, count: 32))
+                expect(prepared.availability) == .keyMismatch
+                expect(LibraryProvider.legacyRealmFiles(in: directory).count) == legacyRealmNames.count + 1
             }
         }
     }
@@ -269,10 +244,8 @@ class LibraryMigrationSpec: QuickSpec {
 
 // MARK: - Fixture
 
-/// 移行のテストで使う Realm のデータ（境界値を集めたもの）
+/// ストアの作成・照合のテストで使うデータ（境界値を集めたもの。v1.6.2 までは Realm からの移行にも使っていた）
 enum MigrationFixture {
-    /// テスト用の Realm の鍵（64 バイト）
-    static let realmKey = Data((0..<64).map { UInt8(($0 * 7 + 3) % 256) })
 
     static let snapshot = LibraryMigrator.Snapshot(
         clips: [
@@ -302,47 +275,5 @@ enum MigrationFixture {
                              hasThumbnail: Bool = false, isColorCode: Bool = false) -> ClipRecord {
         return ClipRecord(id: id, dataPath: "/Users/tester/Library/Application Support/Thoth/\(id).data", title: title,
                           primaryType: type, updateTime: time, hasThumbnail: hasThumbnail, isColorCode: isColorCode)
-    }
-
-    /// snapshot を Realm のファイルとして書き出す（v1.4.x までのアプリと同じスキーマ）
-    static func writeRealm(to url: URL, key: Data? = realmKey) throws {
-        try autoreleasepool {
-            var configuration = RealmProvider.makeBaseConfiguration()
-            configuration.fileURL = url
-            configuration.encryptionKey = key
-            configuration.objectTypes = [CPYClip.self, CPYFolder.self, CPYSnippet.self]
-            let realm = try Realm(configuration: configuration)
-            try realm.write {
-                for record in snapshot.clips {
-                    let clip = CPYClip()
-                    clip.dataHash = record.id
-                    clip.dataPath = record.dataPath
-                    clip.title = record.title
-                    clip.primaryType = record.primaryType
-                    clip.updateTime = record.updateTime
-                    // v1.4.x までは PINCache のキー（コピーした時刻）を入れていた
-                    clip.thumbnailPath = record.hasThumbnail ? "\(record.updateTime)" : ""
-                    clip.isColorCode = record.isColorCode
-                    realm.add(clip)
-                }
-                for record in snapshot.folders {
-                    let folder = CPYFolder()
-                    folder.identifier = record.id
-                    folder.index = record.index
-                    folder.enable = record.enable
-                    folder.title = record.title
-                    for snippetRecord in record.snippets {
-                        let snippet = CPYSnippet()
-                        snippet.identifier = snippetRecord.id
-                        snippet.index = snippetRecord.index
-                        snippet.enable = snippetRecord.enable
-                        snippet.title = snippetRecord.title
-                        snippet.content = snippetRecord.content
-                        folder.snippets.append(snippet)
-                    }
-                    realm.add(folder)
-                }
-            }
-        }
     }
 }

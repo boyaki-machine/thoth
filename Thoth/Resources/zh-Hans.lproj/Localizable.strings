@@ -307,5 +307,7 @@
 "Third Party Licenses Load Failed" = "无法加载第三方许可证列表。";
 "Library Unavailable Title" = "无法读取加密密钥";
 "Library Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行不会向磁盘写入任何内容：剪贴板历史仅保存在内存中，片段也无法显示或编辑。已保存的数据不会被改动。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";
+"Library Legacy Data Not Migrated Title" = "以前的数据尚未迁移";
+"Library Legacy Data Not Migrated Message" = "v1.4.x 或更早版本的剪贴板历史和片段尚未迁移，此版本已无法读取。本次运行期间不会向磁盘写入任何内容，旧数据保持原样。请先启动一次 Thoth v1.6.2 完成迁移，然后再更新到此版本。";
 "Snippets Unavailable" = "无法显示片段";
 "Snippets Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行无法显示或编辑片段。没有任何内容被删除。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";

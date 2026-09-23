@@ -307,5 +307,7 @@
 "Third Party Licenses Load Failed" = "Failed to load the third-party licenses list.";
 "Library Unavailable Title" = "Encryption key unavailable";
 "Library Unavailable Message" = "Thoth could not read its encryption key, so nothing is written to disk during this session: clipboard history is kept in memory only, and snippets cannot be shown or edited. Your saved data is left untouched. Unlock your login keychain (or allow access when asked) and start Thoth again.";
+"Library Legacy Data Not Migrated Title" = "Previous Data Has Not Been Migrated";
+"Library Legacy Data Not Migrated Message" = "The clipboard history and snippets from v1.4.x or earlier have not been migrated yet, and this version can no longer read them. Nothing is written to disk while this app runs, and the old data is left as it is. Start Thoth v1.6.2 once to migrate the data, then update to this version again.";
 "Snippets Unavailable" = "Snippets are unavailable";
 "Snippets Unavailable Message" = "Thoth could not read its encryption key, so snippets cannot be shown or edited during this session. Nothing has been deleted. Unlock your login keychain (or allow access when asked) and start Thoth again.";

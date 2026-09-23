@@ -301,3 +301,5 @@
 "Third Party Licenses" = "Licentiae Tertiarum Partium";
 "Updates Third Party Licenses Button" = "Licentiae Tertiarum Partium";
 "Third Party Licenses Load Failed" = "Index licentiarum tertiarum partium legi non potuit.";
+"Library Legacy Data Not Migrated Title" = "Data priora non translata sunt";
+"Library Legacy Data Not Migrated Message" = "Historia et fragmenta ex v1.4.x vel antea nondum translata sunt, et haec versio ea legere iam non potest. Dum applicatio currit, nihil in discum scribitur et data vetera intacta manent. Thoth v1.6.2 semel incipe ut data transferantur, deinde ad hanc versionem iterum renova.";

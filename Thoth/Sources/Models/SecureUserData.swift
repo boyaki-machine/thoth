@@ -12,7 +12,7 @@ import Foundation
 /// JSON で集約して保存する。エクスポート／インポートの対象はこの単位。
 ///
 /// 対になる概念として「アプリが動作のために自動生成する情報」（DB 暗号鍵等）があり、
-/// そちらは環境固有のため RealmProvider の app-keys エントリで別管理される
+/// そちらは環境固有のため AppKeyStore の app-keys エントリで別管理される
 /// （エクスポート対象外・インストールごとに生成）。
 struct SecureUserData: Codable {
     /// スキーマバージョン（将来の形式変更用）
