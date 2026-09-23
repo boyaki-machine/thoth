@@ -294,6 +294,10 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphen";
 "Beta Language Restart Message" = "Die Sprachänderung wird nach einem Neustart von Thoth wirksam.";
 "Beta Language Restart Now" = "Jetzt neu starten";
+"Beta Debug Log" = "Debug-Informationen speichern";
+"Beta Debug Log Note" = "Speichert nur die Schritte beim Einfügen und im sicheren Menü mit Uhrzeit in ~/Library/Logs/Thoth/debug.log. Kopierte Inhalte, sichere Einträge und App-Namen werden nie gespeichert. Beim Ausschalten wird die Datei gelöscht.";
+"Beta Debug Log Show" = "Anzeigen";
+"Beta Debug Log Empty" = "Es wurden noch keine Debug-Informationen gespeichert.";
 
 "Updates Respect Message" = "Diese Anwendung ist ein Fork von Clipy, der Open-Source-Zwischenablage-Erweiterung für macOS. Tiefer Respekt und Dank gebühren den Entwicklern des ursprünglichen Clipy sowie naotaka, dem Autor des Vorgängers ClipMenu. Dieses Projekt steht auf ihrer großartigen Arbeit.";
 

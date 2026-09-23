@@ -342,6 +342,16 @@ private extension AppDelegate {
                 self?.reflectLoginItemState()
             })
             .disposed(by: disposeBag)
+        // デバッグ情報（ベータ機能）。オフの間は記録せず、オフになったら保存済みのものを消す。
+        // 起動時にオフなら、前回の残り（オフにする前に終了した等）も消す
+        AppEnvironment.current.defaults.rx.observe(Bool.self, Constants.Beta.saveDebugLog, retainSelf: false)
+            .compactMap { $0 }
+            .distinctUntilChanged()
+            .filter { !$0 }
+            .subscribe(onNext: { _ in
+                DebugLog.shared.deleteAll()
+            })
+            .disposed(by: disposeBag)
         // Observe Screenshot（ベータ機能。オンの間だけ保存先フォルダを見張る）
         screenshotWatcher.onCapture = { image in
             AppEnvironment.current.clipService.create(with: image)

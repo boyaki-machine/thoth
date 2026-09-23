@@ -176,19 +176,20 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
 | Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved`, is identical to `NOTICE`, and includes the notices of Clipy / ClipMenu and of the third-party code inside realm-core), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
-| Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
+| Others | `DebugLogSpec` (debug information is recorded only when turned on, only as string-free events; permissions; deletion), `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
 
-### Investigating on a user's machine (unified log)
+### Investigating on a user's machine (debug information)
 
-Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) writes each step to the unified log; read it live **while the user reproduces the problem**:
+Bringing the target app back to the front, sending ⌘V, and showing the secure menu (hotkey → authentication → panel) are flows whose bugs tend to be hard to reproduce locally. `Diagnostics` (`Thoth/Sources/Utility/Diagnostics.swift`) records those steps to `~/Library/Logs/Thoth/debug.log`, **only while the user has turned on Preferences > Beta > "Save debug information"**. To investigate, ask the user to turn it on, reproduce the problem, and share the file (the "Show" button in Preferences reveals it in Finder).
 
-```bash
-log stream --info --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
-```
+As an open-source app that handles secure information, Thoth never records what the user does without them knowing:
 
-To leave no trail of what the user did, it never records the values being pasted, item names, or which app they were used in (bundle IDs) — only booleans such as "the target app came to the front" and elapsed times. The level is info, which macOS keeps in memory only and never writes to disk (so it cannot be read later with `log show`). At notice or above, "when the secure menu was used" would stay in the unified log for days to weeks.
+- **Off by default, and nothing is written while it is off** (neither to the file nor to the macOS unified log). Turning it off deletes the saved files (and anything left over is deleted at launch if it is off)
+- Only the events listed in `DebugEvent`, with booleans, numbers and timestamps, can be written. **No case takes a string**, so copied content, secure item values or names, and the names or bundle IDs of the apps used cannot get in by construction (`DebugLogSpec` checks that no case carries a string)
+- What is and is not saved is stated right under the checkbox
+- The file is readable only by the user (folder 0700, file 0600); past 512 KB it keeps one previous generation and starts a new file
 
 ### Reading a test failure
 

@@ -176,19 +176,20 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
 | 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること・Clipy / ClipMenu と realm-core 内の第三者コードの表示を含むこと）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
-| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
+| その他 | `DebugLogSpec`（デバッグ情報はオンのときだけ・文字列を持たない出来事だけを記録する・権限・削除）、`HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
 
-### 利用者の環境での調査（統合ログ）
+### 利用者の環境での調査（デバッグ情報）
 
-貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。各段階を `Diagnostics`（`Thoth/Sources/Utility/Diagnostics.swift`）が統合ログへ出すので、**利用者が再現する間に**次でリアルタイムに読みます。
+貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。その各段階を、**利用者が環境設定 > ベータ機能 >「デバッグ情報を保存する」をオンにしたときだけ** `DebugLog`（`Thoth/Sources/Utility/DebugLog.swift`）が `~/Library/Logs/Thoth/debug.log` に記録します。調べるときは、利用者にこれをオンにして再現してもらい、ファイルを見せてもらいます（設定画面の「表示」で Finder に出ます）。
 
-```bash
-log stream --info --style compact --predicate 'subsystem == "io.github.boyaki-machine.Thoth"'
-```
+セキュアな情報を扱う OSS として、利用者が知らないうちに行動を記録しないための約束です。
 
-利用者の行動の足跡を残さないため、次を守っています。貼り付ける値・項目名も、どのアプリで使ったか（バンドル ID）も書かず、「貼り付け先が前面に来たか」のような真偽値と経過時間だけを書きます。レベルは info で、macOS はメモリ上にしか持たずディスクに残しません（後から `log show` で読むことはできません）。notice 以上にすると、「いつセキュアメニューを使ったか」が統合ログとして数日〜数週間残ってしまいます。
+- **既定はオフ。オフの間は何も書かない**（ファイルにも macOS の統合ログにも）。オフに戻すと保存済みのファイルを消す（起動時にオフなら前回の残りも消す）
+- 書けるのは `DebugEvent` に挙げた出来事と、真偽値・数値・時刻だけ。**文字列を受け取るケースを作らない**ことで、コピーした内容・セキュアアイテムの値や項目名・使ったアプリの名前やバンドル ID が型の上で入り込めないようにしている（`DebugLogSpec` が、どのケースも文字列を持たないことを確かめる）
+- 何を保存し何を保存しないかは、チェックボックスの下にその場で書いてある
+- ファイルは本人だけが読める権限（フォルダ 0700・ファイル 0600）で、512KB を超えたら 1 世代だけ残して新しく始める
 
 ### 失敗したテストの読み方
 

@@ -24,6 +24,14 @@ internal enum L10n {
   internal static let areYouSureWantToDeleteThisSecureItem = L10n.tr("Localizable", "Are you sure want to delete this secure item?", fallback: "Are you sure you want to delete this item?")
   /// Are you sure you want to clear your clipboard history?
   internal static let areYouSureYouWantToClearYourClipboardHistory = L10n.tr("Localizable", "Are you sure you want to clear your clipboard history?", fallback: "Are you sure you want to clear your clipboard history?")
+  /// Save debug information
+  internal static let betaDebugLog = L10n.tr("Localizable", "Beta Debug Log", fallback: "Save debug information")
+  /// No debug information has been saved yet.
+  internal static let betaDebugLogEmpty = L10n.tr("Localizable", "Beta Debug Log Empty", fallback: "No debug information has been saved yet.")
+  /// Records only the steps of pasting and the secure menu, with times, to ~/Library/Logs/Thoth/debug.log. Copied content, secure items and app names are never saved. Turning this off deletes the file.
+  internal static let betaDebugLogNote = L10n.tr("Localizable", "Beta Debug Log Note", fallback: "Records only the steps of pasting and the secure menu, with times, to ~/Library/Logs/Thoth/debug.log. Copied content, secure items and app names are never saved. Turning this off deletes the file.")
+  /// Show
+  internal static let betaDebugLogShow = L10n.tr("Localizable", "Beta Debug Log Show", fallback: "Show")
   /// Language:
   internal static let betaLanguage = L10n.tr("Localizable", "Beta Language", fallback: "Language:")
   /// 𓂀 Hieroglyphs

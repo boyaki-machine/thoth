@@ -290,6 +290,10 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphica";
 "Beta Language Restart Message" = "Mutatio linguae post Thoth renovatum valebit.";
 "Beta Language Restart Now" = "Nunc renovare";
+"Beta Debug Log" = "Informationes emendationis servare";
+"Beta Debug Log Note" = "Tantum gradus inserendi et menu tuti cum tempore in ~/Library/Logs/Thoth/debug.log servantur. Contenta copiata, res tutae et nomina applicationum numquam servantur. Si deligitur, tabula deletur.";
+"Beta Debug Log Show" = "Monstrare";
+"Beta Debug Log Empty" = "Nullae informationes emendationis adhuc servatae sunt.";
 
 "Updates Respect Message" = "Haec applicatio est propago Clipy, extensionis tabulae affixae fontis aperti pro macOS. Summa reverentia et gratia debentur creatoribus Clipy originalis atque naotaka, auctori praecursoris ClipMenu. Hoc opus in magnis eorum operibus stat.";
 

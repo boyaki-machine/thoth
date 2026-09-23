@@ -89,7 +89,7 @@ enum CallerAppActivator {
     static func activate(_ app: NSRunningApplication?, then perform: @escaping () -> Void) {
         guard let app = app,
               isReturnTarget(processIdentifier: app.processIdentifier, isTerminated: app.isTerminated) else {
-            Diagnostics.paste.info("no return target; sending after \(fallbackDelay, privacy: .public)s")
+            DebugLog.shared.record(.pasteNoReturnTarget(delay: fallbackDelay))
             DispatchQueue.main.asyncAfter(deadline: .now() + fallbackDelay, execute: perform)
             return
         }
@@ -99,7 +99,7 @@ enum CallerAppActivator {
         let requested = app.activate(options: [])
         let callerPID = app.processIdentifier
         let start = Date()
-        Diagnostics.paste.info("activate return target: requested=\(requested, privacy: .public) trusted=\(AXIsProcessTrusted(), privacy: .public)")
+        DebugLog.shared.record(.pasteActivationRequested(requested: requested, accessibilityTrusted: AXIsProcessTrusted()))
         waitUntil({
             isReadyToSend(elapsed: Date().timeIntervalSince(start),
                           frontmostProcessIdentifier: NSWorkspace.shared.frontmostApplication?.processIdentifier,
@@ -107,8 +107,9 @@ enum CallerAppActivator {
                           callerProcessIdentifier: callerPID)
         }, timeout: timeout, interval: pollInterval, completion: { ready in
             let frontmostIsTarget = NSWorkspace.shared.frontmostApplication?.processIdentifier == callerPID
-            let focused = focusedApplicationProcessIdentifier().map { $0 == callerPID ? "target" : "other" } ?? "unknown"
-            Diagnostics.paste.info("ready=\(ready, privacy: .public) after \(Date().timeIntervalSince(start), privacy: .public)s frontmostIsTarget=\(frontmostIsTarget, privacy: .public) keyboardFocus=\(focused, privacy: .public)")
+            let focus: DebugEvent.KeyboardFocus = focusedApplicationProcessIdentifier().map { $0 == callerPID ? .target : .other } ?? .unknown
+            DebugLog.shared.record(.pasteReady(ready: ready, elapsed: Date().timeIntervalSince(start),
+                                               frontmostIsTarget: frontmostIsTarget, keyboardFocus: focus))
             DispatchQueue.main.asyncAfter(deadline: .now() + settleDelay, execute: perform)
         })
     }

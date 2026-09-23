@@ -56,7 +56,7 @@ extension HotKeyService {
     }
 
     @objc func popUpSecureMenu() {
-        Diagnostics.secureMenu.info("hotkey received (secureInput=\(IsSecureEventInputEnabled(), privacy: .public))")
+        DebugLog.shared.record(.secureHotKeyReceived(secureInput: IsSecureEventInputEnabled()))
         AppEnvironment.current.menuManager.popUpSecureMenu()
     }
 

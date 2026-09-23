@@ -294,6 +294,10 @@
 "Beta Language Hieroglyphs" = "𓂀 Hieroglyphs";
 "Beta Language Restart Message" = "The language change will take effect after restarting Thoth.";
 "Beta Language Restart Now" = "Restart Now";
+"Beta Debug Log" = "Save debug information";
+"Beta Debug Log Note" = "Records only the steps of pasting and the secure menu, with times, to ~/Library/Logs/Thoth/debug.log. Copied content, secure items and app names are never saved. Turning this off deletes the file.";
+"Beta Debug Log Show" = "Show";
+"Beta Debug Log Empty" = "No debug information has been saved yet.";
 
 "Updates Respect Message" = "This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.";
 

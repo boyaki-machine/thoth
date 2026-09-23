@@ -153,7 +153,7 @@ final class SecureMenuService {
         // 猶予期間内は再認証を省略する（completion は他の経路と同様に非同期で呼ぶ）
         if let lastAuthenticated = lastAuthenticatedDate,
            Date().timeIntervalSince(lastAuthenticated) < Self.authenticationGracePeriod {
-            Diagnostics.secureMenu.info("authentication skipped (within the grace period)")
+            DebugLog.shared.record(.secureAuthenticationSkipped)
             DispatchQueue.main.async { completion(true) }
             return
         }
@@ -165,7 +165,7 @@ final class SecureMenuService {
         let policy = LAPolicy.deviceOwnerAuthentication
 
         guard context.canEvaluatePolicy(policy, error: &error) else {
-            Diagnostics.secureMenu.error("authentication unavailable: \(error?.code ?? 0, privacy: .public)")
+            DebugLog.shared.record(.secureAuthenticationUnavailable(code: error?.code ?? 0))
             #if DEBUG
             NSLog("[SecureMenuService] authenticate: canEvaluatePolicy failed: \(String(describing: error))")
             #endif
@@ -176,10 +176,10 @@ final class SecureMenuService {
         NSLog("[SecureMenuService] authenticate: starting evaluatePolicy")
         #endif
 
-        Diagnostics.secureMenu.info("authentication requested")
+        DebugLog.shared.record(.secureAuthenticationRequested)
         context.evaluatePolicy(policy, localizedReason: reason) { success, authError in
             if let authError = authError as NSError? {
-                Diagnostics.secureMenu.error("authentication error: \(authError.domain, privacy: .public) \(authError.code, privacy: .public)")
+                DebugLog.shared.record(.secureAuthenticationError(isLocalAuthenticationError: authError.domain == LAErrorDomain, code: authError.code))
             }
             #if DEBUG
             if let authError = authError {

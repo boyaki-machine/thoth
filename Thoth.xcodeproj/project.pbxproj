@@ -80,6 +80,7 @@
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00670100000000ABCDEF01 /* DebugLogSpec.swift */; };
 		AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */; };
 		AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */; };
 		AA00620200000000ABCDEF01 /* CallerAppActivatorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */; };
@@ -89,7 +90,7 @@
 		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
 		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
-		AA00660200000000ABCDEF01 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00660100000000ABCDEF01 /* Diagnostics.swift */; };
+		AA00660200000000ABCDEF01 /* DebugLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00660100000000ABCDEF01 /* DebugLog.swift */; };
 		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
 		AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */; };
 		AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */; };
@@ -340,6 +341,7 @@
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00670100000000ABCDEF01 /* DebugLogSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogSpec.swift; sourceTree = "<group>"; };
 		AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcherSpec.swift; sourceTree = "<group>"; };
 		AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcealedPasteRestoreSpec.swift; sourceTree = "<group>"; };
 		AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallerAppActivatorSpec.swift; sourceTree = "<group>"; };
@@ -349,7 +351,7 @@
 		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
 		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
-		AA00660100000000ABCDEF01 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
+		AA00660100000000ABCDEF01 /* DebugLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLog.swift; sourceTree = "<group>"; };
 		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
 		AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStoreSchema.swift; sourceTree = "<group>"; };
 		AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStore.swift; sourceTree = "<group>"; };
@@ -690,7 +692,7 @@
 				AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */,
 				AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */,
 				AA00052100000000ABCDEF01 /* FieldCipher.swift */,
-				AA00660100000000ABCDEF01 /* Diagnostics.swift */,
+				AA00660100000000ABCDEF01 /* DebugLog.swift */,
 				AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */,
 				AA00051300000000ABCDEF01 /* LibraryStore.swift */,
 				AA10CAFE0000000000000012 /* LegacyMigration.swift */,
@@ -874,6 +876,7 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00670100000000ABCDEF01 /* DebugLogSpec.swift */,
 				AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */,
 				AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */,
 				AA00600100000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift */,
@@ -1142,7 +1145,7 @@
 				AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */,
 				AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */,
 				AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */,
-				AA00660200000000ABCDEF01 /* Diagnostics.swift in Sources */,
+				AA00660200000000ABCDEF01 /* DebugLog.swift in Sources */,
 				AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */,
 				AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */,
 				AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */,
@@ -1265,6 +1268,7 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */,
 				AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */,
 				AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */,
 				AA00620200000000ABCDEF01 /* CallerAppActivatorSpec.swift in Sources */,

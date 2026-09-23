@@ -326,6 +326,7 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 | **Excluded** | Register apps to exclude from clipboard-history capture |
 
 - **Excluded apps**: register apps whose content you don't want in history (e.g. password managers). Also, copies carrying a concealed marker such as `org.nspasteboard.ConcealedType` (e.g. copies from other password managers) are automatically kept out of history regardless of the exclude list.
+- **Save debug information (beta)**: turn this on only when helping to investigate a problem (off by default). While it is on, the steps of pasting and of the secure menu (such as "authentication succeeded" or "the target app came to the front") are saved with timestamps to `~/Library/Logs/Thoth/debug.log`. **Copied content, secure item values or names, and the names of the apps you use are never saved.** "Show" lets you check the contents at any time, and turning it off deletes the file. Nothing is recorded while it is off.
 - **Secure item Export / Import**: from the **⚙** menu in the Secure Info window, you can export/import secure items and the fingerprint password as a JSON file. This is useful for using the same information across multiple machines (**the exported file is plaintext — handle with care**). The exported file schema is described in [docs/DESIGN.md](docs/DESIGN.md).
 
 ---

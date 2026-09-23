@@ -294,6 +294,10 @@
 "Beta Language Hieroglyphs" = "𓂀 ヒエログリフ";
 "Beta Language Restart Message" = "言語の変更は Thoth の再起動後に反映されます。";
 "Beta Language Restart Now" = "今すぐ再起動";
+"Beta Debug Log" = "デバッグ情報を保存する";
+"Beta Debug Log Note" = "貼り付けとセキュアメニューの操作の段階と時刻だけを ~/Library/Logs/Thoth/debug.log に保存します。コピーした内容・セキュア情報・アプリ名は保存しません。オフにすると削除します。";
+"Beta Debug Log Show" = "表示";
+"Beta Debug Log Empty" = "保存されたデバッグ情報はまだありません。";
 
 "Updates Respect Message" = "本アプリは、macOS 向け OSS クリップボード拡張アプリ Clipy から派生したプロジェクトです。素晴らしいアプリケーションを公開してくださったオリジナル Clipy の開発者の皆様、そしてその源流である ClipMenu の作者 naotaka さんに、深い敬意と感謝を表します。本プロジェクトは先人の偉大な成果の上に成り立っています。";
 
