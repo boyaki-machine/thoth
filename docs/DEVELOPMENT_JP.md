@@ -218,12 +218,29 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 
 ### 4-0. 事前準備（初回のみ）
 
-```bash
-# Xcode Command Line Tools
-xcode-select --install
-```
+1. **Xcode 本体（27 系）をインストールする。** `xcodebuild` は Xcode 本体が必要で、Command Line Tools だけでは動きません。
+2. **使う Xcode を選び、初回の準備を済ませる。**
 
-依存ライブラリ（Swift Package）は Xcode・`xcodebuild` が自動で取得します。開発ツール（SwiftLint / SwiftGen / BartyCrouch）も初回のビルドで `scripts/tool.sh` が自動で取得します（ネットワークに繋がっているときに先に取得しておくなら `scripts/tool.sh --install`）。Homebrew・Ruby は不要です。
+   ```bash
+   # 使う Xcode を確認（/Applications/Xcode.app/Contents/Developer と出ればよい）
+   xcode-select -p
+   # Command Line Tools が選ばれている場合は Xcode 本体に切り替える
+   sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+   # ライセンスへの同意と追加コンポーネントのインストール（Xcode を一度起動しても同じ）
+   sudo xcodebuild -license accept
+   xcodebuild -runFirstLaunch
+   ```
+
+3. **初回のビルドはネットワークに接続した状態で行う。** 依存ライブラリ（Swift Package）は Xcode・`xcodebuild` が、開発ツール（SwiftLint / SwiftGen / BartyCrouch）は `scripts/tool.sh` が、ビルド時に自動で取得します。先に取得だけしておく場合は次を実行します。
+
+   ```bash
+   xcodebuild -resolvePackageDependencies -project Thoth.xcodeproj -scheme Thoth   # Swift Package
+   scripts/tool.sh --install                                                     # 開発ツール
+   ```
+
+Homebrew・Ruby・CocoaPods（`bundle exec pod install`）は不要です。Xcode で開くのは `Thoth.xcodeproj` です（`Thoth.xcworkspace` はありません）。
+
+> **CocoaPods 時代（v1.5.0 まで）の作業コピーから切り替えた場合:** 残っている `Pods/`・`vendor/`・`.bundle/` は使いません（いずれも git 管理外なので削除して構いません。ただし v1.5.0 以前のコミットをビルドし直すときは `bundle exec pod install` が再び必要です）。`Thoth.xcworkspace` のフォルダが残っていても開かず、`Thoth.xcodeproj` を開いてください。
 
 ### 4-1. ユニットテスト（ビルド前の確認）
 
@@ -237,7 +254,10 @@ SwiftLint（設定: `.swiftlint.yml`、対象: `Thoth/Sources` と `ThothTests`�
 scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 ```
 
-`Done linting! Found 0 violations` と表示されれば規約違反はありません。
+最後に `Done linting! Found <件数> violations, <件数> serious in <ファイル数> files.` と表示されます。
+
+- **`serious`（エラー）が 0 件であること。** エラーがあるとビルドのスクリプトフェーズも失敗します。
+- **警告は既存のものが残っています（v1.5.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
 
 > **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 
@@ -252,14 +272,17 @@ scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 
 ### 4-3. ビルド（デバッグ / リリース）
 
-リントはビルド時に実行されます。CLI ビルドを速くしたい場合は `SKIP_SWIFTLINT=1` を付けてスキップできます。
+リントはビルド時に実行されます。CLI ビルドを速くしたい場合は `SKIP_SWIFTLINT=1` を付けてスキップできます。SwiftGen（`Thoth/Generated/` の生成）と BartyCrouch（XIB の文言の同期）もビルドのたびにコンパイルより前に走ります。
 
 ```bash
 # クリーン（必要に応じて）
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug clean
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release clean
 # 完全にクリーンな状態から始めたい場合は DerivedData も削除
+# （Swift Package の取得分も消えるため、次のビルドで取得し直す。ネットワークが必要）
 rm -rf ~/Library/Developer/Xcode/DerivedData/Thoth-*
+# 下の -derivedDataPath build/DerivedData や make_dmg.sh で作ったものは build/ にある
+rm -rf build
 
 # デバッグビルド
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug build
@@ -272,17 +295,24 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuratio
 
 ```bash
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
-  -configuration Release build -derivedDataPath build/DerivedData
+  -configuration Release build -derivedDataPath build/DerivedData ARCHS=arm64
 # → build/DerivedData/Build/Products/Release/Thoth.app に生成される
 ```
+
+`ARCHS=arm64` はコマンドラインで渡すと Swift Package のターゲットにも効き、同梱する `RealmSwift.framework` も arm64 だけになります（付けなくても動きますが、x86_64 も入って大きくなる。`make_dmg.sh` と同じ指定）。
 
 生成アプリの起動 / 配置:
 
 ```bash
 open build/DerivedData/Build/Products/Release/Thoth.app
-# または Applications へ配置
+
+# または Applications へ配置（起動中の Thoth を終了し、古いアプリを削除してから複製する）
+osascript -e 'quit app "Thoth"'
+rm -rf /Applications/Thoth.app
 cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
+
+> **古いアプリを消してから複製する理由:** `cp -R` は既存の `Thoth.app` を置き換えず、中身を混ぜ合わせます。v1.5.0 以前（CocoaPods）の `Thoth.app` には今は使わないフレームワークが `Contents/Frameworks/` に入っているため、それが残ってアプリの署名が壊れます。アプリを削除しても、履歴・スニペット・セキュアアイテム（`~/Library/Application Support/`・キーチェーン）は消えません。
 
 ### 4-4. 配布用 DMG の作成（自分・身内用）
 
@@ -303,7 +333,7 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 **出力先:** `build/Thoth-<version>.dmg`（バージョンは `Info.plist` の `CFBundleShortVersionString` から自動取得。`build/` は `.gitignore` 済みのためコミットされない）
 
 **リリース日について:** バージョンタブに表示されるリリース日は、`main` に付けた
-バージョンタグ `v<version>` の付与日（注釈タグの tagger 日付）から自動的に決まる。
+バージョンタグ `v.<version>`（例: `v.1.5.1`）の付与日（注釈タグの tagger 日付）から自動的に決まる。
 `make_dmg.sh` がその日付を取得し、ビルド設定 `THOTH_RELEASE_DATE` として
 `Info.plist` の `ThothReleaseDate` に注入する（手動更新は不要）。そのため、
 **`develop` を `main` へマージしてタグを付けた後に** `make_dmg.sh` を実行すること。
@@ -311,11 +341,12 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 
 **実行条件:**
 
-- macOS + Xcode（`xcodebuild`）。`hdiutil` は macOS 標準のため追加インストール不要
+- macOS + Xcode 本体（`xcodebuild`。4-0 の準備を済ませておく）。`hdiutil` は macOS 標準のため追加インストール不要
+- 初回はネットワーク接続（開発ツールを `.tools/` へ、Swift Package を `build/SourcePackages` へ取得する）
 - Apple Silicon (arm64) 専用ビルド
 - 署名は ad-hoc（Developer ID 署名・公証なし）
 
-**利用方法:** 生成された DMG を開き、`Thoth.app` を `Applications` へドラッグする。
+**利用方法:** 起動中の Thoth を終了してから、生成された DMG を開き、`Thoth.app` を `Applications` へドラッグする（既に入っている場合は「置き換える」を選ぶ。Finder の置き換えは古いアプリを丸ごと入れ替えるため、`cp -R` のような混ざりは起きない）。
 
 > **注意（配布先での初回起動）:** ad-hoc 署名のため Gatekeeper にブロックされる。
 > 配布先の Mac で、右クリック →「開く」で初回のみ許可するか、次のコマンドで

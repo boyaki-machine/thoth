@@ -217,12 +217,29 @@ How useful the output above is comes down almost entirely to how the spec is wri
 
 ### 4-0. First-time Setup
 
-```bash
-# Xcode Command Line Tools
-xcode-select --install
-```
+1. **Install Xcode itself (27 series).** `xcodebuild` needs the full Xcode; the Command Line Tools alone are not enough.
+2. **Select that Xcode and finish its first-launch setup.**
 
-Xcode and `xcodebuild` fetch the dependencies (Swift packages) automatically. The development tools (SwiftLint / SwiftGen / BartyCrouch) are also fetched by `scripts/tool.sh` on the first build (to fetch them ahead of time while online, run `scripts/tool.sh --install`). Homebrew and Ruby are not needed.
+   ```bash
+   # Check which Xcode is selected (/Applications/Xcode.app/Contents/Developer is what you want)
+   xcode-select -p
+   # If the Command Line Tools are selected, switch to the full Xcode
+   sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+   # Accept the license and install additional components (launching Xcode once does the same)
+   sudo xcodebuild -license accept
+   xcodebuild -runFirstLaunch
+   ```
+
+3. **Do the first build while online.** Xcode and `xcodebuild` fetch the dependencies (Swift packages), and `scripts/tool.sh` fetches the development tools (SwiftLint / SwiftGen / BartyCrouch), automatically during the build. To fetch them ahead of time:
+
+   ```bash
+   xcodebuild -resolvePackageDependencies -project Thoth.xcodeproj -scheme Thoth   # Swift packages
+   scripts/tool.sh --install                                                     # development tools
+   ```
+
+Homebrew, Ruby and CocoaPods (`bundle exec pod install`) are not needed. Open `Thoth.xcodeproj` in Xcode (there is no `Thoth.xcworkspace`).
+
+> **Switching an existing working copy from the CocoaPods era (up to v1.5.0):** the leftover `Pods/`, `vendor/` and `.bundle/` are no longer used (none of them are tracked by git, so you may delete them; building a commit from v1.5.0 or earlier again needs `bundle exec pod install` once more). If a `Thoth.xcworkspace` folder is still there, don't open it; open `Thoth.xcodeproj` instead.
 
 ### 4-1. Unit Tests (pre-build check)
 
@@ -236,7 +253,10 @@ Run SwiftLint (config: `.swiftlint.yml`, targets: `Thoth/Sources` and `ThothTest
 scripts/tool.sh swiftlint   # run from the project root
 ```
 
-`Done linting! Found 0 violations` means there are no style violations.
+It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
+
+- **`serious` (errors) must be 0.** Errors also make the build script phase fail.
+- **Existing warnings remain (70 as of v1.5.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
 
 > **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 
@@ -251,14 +271,17 @@ Key style values (`.swiftlint.yml`):
 
 ### 4-3. Build (Debug / Release)
 
-Linting runs during the build; add `SKIP_SWIFTLINT=1` to skip it for faster CLI builds.
+Linting runs during the build; add `SKIP_SWIFTLINT=1` to skip it for faster CLI builds. SwiftGen (generating `Thoth/Generated/`) and BartyCrouch (syncing XIB strings) also run on every build, before compilation.
 
 ```bash
 # Clean (as needed)
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug clean
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Release clean
 # For a fully clean state, also delete DerivedData
+# (this also removes the fetched Swift packages, which the next build fetches again; needs network)
 rm -rf ~/Library/Developer/Xcode/DerivedData/Thoth-*
+# Output of -derivedDataPath build/DerivedData below and of make_dmg.sh lives under build/
+rm -rf build
 
 # Debug build
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth -configuration Debug build
@@ -271,17 +294,24 @@ To specify the output location:
 
 ```bash
 SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
-  -configuration Release build -derivedDataPath build/DerivedData
+  -configuration Release build -derivedDataPath build/DerivedData ARCHS=arm64
 # → produced at build/DerivedData/Build/Products/Release/Thoth.app
 ```
+
+Passed on the command line, `ARCHS=arm64` also applies to the Swift package targets, so the bundled `RealmSwift.framework` is arm64 only too (it works without it, but then x86_64 is included and the app is larger; `make_dmg.sh` passes the same setting).
 
 Launch / install the built app:
 
 ```bash
 open build/DerivedData/Build/Products/Release/Thoth.app
-# or install into Applications
+
+# or install into Applications (quit the running Thoth and delete the old app before copying)
+osascript -e 'quit app "Thoth"'
+rm -rf /Applications/Thoth.app
 cp -R build/DerivedData/Build/Products/Release/Thoth.app /Applications/
 ```
+
+> **Why delete the old app first:** `cp -R` does not replace an existing `Thoth.app`; it merges into it. A `Thoth.app` from v1.5.0 or earlier (CocoaPods) has frameworks in `Contents/Frameworks/` that are no longer used, and leaving them there breaks the app's signature. Deleting the app does not delete history, snippets or secure items (`~/Library/Application Support/` and the keychain).
 
 ### 4-4. Building a Distribution DMG (for yourself / family)
 
@@ -302,7 +332,7 @@ A script builds the Release app and packages a DMG in one command.
 **Output:** `build/Thoth-<version>.dmg` (the version is read automatically from `CFBundleShortVersionString` in `Info.plist`; `build/` is in `.gitignore`, so it is not committed)
 
 **Release date:** the release date shown in the Version tab is derived automatically
-from the date the version tag `v<version>` was applied on `main` (the annotated tag's
+from the date the version tag `v.<version>` (e.g. `v.1.5.1`) was applied on `main` (the annotated tag's
 tagger date). `make_dmg.sh` reads that date and injects it via the `THOTH_RELEASE_DATE`
 build setting into `Info.plist`'s `ThothReleaseDate` (no manual update needed). Therefore,
 run `make_dmg.sh` **after merging `develop` into `main` and creating the tag**. A
@@ -310,11 +340,12 @@ development build without a tag leaves it empty, and the release date is not sho
 
 **Requirements:**
 
-- macOS + Xcode (`xcodebuild`). `hdiutil` ships with macOS, so no extra install is needed
+- macOS + the full Xcode (`xcodebuild`; complete the setup in 4-0 first). `hdiutil` ships with macOS, so no extra install is needed
+- Network access the first time (to fetch the development tools into `.tools/` and the Swift packages into `build/SourcePackages`)
 - Apple Silicon (arm64)-only build
 - Ad-hoc signing (no Developer ID signature or notarization)
 
-**Usage:** open the produced DMG and drag `Thoth.app` into `Applications`.
+**Usage:** quit the running Thoth, then open the produced DMG and drag `Thoth.app` into `Applications` (if it is already there, choose "Replace"; Finder's replace swaps the whole app, so nothing gets merged the way `cp -R` does).
 
 > **Note (first launch on the target Mac):** because the build is ad-hoc-signed,
 > Gatekeeper blocks it. On the target Mac, either right-click → **Open** to allow it
