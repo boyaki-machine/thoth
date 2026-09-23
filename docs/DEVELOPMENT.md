@@ -170,7 +170,7 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
-| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants), `CPYUpdatesPreferenceViewControllerSpec` (the license button fits its title in every language) |
+| Preferences window | `PreferencesLayoutSpec` (layout of every tab: nothing sticks out, nothing overlaps, text fits; Xib translations in every language), `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants), `CPYUpdatesPreferenceViewControllerSpec` (the license button fits its title in every language) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
@@ -223,6 +223,7 @@ How useful the output above is comes down almost entirely to how the spec is wri
 - **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
 - **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
 - **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
+- **Check screen layout with invariants, not literal coordinates.** For the Preferences tabs, `PreferencesLayoutSpec` checks "nothing sticks out, nothing overlaps, text fits" all at once. A new tab is covered as soon as it is added to `CPYPreferencesWindowController.makeTabViewControllers()`. After translating Xib text, this also tells you whether it fits in that language (if not, widen the frame or shorten the translation).
 
 ---
 
@@ -269,7 +270,7 @@ scripts/tool.sh swiftlint   # run from the project root
 It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
 
 - **`serious` (errors) must be 0.** Errors also make the build script phase fail.
-- **Existing warnings remain (70 as of v1.6.0).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
+- **Existing warnings remain (70 as of v1.6.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
 
 > **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 

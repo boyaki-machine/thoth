@@ -277,7 +277,7 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 
 > Desktop folder access is requested **only if you enable the "Save screenshots in history" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
 
-> **About "Save screenshots in history":** Thoth watches the screenshot folder directly (it also follows a location changed under ⌘⇧5 → Options → Save to) and adds each screenshot to the history as soon as it is saved (since v1.6.0; earlier versions waited for the Spotlight index, so screenshots appeared seconds to tens of seconds late or were missed).
+> **About "Save screenshots in history":** Thoth watches the screenshot folder directly (it also follows a location changed under ⌘⇧5 → Options → Save to) and adds each screenshot to the history as soon as it is saved (since v1.6.1; earlier versions waited for the Spotlight index, so screenshots appeared seconds to tens of seconds late or were missed).
 > While macOS's "**Show Floating Thumbnail**" is on (the default), however, macOS does not write the file until the thumbnail in the bottom-right corner goes away, so the history entry also appears about 5 seconds late. To have it added right away, turn that option off under ⌘⇧5 → Options.
 > Screenshots taken before the feature was enabled, and files moved into the folder later, are not added.
 
@@ -337,7 +337,7 @@ This app is provided under the MIT license. See the LICENSE file for details. Ic
 
 The copyright notices of Clipy and ClipMenu, which Thoth is derived from ([LICENSE](LICENSE), [LICENSE_CLIPMENU](LICENSE_CLIPMENU)), and the third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses; the distributed `Thoth.app` carries the same list).
 
-All dependencies use permissive licenses compatible with distribution under the MIT License (MIT, ISC, BSD, Apache-2.0, Boost). Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. Because Realm's database engine (realm-core) is now built from source and bundled, however, the licenses of the third-party code it includes (Intel's decimal floating-point library, JSON for Modern C++, and others) are also listed since v1.6.0.
+All dependencies use permissive licenses compatible with distribution under the MIT License (MIT, ISC, BSD, Apache-2.0, Boost). Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. Because Realm's database engine (realm-core) is now built from source and bundled, however, the licenses of the third-party code it includes (Intel's decimal floating-point library, JSON for Modern C++, and others) are also listed since v1.6.1.
 
 ## Special Thanks
 

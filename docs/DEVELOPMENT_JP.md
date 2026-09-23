@@ -170,7 +170,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
 | 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
-| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件）、`CPYUpdatesPreferenceViewControllerSpec`（ライセンスボタンが全言語で見切れない） |
+| 環境設定ウィンドウ | `PreferencesLayoutSpec`（全タブの配置: 部品がはみ出さない・重ならない・文字が収まる。Xib の翻訳は全言語）、`CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件）、`CPYUpdatesPreferenceViewControllerSpec`（ライセンスボタンが全言語で見切れない） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
@@ -224,6 +224,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
   （例: `SecureItemSearchSpec` の「画面間で条件が揃っていること」）。
 - **ファイル冒頭に、何を・どんな前提で確かめるスペックかを書く。** 共有状態（UserDefaults・キーチェーン・Realm）を使う場合は、その後始末の約束もここに書きます。
 - **新しいテストは「実装を意図的に戻すと落ちる」ことまで確認してから積む。** 何も検出しないテストが紛れ込むのを防ぎます。
+- **画面の配置は、座標の直値ではなく不変条件で確かめる。** 環境設定のタブは `PreferencesLayoutSpec` が「はみ出さない・重ならない・文字が収まる」をまとめて検査します。タブを足したら `CPYPreferencesWindowController.makeTabViewControllers()` に足すだけで対象になります。Xib の文言を訳したら、その言語で枠に収まるかもここで分かります（収まらないときは枠を広げるか、訳を短くする）。
 
 ---
 
@@ -270,7 +271,7 @@ scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 最後に `Done linting! Found <件数> violations, <件数> serious in <ファイル数> files.` と表示されます。
 
 - **`serious`（エラー）が 0 件であること。** エラーがあるとビルドのスクリプトフェーズも失敗します。
-- **警告は既存のものが残っています（v1.6.0 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
+- **警告は既存のものが残っています（v1.6.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
 
 > **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 

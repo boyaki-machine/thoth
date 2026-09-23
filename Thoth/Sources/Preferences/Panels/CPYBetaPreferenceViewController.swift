@@ -88,7 +88,7 @@ final class CPYBetaPreferenceViewController: NSViewController {
     /// タブを下へ広げ、Xib で組んだ部品を同じだけ上へずらして最下段の場所を作る。
     ///
     /// Xib の部品は上端からの距離を保つ設定（flexibleMinY）なので、自動配置を効かせたまま広げると
-    /// それだけで上へ動き、手でずらすと二重にずれてツールバーに重なる（v1.6.0 の動作確認で発生）。
+    /// それだけで上へ動き、手でずらすと二重にずれてツールバーに重なる（v1.6.1 の動作確認で発生）。
     /// 自動配置を止めてから広げ、ずらす量を 1 回だけにする
     private func makeRoomForDebugLogSection() {
         let extra = Self.debugLogSectionHeight

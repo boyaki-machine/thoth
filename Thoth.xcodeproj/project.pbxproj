@@ -80,6 +80,7 @@
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */; };
 		AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00670100000000ABCDEF01 /* DebugLogSpec.swift */; };
 		AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */; };
 		AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */; };
@@ -341,6 +342,7 @@
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesLayoutSpec.swift; sourceTree = "<group>"; };
 		AA00670100000000ABCDEF01 /* DebugLogSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogSpec.swift; sourceTree = "<group>"; };
 		AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcherSpec.swift; sourceTree = "<group>"; };
 		AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConcealedPasteRestoreSpec.swift; sourceTree = "<group>"; };
@@ -876,6 +878,7 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */,
 				AA00670100000000ABCDEF01 /* DebugLogSpec.swift */,
 				AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */,
 				AA00630100000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift */,
@@ -1268,6 +1271,7 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */,
 				AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */,
 				AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */,
 				AA00630200000000ABCDEF01 /* ConcealedPasteRestoreSpec.swift in Sources */,

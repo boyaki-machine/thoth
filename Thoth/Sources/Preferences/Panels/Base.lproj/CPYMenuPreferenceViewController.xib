@@ -192,7 +192,7 @@
                     </connections>
                 </textField>
                 <textField verticalHuggingPriority="750" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" preferredMaxLayoutWidth="272" translatesAutoresizingMaskIntoConstraints="NO" id="mlw-2I-UqA">
-                    <rect key="frame" x="59" y="319" width="276" height="18"/>
+                    <rect key="frame" x="59" y="319" width="268" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Number of characters in the menu:" id="hBb-sd-DcP">
                         <font key="font" metaFont="system"/>

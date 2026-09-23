@@ -11,7 +11,7 @@
 "Lps-06-dPB.title" = "Verlauf sortieren nach:";
 
 /* Class = "NSTextFieldCell"; title = "Max clipboard history size:"; ObjectID = "Nab-CO-ytH"; */
-"Nab-CO-ytH.title" = "Maximale Anzahl im Zwischenablagenverlauf:";
+"Nab-CO-ytH.title" = "Maximale Anzahl im Verlauf:";
 
 /* Class = "NSTextFieldCell"; title = "Clipboard History"; ObjectID = "OOT-F5-Pal"; */
 "OOT-F5-Pal.title" = "Zwischenablagenverlauf";
