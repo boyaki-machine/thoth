@@ -263,9 +263,13 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 | Permission | Required? | Purpose |
 |---|---|---|
 | Accessibility | Required | Used for pasting (sending ⌘V / typing keystrokes) |
-| **Desktop folder** | **Optional** | Requested only when the "Observe screenshots" beta feature is enabled. macOS saves screenshots to the Desktop by default, so scanning the Desktop is needed to detect new ones |
+| **Desktop folder** | **Optional** | Requested only when the "Save screenshots in history" beta feature is enabled. Needed to read files added to the screenshot location (the Desktop by default). Not requested if you save screenshots somewhere other than the Desktop, Documents, or Downloads (e.g. `~/Pictures`) |
 
-> Desktop folder access is requested **only if you enable the "Observe screenshots" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
+> Desktop folder access is requested **only if you enable the "Save screenshots in history" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
+
+> **About "Save screenshots in history":** Thoth watches the screenshot folder directly (it also follows a location changed under ⌘⇧5 → Options → Save to) and adds each screenshot to the history as soon as it is saved (since v1.6.0; earlier versions waited for the Spotlight index, so screenshots appeared seconds to tens of seconds late or were missed).
+> While macOS's "**Show Floating Thumbnail**" is on (the default), however, macOS does not write the file until the thumbnail in the bottom-right corner goes away, so the history entry also appears about 5 seconds late. To have it added right away, turn that option off under ⌘⇧5 → Options.
+> Screenshots taken before the feature was enabled, and files moved into the folder later, are not added.
 
 ### Handling the Gatekeeper Alert on First Launch
 

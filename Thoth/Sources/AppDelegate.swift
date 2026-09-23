@@ -14,8 +14,6 @@ import Cocoa
 import RxCocoa
 import RxSwift
 import Magnet
-import Screeen
-import RxScreeen
 import LetsMove
 
 /// アプリのエントリポイント。起動シーケンスの統括・メニュー項目のアクション受け口・
@@ -26,7 +24,7 @@ import LetsMove
 class AppDelegate: NSObject, NSMenuItemValidation {
 
     // MARK: - Properties
-    let screenshotObserver = ScreenShotObserver()
+    let screenshotWatcher = ScreenshotWatcher()
     let disposeBag = DisposeBag()
     // 再署名による再起動が予約されている間 true（起動処理をスキップするためのフラグ）
     fileprivate var isRelaunchPendingForResign = false
@@ -344,26 +342,20 @@ private extension AppDelegate {
                 self?.reflectLoginItemState()
             })
             .disposed(by: disposeBag)
-        // Observe Screenshot
-        let observerScreenshot = AppEnvironment.current.defaults.rx.observe(Bool.self, Constants.Beta.observerScreenshot, retainSelf: false)
+        // Observe Screenshot（ベータ機能。オンの間だけ保存先フォルダを見張る）
+        screenshotWatcher.onCapture = { image in
+            AppEnvironment.current.clipService.create(with: image)
+        }
+        AppEnvironment.current.defaults.rx.observe(Bool.self, Constants.Beta.observerScreenshot, retainSelf: false)
             .compactMap { $0 }
-            .share(replay: 1)
-        observerScreenshot
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] enabled in
-                self?.screenshotObserver.isEnabled = enabled
-            })
-            .disposed(by: disposeBag)
-        observerScreenshot
-            .filter { $0 }
-            .take(1)
-            .subscribe(onNext: { [weak self] _ in
-                self?.screenshotObserver.start()
-            })
-            .disposed(by: disposeBag)
-        // Observe Screenshot image
-        screenshotObserver.rx.addedImage
-            .subscribe(onNext: { image in
-                AppEnvironment.current.clipService.create(with: image)
+                if enabled {
+                    self?.screenshotWatcher.start()
+                } else {
+                    self?.screenshotWatcher.stop()
+                }
             })
             .disposed(by: disposeBag)
     }

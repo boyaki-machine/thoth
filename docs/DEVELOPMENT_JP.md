@@ -36,7 +36,6 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 | RxSwift / RxCocoa | リアクティブなイベント処理・設定監視 |
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
-| RxScreeen | スクリーンショット監視 |
 | AEXML | スニペットの XML インポート/エクスポート |
 | LetsMove | 初回起動時の Applications フォルダへの移動促進（`Packages/LetsMove` に取り込んだローカルパッケージ） |
 | SwiftHEXColors | HEX カラープレビュー |

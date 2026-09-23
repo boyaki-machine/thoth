@@ -83,15 +83,6 @@
       }
     },
     {
-      "identity" : "rxscreeen",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Clipy/RxScreeen.git",
-      "state" : {
-        "revision" : "dda9b6373963d6b08a62407f064af40509e8032a",
-        "version" : "2.2.0"
-      }
-    },
-    {
       "identity" : "rxswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ReactiveX/RxSwift.git",
@@ -107,15 +98,6 @@
       "state" : {
         "revision" : "df657bc1beba23ffd580953f183cd756b5bcd514",
         "version" : "2.4.1"
-      }
-    },
-    {
-      "identity" : "screeen",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/Clipy/Screeen.git",
-      "state" : {
-        "revision" : "357a72be0060765a8e93b9a70b283fc63c75f4a9",
-        "version" : "2.1.0"
       }
     },
     {

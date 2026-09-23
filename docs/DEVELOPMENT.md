@@ -36,7 +36,6 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
-| RxScreeen | Screenshot observation |
 | AEXML | Snippet XML import/export |
 | LetsMove | Prompt to move to the Applications folder on first launch (vendored as the local package `Packages/LetsMove`) |
 | SwiftHEXColors | HEX color preview |
