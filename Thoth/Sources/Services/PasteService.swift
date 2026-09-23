@@ -298,7 +298,7 @@ extension PasteService {
     @discardableResult
     func paste() -> Bool {
         guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else {
-            Diagnostics.paste.info("paste: ⌘V input is turned off in Preferences")
+            Diagnostics.paste.notice("paste: ⌘V input is turned off in Preferences")
             return false
         }
         // Check Accessibility Permission
@@ -325,7 +325,7 @@ extension PasteService {
             // Post Paste Command
             keyVDown?.post(tap: .cgAnnotatedSessionEventTap)
             keyVUp?.post(tap: .cgAnnotatedSessionEventTap)
-            Diagnostics.paste.info("paste: posted ⌘V (keyCode \(vKeyCode, privacy: .public)) frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil", privacy: .public) thothActive=\(NSApp.isActive, privacy: .public)")
+            Diagnostics.paste.notice("paste: posted ⌘V (keyCode \(vKeyCode, privacy: .public)) frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil", privacy: .public) thothActive=\(NSApp.isActive, privacy: .public)")
         }
         return true
     }

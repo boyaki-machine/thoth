@@ -210,7 +210,7 @@ extension CPYSecurePickerPanel {
     /// - Parameter callerApp: 貼り付け先として覚えておくアプリ（ホットキーを押した時点の最前面）。
     ///   使えない場合（nil・Thoth 自身）は表示する時点の最前面を使う
     func show(near point: NSPoint, callerApp hotKeyApp: NSRunningApplication? = nil) {
-        Diagnostics.secureMenu.info("picker show requested")
+        Diagnostics.secureMenu.notice("picker show requested")
         callerApp = CallerAppActivator.returnTarget(atHotKey: hotKeyApp, atShow: NSWorkspace.shared.frontmostApplication)
         let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
@@ -228,8 +228,8 @@ extension CPYSecurePickerPanel {
             self.makeKeyAndOrderFront(nil)
             self.makeFirstResponder(self.tableView)
             let caller = self.callerApp?.bundleIdentifier ?? "nil"
-            Diagnostics.secureMenu.info("picker shown: visible=\(self.isVisible, privacy: .public) key=\(self.isKeyWindow, privacy: .public) thothActive=\(NSApp.isActive, privacy: .public)")
-            Diagnostics.secureMenu.info("picker state: onScreen=\(self.occlusionState.contains(.visible), privacy: .public) level=\(self.level.rawValue, privacy: .public) caller=\(caller, privacy: .public)")
+            Diagnostics.secureMenu.notice("picker shown: visible=\(self.isVisible, privacy: .public) key=\(self.isKeyWindow, privacy: .public) thothActive=\(NSApp.isActive, privacy: .public)")
+            Diagnostics.secureMenu.notice("picker state: onScreen=\(self.occlusionState.contains(.visible), privacy: .public) level=\(self.level.rawValue, privacy: .public) caller=\(caller, privacy: .public)")
             if self.context.isWithinWindow, let parentItemID = self.context.lastParentItemID {
                 self.preselectParent(parentItemID: parentItemID, thenOpenSubWithField: self.context.lastFieldIndex)
             } else {

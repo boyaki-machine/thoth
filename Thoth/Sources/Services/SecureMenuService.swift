@@ -153,7 +153,7 @@ final class SecureMenuService {
         // 猶予期間内は再認証を省略する（completion は他の経路と同様に非同期で呼ぶ）
         if let lastAuthenticated = lastAuthenticatedDate,
            Date().timeIntervalSince(lastAuthenticated) < Self.authenticationGracePeriod {
-            Diagnostics.secureMenu.info("authentication skipped (within the grace period)")
+            Diagnostics.secureMenu.notice("authentication skipped (within the grace period)")
             DispatchQueue.main.async { completion(true) }
             return
         }
@@ -176,7 +176,7 @@ final class SecureMenuService {
         NSLog("[SecureMenuService] authenticate: starting evaluatePolicy")
         #endif
 
-        Diagnostics.secureMenu.info("authentication requested")
+        Diagnostics.secureMenu.notice("authentication requested")
         context.evaluatePolicy(policy, localizedReason: reason) { success, authError in
             if let authError = authError as NSError? {
                 Diagnostics.secureMenu.error("authentication error: \(authError.domain, privacy: .public) \(authError.code, privacy: .public)")
