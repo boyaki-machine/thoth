@@ -3,11 +3,10 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		242EC2327861D35B7C3AE84E /* Pods_ThothTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00A4B450122D7FCE6BD57E77 /* Pods_ThothTests.framework */; };
 		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		6F92D636300240E900478ACF /* CPYTOTPImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */; };
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
@@ -81,7 +80,6 @@
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
-		AA00057200000000ABCDEF01 /* LibraryUnavailableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */; };
 		AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051100000000ABCDEF01 /* LibraryRecords.swift */; };
 		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
 		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
@@ -98,6 +96,10 @@
 		AA00055200000000ABCDEF01 /* LibraryMigrationFixture.realm in Resources */ = {isa = PBXBuildFile; fileRef = AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */; };
 		AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056100000000ABCDEF01 /* ClipThumbnail.swift */; };
 		AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */; };
+		AA00057200000000ABCDEF01 /* LibraryUnavailableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */; };
+		AA00059200000000ABCDEF01 /* AcknowledgementsSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */; };
+		AA0005A200000000ABCDEF01 /* LetsMoveBundleSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */; };
+		AA00058200000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00058100000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift */; };
 		AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10CAFE0000000000000012 /* LegacyMigration.swift */; };
 		AA20C0DE0000000000000001 /* CryptoPasswordQRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */; };
 		AA20C0DE0000000000000003 /* CPYCameraQRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000004 /* CPYCameraQRScannerViewController.swift */; };
@@ -114,7 +116,6 @@
 		AA20C0DE0000000000000043 /* CPYSecurePickerPanelSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000044 /* CPYSecurePickerPanelSpec.swift */; };
 		AA20C0DE0000000000000045 /* CPYVersionPreferenceViewControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000046 /* CPYVersionPreferenceViewControllerSpec.swift */; };
 		AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA20C0DE0000000000000048 /* CPYPreferencesWindowControllerSpec.swift */; };
-		B7CC520B88EAA6AD38E93462 /* Pods_Thoth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */; };
 		C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */; };
 		FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */; };
 		FA0D5CE81DDCC61600AC9052 /* ClipService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA0D5CE71DDCC61600AC9052 /* ClipService.swift */; };
@@ -164,7 +165,6 @@
 		FA1DB51E1DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB5011DDCB4C0007F95C8 /* CPYTypePreferenceViewController.xib */; };
 		FA1DB51F1DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB5031DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.xib */; };
 		FA1DB5201DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB50D1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift */; };
-		AA00058200000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00058100000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift */; };
 		FA1DB5221DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = FA1DB50F1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.xib */; };
 		FA3778931F3B691A003B5BAB /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3778921F3B691A003B5BAB /* AppEnvironment.swift */; };
 		FA3778951F3B6920003B5BAB /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3778941F3B6920003B5BAB /* Environment.swift */; };
@@ -185,6 +185,21 @@
 		FAC43E2B1B35DFDF00C06102 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FAC43E2A1B35DFDF00C06102 /* WebKit.framework */; };
 		FAE911B91DE045E2008A4BEC /* HotKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE911B81DE045E2008A4BEC /* HotKeyService.swift */; };
 		FAE911BB1DE054F1008A4BEC /* NSCoding+Archive.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE911BA1DE054F1008A4BEC /* NSCoding+Archive.swift */; };
+		FB6855A93447A3954AACCB18 /* AEXML in Frameworks */ = {isa = PBXBuildFile; productRef = 4F13B795E0691CA522482ECE /* AEXML */; };
+		C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */ = {isa = PBXBuildFile; productRef = 1938DBEC244DCB10F558AC8E /* KeyHolder */; };
+		023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */ = {isa = PBXBuildFile; productRef = 0756B1CE738969E1843E4F63 /* Magnet */; };
+		39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EF29407C8D8A90E2B0EF931D /* RealmSwift */; };
+		7C2D64B4595F209442AD861B /* RxScreeen in Frameworks */ = {isa = PBXBuildFile; productRef = 126D463DF25869050ACDFE94 /* RxScreeen */; };
+		D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1B221E0B7D9C6A2CF768C1F4 /* RxSwift */; };
+		6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 8C215EB623181C3B0EF7D2F3 /* RxCocoa */; };
+		8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */ = {isa = PBXBuildFile; productRef = EF59A623C09A7FDDF0ACACB5 /* Sauce */; };
+		A831E4ADD1F7158D45D8FD72 /* Screeen in Frameworks */ = {isa = PBXBuildFile; productRef = 91D19FC412DA73CCE0C74456 /* Screeen */; };
+		F0382482DB9461EB47688363 /* SwiftHEXColors in Frameworks */ = {isa = PBXBuildFile; productRef = E938119460D36ADC6BEB6549 /* SwiftHEXColors */; };
+		CFA78390949AF0D8D7CBA8FB /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = CBBFA159A947C4864AB2793F /* Quick */; };
+		013BC32641FB0ABC539B890E /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = F7850410BD6D2FF990E9621F /* Nimble */; };
+		1E2B9AD954139146B8CCC427 /* LetsMove in Frameworks */ = {isa = PBXBuildFile; productRef = 9B6900DA061889398274DBCD /* LetsMove */; };
+		043D48842FAB190208863D91 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = EF29407C8D8A90E2B0EF931D /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C3CB2DEE5AEC6E721723C2A0 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D41FD0C12C2D616213B35F40 /* RealmSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -204,6 +219,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				043D48842FAB190208863D91 /* RealmSwift in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -211,11 +227,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		00A4B450122D7FCE6BD57E77 /* Pods_ThothTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ThothTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
 		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
-		1C2D23FF23B07B76585DC610 /* Pods-ThothTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ThothTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-ThothTests/Pods-ThothTests.release.xcconfig"; sourceTree = "<group>"; };
-		31064F137CFB046737D1709D /* Pods-Thoth.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Thoth.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Thoth/Pods-Thoth.debug.xcconfig"; sourceTree = "<group>"; };
 		314B299D1EC49AD5004DD070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYSnippetsEditorWindowController.xib; sourceTree = "<group>"; };
 		314B299E1EC49AEF004DD070 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/CPYSnippetsEditorWindowController.strings; sourceTree = "<group>"; };
 		314B299F1EC49BAF004DD070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYPreferencesWindowController.xib; sourceTree = "<group>"; };
@@ -251,7 +264,6 @@
 		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ThothTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Thoth.swift"; sourceTree = "<group>"; };
-		73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Thoth.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		846004961FD5511800BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYPreferencesWindowController.strings; sourceTree = "<group>"; };
 		846004971FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
 		846004981FD5511900BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYExcludeAppPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -262,8 +274,6 @@
 		8460049D1FD5511A00BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYUpdatesPreferenceViewController.strings; sourceTree = "<group>"; };
 		8460049E1FD5511A00BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/CPYSnippetsEditorWindowController.strings; sourceTree = "<group>"; };
 		8460049F1FD5511A00BA733E /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
-		994536AAB91CE22186C3CFB1 /* Pods-ThothTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ThothTests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-ThothTests/Pods-ThothTests.debug.xcconfig"; sourceTree = "<group>"; };
-		9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Thoth.release.xcconfig"; path = "Pods/Target Support Files/Pods-Thoth/Pods-Thoth.release.xcconfig"; sourceTree = "<group>"; };
 		AA00001100000000ABCDEF01 /* SecureMenuItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuItem.swift; sourceTree = "<group>"; };
 		AA00001200000000ABCDEF01 /* SecureMenuService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureMenuService.swift; sourceTree = "<group>"; };
 		AA00001400000000ABCDEF01 /* CPYSecurePickerPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSecurePickerPanel.swift; sourceTree = "<group>"; };
@@ -325,7 +335,6 @@
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
-		AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryUnavailableSpec.swift; sourceTree = "<group>"; };
 		AA00051100000000ABCDEF01 /* LibraryRecords.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryRecords.swift; sourceTree = "<group>"; };
 		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
 		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
@@ -342,6 +351,10 @@
 		AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */ = {isa = PBXFileReference; lastKnownFileType = file; name = LibraryMigrationFixture.realm; path = Fixtures/LibraryMigrationFixture.realm; sourceTree = "<group>"; };
 		AA00056100000000ABCDEF01 /* ClipThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipThumbnail.swift; sourceTree = "<group>"; };
 		AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClipThumbnailSpec.swift; sourceTree = "<group>"; };
+		AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryUnavailableSpec.swift; sourceTree = "<group>"; };
+		AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AcknowledgementsSpec.swift; sourceTree = "<group>"; };
+		AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LetsMoveBundleSpec.swift; sourceTree = "<group>"; };
+		AA00058100000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSnippetsEditorWindowController+OutlineView.swift"; sourceTree = "<group>"; };
 		AA10CAFE0000000000000001 /* la */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = la; path = la.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000002 /* egy */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = egy; path = egy.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA10CAFE0000000000000012 /* LegacyMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMigration.swift; sourceTree = "<group>"; };
@@ -410,7 +423,6 @@
 		FA1DB4F51DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYTypePreferenceViewController.swift; sourceTree = "<group>"; };
 		FA1DB4F61DDCB4C0007F95C8 /* CPYUpdatesPreferenceViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYUpdatesPreferenceViewController.swift; sourceTree = "<group>"; };
 		FA1DB50D1DDCB4C0007F95C8 /* CPYSnippetsEditorWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSnippetsEditorWindowController.swift; sourceTree = "<group>"; };
-		AA00058100000000ABCDEF01 /* CPYSnippetsEditorWindowController+OutlineView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CPYSnippetsEditorWindowController+OutlineView.swift"; sourceTree = "<group>"; };
 		FA3778921F3B691A003B5BAB /* AppEnvironment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
 		FA3778941F3B6920003B5BAB /* Environment.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Collection+Safe.swift"; sourceTree = "<group>"; };
@@ -452,12 +464,22 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB6855A93447A3954AACCB18 /* AEXML in Frameworks */,
+				C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */,
+				023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */,
+				39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */,
+				7C2D64B4595F209442AD861B /* RxScreeen in Frameworks */,
+				D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */,
+				6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */,
+				8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */,
+				A831E4ADD1F7158D45D8FD72 /* Screeen in Frameworks */,
+				F0382482DB9461EB47688363 /* SwiftHEXColors in Frameworks */,
+				1E2B9AD954139146B8CCC427 /* LetsMove in Frameworks */,
 				FAC43E2B1B35DFDF00C06102 /* WebKit.framework in Frameworks */,
 				FAC43E291B35DFDA00C06102 /* Cocoa.framework in Frameworks */,
 				FAC43E271B35DFD300C06102 /* Carbon.framework in Frameworks */,
 				FAC43E251B35DFD000C06102 /* AppKit.framework in Frameworks */,
 				FAC43E231B35DFC800C06102 /* Foundation.framework in Frameworks */,
-				B7CC520B88EAA6AD38E93462 /* Pods_Thoth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,7 +487,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				242EC2327861D35B7C3AE84E /* Pods_ThothTests.framework in Frameworks */,
+				C3CB2DEE5AEC6E721723C2A0 /* RealmSwift in Frameworks */,
+				CFA78390949AF0D8D7CBA8FB /* Quick in Frameworks */,
+				013BC32641FB0ABC539B890E /* Nimble in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -480,8 +504,6 @@
 				FAC43E261B35DFD300C06102 /* Carbon.framework */,
 				FAC43E241B35DFD000C06102 /* AppKit.framework */,
 				FAC43E221B35DFC800C06102 /* Foundation.framework */,
-				73A92F6DEE6CFF50A567CFEF /* Pods_Thoth.framework */,
-				00A4B450122D7FCE6BD57E77 /* Pods_ThothTests.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -513,17 +535,6 @@
 				AA0000D900000000ABCDEF01 /* CPYSecureInfoWindowController.swift */,
 			);
 			path = SecureInfo;
-			sourceTree = "<group>";
-		};
-		D308B3D847EEAF20B17182CE /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				31064F137CFB046737D1709D /* Pods-Thoth.debug.xcconfig */,
-				9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */,
-				994536AAB91CE22186C3CFB1 /* Pods-ThothTests.debug.xcconfig */,
-				1C2D23FF23B07B76585DC610 /* Pods-ThothTests.release.xcconfig */,
-			);
-			name = Pods;
 			sourceTree = "<group>";
 		};
 		FA06D2D21DD882BD002FB7C2 /* Resources */ = {
@@ -807,7 +818,6 @@
 				FAC43DDB1B35D8B100C06102 /* ThothTests */,
 				FAC43DC71B35D8B100C06102 /* Products */,
 				2CB0F71AAC48A392535FD3B0 /* Frameworks */,
-				D308B3D847EEAF20B17182CE /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -852,6 +862,8 @@
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
 				AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */,
+				AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */,
+				AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */,
 				AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */,
 				AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */,
 				AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */,
@@ -887,21 +899,32 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FAC43DE21B35D8B100C06102 /* Build configuration list for PBXNativeTarget "Thoth" */;
 			buildPhases = (
-				8E8162F076D1C3115EAAB644 /* [CP] Check Pods Manifest.lock */,
+				FA10897F20EC24F700A3FEFC /* SwiftGen */,
+				FAAA88991E686CED0088FB34 /* BartyCrouch */,
 				FAC43DC21B35D8B100C06102 /* Sources */,
 				FAC43DC31B35D8B100C06102 /* Frameworks */,
 				FAC43DC41B35D8B100C06102 /* Resources */,
 				FAC43E1D1B35DF4A00C06102 /* Embed Frameworks */,
 				FAAD02201CA98E20007C6EEE /* SwiftLint */,
-				07B47785AE0AC2185B570C28 /* [CP] Embed Pods Frameworks */,
-				FAAA88991E686CED0088FB34 /* BartyCrouch */,
-				FA10897F20EC24F700A3FEFC /* SwiftGen */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = Thoth;
+			packageProductDependencies = (
+				4F13B795E0691CA522482ECE /* AEXML */,
+				1938DBEC244DCB10F558AC8E /* KeyHolder */,
+				0756B1CE738969E1843E4F63 /* Magnet */,
+				EF29407C8D8A90E2B0EF931D /* RealmSwift */,
+				126D463DF25869050ACDFE94 /* RxScreeen */,
+				1B221E0B7D9C6A2CF768C1F4 /* RxSwift */,
+				8C215EB623181C3B0EF7D2F3 /* RxCocoa */,
+				EF59A623C09A7FDDF0ACACB5 /* Sauce */,
+				91D19FC412DA73CCE0C74456 /* Screeen */,
+				E938119460D36ADC6BEB6549 /* SwiftHEXColors */,
+				9B6900DA061889398274DBCD /* LetsMove */,
+			);
 			productName = Thoth;
 			productReference = FAC43DC61B35D8B100C06102 /* Thoth.app */;
 			productType = "com.apple.product-type.application";
@@ -910,11 +933,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = FAC43DE51B35D8B100C06102 /* Build configuration list for PBXNativeTarget "ThothTests" */;
 			buildPhases = (
-				7BFBD366B210014B03083E71 /* [CP] Check Pods Manifest.lock */,
 				FAC43DD41B35D8B100C06102 /* Sources */,
 				FAC43DD51B35D8B100C06102 /* Frameworks */,
 				FAC43DD61B35D8B100C06102 /* Resources */,
-				321A1AC02A519AFA3A4D43D2 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -922,6 +943,11 @@
 				FAC43DDA1B35D8B100C06102 /* PBXTargetDependency */,
 			);
 			name = ThothTests;
+			packageProductDependencies = (
+				D41FD0C12C2D616213B35F40 /* RealmSwift */,
+				CBBFA159A947C4864AB2793F /* Quick */,
+				F7850410BD6D2FF990E9621F /* Nimble */,
+			);
 			productName = ThothTests;
 			productReference = FAC43DD81B35D8B100C06102 /* ThothTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -952,7 +978,7 @@
 				};
 			};
 			buildConfigurationList = FAC43DC11B35D8B100C06102 /* Build configuration list for PBXProject "Thoth" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 15.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -966,6 +992,20 @@
 				egy,
 			);
 			mainGroup = FAC43DBD1B35D8B100C06102;
+			packageReferences = (
+				54C89554B16C57DE53FA81F8 /* XCRemoteSwiftPackageReference "AEXML" */,
+				F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */,
+				6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */,
+				9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */,
+				40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */,
+				FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */,
+				A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */,
+				852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */,
+				7BA860BC73B803449586D44E /* XCRemoteSwiftPackageReference "Quick" */,
+				09A0F67417FDE30521293F77 /* XCRemoteSwiftPackageReference "Nimble" */,
+				A859B9F0F51B0362E6D1C1B4 /* XCLocalSwiftPackageReference "Packages/LetsMove" */,
+			);
 			productRefGroup = FAC43DC71B35D8B100C06102 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -1011,116 +1051,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		07B47785AE0AC2185B570C28 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Thoth/Pods-Thoth-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/AEXML/AEXML.framework",
-				"${BUILT_PRODUCTS_DIR}/KeyHolder/KeyHolder.framework",
-				"${BUILT_PRODUCTS_DIR}/LetsMove/LetsMove.framework",
-				"${BUILT_PRODUCTS_DIR}/Magnet/Magnet.framework",
-				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
-				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
-				"${BUILT_PRODUCTS_DIR}/RxRelay/RxRelay.framework",
-				"${BUILT_PRODUCTS_DIR}/RxScreeen/RxScreeen.framework",
-				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/Sauce/Sauce.framework",
-				"${BUILT_PRODUCTS_DIR}/Screeen/Screeen.framework",
-				"${BUILT_PRODUCTS_DIR}/SwiftHEXColors/SwiftHEXColors.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AEXML.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/KeyHolder.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/LetsMove.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Magnet.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxRelay.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxScreeen.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sauce.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Screeen.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftHEXColors.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Thoth/Pods-Thoth-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		321A1AC02A519AFA3A4D43D2 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ThothTests/Pods-ThothTests-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/CwlCatchException/CwlCatchException.framework",
-				"${BUILT_PRODUCTS_DIR}/CwlCatchExceptionSupport/CwlCatchExceptionSupport.framework",
-				"${BUILT_PRODUCTS_DIR}/CwlMachBadInstructionHandler/CwlMachBadInstructionHandler.framework",
-				"${BUILT_PRODUCTS_DIR}/CwlPosixPreconditionTesting/CwlPosixPreconditionTesting.framework",
-				"${BUILT_PRODUCTS_DIR}/CwlPreconditionTesting/CwlPreconditionTesting.framework",
-				"${BUILT_PRODUCTS_DIR}/Nimble/Nimble.framework",
-				"${BUILT_PRODUCTS_DIR}/Quick/Quick.framework",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlCatchException.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlCatchExceptionSupport.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlMachBadInstructionHandler.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlPosixPreconditionTesting.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/CwlPreconditionTesting.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Nimble.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Quick.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ThothTests/Pods-ThothTests-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		7BFBD366B210014B03083E71 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-ThothTests-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-		8E8162F076D1C3115EAAB644 /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-Thoth-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 		FA10897F20EC24F700A3FEFC /* SwiftGen */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1131,10 +1064,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/SwiftGen/bin/swiftgen\"";
+			shellScript = "cd \"${PROJECT_DIR}\" && \"${PROJECT_DIR}/scripts/tool.sh\" swiftgen config run\n";
 		};
 		FAAA88991E686CED0088FB34 /* BartyCrouch */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1145,10 +1079,11 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$PROJECT_DIR\" && \"${PODS_ROOT}/BartyCrouch/bartycrouch\" update";
+			shellScript = "cd \"${PROJECT_DIR}\" && \"${PROJECT_DIR}/scripts/tool.sh\" bartycrouch update\n";
 		};
 		FAAD02201CA98E20007C6EEE /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1159,7 +1094,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${SKIP_SWIFTLINT:-0}\" != \"1\" ]; then if [ -x \"${PODS_ROOT}/SwiftLint/swiftlint\" ]; then \"${PODS_ROOT}/SwiftLint/swiftlint\"; fi; fi";
+			shellScript = "if [ \"${SKIP_SWIFTLINT:-0}\" != \"1\" ]; then\n    cd \"${PROJECT_DIR}\" && \"${PROJECT_DIR}/scripts/tool.sh\" swiftlint\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1314,6 +1249,8 @@
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
 				AA00057200000000ABCDEF01 /* LibraryUnavailableSpec.swift in Sources */,
+				AA00059200000000ABCDEF01 /* AcknowledgementsSpec.swift in Sources */,
+				AA0005A200000000ABCDEF01 /* LetsMoveBundleSpec.swift in Sources */,
 				AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */,
 				AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */,
 				AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */,
@@ -1592,7 +1529,6 @@
 		};
 		FAC43DE31B35D8B100C06102 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 31064F137CFB046737D1709D /* Pods-Thoth.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -1617,7 +1553,6 @@
 		};
 		FAC43DE41B35D8B100C06102 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9DBBF976436A0651CB8BD4B2 /* Pods-Thoth.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -1643,7 +1578,6 @@
 		};
 		FAC43DE61B35D8B100C06102 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 994536AAB91CE22186C3CFB1 /* Pods-ThothTests.debug.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1667,7 +1601,6 @@
 		};
 		FAC43DE71B35D8B100C06102 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1C2D23FF23B07B76585DC610 /* Pods-ThothTests.release.xcconfig */;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -1716,6 +1649,177 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A859B9F0F51B0362E6D1C1B4 /* XCLocalSwiftPackageReference "Packages/LetsMove" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/LetsMove;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		54C89554B16C57DE53FA81F8 /* XCRemoteSwiftPackageReference "AEXML" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/tadija/AEXML.git";
+			requirement = {
+				kind = exactVersion;
+				version = 4.7.0;
+			};
+		};
+		F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clipy/KeyHolder.git";
+			requirement = {
+				kind = exactVersion;
+				version = 4.2.0;
+			};
+		};
+		6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clipy/Magnet.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.4.0;
+			};
+		};
+		9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 20.0.5;
+			};
+		};
+		E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clipy/RxScreeen.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.2.0;
+			};
+		};
+		40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 6.9.0;
+			};
+		};
+		FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clipy/Sauce.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.4.1;
+			};
+		};
+		A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Clipy/Screeen.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.0;
+			};
+		};
+		852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/thii/SwiftHEXColors.git";
+			requirement = {
+				kind = exactVersion;
+				version = 1.4.1;
+			};
+		};
+		7BA860BC73B803449586D44E /* XCRemoteSwiftPackageReference "Quick" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Quick/Quick.git";
+			requirement = {
+				kind = exactVersion;
+				version = 7.6.2;
+			};
+		};
+		09A0F67417FDE30521293F77 /* XCRemoteSwiftPackageReference "Nimble" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Quick/Nimble.git";
+			requirement = {
+				kind = exactVersion;
+				version = 14.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F13B795E0691CA522482ECE /* AEXML */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 54C89554B16C57DE53FA81F8 /* XCRemoteSwiftPackageReference "AEXML" */;
+			productName = AEXML;
+		};
+		1938DBEC244DCB10F558AC8E /* KeyHolder */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */;
+			productName = KeyHolder;
+		};
+		0756B1CE738969E1843E4F63 /* Magnet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */;
+			productName = Magnet;
+		};
+		EF29407C8D8A90E2B0EF931D /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+		126D463DF25869050ACDFE94 /* RxScreeen */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E9A3B0E774EA59E5326EC266 /* XCRemoteSwiftPackageReference "RxScreeen" */;
+			productName = RxScreeen;
+		};
+		1B221E0B7D9C6A2CF768C1F4 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
+		8C215EB623181C3B0EF7D2F3 /* RxCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxCocoa;
+		};
+		EF59A623C09A7FDDF0ACACB5 /* Sauce */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */;
+			productName = Sauce;
+		};
+		91D19FC412DA73CCE0C74456 /* Screeen */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1A268D301BB87BEA0CB737B /* XCRemoteSwiftPackageReference "Screeen" */;
+			productName = Screeen;
+		};
+		E938119460D36ADC6BEB6549 /* SwiftHEXColors */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */;
+			productName = SwiftHEXColors;
+		};
+		CBBFA159A947C4864AB2793F /* Quick */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7BA860BC73B803449586D44E /* XCRemoteSwiftPackageReference "Quick" */;
+			productName = Quick;
+		};
+		F7850410BD6D2FF990E9621F /* Nimble */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 09A0F67417FDE30521293F77 /* XCRemoteSwiftPackageReference "Nimble" */;
+			productName = Nimble;
+		};
+		9B6900DA061889398274DBCD /* LetsMove */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A859B9F0F51B0362E6D1C1B4 /* XCLocalSwiftPackageReference "Packages/LetsMove" */;
+			productName = LetsMove;
+		};
+		D41FD0C12C2D616213B35F40 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FAC43DBE1B35D8B100C06102 /* Project object */;
 }

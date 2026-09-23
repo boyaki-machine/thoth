@@ -31,8 +31,8 @@ final class CPYThirdPartyLicensesWindowController: NSWindowController {
 // MARK: - View Controller
 
 /// サードパーティライセンス表示画面。
-/// 表示内容は `Pods-Thoth-acknowledgements.markdown`（CocoaPods自動生成）を
-/// `bundle exec pod install` 実行時に Acknowledgements.md としてコピーしたもの。
+/// 表示内容は Acknowledgements.md。`scripts/update-acknowledgements.swift` が
+/// Swift Package の解決結果（Package.resolved）と各パッケージの LICENSE から作る。
 final class CPYThirdPartyLicensesViewController: NSViewController {
 
     override func loadView() {

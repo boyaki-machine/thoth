@@ -247,9 +247,8 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 **概略:**
 
 1. リポジトリを clone
-2. 依存関係をインストール（`bundle exec pod install`）
-3. ビルド（`Thoth.xcworkspace` を Xcode で開くか、CLI で `xcodebuild`）
-4. 生成された `Thoth.app` を `/Applications` などに配置して起動
+2. ビルド（`Thoth.xcodeproj` を Xcode で開くか、CLI で `xcodebuild`。依存ライブラリと開発ツールはビルド時に自動で取得されます）
+3. 生成された `Thoth.app` を `/Applications` などに配置して起動
 
 **初回起動時の注意:**
 

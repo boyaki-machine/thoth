@@ -1,3 +1,4 @@
+import AppKit
 import Quick
 import Nimble
 @testable import Thoth
