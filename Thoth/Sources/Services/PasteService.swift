@@ -176,6 +176,36 @@ extension PasteService {
         }
     }
 
+    /// 秘匿値を貼り付けてから、元のクリップボードへ戻すまでの時間。
+    /// 貼り付け先が ⌘V を処理してクリップボードを読み終えるのを待つ
+    /// （短すぎると、遅いアプリでは戻した後の内容が貼り付けられてしまう）
+    static let concealedPasteRestoreDelay: TimeInterval = 2.0
+
+    /// 秘匿値の貼り付けの後始末として、`snapshot`（書き込む前の内容）へクリップボードを戻す。
+    /// その間に別のコピーがあった（changeCount が `writtenChangeCount` から変わった）場合は何もしない。
+    ///
+    /// 貼り付け後もクリップボードに秘匿値が残っていると、⌘V でもう一度貼り付けられてしまう。
+    /// 30 秒後に消すだけだった以前の方式では、その間は残り、元のクリップボードの内容も失われていた
+    func restorePasteboard(_ snapshot: PasteboardSnapshot,
+                           to pasteboard: NSPasteboard = .general,
+                           ifUnchangedSince writtenChangeCount: Int,
+                           after delay: TimeInterval = PasteService.concealedPasteRestoreDelay,
+                           completion: ((Bool) -> Void)? = nil) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            guard pasteboard.changeCount == writtenChangeCount else {
+                completion?(false)
+                return
+            }
+            // 戻した内容を「新しいコピー」として履歴に取り込まない。
+            // 先に進めておく（戻した後に進めると、その間に監視が変化を拾ったとき次の本物のコピーを取りこぼす）
+            if pasteboard == NSPasteboard.general {
+                AppEnvironment.current.clipService.incrementChangeCount()
+            }
+            snapshot.restore(to: pasteboard)
+            completion?(true)
+        }
+    }
+
     func copyToPasteboard(with clip: ClipRecord) {
         lock.lock(); defer { lock.unlock() }
 
@@ -264,15 +294,21 @@ extension PasteService {
 extension PasteService {
     /// CGEvent で Cmd+V を送出し、最前面アプリにペーストさせる。
     /// 「ペーストコマンドを入力する」設定が無効の場合は何もしない
-    func paste() {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else { return }
+    /// - Returns: Cmd+V を送出した（送出を予約した）場合 true。設定が無効・権限が無い場合 false
+    @discardableResult
+    func paste() -> Bool {
+        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else {
+            DebugLog.shared.record(.pasteCommandDisabled)
+            return false
+        }
         // Check Accessibility Permission
         guard AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: false) else {
+            DebugLog.shared.record(.pasteAccessibilityMissing)
             // バックグラウンドスレッドから呼ばれる場合があるため、アラート表示はメインスレッドで行う
             DispatchQueue.main.async {
                 AppEnvironment.current.accessibilityService.showAccessibilityAuthenticationAlert()
             }
-            return
+            return false
         }
 
         let vKeyCode = Sauce.shared.keyCode(for: .v)
@@ -289,6 +325,39 @@ extension PasteService {
             // Post Paste Command
             keyVDown?.post(tap: .cgAnnotatedSessionEventTap)
             keyVUp?.post(tap: .cgAnnotatedSessionEventTap)
+            DebugLog.shared.record(.pastePosted(keyCode: Int(vKeyCode), thothActive: NSApp.isActive))
         }
+        return true
+    }
+}
+
+// MARK: - PasteboardSnapshot
+/// クリップボードの内容（全アイテム・全型のデータ）の控え。
+/// 秘匿値を貼り付ける間だけクリップボードを借り、終わったら元へ戻すために使う
+struct PasteboardSnapshot {
+    /// アイテムごとの（型, データ）。型の並び（優先順）を保つため辞書にしない
+    let items: [[(type: NSPasteboard.PasteboardType, data: Data)]]
+
+    init(pasteboard: NSPasteboard) {
+        items = (pasteboard.pasteboardItems ?? []).map { item in
+            item.types.compactMap { type in
+                item.data(forType: type).map { (type: type, data: $0) }
+            }
+        }
+        .filter { !$0.isEmpty }
+    }
+
+    var isEmpty: Bool { items.isEmpty }
+
+    /// 控えた内容でクリップボードを置き換える。控えが空ならクリアだけ行う
+    func restore(to pasteboard: NSPasteboard) {
+        pasteboard.clearContents()
+        let restored = items.map { entries -> NSPasteboardItem in
+            let item = NSPasteboardItem()
+            entries.forEach { item.setData($0.data, forType: $0.type) }
+            return item
+        }
+        guard !restored.isEmpty else { return }
+        pasteboard.writeObjects(restored)
     }
 }

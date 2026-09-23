@@ -36,7 +36,6 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 | RxSwift / RxCocoa | リアクティブなイベント処理・設定監視 |
 | Magnet / KeyHolder | グローバルホットキーの登録・表示 |
 | Sauce | キーボードレイアウト非依存のキーコード解決 |
-| RxScreeen | スクリーンショット監視 |
 | AEXML | スニペットの XML インポート/エクスポート |
 | LetsMove | 初回起動時の Applications フォルダへの移動促進（`Packages/LetsMove` に取り込んだローカルパッケージ） |
 | SwiftHEXColors | HEX カラープレビュー |
@@ -49,7 +48,7 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods のスペックリポジトリが 2026-12-02 に読み取り専用になるため）。Ruby・`pod install` は不要です。
 
 - **版は完全に固定する（Exact Version）。** 固定した版は `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` に記録され、コミット対象です。Xcode がプロジェクトを開いたとき・ビルド時に自動で取得します。
-- **パッケージを足したり版を変えたりしたら、`scripts/update-acknowledgements.swift` を実行して、サードパーティライセンス一覧（`Thoth/Resources/Acknowledgements.md` と `NOTICE`）を作り直してコミットする。** 忘れると `AcknowledgementsSpec` が落ちます。テストだけで使うパッケージは一覧に載せません（スクリプト冒頭の `testOnlyPackages`）。
+- **パッケージを足したり版を変えたりしたら、`scripts/update-acknowledgements.swift` を実行して、サードパーティライセンス一覧（`Thoth/Resources/Acknowledgements.md` と `NOTICE`）を作り直してコミットする。** 忘れると `AcknowledgementsSpec` が落ちます。テストだけで使うパッケージは一覧に載せません（スクリプト冒頭の `testOnlyPackages`）。一覧の先頭には元になった Clipy・ClipMenu の `LICENSE`・`LICENSE_CLIPMENU` を、各パッケージには `LICENSE` に加えて `NOTICE` / `THIRD-PARTY-NOTICES` と、パッケージが取り込んでいる第三者コードのライセンス（`vendoredLicenses`。いまは realm-core の jsonsl）を載せます。
 - **RealmSwift は動的フレームワーク**（他は静的リンク）。アプリの「Embed Frameworks」に登録して `.app` に同梱し、テストターゲットにはリンクだけします（テストが Realm を直接使うため。埋め込むとアプリの分と 2 つ読み込まれる）。動的な製品を足すときは同じ扱いが要ります。
 - **Realm は 20.0.5。** v1.5.0（CocoaPods）までは 10.54.6 でしたが、SPM 版は realm-core をソースからビルドするため、Xcode 27 でコンパイルできる 20.0.5 に上げました。移行元（10.x で書かれた Realm ファイル）を読めること・1 バイトも書き換えないことは、10.54.6 で作った固定の Realm ファイルを使う `LibraryMigrationSpec` で確かめています。
 - **LetsMove は本家が SPM に対応していないため、1.25 を `Packages/LetsMove` に取り込んでいます。** 変更点（翻訳を読むバンドルなど）は `Packages/LetsMove/README.md` を参照。
@@ -91,7 +90,8 @@ v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods
 ├── ThothTests/                      ユニットテスト（Quick + Nimble）
 ├── Packages/LetsMove/               LetsMove を取り込んだローカルパッケージ
 ├── scripts/                         tool.sh（開発ツールの実行）、update-acknowledgements.swift
-│                                    （ライセンス一覧の生成）、make_dmg.sh（配布用 DMG の作成）
+│                                    （ライセンス一覧の生成）、make_dmg.sh（配布用 DMG の作成）、
+│                                    make-dmg-background.swift（DMG のウィンドウ背景の描画）
 ├── NOTICE                           サードパーティライセンス一覧（Acknowledgements.md と同じ内容）
 ├── .swiftlint.yml                   コード規約設定
 ├── README_JP.md                     利用者向け説明
@@ -107,7 +107,9 @@ v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods
 | サービス | 責務 |
 |---|---|
 | `ClipService` | クリップボードの監視（100ms ポーリング）と履歴の保存・削除 |
-| `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路） |
+| `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路）。秘匿値を貼り付けた後、クリップボードを元の内容へ戻す（`PasteboardSnapshot`） |
+| `CallerAppActivator` | パネルで選んだ値を貼り付ける前に、貼り付け先のアプリ（ホットキーを押した時点の最前面）を前面へ戻し、前面に来たのを確かめてから送る |
+| `ScreenshotWatcher` | ベータ機能「スクリーンショットを履歴に保存」。保存先フォルダを FSEvents で見張り、拡張属性 `kMDItemIsScreenCapture` でスクリーンショットを判定する（Spotlight を使わない） |
 | `SecureMenuService` | セキュアアイテム・指紋パスワードのキーチェーン管理と生体認証 |
 | `SecureItemSearch` | セキュアアイテムの絞り込み（確認ウィンドウと選択パネルで共通の検索条件） |
 | `SecureItemsTransfer` | セキュアアイテムの JSON インポート／エクスポート |
@@ -159,7 +161,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 
 | 分類 | スペック |
 |---|---|
-| クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
+| クリップボード | `DraggedDataSpec`（ドラッグデータの安全な復元・並べ替え）、`ClipboardConcealSpec`、`ConcealedPasteRestoreSpec`（秘匿値の貼り付け後にクリップボードを元へ戻す）、`CallerAppActivatorSpec`（貼り付け先のアプリへ戻す）、`ScreenshotWatcherSpec`（スクリーンショットの検知） |
 | モデル | `SecureMenuItemSpec` |
 | 保存層 | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec`（共通の契約 `LibraryStoreContract` を両実装で確かめる。SwiftData 版はファイルに平文が現れないことも）、`DataCleanServiceSpec`（上限超過で消す範囲） |
 | 暗号化（保存層） | `FieldCipherSpec`（鍵の導出・暗号文の形式・改ざんと取り違えの検出。固定値は Swift の実装とは独立に計算） |
@@ -168,15 +170,26 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
 | 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
-| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
+| 環境設定ウィンドウ | `PreferencesLayoutSpec`（全タブの配置: 部品がはみ出さない・重ならない・文字が収まる。Xib の翻訳は全言語）、`CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件）、`CPYUpdatesPreferenceViewControllerSpec`（ライセンスボタンが全言語で見切れない） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
-| 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
-| その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
+| 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること・Clipy / ClipMenu と realm-core 内の第三者コードの表示を含むこと）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
+| その他 | `DebugLogSpec`（デバッグ情報はオンのときだけ・文字列を持たない出来事だけを記録する・権限・削除）、`HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
+
+### 利用者の環境での調査（デバッグ情報）
+
+貼り付け先への前面化・⌘V の送出・セキュアメニューの表示（ホットキー → 認証 → パネル）は、手元では再現しにくい不具合が出やすい流れです。その各段階を、**利用者が環境設定 > ベータ機能 >「デバッグ情報を保存する」をオンにしたときだけ** `DebugLog`（`Thoth/Sources/Utility/DebugLog.swift`）が `~/Library/Logs/Thoth/debug.log` に記録します。調べるときは、利用者にこれをオンにして再現してもらい、ファイルを見せてもらいます（設定画面の「表示」で Finder に出ます）。
+
+セキュアな情報を扱う OSS として、利用者が知らないうちに行動を記録しないための約束です。
+
+- **既定はオフ。オフの間は何も書かない**（ファイルにも macOS の統合ログにも）。オフに戻すと保存済みのファイルを消す（起動時にオフなら前回の残りも消す）
+- 書けるのは `DebugEvent` に挙げた出来事と、真偽値・数値・時刻だけ。**文字列を受け取るケースを作らない**ことで、コピーした内容・セキュアアイテムの値や項目名・使ったアプリの名前やバンドル ID が型の上で入り込めないようにしている（`DebugLogSpec` が、どのケースも文字列を持たないことを確かめる）
+- 何を保存し何を保存しないかは、チェックボックスの下にその場で書いてある
+- ファイルは本人だけが読める権限（フォルダ 0700・ファイル 0600）で、512KB を超えたら 1 世代だけ残して新しく始める
 
 ### 失敗したテストの読み方
 
@@ -211,6 +224,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
   （例: `SecureItemSearchSpec` の「画面間で条件が揃っていること」）。
 - **ファイル冒頭に、何を・どんな前提で確かめるスペックかを書く。** 共有状態（UserDefaults・キーチェーン・Realm）を使う場合は、その後始末の約束もここに書きます。
 - **新しいテストは「実装を意図的に戻すと落ちる」ことまで確認してから積む。** 何も検出しないテストが紛れ込むのを防ぎます。
+- **画面の配置は、座標の直値ではなく不変条件で確かめる。** 環境設定のタブは `PreferencesLayoutSpec` が「はみ出さない・重ならない・文字が収まる」をまとめて検査します。タブを足したら `CPYPreferencesWindowController.makeTabViewControllers()` に足すだけで対象になります。Xib の文言を訳したら、その言語で枠に収まるかもここで分かります（収まらないときは枠を広げるか、訳を短くする）。
 
 ---
 
@@ -257,7 +271,7 @@ scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 最後に `Done linting! Found <件数> violations, <件数> serious in <ファイル数> files.` と表示されます。
 
 - **`serious`（エラー）が 0 件であること。** エラーがあるとビルドのスクリプトフェーズも失敗します。
-- **警告は既存のものが残っています（v1.5.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
+- **警告は既存のものが残っています（v1.6.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
 
 > **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 
@@ -327,8 +341,11 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 1. 開発ツールを用意（`scripts/tool.sh --install`。取得済みなら何もしない）
 2. Swift Package を `build/SourcePackages` へ取得し、サードパーティライセンス一覧を作り直す（`scripts/update-acknowledgements.swift`。一覧が変わったらコミットするよう警告を出す）
 3. `Release` 構成でビルド（`build/DerivedData` へ出力。`ARCHS=arm64` を渡し、パッケージも arm64 だけでビルドする）
-4. `Thoth.app` と `/Applications` へのシンボリックリンクをステージング
-5. macOS 標準の `hdiutil` で圧縮 DMG（UDZO）を作成
+4. `Thoth.app`、`/Applications` へのシンボリックリンク、ウィンドウの背景をステージング（背景は `scripts/make-dmg-background.swift` が矢印と案内文を通常用・Retina 用に描き、1 つの TIFF にまとめる）
+5. `hdiutil` で書き込み可能な DMG を作ってマウントし、Finder（AppleScript）にウィンドウを設定させる: 大きさ 560 × 370（macOS 27 の Finder が下端に出すバーが重なっても案内文が隠れない高さ）・ツールバーなし・アイコン 128pt・矢印の左に `Thoth.app`、右に `Applications`。Finder がこれを DMG の `.DS_Store` に書く
+6. 圧縮 DMG（UDZO）に変換
+
+初回は、ターミナルから Finder を操作する許可を求められます（システム設定 > プライバシーとセキュリティ > オートメーション）。許可しない・失敗した場合は、ウィンドウの設定なしの DMG を作ります（中身は同じ）。見た目だけを調整するときは、`./scripts/make_dmg.sh --dmg-only` でビルドを省き、既存の `build/DerivedData/…/Release/Thoth.app` から DMG だけを作り直せます。macOS 27 では `hdiutil` が非推奨の警告を出しますが、動作します。
 
 **出力先:** `build/Thoth-<version>.dmg`（バージョンは `Info.plist` の `CFBundleShortVersionString` から自動取得。`build/` は `.gitignore` 済みのためコミットされない）
 
@@ -341,7 +358,7 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 
 **実行条件:**
 
-- macOS + Xcode 本体（`xcodebuild`。4-0 の準備を済ませておく）。`hdiutil` は macOS 標準のため追加インストール不要
+- macOS + Xcode 本体（`xcodebuild`。4-0 の準備を済ませておく）。`hdiutil`・`osascript` は macOS 標準のため追加インストール不要
 - 初回はネットワーク接続（開発ツールを `.tools/` へ、Swift Package を `build/SourcePackages` へ取得する）
 - Apple Silicon (arm64) 専用ビルド
 - 署名は ad-hoc（Developer ID 署名・公証なし）

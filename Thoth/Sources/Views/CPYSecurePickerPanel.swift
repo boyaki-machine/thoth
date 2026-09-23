@@ -207,11 +207,11 @@ final class CPYSecurePickerPanel: NSPanel {
 // MARK: - Show
 
 extension CPYSecurePickerPanel {
-    func show(near point: NSPoint) {
-        #if DEBUG
-        NSLog("[SecurePickerPanel] show: called")
-        #endif
-        callerApp = NSWorkspace.shared.frontmostApplication
+    /// - Parameter callerApp: 貼り付け先として覚えておくアプリ（ホットキーを押した時点の最前面）。
+    ///   使えない場合（nil・Thoth 自身）は表示する時点の最前面を使う
+    func show(near point: NSPoint, callerApp hotKeyApp: NSRunningApplication? = nil) {
+        DebugLog.shared.record(.securePickerShowRequested)
+        callerApp = CallerAppActivator.returnTarget(atHotKey: hotKeyApp, atShow: NSWorkspace.shared.frontmostApplication)
         let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
         var origin = NSPoint(x: point.x + 15, y: point.y - frame.height + 15)
@@ -227,9 +227,10 @@ extension CPYSecurePickerPanel {
             NSApp.activate(ignoringOtherApps: true)
             self.makeKeyAndOrderFront(nil)
             self.makeFirstResponder(self.tableView)
-            #if DEBUG
-            NSLog("[SecurePickerPanel] show: activated, isVisible=\(self.isVisible)")
-            #endif
+            DebugLog.shared.record(.securePickerShown(visible: self.isVisible, key: self.isKeyWindow, thothActive: NSApp.isActive))
+            DebugLog.shared.record(.securePickerState(onScreen: self.occlusionState.contains(.visible),
+                                                      level: self.level.rawValue,
+                                                      hasReturnTarget: self.callerApp != nil))
             if self.context.isWithinWindow, let parentItemID = self.context.lastParentItemID {
                 self.preselectParent(parentItemID: parentItemID, thenOpenSubWithField: self.context.lastFieldIndex)
             } else {

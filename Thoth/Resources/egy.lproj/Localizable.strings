@@ -298,10 +298,14 @@
 "Beta Language Hieroglyphs" = "𓂀 𓅓𓂧𓅱𓊹";
 "Beta Language Restart Message" = "𓌃𓂧𓅱𓀁 𓆣 𓅓𓐍𓏏 𓋹𓆣 𓍹𓆓𓎛𓅱𓏏𓇋𓍺.";
 "Beta Language Restart Now" = "𓋹𓆣";
+"Beta Debug Log" = "𓆣 Save debug information";
+"Beta Debug Log Note" = "Records only the steps of pasting and the secure menu, with times, to ~/Library/Logs/Thoth/debug.log. Copied content, secure items and app names are never saved. Turning this off deletes the file.";
+"Beta Debug Log Show" = "𓁹";
+"Beta Debug Log Empty" = "No debug information has been saved yet.";
 
 "Updates Respect Message" = "𓊪𓄿 𓐍𓏏𓏛 𓅐 𓅓 𓍹𓎡𓃭𓇋𓊪𓇋𓍺. 𓌻𓏏𓀁 𓎟 𓂋 𓏞𓏥 𓈖 𓍹𓎡𓃭𓇋𓊪𓇋𓍺 𓂋𓊪𓅱 ClipMenu (naotaka). 𓊪𓄿 𓐍𓏏𓏛 𓁷 𓌻𓂋𓏛 𓎟 𓈖𓋴𓈖.";
 
 "Updates Original Repository Link" = "𓂻 𓂋 𓉐 𓈖 𓍹𓎡𓃭𓇋𓊪𓇋𓍺";
 "Third Party Licenses" = "𓇋𓏏𓈖 𓂋𓐍𓏏";
-"Updates Third Party Licenses Button" = "𓇋𓏏𓈖 𓂋𓐍𓏏…";
+"Updates Third Party Licenses Button" = "𓇋𓏏𓈖 𓂋𓐍𓏏";
 "Third Party Licenses Load Failed" = "𓂋𓅱𓄿 𓇋𓏏𓈖 𓂋𓐍𓏏 𓈖 𓄋.";

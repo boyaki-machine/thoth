@@ -6,6 +6,8 @@
 
 **Thoth** is a clipboard extension app for macOS. It is a personal, feature-extended fork of the original [Clipy](https://github.com/Clipy/Clipy), adding secure item management, password generation, and file encryption.
 
+**Requirements:** macOS 15.0 (Sequoia) or later · Macs with Apple silicon (M-series) only (does not run on Intel Macs)
+
 > 日本語版は [README_JP.md](README_JP.md) を参照してください。
 
 ---
@@ -77,7 +79,7 @@ Keeps a history of copied content that you can re-paste from a menu. Frequently 
 
 ### 2-2. Secure Items
 
-Paste passwords, TOTP, and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
+Paste passwords, TOTP, and other sensitive values directly into any app **without leaving them in the copy history** (TOTP never touches the clipboard at all; other values are on the clipboard only for the moment of pasting, and the previous content is put back right after). Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
 
 **How to use:**
 
@@ -96,7 +98,7 @@ Paste passwords, TOTP, and other sensitive values directly into any app **withou
 | **Keychain storage** | All values are stored with `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` — never synced to iCloud |
 | **Biometric lock** | Touch ID (or login password) is required before the menu appears. Within 30 seconds of a successful authentication, re-authentication is skipped so you can pick ID / password / TOTP in a row |
 | **Two-level menu** | Select a parent item (e.g. "GitHub"), then a specific field (e.g. "Password") |
-| **Direct paste** | The selected value is pasted into the frontmost app without touching the clipboard. TOTP is typed as keystrokes directly, leaving no trace in any history |
+| **Direct paste** | The selected value is pasted straight into the app you were using when you pressed the hotkey. It stays out of Thoth's copy history, and once the paste is done the clipboard goes back to what it held before. TOTP is typed as keystrokes directly, leaving no trace in any history |
 | **Continue-paste mode** | Re-opening the menu within 30 seconds highlights the previously selected field automatically |
 | **TOTP support** | Register from an otpauth URI / QR code; a one-time code is generated and typed at selection time |
 
@@ -148,7 +150,8 @@ Export / Import live in the **⚙** menu at the bottom of the left pane, togethe
 **Security characteristics:**
 
 - Values are read from Keychain only at the moment of authentication
-- Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and it is cleared automatically after pasting
+- Pasting a regular field temporarily uses the clipboard, but with a marker that keeps it out of history (`org.nspasteboard.ConcealedType`), and **about 2 seconds after the paste the clipboard is restored to its previous content** (so the pasted value cannot be pasted again with ⌘V; if you copy something else in the meantime, that is kept)
+- When Thoth cannot paste for you (the “Input "⌘ + V" after menu item selection” preference is off, or Accessibility permission is missing), the value is left on the clipboard so you can paste it yourself, and cleared after 30 seconds
 - TOTP never touches the clipboard; it is typed as keystrokes directly
 - The Secure Info window shows values in plaintext, so it is protected as follows:
   - Touch ID / password authentication is required before it opens
@@ -242,7 +245,15 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed build steps.
 
-**Requirements:** macOS 15.0 or later · Apple Silicon (arm64)
+### Requirements
+
+| Item | Requirement |
+|---|---|
+| **macOS** | **15.0 (Sequoia) or later** (verified on macOS 27) |
+| **CPU** | **Apple silicon (M1 or later M-series) only.** The app is built for arm64 only, so it does not launch on Intel Macs (Rosetta 2 runs Intel apps on Apple silicon, not the other way round) |
+| **Build environment** | Xcode 27 (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)) |
+
+> v1.4.0 raised the minimum to macOS 15.0. v1.3.1 and earlier support macOS 11.0 or later (also Apple silicon only).
 
 **Outline:**
 
@@ -262,9 +273,13 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 | Permission | Required? | Purpose |
 |---|---|---|
 | Accessibility | Required | Used for pasting (sending ⌘V / typing keystrokes) |
-| **Desktop folder** | **Optional** | Requested only when the "Observe screenshots" beta feature is enabled. macOS saves screenshots to the Desktop by default, so scanning the Desktop is needed to detect new ones |
+| **Desktop folder** | **Optional** | Requested only when the "Save screenshots in history" beta feature is enabled. Needed to read files added to the screenshot location (the Desktop by default). Not requested if you save screenshots somewhere other than the Desktop, Documents, or Downloads (e.g. `~/Pictures`) |
 
-> Desktop folder access is requested **only if you enable the "Observe screenshots" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
+> Desktop folder access is requested **only if you enable the "Save screenshots in history" feature** (disabled by default). If you don't use it, you can deny the request — clipboard history, snippets, secure items, encryption, password generation, and all other features work unaffected.
+
+> **About "Save screenshots in history":** Thoth watches the screenshot folder directly (it also follows a location changed under ⌘⇧5 → Options → Save to) and adds each screenshot to the history as soon as it is saved (since v1.6.1; earlier versions waited for the Spotlight index, so screenshots appeared seconds to tens of seconds late or were missed).
+> While macOS's "**Show Floating Thumbnail**" is on (the default), however, macOS does not write the file until the thumbnail in the bottom-right corner goes away, so the history entry also appears about 5 seconds late. To have it added right away, turn that option off under ⌘⇧5 → Options.
+> Screenshots taken before the feature was enabled, and files moved into the folder later, are not added.
 
 ### Handling the Gatekeeper Alert on First Launch
 
@@ -311,6 +326,7 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 | **Excluded** | Register apps to exclude from clipboard-history capture |
 
 - **Excluded apps**: register apps whose content you don't want in history (e.g. password managers). Also, copies carrying a concealed marker such as `org.nspasteboard.ConcealedType` (e.g. copies from other password managers) are automatically kept out of history regardless of the exclude list.
+- **Save debug information (beta)**: turn this on only when helping to investigate a problem (off by default). While it is on, the steps of pasting and of the secure menu (such as "authentication succeeded" or "the target app came to the front") are saved with timestamps to `~/Library/Logs/Thoth/debug.log`. **Copied content, secure item values or names, and the names of the apps you use are never saved.** "Show" lets you check the contents at any time, and turning it off deletes the file. Nothing is recorded while it is off.
 - **Secure item Export / Import**: from the **⚙** menu in the Secure Info window, you can export/import secure items and the fingerprint password as a JSON file. This is useful for using the same information across multiple machines (**the exported file is plaintext — handle with care**). The exported file schema is described in [docs/DESIGN.md](docs/DESIGN.md).
 
 ---
@@ -319,7 +335,9 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 
 This app is provided under the MIT license. See the LICENSE file for details. Icons are copyrighted by their respective authors.
 
-Third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses).
+The copyright notices of Clipy and ClipMenu, which Thoth is derived from ([LICENSE](LICENSE), [LICENSE_CLIPMENU](LICENSE_CLIPMENU)), and the third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses; the distributed `Thoth.app` carries the same list).
+
+All dependencies use permissive licenses compatible with distribution under the MIT License (MIT, ISC, BSD, Apache-2.0, Boost). Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. Because Realm's database engine (realm-core) is now built from source and bundled, however, the licenses of the third-party code it includes (Intel's decimal floating-point library, JSON for Modern C++, and others) are also listed since v1.6.1.
 
 ## Special Thanks
 

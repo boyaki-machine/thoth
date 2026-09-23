@@ -43,14 +43,19 @@ final class CPYPreferencesWindowController: NSWindowController {
     @IBOutlet private weak var updatesButton: NSButton!
     @IBOutlet private weak var betaButton: NSButton!
     // ViewController
-    private let viewController = [NSViewController(nibName: "CPYGeneralPreferenceViewController", bundle: nil),
-                                  NSViewController(nibName: "CPYMenuPreferenceViewController", bundle: nil),
-                                  CPYTypePreferenceViewController(nibName: "CPYTypePreferenceViewController", bundle: nil),
-                                  CPYExcludeAppPreferenceViewController(nibName: "CPYExcludeAppPreferenceViewController", bundle: nil),
-                                  CPYShortcutsPreferenceViewController(nibName: "CPYShortcutsPreferenceViewController", bundle: nil),
-                                  CPYUpdatesPreferenceViewController(nibName: "CPYUpdatesPreferenceViewController", bundle: nil),
-                                  CPYBetaPreferenceViewController(nibName: "CPYBetaPreferenceViewController", bundle: nil),
-                                  CPYVersionPreferenceViewController()]
+    private let viewController = CPYPreferencesWindowController.makeTabViewControllers()
+
+    /// 各タブの画面（ツールバーの並び順）。PreferencesLayoutSpec が同じものを組み立てて配置を検査する
+    static func makeTabViewControllers(bundle: Bundle? = nil) -> [NSViewController] {
+        return [NSViewController(nibName: "CPYGeneralPreferenceViewController", bundle: bundle),
+                NSViewController(nibName: "CPYMenuPreferenceViewController", bundle: bundle),
+                CPYTypePreferenceViewController(nibName: "CPYTypePreferenceViewController", bundle: bundle),
+                CPYExcludeAppPreferenceViewController(nibName: "CPYExcludeAppPreferenceViewController", bundle: bundle),
+                CPYShortcutsPreferenceViewController(nibName: "CPYShortcutsPreferenceViewController", bundle: bundle),
+                CPYUpdatesPreferenceViewController(nibName: "CPYUpdatesPreferenceViewController", bundle: bundle),
+                CPYBetaPreferenceViewController(nibName: "CPYBetaPreferenceViewController", bundle: bundle),
+                CPYVersionPreferenceViewController()]
+    }
     // バージョンタブ（XIB を変更せずコードで追加するため参照を保持する）
     private let versionImageView = NSImageView()
     private let versionTextField = NSTextField(labelWithString: L10n.preferenceVersionTab)

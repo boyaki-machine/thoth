@@ -152,7 +152,7 @@ extension ClipService {
             // Saved time and path
             let unixTime = Int(Date().timeIntervalSince1970)
             let savedPath = CPYUtilities.applicationSupportFolder() + "/\(NSUUID().uuidString).data"
-            var clip = ClipRecord(id: historyStore.clipID(forContentHash: "\(savedHash)"),
+            let clip = ClipRecord(id: historyStore.clipID(forContentHash: "\(savedHash)"),
                                   dataPath: savedPath,
                                   title: data.stringValue[0...10000],
                                   primaryType: data.primaryType?.rawValue ?? "",

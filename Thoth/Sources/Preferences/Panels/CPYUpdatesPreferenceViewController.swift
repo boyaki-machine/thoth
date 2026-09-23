@@ -16,6 +16,25 @@ import Cocoa
 /// （個人フォークのため、Sparkle による自動アップデート確認機能は撤去済み）
 class CPYUpdatesPreferenceViewController: NSViewController {
 
+    /// テストから部品を探すための識別子
+    enum ViewID {
+        static let licensesButton = NSUserInterfaceItemIdentifier("updates.licensesButton")
+    }
+
+    /// ライセンスボタンの最小幅（短い訳語でも押しやすい大きさを保つ）
+    static let licensesButtonMinWidth: CGFloat = 150
+
+    /// ライセンスボタンの位置と大きさを決める。
+    ///
+    /// 幅は文字が収まる幅（`fittingWidth`）以上・最小幅以上にし、タブの左右に余白を残す。
+    /// 固定幅だと長い訳語（ドイツ語など）が見切れるため、文字に合わせて広げる
+    static func licensesButtonFrame(fittingWidth: CGFloat, containerWidth: CGFloat, originY: CGFloat, height: CGFloat) -> NSRect {
+        let margin: CGFloat = 20
+        let width = min(max(ceil(fittingWidth), licensesButtonMinWidth), containerWidth - margin * 2)
+        let originX = ((containerWidth - width) / 2).rounded(.down)
+        return NSRect(x: originX, y: originY, width: width, height: height)
+    }
+
     // MARK: - View Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -71,7 +90,10 @@ fileprivate extension CPYUpdatesPreferenceViewController {
             action: #selector(openThirdPartyLicenses)
         )
         licensesButton.bezelStyle = .rounded
-        licensesButton.frame = NSRect(x: 165, y: 10, width: 150, height: 24)
+        licensesButton.identifier = ViewID.licensesButton
+        licensesButton.frame = Self.licensesButtonFrame(fittingWidth: licensesButton.fittingSize.width,
+                                                        containerWidth: view.bounds.width,
+                                                        originY: 10, height: 24)
         licensesButton.autoresizingMask = [.minXMargin, .maxXMargin, .minYMargin]
         view.addSubview(licensesButton)
     }

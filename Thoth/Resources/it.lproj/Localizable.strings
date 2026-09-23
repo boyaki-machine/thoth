@@ -294,12 +294,16 @@
 "Beta Language Hieroglyphs" = "𓂀 Geroglifici";
 "Beta Language Restart Message" = "Il cambio di lingua avrà effetto dopo il riavvio di Thoth.";
 "Beta Language Restart Now" = "Riavvia ora";
+"Beta Debug Log" = "Salva informazioni di debug";
+"Beta Debug Log Note" = "Registra solo i passaggi di incolla e del menu sicuro, con l'orario, in ~/Library/Logs/Thoth/debug.log. Contenuti copiati, elementi sicuri e nomi delle app non vengono mai salvati. Disattivandolo il file viene eliminato.";
+"Beta Debug Log Show" = "Mostra";
+"Beta Debug Log Empty" = "Nessuna informazione di debug è stata ancora salvata.";
 
 "Updates Respect Message" = "Questa applicazione è un fork di Clipy, l'estensione open source degli appunti per macOS. Profondo rispetto e gratitudine vanno agli sviluppatori del Clipy originale e a naotaka, autore del predecessore ClipMenu. Questo progetto si fonda sul loro grande lavoro.";
 
 "Updates Original Repository Link" = "Link al repository originale di Clipy";
 "Third Party Licenses" = "Licenze di terze parti";
-"Updates Third Party Licenses Button" = "Licenze di terze parti…";
+"Updates Third Party Licenses Button" = "Licenze di terze parti";
 "Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";
 "Library Unavailable Title" = "Chiave di crittografia non disponibile";
 "Library Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione non verrà scritto nulla su disco, la cronologia resterà solo in memoria e gli snippet non potranno essere mostrati né modificati. I dati salvati restano intatti. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";

@@ -44,7 +44,7 @@
 "hgW-RK-5oy.title" = "Farbcode-Vorschau anzeigen";
 
 /* Class = "NSButtonCell"; title = "Move instead of copying (removes the older one from the list)"; ObjectID = "lsx-Y0-zFR"; */
-"lsx-Y0-zFR.title" = "Verschieben anstatt kopieren (Entfernt älteren Eintrag von der Liste)";
+"lsx-Y0-zFR.title" = "Verschieben statt kopieren (entfernt den älteren Eintrag)";
 
 /* Class = "NSButtonCell"; title = "Mark menu items with numbers"; ObjectID = "nMF-6D-hXu"; */
 "nMF-6D-hXu.title" = "Menüeinträge mit Nummern markieren";
@@ -53,7 +53,7 @@
 "nzx-q5-ifH.title" = "Zeichen";
 
 /* Class = "NSButtonCell"; title = "Add a menu item to clear clipboard history"; ObjectID = "p80-3o-bgA"; */
-"p80-3o-bgA.title" = "Menüeintrag hinzufügen, um Zwischenablagenverlauf zu löschen";
+"p80-3o-bgA.title" = "Menüeintrag zum Löschen des Verlaufs hinzufügen";
 
 /* Class = "NSTextFieldCell"; title = "Width:"; ObjectID = "saf-vP-Qwl"; */
 "saf-vP-Qwl.title" = "Breite:";
@@ -62,7 +62,7 @@
 "seq-HO-d27.title" = "Mit 0 anfangen";
 
 /* Class = "NSTextFieldCell"; title = "Number of items place inline:"; ObjectID = "wef-NB-6p6"; */
-"wef-NB-6p6.title" = "Anzahl der Einträge die innerhalb angezeigt werden:";
+"wef-NB-6p6.title" = "Anzahl der Einträge im Menü:";
 
 /* Class = "NSButtonCell"; title = "Display icons in menu items"; ObjectID = "yrU-qO-OwD"; */
 "yrU-qO-OwD.title" = "Icons in Menüeinträgen anzeigen";

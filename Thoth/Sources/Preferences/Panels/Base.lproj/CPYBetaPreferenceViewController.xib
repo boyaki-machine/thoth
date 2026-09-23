@@ -67,7 +67,7 @@
                     </textFieldCell>
                 </textField>
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cPO-Kb-LG8">
-                    <rect key="frame" x="316" y="176" width="108" height="26"/>
+                    <rect key="frame" x="312" y="176" width="112" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="DPj-O5-TCm">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -98,7 +98,7 @@
                     </connections>
                 </button>
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xih-Sx-WpW">
-                    <rect key="frame" x="316" y="145" width="108" height="26"/>
+                    <rect key="frame" x="312" y="145" width="112" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="I0s-bs-Y8L">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
@@ -129,7 +129,7 @@
                     </connections>
                 </button>
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pwa-Yn-1fY">
-                    <rect key="frame" x="316" y="114" width="108" height="26"/>
+                    <rect key="frame" x="312" y="114" width="112" height="26"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <popUpButtonCell key="cell" type="push" bezelStyle="rounded" alignment="left" lineBreakMode="truncatingTail" borderStyle="borderAndBezel" imageScaling="proportionallyDown" inset="2" id="RLH-Us-QOE">
                         <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
