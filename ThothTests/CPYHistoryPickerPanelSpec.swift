@@ -14,17 +14,17 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
     /// テスト用の表示設定（既定はメニュータブのデフォルト相当）
     private static func makeSettings(markWithNumber: Bool = true,
-                              numericKeysEnabled: Bool = true,
-                              numberOffset: Int = 0,
-                              showIcon: Bool = true,
-                              showToolTip: Bool = true,
-                              maxToolTipLength: Int = 200,
-                              placeInline: Int = 0,
-                              groupSize: Int = 10,
-                              showImage: Bool = true,
-                              showColorCode: Bool = true,
-                              maxTitleLength: Int = 0,
-                              showsClearHistory: Bool = false) -> CPYHistoryPickerPanel.DisplaySettings {
+                                     numericKeysEnabled: Bool = true,
+                                     numberOffset: Int = 0,
+                                     showIcon: Bool = true,
+                                     showToolTip: Bool = true,
+                                     maxToolTipLength: Int = 200,
+                                     placeInline: Int = 0,
+                                     groupSize: Int = 10,
+                                     showImage: Bool = true,
+                                     showColorCode: Bool = true,
+                                     maxTitleLength: Int = 0,
+                                     showsClearHistory: Bool = false) -> CPYHistoryPickerPanel.DisplaySettings {
         return CPYHistoryPickerPanel.DisplaySettings(markWithNumber: markWithNumber,
                                                      numericKeysEnabled: numericKeysEnabled,
                                                      numberOffset: numberOffset,
@@ -40,8 +40,8 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
     }
 
     private static func makeItem(_ hash: String, title: String, index: Int,
-                          primaryType: NSPasteboard.PasteboardType = .deprecatedString,
-                          hasThumbnail: Bool = false, isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
+                                 primaryType: NSPasteboard.PasteboardType = .deprecatedString,
+                                 hasThumbnail: Bool = false, isColorCode: Bool = false) -> CPYHistoryPickerPanel.ClipItem {
         let clip = ClipRecord(id: hash, dataPath: "/tmp/\(hash).data", title: title,
                               primaryType: primaryType.rawValue, updateTime: 0,
                               hasThumbnail: hasThumbnail, isColorCode: isColorCode)
@@ -258,7 +258,7 @@ class CPYHistoryPickerPanelSpec: QuickSpec {
 
                 let noTipPanel = CPYHistoryPickerPanel(clips: [clip],
                                                        settings: self.makeSettings(showToolTip: false))
-                expect(noTipPanel.makeSubEntries(for: group).first?.toolTip).to(beNil())
+                expect(noTipPanel.makeSubEntries(for: group).first?.toolTip) == nil
                 noTipPanel.close()
             }
 

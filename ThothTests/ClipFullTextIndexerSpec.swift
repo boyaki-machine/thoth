@@ -85,8 +85,8 @@ class ClipFullTextIndexerSpec: QuickSpec {
     // MARK: - Extraction
 
     private static func extractionSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
-                                 store: @escaping () -> ClipDataStore,
-                                 path: @escaping (String) -> String) {
+                                        store: @escaping () -> ClipDataStore,
+                                        path: @escaping (String) -> String) {
         describe("本文の抽出") {
             it("暗号化ファイルから本文を復号して小文字化した文字列を返す") {
                 let ref = makeStringClip("Hello WORLD 日本語", "clip1.data")
@@ -107,15 +107,15 @@ class ClipFullTextIndexerSpec: QuickSpec {
                                                           primaryType: NSPasteboard.PasteboardType.deprecatedTIFF.rawValue)
                 let pdfRef = ClipFullTextIndexer.ClipRef(dataHash: "p", dataPath: path("missing-pdf.data"),
                                                          primaryType: NSPasteboard.PasteboardType.deprecatedPDF.rawValue)
-                expect(indexer.extractIndexableText(from: tiffRef)).to(beNil())
-                expect(indexer.extractIndexableText(from: pdfRef)).to(beNil())
+                expect(indexer.extractIndexableText(from: tiffRef)) == nil
+                expect(indexer.extractIndexableText(from: pdfRef)) == nil
             }
 
             it("ファイルが存在しない文字列クリップは nil を返す") {
                 let indexer = ClipFullTextIndexer(store: store())
                 let ref = ClipFullTextIndexer.ClipRef(dataHash: "x", dataPath: path("missing.data"),
                                                       primaryType: NSPasteboard.PasteboardType.deprecatedString.rawValue)
-                expect(indexer.extractIndexableText(from: ref)).to(beNil())
+                expect(indexer.extractIndexableText(from: ref)) == nil
             }
         }
     }
@@ -123,7 +123,7 @@ class ClipFullTextIndexerSpec: QuickSpec {
     // MARK: - Async Build
 
     private static func buildSpecs(makeStringClip: @escaping (String, String) -> ClipFullTextIndexer.ClipRef,
-                            store: @escaping () -> ClipDataStore) {
+                                   store: @escaping () -> ClipDataStore) {
         describe("非同期ビルド") {
             it("全クリップの索引が最終的に揃う") {
                 let refs = [

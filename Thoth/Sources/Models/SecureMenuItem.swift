@@ -33,6 +33,9 @@ struct SecureMenuItem: Codable, Equatable {
 
     struct Field: Codable, Equatable {
 
+        // Kind・ValueSearchability・CodingKeys は型の入れ子が 2 段（SecureMenuItem.Field.Xxx）になるが、
+        // 意図的に外に出さない。Field の保存形式（JSON）と一体の型で、外に出すとアプリ全体の参照を
+        // 書き換えることになる。セキュアアイテム（特に TOTP）を失わせない約束のため、触る範囲を最小にする
         /// フィールドの種別。
         ///
         /// - `.plain`: 通常のテキスト（ID・パスワードなど）
@@ -45,7 +48,7 @@ struct SecureMenuItem: Codable, Equatable {
         /// （`retainsValueHistory` など）を通して分岐すること。capability は
         /// `default` の無い switch で定義してあるため、種別を追加すると
         /// 判断が必要な箇所がすべてコンパイルエラーとして表面化する。
-        enum Kind: String, Codable {
+        enum Kind: String, Codable { // swiftlint:disable:this nesting
             case plain
             case totp
             case url
@@ -53,7 +56,7 @@ struct SecureMenuItem: Codable, Equatable {
         }
 
         /// 検索窓の絞り込みで値を対象にする条件（種別ごとの割り当ては `Kind.valueSearchability`）
-        enum ValueSearchability {
+        enum ValueSearchability { // swiftlint:disable:this nesting
             /// マスク指定に関わらず対象にする
             case always
             /// マスク（`isPassword`）が掛かっていないときだけ対象にする
@@ -123,7 +126,8 @@ struct SecureMenuItem: Codable, Equatable {
                          createdAt: createdAt)
         }
 
-        private enum CodingKeys: String, CodingKey {
+        // 保存形式（JSON のキー）。Field の中に置く必要がある（Kind と同じ理由で入れ子を許す）
+        private enum CodingKeys: String, CodingKey { // swiftlint:disable:this nesting
             case fieldID, label, value, isPassword, kind, history, createdAt
             /// v1.2.0 で追加した拡張種別（`url` / `note`）の保存先。
             /// 旧バージョンは知らないキーとして黙って無視するため、

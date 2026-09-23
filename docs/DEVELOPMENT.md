@@ -269,8 +269,8 @@ scripts/tool.sh swiftlint   # run from the project root
 
 It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
 
-- **`serious` (errors) must be 0.** Errors also make the build script phase fail.
-- **Existing warnings remain (70 as of v1.6.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
+- **There must be no violations.** v1.6.2 cleared all existing warnings (70) and set `strict: true` in `.swiftlint.yml`, so **warnings are treated as errors**. A single violation counts as `serious` and makes the build script phase fail.
+- Where a rule genuinely cannot be followed, add `// swiftlint:disable:this <rule>` on that line and explain why in a comment just before it (e.g. `nesting` for `SecureMenuItem.Field.Kind`, which stays nested because it is part of the storage format). When a file or type grows too long, split it by concern into extension files instead of loosening the limits (e.g. `SecureMenuService+Keychain.swift`, `SecureMenuServiceSpec+Storage.swift`).
 
 > **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 

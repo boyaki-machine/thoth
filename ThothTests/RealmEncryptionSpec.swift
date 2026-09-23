@@ -64,7 +64,7 @@ class RealmEncryptionSpec: QuickSpec {
 
                 // 暗号化構成で開けて、データが無傷であること
                 let realm = openEncrypted()
-                expect(realm).toNot(beNil())
+                expect(realm) != nil
                 expect(realm?.objects(CPYClip.self).count) == 1
                 expect(realm?.objects(CPYClip.self).first?.title) == "test clip"
                 expect(realm?.objects(CPYSnippet.self).count) == 1
@@ -75,7 +75,7 @@ class RealmEncryptionSpec: QuickSpec {
                 makePlaintextRealm()
                 _ = RealmProvider.migrateToEncryptedIfNeeded(at: fileURL, key: key)
 
-                expect(openPlaintext()).to(beNil())
+                expect(openPlaintext()) == nil
             }
 
             it("Is idempotent (second call succeeds without changes)") {
@@ -106,8 +106,8 @@ class RealmEncryptionSpec: QuickSpec {
 
                 // 暗号化後のファイルに平文文字列が残っていないこと
                 let raw = try! Data(contentsOf: fileURL)
-                expect(raw.range(of: Data("test clip".utf8))).to(beNil())
-                expect(raw.range(of: Data("snippet content".utf8))).to(beNil())
+                expect(raw.range(of: Data("test clip".utf8))) == nil
+                expect(raw.range(of: Data("snippet content".utf8))) == nil
             }
         }
     }

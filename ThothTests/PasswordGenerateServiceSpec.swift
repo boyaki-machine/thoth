@@ -21,11 +21,11 @@ class PasswordGenerateServiceSpec: QuickSpec {
     }
 
     private static func makeConditions(length: Int = 16,
-                                useLetters: Bool = true,
-                                useDigits: Bool = true,
-                                useSymbols: Bool = false,
-                                distinguishCase: Bool = true,
-                                easyToType: Bool = false) -> PasswordGenerateService.Conditions {
+                                       useLetters: Bool = true,
+                                       useDigits: Bool = true,
+                                       useSymbols: Bool = false,
+                                       distinguishCase: Bool = true,
+                                       easyToType: Bool = false) -> PasswordGenerateService.Conditions {
         return PasswordGenerateService.Conditions(length: length,
                                                   useLetters: useLetters,
                                                   useDigits: useDigits,
