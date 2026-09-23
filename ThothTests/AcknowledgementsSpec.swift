@@ -49,7 +49,7 @@ class AcknowledgementsSpec: QuickSpec {
 
             it("NOTICE は同梱する一覧と同じ内容である") {
                 let notice = try? String(contentsOf: repositoryRoot.appendingPathComponent("NOTICE"), encoding: .utf8)
-                expect(notice).toNot(beNil())
+                expect(notice) != nil
                 expect(notice) == bundledAcknowledgements()
             }
         }
