@@ -5,7 +5,7 @@ import AppKit
 
 /// 履歴全文検索インデクサーと検索フィルタのスペック。
 /// クリップデータは実運用と同じ形式（NSKeyedArchiver → ClipDataStore 暗号化）で
-/// 一時ディレクトリに作成する（Realm・Keychain には触れない）
+/// 一時ディレクトリに作成する（保存層・Keychain には触れない）
 class ClipFullTextIndexerSpec: QuickSpec {
 
     override class func spec() {

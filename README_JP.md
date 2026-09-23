@@ -254,6 +254,7 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 | **ビルド環境** | Xcode 27 系（詳細は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md)） |
 
 > v1.4.0 で対応 OS を macOS 15.0 以降に引き上げました。v1.3.1 以前は macOS 11.0 以降が対象です（こちらも Apple Silicon 専用）。
+> v1.4.x 以前から更新する場合は、先に v1.5.1〜v1.6.2 のいずれかを一度起動して履歴・スニペットを移行してください（v1.6.3 以降は v1.4.x 以前の保存形式を読めません）。
 
 **概略:**
 
@@ -337,7 +338,7 @@ xattr -p com.apple.quarantine /Applications/Thoth.app 2>/dev/null
 
 元になった Clipy・ClipMenu の著作権表示（[LICENSE](LICENSE)・[LICENSE_CLIPMENU](LICENSE_CLIPMENU)）と、サードパーティライブラリのライセンス一覧は [NOTICE](NOTICE) に記載しています（アプリ内では 環境設定 > オリジナル > サードパーティライセンス からも確認できます。配布する `Thoth.app` にも同じ一覧が入っています）。
 
-依存ライブラリはすべて、MIT ライセンスでの配布と両立する寛容なライセンス（MIT・ISC・BSD・Apache-2.0・Boost）です。v1.5.1 で CocoaPods から Swift Package Manager へ移したことで、Thoth のライセンスに変わりはありません。ただし Realm のデータベース部分（realm-core）はソースからビルドして同梱するようになったため、その中に取り込まれている第三者のコード（Intel の十進数ライブラリ・JSON for Modern C++ など）のライセンスも、v1.6.1 から一覧に載せています。
+同梱する依存ライブラリはすべて MIT ライセンス（LetsMove はパブリックドメイン）で、Thoth の MIT ライセンスでの配布と両立します。v1.5.1 で CocoaPods から Swift Package Manager へ移したことで、Thoth のライセンスに変わりはありません。v1.6.1〜v1.6.2 は Realm（Apache-2.0。取り込まれた Intel の十進数ライブラリ・JSON for Modern C++ などを含む）も同梱していましたが、v1.6.3 で外しました。
 
 ## スペシャル・サンクス
 

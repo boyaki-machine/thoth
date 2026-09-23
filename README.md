@@ -254,6 +254,7 @@ No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](do
 | **Build environment** | Xcode 27 (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)) |
 
 > v1.4.0 raised the minimum to macOS 15.0. v1.3.1 and earlier support macOS 11.0 or later (also Apple silicon only).
+> When updating from v1.4.x or earlier, launch any of v1.5.1–v1.6.2 once first to migrate the history and snippets (v1.6.3 and later cannot read the storage format of v1.4.x and earlier).
 
 **Outline:**
 
@@ -337,7 +338,7 @@ This app is provided under the MIT license. See the LICENSE file for details. Ic
 
 The copyright notices of Clipy and ClipMenu, which Thoth is derived from ([LICENSE](LICENSE), [LICENSE_CLIPMENU](LICENSE_CLIPMENU)), and the third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses; the distributed `Thoth.app` carries the same list).
 
-All dependencies use permissive licenses compatible with distribution under the MIT License (MIT, ISC, BSD, Apache-2.0, Boost). Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. Because Realm's database engine (realm-core) is now built from source and bundled, however, the licenses of the third-party code it includes (Intel's decimal floating-point library, JSON for Modern C++, and others) are also listed since v1.6.1.
+Every bundled dependency is under the MIT License (LetsMove is in the public domain), compatible with distributing Thoth under the MIT License. Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. v1.6.1–v1.6.2 also bundled Realm (Apache-2.0, including Intel's decimal floating-point library, JSON for Modern C++, and other third-party code), which v1.6.3 removed.
 
 ## Special Thanks
 

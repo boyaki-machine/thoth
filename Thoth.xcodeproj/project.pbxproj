@@ -13,8 +13,7 @@
 		6F92D63A3002411700478ACF /* QRDecodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6383002411700478ACF /* QRDecodeService.swift */; };
 		6F92D63E300241A300478ACF /* TOTPServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */; };
 		6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */; };
-		6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */; };
-		6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */; };
+		6FCC01A1B2C3D4E5F6070803 /* AppKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070804 /* AppKeyStore.swift */; };
 		6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */; };
 		6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */; };
 		6FCC01A1B2C3D4E5F607080B /* NSAlert+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */; };
@@ -95,7 +94,6 @@
 		AA00620200000000ABCDEF01 /* CallerAppActivatorSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */; };
 		AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051100000000ABCDEF01 /* LibraryRecords.swift */; };
 		AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051300000000ABCDEF01 /* LibraryStore.swift */; };
-		AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */; };
 		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
 		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
@@ -107,7 +105,6 @@
 		AA00054200000000ABCDEF01 /* LibraryMigrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054100000000ABCDEF01 /* LibraryMigrator.swift */; };
 		AA00054400000000ABCDEF01 /* LibraryProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054300000000ABCDEF01 /* LibraryProvider.swift */; };
 		AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */; };
-		AA00055200000000ABCDEF01 /* LibraryMigrationFixture.realm in Resources */ = {isa = PBXBuildFile; fileRef = AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */; };
 		AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056100000000ABCDEF01 /* ClipThumbnail.swift */; };
 		AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */; };
 		AA00057200000000ABCDEF01 /* LibraryUnavailableSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */; };
@@ -151,15 +148,11 @@
 		FA1DB4B81DDCB452007F95C8 /* NSLock+Thoth.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AD1DDCB452007F95C8 /* NSLock+Thoth.swift */; };
 		FA1DB4B91DDCB452007F95C8 /* NSMenuItem+Initialize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */; };
 		FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */; };
-		FA1DB4BC1DDCB452007F95C8 /* Realm+NoCatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4B11DDCB452007F95C8 /* Realm+NoCatch.swift */; };
 		FA1DB4BD1DDCB452007F95C8 /* String+Substring.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4B21DDCB452007F95C8 /* String+Substring.swift */; };
 		FA1DB4C91DDCB460007F95C8 /* MenuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4C31DDCB460007F95C8 /* MenuManager.swift */; };
 		FA1DB4D21DDCB479007F95C8 /* CPYAppInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CC1DDCB479007F95C8 /* CPYAppInfo.swift */; };
-		FA1DB4D31DDCB479007F95C8 /* CPYClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CD1DDCB479007F95C8 /* CPYClip.swift */; };
 		FA1DB4D41DDCB479007F95C8 /* CPYClipData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CE1DDCB479007F95C8 /* CPYClipData.swift */; };
 		FA1DB4D51DDCB479007F95C8 /* CPYDraggedData.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4CF1DDCB479007F95C8 /* CPYDraggedData.swift */; };
-		FA1DB4D61DDCB479007F95C8 /* CPYFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4D01DDCB479007F95C8 /* CPYFolder.swift */; };
-		FA1DB4D71DDCB479007F95C8 /* CPYSnippet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4D11DDCB479007F95C8 /* CPYSnippet.swift */; };
 		FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */; };
 		FA1DB4E71DDCB49C007F95C8 /* CPYDesignableButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4DD1DDCB49C007F95C8 /* CPYDesignableButton.swift */; };
 		FA1DB4E81DDCB49C007F95C8 /* CPYDesignableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA1DB4DE1DDCB49C007F95C8 /* CPYDesignableView.swift */; };
@@ -187,7 +180,6 @@
 		FA431F021E6718CE00ACFF56 /* Collection+Safe.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */; };
 		FA6167921D3ABEB10049FA14 /* LibraryStoreContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */; };
 		FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */; };
-		FA6167961D3ACDD80049FA14 /* RealmLibraryStoreSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167951D3ACDD80049FA14 /* RealmLibraryStoreSpec.swift */; };
 		FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */; };
@@ -206,7 +198,6 @@
 		FB6855A93447A3954AACCB18 /* AEXML in Frameworks */ = {isa = PBXBuildFile; productRef = 4F13B795E0691CA522482ECE /* AEXML */; };
 		C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */ = {isa = PBXBuildFile; productRef = 1938DBEC244DCB10F558AC8E /* KeyHolder */; };
 		023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */ = {isa = PBXBuildFile; productRef = 0756B1CE738969E1843E4F63 /* Magnet */; };
-		39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = EF29407C8D8A90E2B0EF931D /* RealmSwift */; };
 		D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1B221E0B7D9C6A2CF768C1F4 /* RxSwift */; };
 		6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 8C215EB623181C3B0EF7D2F3 /* RxCocoa */; };
 		8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */ = {isa = PBXBuildFile; productRef = EF59A623C09A7FDDF0ACACB5 /* Sauce */; };
@@ -214,8 +205,6 @@
 		CFA78390949AF0D8D7CBA8FB /* Quick in Frameworks */ = {isa = PBXBuildFile; productRef = CBBFA159A947C4864AB2793F /* Quick */; };
 		013BC32641FB0ABC539B890E /* Nimble in Frameworks */ = {isa = PBXBuildFile; productRef = F7850410BD6D2FF990E9621F /* Nimble */; };
 		1E2B9AD954139146B8CCC427 /* LetsMove in Frameworks */ = {isa = PBXBuildFile; productRef = 9B6900DA061889398274DBCD /* LetsMove */; };
-		043D48842FAB190208863D91 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = EF29407C8D8A90E2B0EF931D /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		C3CB2DEE5AEC6E721723C2A0 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = D41FD0C12C2D616213B35F40 /* RealmSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -235,7 +224,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				043D48842FAB190208863D91 /* RealmSwift in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -275,8 +263,7 @@
 		6F92D63B3002417500478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TOTPServiceSpec.swift; path = ThothTests/TOTPServiceSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipboardConcealSpec.swift; path = ThothTests/ClipboardConcealSpec.swift; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmProvider.swift; sourceTree = "<group>"; };
-		6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RealmEncryptionSpec.swift; path = ThothTests/RealmEncryptionSpec.swift; sourceTree = "<group>"; };
+		6FCC01A1B2C3D4E5F6070804 /* AppKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppKeyStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipDataStore.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ClipDataStoreSpec.swift; path = ThothTests/ClipDataStoreSpec.swift; sourceTree = "<group>"; };
 		6FCC01A1B2C3D4E5F607080C /* NSAlert+Thoth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSAlert+Thoth.swift"; sourceTree = "<group>"; };
@@ -366,7 +353,6 @@
 		AA00620100000000ABCDEF01 /* CallerAppActivatorSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallerAppActivatorSpec.swift; sourceTree = "<group>"; };
 		AA00051100000000ABCDEF01 /* LibraryRecords.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryRecords.swift; sourceTree = "<group>"; };
 		AA00051300000000ABCDEF01 /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
-		AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmLibraryStore.swift; sourceTree = "<group>"; };
 		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
 		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
@@ -378,7 +364,6 @@
 		AA00054100000000ABCDEF01 /* LibraryMigrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryMigrator.swift; sourceTree = "<group>"; };
 		AA00054300000000ABCDEF01 /* LibraryProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryProvider.swift; sourceTree = "<group>"; };
 		AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryMigrationSpec.swift; sourceTree = "<group>"; };
-		AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */ = {isa = PBXFileReference; lastKnownFileType = file; name = LibraryMigrationFixture.realm; path = Fixtures/LibraryMigrationFixture.realm; sourceTree = "<group>"; };
 		AA00056100000000ABCDEF01 /* ClipThumbnail.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipThumbnail.swift; sourceTree = "<group>"; };
 		AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClipThumbnailSpec.swift; sourceTree = "<group>"; };
 		AA00057100000000ABCDEF01 /* LibraryUnavailableSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryUnavailableSpec.swift; sourceTree = "<group>"; };
@@ -433,15 +418,11 @@
 		FA1DB4AD1DDCB452007F95C8 /* NSLock+Thoth.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSLock+Thoth.swift"; sourceTree = "<group>"; };
 		FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSMenuItem+Initialize.swift"; sourceTree = "<group>"; };
 		FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "NSUserDefaults+ArchiveData.swift"; sourceTree = "<group>"; };
-		FA1DB4B11DDCB452007F95C8 /* Realm+NoCatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Realm+NoCatch.swift"; sourceTree = "<group>"; };
 		FA1DB4B21DDCB452007F95C8 /* String+Substring.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String+Substring.swift"; sourceTree = "<group>"; };
 		FA1DB4C31DDCB460007F95C8 /* MenuManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuManager.swift; sourceTree = "<group>"; };
 		FA1DB4CC1DDCB479007F95C8 /* CPYAppInfo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYAppInfo.swift; sourceTree = "<group>"; };
-		FA1DB4CD1DDCB479007F95C8 /* CPYClip.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYClip.swift; sourceTree = "<group>"; };
 		FA1DB4CE1DDCB479007F95C8 /* CPYClipData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYClipData.swift; sourceTree = "<group>"; };
 		FA1DB4CF1DDCB479007F95C8 /* CPYDraggedData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYDraggedData.swift; sourceTree = "<group>"; };
-		FA1DB4D01DDCB479007F95C8 /* CPYFolder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYFolder.swift; sourceTree = "<group>"; };
-		FA1DB4D11DDCB479007F95C8 /* CPYSnippet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYSnippet.swift; sourceTree = "<group>"; };
 		FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYUtilities.swift; sourceTree = "<group>"; };
 		FA1DB4DD1DDCB49C007F95C8 /* CPYDesignableButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYDesignableButton.swift; sourceTree = "<group>"; };
 		FA1DB4DE1DDCB49C007F95C8 /* CPYDesignableView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYDesignableView.swift; sourceTree = "<group>"; };
@@ -460,7 +441,6 @@
 		FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Collection+Safe.swift"; sourceTree = "<group>"; };
 		FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryStoreContract.swift; sourceTree = "<group>"; };
 		FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggedDataSpec.swift; sourceTree = "<group>"; };
-		FA6167951D3ACDD80049FA14 /* RealmLibraryStoreSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RealmLibraryStoreSpec.swift; sourceTree = "<group>"; };
 		FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		FAAA885C1E6853B80088FB34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYBetaPreferenceViewController.xib; sourceTree = "<group>"; };
 		FAAA88621E6858030088FB34 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -501,7 +481,6 @@
 				FB6855A93447A3954AACCB18 /* AEXML in Frameworks */,
 				C5063408541E50EEDEDE5EF5 /* KeyHolder in Frameworks */,
 				023CC3AE47B062DEF4F1097D /* Magnet in Frameworks */,
-				39CD244CF145AF1611CD70C3 /* RealmSwift in Frameworks */,
 				D33E388732A37EAF48BE6023 /* RxSwift in Frameworks */,
 				6BD1BE2B5A3793DC2FEDF939 /* RxCocoa in Frameworks */,
 				8F1928B991E5E88DCE190A27 /* Sauce in Frameworks */,
@@ -519,7 +498,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C3CB2DEE5AEC6E721723C2A0 /* RealmSwift in Frameworks */,
 				CFA78390949AF0D8D7CBA8FB /* Quick in Frameworks */,
 				013BC32641FB0ABC539B890E /* Nimble in Frameworks */,
 			);
@@ -669,7 +647,6 @@
 				FA1DB4AD1DDCB452007F95C8 /* NSLock+Thoth.swift */,
 				FA1DB4AE1DDCB452007F95C8 /* NSMenuItem+Initialize.swift */,
 				FA1DB4AF1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift */,
-				FA1DB4B11DDCB452007F95C8 /* Realm+NoCatch.swift */,
 				FA1DB4B21DDCB452007F95C8 /* String+Substring.swift */,
 				FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */,
 				C5F1B7321FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift */,
@@ -691,12 +668,9 @@
 			isa = PBXGroup;
 			children = (
 				FA1DB4CC1DDCB479007F95C8 /* CPYAppInfo.swift */,
-				FA1DB4CD1DDCB479007F95C8 /* CPYClip.swift */,
 				AA00051100000000ABCDEF01 /* LibraryRecords.swift */,
 				FA1DB4CE1DDCB479007F95C8 /* CPYClipData.swift */,
 				FA1DB4CF1DDCB479007F95C8 /* CPYDraggedData.swift */,
-				FA1DB4D01DDCB479007F95C8 /* CPYFolder.swift */,
-				FA1DB4D11DDCB479007F95C8 /* CPYSnippet.swift */,
 				AA00001100000000ABCDEF01 /* SecureMenuItem.swift */,
 				AA00760100000000ABCDEF01 /* SecureUserData.swift */,
 			);
@@ -707,7 +681,7 @@
 			isa = PBXGroup;
 			children = (
 				FA1DB4D91DDCB49C007F95C8 /* CPYUtilities.swift */,
-				6FCC01A1B2C3D4E5F6070804 /* RealmProvider.swift */,
+				6FCC01A1B2C3D4E5F6070804 /* AppKeyStore.swift */,
 				AA00056100000000ABCDEF01 /* ClipThumbnail.swift */,
 				AA00054300000000ABCDEF01 /* LibraryProvider.swift */,
 				AA00054100000000ABCDEF01 /* LibraryMigrator.swift */,
@@ -715,7 +689,6 @@
 				AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */,
 				AA00052100000000ABCDEF01 /* FieldCipher.swift */,
 				AA00660100000000ABCDEF01 /* DebugLog.swift */,
-				AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */,
 				AA00051300000000ABCDEF01 /* LibraryStore.swift */,
 				AA10CAFE0000000000000012 /* LegacyMigration.swift */,
 				6FCC01A1B2C3D4E5F6070808 /* ClipDataStore.swift */,
@@ -832,7 +805,6 @@
 				6F92D63B3002417500478ACF /* TOTPServiceSpec.swift */,
 				6F92D63D300241A300478ACF /* TOTPServiceSpec.swift */,
 				6FCC01A1B2C3D4E5F6070802 /* ClipboardConcealSpec.swift */,
-				6FCC01A1B2C3D4E5F6070806 /* RealmEncryptionSpec.swift */,
 				6FCC01A1B2C3D4E5F607080A /* ClipDataStoreSpec.swift */,
 				6F92D6383002411700478ACF /* QRDecodeService.swift */,
 				AA20C0DE0000000000000002 /* CryptoPasswordQRService.swift */,
@@ -886,7 +858,6 @@
 				FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */,
 				FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */,
 				FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */,
-				FA6167951D3ACDD80049FA14 /* RealmLibraryStoreSpec.swift */,
 				AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */,
 				AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */,
 				AA00003D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift */,
@@ -915,7 +886,6 @@
 				AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */,
 				AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */,
 				AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */,
-				AA00055100000000ABCDEF01 /* LibraryMigrationFixture.realm */,
 				AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */,
 				AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */,
 				AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */,
@@ -966,7 +936,6 @@
 				4F13B795E0691CA522482ECE /* AEXML */,
 				1938DBEC244DCB10F558AC8E /* KeyHolder */,
 				0756B1CE738969E1843E4F63 /* Magnet */,
-				EF29407C8D8A90E2B0EF931D /* RealmSwift */,
 				1B221E0B7D9C6A2CF768C1F4 /* RxSwift */,
 				8C215EB623181C3B0EF7D2F3 /* RxCocoa */,
 				EF59A623C09A7FDDF0ACACB5 /* Sauce */,
@@ -992,7 +961,6 @@
 			);
 			name = ThothTests;
 			packageProductDependencies = (
-				D41FD0C12C2D616213B35F40 /* RealmSwift */,
 				CBBFA159A947C4864AB2793F /* Quick */,
 				F7850410BD6D2FF990E9621F /* Nimble */,
 			);
@@ -1044,7 +1012,6 @@
 				54C89554B16C57DE53FA81F8 /* XCRemoteSwiftPackageReference "AEXML" */,
 				F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */,
 				6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */,
-				9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */,
 				FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */,
 				852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */,
@@ -1090,7 +1057,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AA00055200000000ABCDEF01 /* LibraryMigrationFixture.realm in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1169,7 +1135,7 @@
 				AA00640200000000ABCDEF01 /* ScreenshotWatcher.swift in Sources */,
 				AA00610200000000ABCDEF01 /* CallerAppActivator.swift in Sources */,
 				FA1DB4E51DDCB49C007F95C8 /* CPYUtilities.swift in Sources */,
-				6FCC01A1B2C3D4E5F6070803 /* RealmProvider.swift in Sources */,
+				6FCC01A1B2C3D4E5F6070803 /* AppKeyStore.swift in Sources */,
 				AA00056200000000ABCDEF01 /* ClipThumbnail.swift in Sources */,
 				AA00054400000000ABCDEF01 /* LibraryProvider.swift in Sources */,
 				AA00054200000000ABCDEF01 /* LibraryMigrator.swift in Sources */,
@@ -1177,7 +1143,6 @@
 				AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */,
 				AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */,
 				AA00660200000000ABCDEF01 /* DebugLog.swift in Sources */,
-				AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */,
 				AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */,
 				AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070807 /* ClipDataStore.swift in Sources */,
@@ -1185,17 +1150,14 @@
 				FA1DB4BA1DDCB452007F95C8 /* NSUserDefaults+ArchiveData.swift in Sources */,
 				FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */,
 				AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */,
-				FA1DB4D31DDCB479007F95C8 /* CPYClip.swift in Sources */,
 				AA00051200000000ABCDEF01 /* LibraryRecords.swift in Sources */,
 				FAC0DCE91DE15FD900309C49 /* DataCleanService.swift in Sources */,
 				C5F1B7331FF74A2D00D2DA83 /* NSPasteboard+Deprecated.swift in Sources */,
 				FA1DB4A31DDCB433007F95C8 /* Constants.swift in Sources */,
-				FA1DB4D61DDCB479007F95C8 /* CPYFolder.swift in Sources */,
 				FA1DB4B41DDCB452007F95C8 /* NSBundle+Version.swift in Sources */,
 				FA1DB5171DDCB4C0007F95C8 /* CPYTypePreferenceViewController.swift in Sources */,
 				FA1DB4A21DDCB433007F95C8 /* AppDelegate.swift in Sources */,
 				FA1DB5141DDCB4C0007F95C8 /* CPYBetaPreferenceViewController.swift in Sources */,
-				FA1DB4BC1DDCB452007F95C8 /* Realm+NoCatch.swift in Sources */,
 				FA1DB4B91DDCB452007F95C8 /* NSMenuItem+Initialize.swift in Sources */,
 				FA0D5CE81DDCC61600AC9052 /* ClipService.swift in Sources */,
 				FA1DB4C91DDCB460007F95C8 /* MenuManager.swift in Sources */,
@@ -1217,7 +1179,6 @@
 				FA10898320EC2AFB00A3FEFC /* Colors.swift in Sources */,
 				FA1DB4D21DDCB479007F95C8 /* CPYAppInfo.swift in Sources */,
 				FAE911B91DE045E2008A4BEC /* HotKeyService.swift in Sources */,
-				FA1DB4D71DDCB479007F95C8 /* CPYSnippet.swift in Sources */,
 				AA00002100000000ABCDEF01 /* SecureMenuItem.swift in Sources */,
 				AA00760200000000ABCDEF01 /* SecureUserData.swift in Sources */,
 				AA00002200000000ABCDEF01 /* SecureMenuService.swift in Sources */,
@@ -1284,11 +1245,9 @@
 				AA00600200000000ABCDEF01 /* CPYUpdatesPreferenceViewControllerSpec.swift in Sources */,
 				AA20C0DE0000000000000047 /* CPYPreferencesWindowControllerSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070801 /* ClipboardConcealSpec.swift in Sources */,
-				6FCC01A1B2C3D4E5F6070805 /* RealmEncryptionSpec.swift in Sources */,
 				6FCC01A1B2C3D4E5F6070809 /* ClipDataStoreSpec.swift in Sources */,
 				FA6167921D3ABEB10049FA14 /* LibraryStoreContract.swift in Sources */,
 				FA08EDF81D1FED7D000D1D13 /* HotKeyServiceSpec.swift in Sources */,
-				FA6167961D3ACDD80049FA14 /* RealmLibraryStoreSpec.swift in Sources */,
 				AA00004900000000ABCDEF01 /* SecureMenuItemSpec.swift in Sources */,
 				AA00004A00000000ABCDEF01 /* SecureMenuServiceSpec.swift in Sources */,
 				AA00004D00000000ABCDEF01 /* PasswordGenerateServiceSpec.swift in Sources */,
@@ -1746,14 +1705,6 @@
 				version = 3.5.0;
 			};
 		};
-		9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/realm/realm-swift.git";
-			requirement = {
-				kind = exactVersion;
-				version = 20.0.5;
-			};
-		};
 		40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
@@ -1812,11 +1763,6 @@
 			package = 6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */;
 			productName = Magnet;
 		};
-		EF29407C8D8A90E2B0EF931D /* RealmSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */;
-			productName = RealmSwift;
-		};
 		1B221E0B7D9C6A2CF768C1F4 /* RxSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 40D904BDE50C6EF2DD559908 /* XCRemoteSwiftPackageReference "RxSwift" */;
@@ -1851,11 +1797,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A859B9F0F51B0362E6D1C1B4 /* XCLocalSwiftPackageReference "Packages/LetsMove" */;
 			productName = LetsMove;
-		};
-		D41FD0C12C2D616213B35F40 /* RealmSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */;
-			productName = RealmSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

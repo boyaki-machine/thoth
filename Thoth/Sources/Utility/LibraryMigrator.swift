@@ -6,24 +6,24 @@
 //
 
 import Foundation
-import RealmSwift
 import SwiftData
 
-/// 履歴・スニペットの Realm → SwiftData 移行（v1.5.x の初回起動で 1 回だけ）。
+/// 保存層（SwiftData）のストアを作り、照合してから完了の印を書く。
 ///
-/// 1. Realm を**読み取り専用**で開き、全件を値型に読み出す（Realm のファイルには書き込まない）
-/// 2. 本番の場所に新しいストアを作って書き込む
-/// 3. 新しい ModelContext で読み直して、件数・全項目・並び順を照合する
-/// 4. 照合に通ったときだけ、ストアの隣に**完了の印**（`<ストア名>.ready`）を書く
+/// v1.5.x〜v1.6.2 は、初回起動で Realm の全データを読み出してここへ書き込んでいた（Realm → SwiftData 移行）。
+/// v1.6.3 で Realm を外したので、いまは新規インストールで空のストアを作るときだけ使う。
 ///
-/// 完了の印が無いストアは「移行が途中で止まったもの」で、利用者のデータは入っていない
+/// 1. 本番の場所に新しいストアを作って書き込む
+/// 2. 新しい ModelContext で読み直して、件数・全項目・並び順を照合する
+/// 3. 照合に通ったときだけ、ストアの隣に**完了の印**（`<ストア名>.ready`）を書く
+///
+/// 完了の印が無いストアは「作成が途中で止まったもの」で、利用者のデータは入っていない
 /// （アプリは印のあるストアしか使わない）。次回起動時に開く前に消してやり直す。
 /// 一時ファイルに書いてから移す方式にしないのは、SwiftData にはストアを閉じる手段が無く、
 /// 開いたことのあるファイルを動かすと SQLite が壊れる（SQLITE_IOERR_VNODE）ため。
-/// Realm のファイルは v1.6.x まで残し、旧版へ戻せるようにする。
 enum LibraryMigrator {
 
-    /// 移行元から読み出した全データ（履歴の id は Realm の内容ハッシュのまま）
+    /// ストアへ書き込む全データ（履歴の id は内容ハッシュのまま。書き込むときに鍵付きハッシュへ置き換える）
     struct Snapshot: Equatable {
         var clips: [ClipRecord]
         var folders: [SnippetFolderRecord]
@@ -54,33 +54,6 @@ enum LibraryMigrator {
 
     /// StoreMeta に移行の記録を書くときのキー
     static let metaKey = "migration"
-
-    // MARK: - Read Realm
-
-    /// Realm のファイルを読み取り専用で開き、全件を値型に読み出す。
-    /// 暗号化されていない古いファイルにも対応するため、鍵あり → 鍵なしの順で試す
-    static func readRealm(at fileURL: URL, encryptionKey: Data?) throws -> Snapshot {
-        let keys: [Data?] = encryptionKey.map { [$0, nil] } ?? [nil]
-        for key in keys {
-            let snapshot: Snapshot? = autoreleasepool {
-                var configuration = RealmProvider.makeBaseConfiguration()
-                configuration.fileURL = fileURL
-                configuration.readOnly = true
-                configuration.encryptionKey = key
-                configuration.objectTypes = [CPYClip.self, CPYFolder.self, CPYSnippet.self]
-                guard let realm = try? Realm(configuration: configuration) else { return nil }
-                let clips = realm.objects(CPYClip.self)
-                    .sorted(byKeyPath: #keyPath(CPYClip.updateTime), ascending: true)
-                    .map(ClipRecord.init)
-                let folders = realm.objects(CPYFolder.self)
-                    .sorted(byKeyPath: #keyPath(CPYFolder.index), ascending: true)
-                    .map(SnippetFolderRecord.init)
-                return Snapshot(clips: Array(clips), folders: Array(folders))
-            }
-            if let snapshot = snapshot { return snapshot }
-        }
-        throw Failure.sourceUnreadable
-    }
 
     // MARK: - Migrate
 

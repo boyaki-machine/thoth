@@ -25,8 +25,8 @@ import CryptoKit
 /// - 読み込みはマジックナンバーで判別し、旧形式（平文アーカイブ）もそのまま返す（遅延互換）
 /// - 鍵が用意できない場合（ad-hoc 署名で鍵作成を延期中・Keychain 障害）は
 ///   平文で読み書きして機能を維持する（暗号化は次回起動以降のスイープで追いつく）
-/// - 鍵は Realm 暗号鍵と同じ Keychain サービスの別アカウントに保存し、
-///   作成条件（安定署名時のみ・読み戻し検証）も RealmProvider と共通のロジックを使う
+/// - 鍵はアプリ生成鍵（app-keys）の 1 つとして AppKeyStore が管理する
+///   （作成は安定署名時のみ・読み戻し検証つき）
 final class ClipDataStore {
 
     // MARK: - Properties
@@ -57,7 +57,7 @@ final class ClipDataStore {
     /// テスト実行時は nil（各テストが専用インスタンスに鍵を注入する）
     private static func defaultKey() -> Data? {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return nil }
-        return RealmProvider.appEncryptionKey(for: .clipData)
+        return AppKeyStore.appEncryptionKey(for: .clipData)
     }
 
     // MARK: - Read / Write

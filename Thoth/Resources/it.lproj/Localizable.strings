@@ -41,16 +41,6 @@
 
 "Snippet" = "Snippet";
 
-"General" = "Generali";
-
-"Menu" = "Menu";
-
-"Type" = "Appunti";
-
-"Shortcuts" = "Scorciatoie";
-
-"Updates" = "Aggiornamenti";
-
 "Delete Item" = "Elimina";
 
 "Are you sure want to delete this item?" = "Vuoi davvero eliminare questo elemento?";
@@ -64,8 +54,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "Per eseguire questa azione, consenti a Thoth l'accesso ad Accessibilità in Preferenze di Sistema > Sicurezza e Privacy.";
 
 "Open System Preferences" = "Apri Preferenze di Sistema";
-
-"Secure Menu" = "Menu sicuro";
 
 "Secure Items" = "Elementi sicuri";
 
@@ -101,8 +89,6 @@
 
 "Secure Info Remove Field" = "Rimuovi campo";
 
-"Secure Info Remove Field Confirmation" = "Vuoi davvero rimuovere questo campo?";
-
 "Secure Info Toggle Mask" = "Maschera / mostra il valore";
 
 "Secure Info External Change" = "Modificato in un'altra finestra.";
@@ -137,25 +123,11 @@
 
 "Add Secure Item" = "Aggiungi elemento";
 
-"Edit Secure Item" = "Modifica elemento";
-
 "Delete Secure Item" = "Elimina elemento";
 
 "Are you sure want to delete this secure item?" = "Vuoi davvero eliminare questo elemento?";
 
 "Secure Item Title Placeholder" = "Titolo (es. Gmail)";
-
-"Secure Field Label Placeholder" = "Etichetta (es. ID)";
-
-"Secure Field Value Placeholder" = "Valore";
-
-"Secure Column Title" = "Titolo";
-
-"Secure Column Fields" = "Campi";
-
-"Secure Column Label" = "Etichetta";
-
-"Secure Column Value" = "Valore";
 
 "Import Secure Items" = "Importa...";
 
@@ -163,11 +135,7 @@
 
 "Secure Items Export Warning" = "Il file esportato conterrà tutti i valori in chiaro. Maneggialo con cura.";
 
-"Secure Items Save Failed" = "Salvataggio nel portachiavi non riuscito. Dettagli in Console.app (filtro: SecureMenuService).";
-
 "Secure Items Import Overwrites Crypto Password" = "Questo file contiene una password impronta diversa da quella registrata su questo Mac. Importandola verrà sostituita e i file cifrati con la password attuale non si apriranno più con la password memorizzata. Continuare?";
-
-"Secure Item Title Required" = "Inserisci un titolo prima di salvare.";
 
 "Imported Secure Items Format" = "%d elementi importati.";
 
@@ -195,15 +163,9 @@
 
 "Value History" = "Cronologia dei valori";
 
-"No Value History" = "Nessuna cronologia";
-
 "Generate Password" = "Genera";
 
 "Copy Password" = "Copia";
-
-"Add Field" = "Aggiungi campo";
-
-"Save" = "Salva";
 
 "Close" = "Chiudi";
 
@@ -229,8 +191,6 @@
 
 "Crypto Decrypting" = "Decifratura in corso...";
 
-"Crypto Done" = "Fatto";
-
 "Crypto Error Empty Password" = "Inserisci una password.";
 
 "Crypto Error Empty Output Name" = "Inserisci un nome per il file di output.";
@@ -254,9 +214,6 @@
 "Crypto Manage Fingerprint Password" = "Gestisci password con impronta digitale...";
 
 "Crypto Register Update" = "Registra / Aggiorna";
-
-"Crypto Fingerprint Password Saved" = "Password con impronta digitale salvata.";
-
 
 "Add TOTP" = "Aggiungi TOTP...";
 
@@ -307,5 +264,7 @@
 "Third Party Licenses Load Failed" = "Impossibile caricare l'elenco delle licenze di terze parti.";
 "Library Unavailable Title" = "Chiave di crittografia non disponibile";
 "Library Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione non verrà scritto nulla su disco, la cronologia resterà solo in memoria e gli snippet non potranno essere mostrati né modificati. I dati salvati restano intatti. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";
+"Library Legacy Data Not Migrated Title" = "I dati precedenti non sono stati migrati";
+"Library Legacy Data Not Migrated Message" = "La cronologia degli appunti e gli snippet della v1.4.x o precedenti non sono ancora stati migrati e questa versione non può più leggerli. Finché l'app è in esecuzione non viene scritto nulla sul disco e i vecchi dati restano intatti. Avvia una volta Thoth v1.6.2 per migrare i dati, poi aggiorna di nuovo a questa versione.";
 "Snippets Unavailable" = "Snippet non disponibili";
 "Snippets Unavailable Message" = "Thoth non è riuscito a leggere la sua chiave di crittografia: durante questa sessione gli snippet non possono essere mostrati né modificati. Non è stato eliminato nulla. Sblocca il portachiavi di accesso (o consenti l'accesso quando richiesto) e riavvia Thoth.";

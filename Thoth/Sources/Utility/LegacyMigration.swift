@@ -18,7 +18,7 @@ import Foundation
 /// - ログイン項目（旧アプリ登録の引き継ぎ）
 ///
 /// Keychain（セキュアアイテム・DB 暗号鍵）の移行は、それぞれ
-/// `SecureMenuService` / `RealmProvider` が読み出し時に旧サービス名へ
+/// `SecureMenuService` / `AppKeyStore` が読み出し時に旧サービス名へ
 /// フォールバックする形で行う（このファイルでは扱わない）。
 ///
 /// アプリ起動の最初期（他のサービスが UserDefaults やデータフォルダに
