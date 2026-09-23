@@ -420,7 +420,9 @@ final class CryptoService {
         // 親ディレクトリを基準にフォルダ名だけを相対パスで格納する
         let parent = folderURL.deletingLastPathComponent().path
         let name = folderURL.lastPathComponent
-        let result = runCommand("/usr/bin/tar", ["-cf", tarURL.path, "-C", parent, name])
+        // "--" でオプションの終わりを示す。無いと、"-" で始まるフォルダ名（例: "--use-compress-program=…"）が
+        // tar のオプションとして解釈され、失敗したり意図しないコマンドを実行したりする
+        let result = runCommand("/usr/bin/tar", ["-cf", tarURL.path, "-C", parent, "--", name])
         guard result.status == 0 else { throw CryptoError.tarFailed(result.output) }
     }
 

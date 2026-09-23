@@ -111,6 +111,21 @@ class CryptoServiceSpec: QuickSpec {
                 expect(try? String(contentsOf: restoredA, encoding: .utf8)) == "file a"
                 expect(try? String(contentsOf: restoredB, encoding: .utf8)) == "file b"
             }
+
+            // "-" で始まるフォルダ名を tar のオプションとして解釈させない（"--" で区切る）
+            it("Encrypts and decrypts a folder whose name starts with a hyphen") {
+                let folder = workDirectory.appendingPathComponent("--checkpoint=1", isDirectory: true)
+                try! FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                try! "hyphen".write(to: folder.appendingPathComponent("a.txt"), atomically: true, encoding: .utf8)
+
+                let encrypted = workDirectory.appendingPathComponent("hyphen.enc")
+                let restoreRoot = workDirectory.appendingPathComponent("restored-hyphen", isDirectory: true)
+
+                expect(try? encryptSync(folder, to: encrypted, password: "pw").get()) != nil
+                expect(try? decryptSync(encrypted, to: restoreRoot, password: "pw").get()) != nil
+                let restored = restoreRoot.appendingPathComponent("--checkpoint=1/a.txt")
+                expect(try? String(contentsOf: restored, encoding: .utf8)) == "hyphen"
+            }
         }
 
         // MARK: - Integrity (Encrypt-then-MAC)
