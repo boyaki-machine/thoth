@@ -324,7 +324,9 @@ The Preferences window (menu bar icon → "Preferences") lets you adjust:
 
 This app is provided under the MIT license. See the LICENSE file for details. Icons are copyrighted by their respective authors.
 
-Third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses).
+The copyright notices of Clipy and ClipMenu, which Thoth is derived from ([LICENSE](LICENSE), [LICENSE_CLIPMENU](LICENSE_CLIPMENU)), and the third-party library licenses are listed in [NOTICE](NOTICE) (also viewable in-app via Preferences > Original > Third-Party Licenses; the distributed `Thoth.app` carries the same list).
+
+All dependencies use permissive licenses compatible with distribution under the MIT License (MIT, ISC, BSD, Apache-2.0, Boost). Moving from CocoaPods to Swift Package Manager in v1.5.1 does not change Thoth's license. Because Realm's database engine (realm-core) is now built from source and bundled, however, the licenses of the third-party code it includes (Intel's decimal floating-point library, JSON for Modern C++, and others) are also listed since v1.6.0.
 
 ## Special Thanks
 

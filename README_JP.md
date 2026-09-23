@@ -324,7 +324,9 @@ xattr -p com.apple.quarantine /Applications/Thoth.app 2>/dev/null
 
 本アプリは MIT ライセンスのもとで提供されています。詳細は LICENSE ファイルをご覧ください。アイコンの著作権は、それぞれの作者に帰属します。
 
-サードパーティライブラリのライセンス一覧は [NOTICE](NOTICE) に記載しています（アプリ内では 環境設定 > オリジナル > サードパーティライセンス からも確認できます）。
+元になった Clipy・ClipMenu の著作権表示（[LICENSE](LICENSE)・[LICENSE_CLIPMENU](LICENSE_CLIPMENU)）と、サードパーティライブラリのライセンス一覧は [NOTICE](NOTICE) に記載しています（アプリ内では 環境設定 > オリジナル > サードパーティライセンス からも確認できます。配布する `Thoth.app` にも同じ一覧が入っています）。
+
+依存ライブラリはすべて、MIT ライセンスでの配布と両立する寛容なライセンス（MIT・ISC・BSD・Apache-2.0・Boost）です。v1.5.1 で CocoaPods から Swift Package Manager へ移したことで、Thoth のライセンスに変わりはありません。ただし Realm のデータベース部分（realm-core）はソースからビルドして同梱するようになったため、その中に取り込まれている第三者のコード（Intel の十進数ライブラリ・JSON for Modern C++ など）のライセンスも、v1.6.0 から一覧に載せています。
 
 ## スペシャル・サンクス
 
