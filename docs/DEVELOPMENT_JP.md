@@ -270,8 +270,8 @@ scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 
 最後に `Done linting! Found <件数> violations, <件数> serious in <ファイル数> files.` と表示されます。
 
-- **`serious`（エラー）が 0 件であること。** エラーがあるとビルドのスクリプトフェーズも失敗します。
-- **警告は既存のものが残っています（v1.6.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
+- **違反は 0 件であること。** v1.6.2 で既存の警告（70 件）をすべて解消し、`.swiftlint.yml` の `strict: true` で**警告もエラーとして扱う**ようにしました。違反が 1 件でもあれば `serious` に数えられ、ビルドのスクリプトフェーズも失敗します。
+- どうしても規約に合わせられない箇所は、その行に `// swiftlint:disable:this <ルール名>` を付け、直前のコメントに理由を書きます（例: `SecureMenuItem.Field.Kind` の `nesting`。保存形式と一体の型なので外に出さない）。ファイルや型が長くなったときは、規約値を緩めずに関心ごとに extension のファイルへ分けます（例: `SecureMenuService+Keychain.swift`・`SecureMenuServiceSpec+Storage.swift`）。
 
 > **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 

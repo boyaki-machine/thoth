@@ -40,7 +40,7 @@ class ClipDataStoreSpec: QuickSpec {
 
                 let raw = try! Data(contentsOf: URL(fileURLWithPath: path("clip.data")))
                 expect(raw.prefix(7)) == Data("CLPYDAT".utf8)
-                expect(raw.range(of: original)).to(beNil())
+                expect(raw.range(of: original)) == nil
             }
 
             it("Fails to read with a different key (GCM tag mismatch)") {
@@ -48,7 +48,7 @@ class ClipDataStoreSpec: QuickSpec {
                 _ = store.write(Data("secret".utf8), toPath: path("clip.data"))
 
                 let otherStore = ClipDataStore(key: Data((0..<32).map { UInt8($0 &+ 99) }))
-                expect(otherStore.read(fromPath: path("clip.data"))).to(beNil())
+                expect(otherStore.read(fromPath: path("clip.data"))) == nil
             }
 
             it("Fails to read tampered ciphertext") {
@@ -58,7 +58,7 @@ class ClipDataStoreSpec: QuickSpec {
                 var raw = try! Data(contentsOf: URL(fileURLWithPath: path("clip.data")))
                 raw[raw.count - 1] ^= 0x01
                 try! raw.write(to: URL(fileURLWithPath: path("clip.data")))
-                expect(store.read(fromPath: path("clip.data"))).to(beNil())
+                expect(store.read(fromPath: path("clip.data"))) == nil
             }
         }
 

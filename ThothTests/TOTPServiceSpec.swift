@@ -7,8 +7,6 @@ class TOTPServiceSpec: QuickSpec {
 
     private static let service = TOTPService()
 
-    // BDD スペックの spec() は多数の it ブロックを含み長くなるため関数長ルールを緩める
-    // swiftlint:disable:next function_body_length
     override class func spec() {
 
         // RFC 6238 Appendix B のテストベクタ（SHA1, ASCII secret "12345678901234567890", 8 桁）
@@ -25,7 +23,6 @@ class TOTPServiceSpec: QuickSpec {
         // MARK: - RFC 6238 Vectors
 
         describe("RFC 6238 test vectors (SHA1, 8 digits)") {
-            let params = makeParams(base32: rfcSecretBase32, digits: 8)
             let cases: [(TimeInterval, String)] = [
                 (59, "94287082"),
                 (1111111109, "07081804"),
@@ -35,6 +32,7 @@ class TOTPServiceSpec: QuickSpec {
             ]
 
             it("Generates the expected codes for each timestamp") {
+                let params = makeParams(base32: rfcSecretBase32, digits: 8)
                 for (time, expected) in cases {
                     let code = self.service.code(for: params, at: Date(timeIntervalSince1970: time))
                     expect(code).to(equal(expected), description: "T=\(time)")
@@ -47,17 +45,17 @@ class TOTPServiceSpec: QuickSpec {
         describe("Base32 decoding") {
             it("Decodes a known ASCII secret") {
                 let data = TOTPService.base32Decode(rfcSecretBase32)
-                expect(data).toNot(beNil())
+                expect(data) != nil
                 expect(String(data: data!, encoding: .utf8)) == "12345678901234567890"
             }
             it("Ignores whitespace, padding and lowercase") {
                 let decoded = TOTPService.base32Decode("JBSWY3DPEHPK3PXP")
                 let spacedLowercased = TOTPService.base32Decode("jbsw y3dp ehpk 3pxp")
-                expect(decoded).toNot(beNil())
+                expect(decoded) != nil
                 expect(decoded) == spacedLowercased
             }
             it("Returns nil for invalid characters") {
-                expect(TOTPService.base32Decode("0189!")).to(beNil())
+                expect(TOTPService.base32Decode("0189!")) == nil
             }
             // 実在のサービスは「ランダムな base32 文字列」を秘密鍵として発行するため、
             // 末尾ビットが非ゼロの鍵が普通に存在する（26文字の鍵では約75%）。
@@ -67,18 +65,18 @@ class TOTPServiceSpec: QuickSpec {
             it("Accepts real-world secrets with non-zero trailing bits") {
                 // "MZXW7": 末尾ビット非ゼロ → 上位ビットのみ採用して "foo" と同じ 3 バイトに
                 let lenient = TOTPService.base32Decode("MZXW7")
-                expect(lenient).toNot(beNil())
+                expect(lenient) != nil
                 expect(lenient!.count) == 3
                 // 正規形も当然デコードできる
                 let canonical = TOTPService.base32Decode("MZXW6")
                 expect(String(data: canonical!, encoding: .utf8)) == "foo"
                 // 26文字のランダム風秘密鍵（末尾ビット非ゼロ）
-                expect(TOTPService.base32Decode("JBSWY3DPEHPK3PXPJBSWY3DPEH")).toNot(beNil())
+                expect(TOTPService.base32Decode("JBSWY3DPEHPK3PXPJBSWY3DPEH")) != nil
             }
             it("Accepts canonical padded encodings") {
                 // "fo" → "MZXQ====" 残余2ビット・ゼロ埋め（正規形）
                 let decoded = TOTPService.base32Decode("MZXQ====")
-                expect(decoded).toNot(beNil())
+                expect(decoded) != nil
                 expect(String(data: decoded!, encoding: .utf8)) == "fo"
             }
         }
@@ -88,7 +86,7 @@ class TOTPServiceSpec: QuickSpec {
         describe("Parsing input") {
             it("Parses a raw Base32 secret with default parameters") {
                 let params = TOTPService.parse("JBSWY3DPEHPK3PXP")
-                expect(params).toNot(beNil())
+                expect(params) != nil
                 expect(params?.digits) == TOTPParameters.defaultDigits
                 expect(params?.period) == TOTPParameters.defaultPeriod
                 expect(params?.algorithm) == .sha1
@@ -97,7 +95,7 @@ class TOTPServiceSpec: QuickSpec {
             it("Parses an otpauth:// URI with all parameters") {
                 let uri = "otpauth://totp/GitHub:octocat?secret=\(rfcSecretBase32)&issuer=GitHub&algorithm=SHA256&digits=8&period=60"
                 let params = TOTPService.parse(uri)
-                expect(params).toNot(beNil())
+                expect(params) != nil
                 expect(params?.digits) == 8
                 expect(params?.period) == 60
                 expect(params?.algorithm) == .sha256
@@ -114,12 +112,12 @@ class TOTPServiceSpec: QuickSpec {
             }
 
             it("Returns nil for a URI without a secret") {
-                expect(TOTPService.parse("otpauth://totp/Example?issuer=X")).to(beNil())
+                expect(TOTPService.parse("otpauth://totp/Example?issuer=X")) == nil
             }
 
             it("Returns nil for empty or clearly invalid input") {
-                expect(TOTPService.parse("")).to(beNil())
-                expect(TOTPService.parse("   ")).to(beNil())
+                expect(TOTPService.parse("")) == nil
+                expect(TOTPService.parse("   ")) == nil
             }
 
             it("isValid reflects parseability") {
@@ -131,271 +129,12 @@ class TOTPServiceSpec: QuickSpec {
         // MARK: - Remaining seconds
 
         describe("Remaining seconds") {
-            let params = makeParams(base32: rfcSecretBase32)
             it("Counts down within the period") {
+                let params = makeParams(base32: rfcSecretBase32)
                 expect(self.service.remainingSeconds(for: params, at: Date(timeIntervalSince1970: 0))) == 30
                 expect(self.service.remainingSeconds(for: params, at: Date(timeIntervalSince1970: 1))) == 29
                 expect(self.service.remainingSeconds(for: params, at: Date(timeIntervalSince1970: 29))) == 1
                 expect(self.service.remainingSeconds(for: params, at: Date(timeIntervalSince1970: 30))) == 30
-            }
-        }
-    }
-}
-
-// MARK: - SecureMenuItem.Field (CRUD)
-
-class SecureMenuItemFieldSpec: QuickSpec {
-    // swiftlint:disable:next function_body_length
-    override class func spec() {
-
-        // MARK: - createdAt Basics
-
-        describe("SecureMenuItem.Field with createdAt") {
-            it("Creates a TOTP field with createdAt set to now") {
-                let now = Date()
-                let field = SecureMenuItem.Field(label: "GitHub TOTP", value: "otpauth://totp/GitHub:me?secret=GEZDGNBVGY3TQOJQ",
-                                                 kind: .totp, createdAt: now)
-                expect(field.isTOTP) == true
-                expect(field.createdAt).to(beCloseTo(now, within: 0.1))
-            }
-
-            it("Creates a plain field with default createdAt (now)") {
-                let field = SecureMenuItem.Field(label: "Username", value: "alice")
-                expect(field.kind) == .plain
-                expect(field.createdAt).to(beCloseTo(Date(), within: 0.1))
-            }
-
-            it("Encodes and decodes a TOTP field preserving createdAt") {
-                let original = SecureMenuItem.Field(label: "TOTP", value: "secret",
-                                                    kind: .totp, createdAt: Date(timeIntervalSince1970: 1234567890))
-                let encoder = JSONEncoder()
-                let data = try! encoder.encode(original)
-                let decoder = JSONDecoder()
-                let decoded = try! decoder.decode(SecureMenuItem.Field.self, from: data)
-                expect(decoded.createdAt.timeIntervalSince1970) == 1234567890
-            }
-
-            it("Decodes a legacy field without createdAt, using current time as fallback") {
-                let legacyJSON = """
-                {
-                    "fieldID": "test-id",
-                    "label": "Old field",
-                    "value": "test-value",
-                    "isPassword": false,
-                    "kind": "plain",
-                    "history": []
-                }
-                """
-                let decoder = JSONDecoder()
-                let field = try! decoder.decode(SecureMenuItem.Field.self, from: legacyJSON.data(using: .utf8)!)
-                expect(field.createdAt).to(beCloseTo(Date(), within: 1.0))
-            }
-        }
-
-        // MARK: - Field Types (Plain, Password, TOTP)
-
-        describe("Field type variants") {
-            it("Creates a plain text field") {
-                let field = SecureMenuItem.Field(label: "Username", value: "alice@example.com", isPassword: false)
-                expect(field.label) == "Username"
-                expect(field.value) == "alice@example.com"
-                expect(field.isPassword) == false
-                expect(field.kind) == .plain
-            }
-
-            it("Creates a password field") {
-                let field = SecureMenuItem.Field(label: "Password", value: "secret123", isPassword: true)
-                expect(field.label) == "Password"
-                expect(field.value) == "secret123"
-                expect(field.isPassword) == true
-                expect(field.kind) == .plain
-            }
-
-            it("Creates a TOTP field from otpauth URI") {
-                let uri = "otpauth://totp/GitHub:user@example.com?secret=GEZDGNBVGY3TQOJQ&issuer=GitHub"
-                let field = SecureMenuItem.Field(label: "GitHub TOTP", value: uri, kind: .totp)
-                expect(field.label) == "GitHub TOTP"
-                expect(field.value) == uri
-                expect(field.isTOTP) == true
-                expect(field.isPassword) == false
-            }
-        }
-
-        // MARK: - Field History
-
-        describe("Field history management") {
-            it("Creates a field with empty history") {
-                let field = SecureMenuItem.Field(label: "Test", value: "value1")
-                expect(field.history.count) == 0
-            }
-
-            it("Encodes and decodes field with history entries") {
-                let now = Date()
-                let entry1 = SecureMenuItem.FieldHistoryEntry(value: "old-value-1", replacedAt: Date(timeIntervalSince1970: 1000))
-                let entry2 = SecureMenuItem.FieldHistoryEntry(value: "old-value-2", replacedAt: Date(timeIntervalSince1970: 2000))
-                let field = SecureMenuItem.Field(label: "Test", value: "current-value",
-                                                 isPassword: false, kind: .plain, history: [entry1, entry2])
-
-                let encoder = JSONEncoder()
-                let data = try! encoder.encode(field)
-                let decoder = JSONDecoder()
-                let decoded = try! decoder.decode(SecureMenuItem.Field.self, from: data)
-
-                expect(decoded.history.count) == 2
-                expect(decoded.history[0].value) == "old-value-1"
-                expect(decoded.history[1].value) == "old-value-2"
-            }
-        }
-
-        // MARK: - JSON Serialization
-
-        describe("Field JSON serialization") {
-            it("Includes all required properties in JSON") {
-                let field = SecureMenuItem.Field(label: "Test Field", value: "test-value",
-                                                 isPassword: true, kind: .plain)
-                let encoder = JSONEncoder()
-                let data = try! encoder.encode(field)
-                guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
-                    fail("Failed to serialize field to JSON object")
-                    return
-                }
-
-                expect(json.keys.contains("fieldID")) == true
-                expect(json.keys.contains("label")) == true
-                expect(json.keys.contains("value")) == true
-                expect(json.keys.contains("isPassword")) == true
-                expect(json.keys.contains("kind")) == true
-                expect(json.keys.contains("history")) == true
-                expect(json.keys.contains("createdAt")) == true
-            }
-
-            it("Decodes JSON with all properties correctly") {
-                let original = SecureMenuItem.Field(label: "Username", value: "alice", isPassword: false)
-                let encoder = JSONEncoder()
-                let data = try! encoder.encode(original)
-                let decoder = JSONDecoder()
-                let field = try! decoder.decode(SecureMenuItem.Field.self, from: data)
-
-                expect(field.label) == "Username"
-                expect(field.value) == "alice"
-                expect(field.isPassword) == false
-                expect(field.kind) == .plain
-                expect(field.fieldID) == original.fieldID
-                expect(field.createdAt).to(beCloseTo(original.createdAt, within: 0.001))
-            }
-        }
-
-        // MARK: - Field Update (Create, Read, Update, Delete)
-
-        describe("Field CRUD operations") {
-            it("Updates field label") {
-                var field = SecureMenuItem.Field(label: "Old Label", value: "value")
-                let newField = SecureMenuItem.Field(fieldID: field.fieldID, label: "New Label",
-                                                    value: field.value, isPassword: field.isPassword,
-                                                    kind: field.kind, history: field.history, createdAt: field.createdAt)
-                expect(newField.label) == "New Label"
-                expect(newField.fieldID) == field.fieldID
-                expect(newField.createdAt).to(beCloseTo(field.createdAt, within: 0.001))
-            }
-
-            it("Updates field value while preserving metadata") {
-                let original = SecureMenuItem.Field(label: "Password", value: "old-secret", isPassword: true)
-                let updated = SecureMenuItem.Field(fieldID: original.fieldID, label: original.label,
-                                                   value: "new-secret", isPassword: original.isPassword,
-                                                   kind: original.kind, history: original.history)
-                expect(updated.value) == "new-secret"
-                expect(updated.isPassword) == true
-                expect(updated.fieldID) == original.fieldID
-                expect(updated.label) == original.label
-            }
-
-            it("Toggles password flag") {
-                let plainField = SecureMenuItem.Field(label: "Secret", value: "mysecret", isPassword: false)
-                let passwordField = SecureMenuItem.Field(fieldID: plainField.fieldID, label: plainField.label,
-                                                         value: plainField.value, isPassword: true,
-                                                         kind: plainField.kind, history: plainField.history)
-                expect(plainField.isPassword) == false
-                expect(passwordField.isPassword) == true
-            }
-        }
-
-        // MARK: - Multiple Fields Reordering
-
-        describe("Multiple field reordering") {
-            it("Reorders fields array correctly (move to later position)") {
-                var fields = [
-                    SecureMenuItem.Field(label: "Field 1", value: "value1"),
-                    SecureMenuItem.Field(label: "Field 2", value: "value2"),
-                    SecureMenuItem.Field(label: "Field 3", value: "value3"),
-                    SecureMenuItem.Field(label: "Field 4", value: "value4"),
-                    SecureMenuItem.Field(label: "Field 5", value: "value5")
-                ]
-
-                // Move field at index 1 (F2) to position 3 (before F4 in .above semantics)
-                let moved = fields.remove(at: 1)
-                let targetIndex = 3 > 1 ? 3 - 1 : 3
-                fields.insert(moved, at: targetIndex)
-
-                // After: [F1, F3, F2, F4, F5]
-                expect(fields[0].label) == "Field 1"
-                expect(fields[1].label) == "Field 3"
-                expect(fields[2].label) == "Field 2"
-                expect(fields[3].label) == "Field 4"
-                expect(fields[4].label) == "Field 5"
-            }
-
-            it("Reorders fields array correctly (move to earlier position)") {
-                var fields = [
-                    SecureMenuItem.Field(label: "Field 1", value: "value1"),
-                    SecureMenuItem.Field(label: "Field 2", value: "value2"),
-                    SecureMenuItem.Field(label: "Field 3", value: "value3"),
-                    SecureMenuItem.Field(label: "Field 4", value: "value4"),
-                    SecureMenuItem.Field(label: "Field 5", value: "value5")
-                ]
-
-                // Move field at index 3 (F4) to position 1 (before F2 in .above semantics)
-                let moved = fields.remove(at: 3)
-                let targetIndex = 1 > 3 ? 1 - 1 : 1
-                fields.insert(moved, at: targetIndex)
-
-                // After: [F1, F4, F2, F3, F5]
-                expect(fields[0].label) == "Field 1"
-                expect(fields[1].label) == "Field 4"
-                expect(fields[2].label) == "Field 2"
-                expect(fields[3].label) == "Field 3"
-                expect(fields[4].label) == "Field 5"
-            }
-
-            it("Handles edge case: move last field to first position") {
-                var fields = [
-                    SecureMenuItem.Field(label: "Field 1", value: "value1"),
-                    SecureMenuItem.Field(label: "Field 2", value: "value2"),
-                    SecureMenuItem.Field(label: "Field 3", value: "value3")
-                ]
-
-                let moved = fields.remove(at: 2)
-                let targetIndex = 0 > 2 ? 0 - 1 : 0
-                fields.insert(moved, at: targetIndex)
-
-                expect(fields[0].label) == "Field 3"
-                expect(fields[1].label) == "Field 1"
-                expect(fields[2].label) == "Field 2"
-            }
-
-            it("Handles edge case: move first field to last position") {
-                var fields = [
-                    SecureMenuItem.Field(label: "Field 1", value: "value1"),
-                    SecureMenuItem.Field(label: "Field 2", value: "value2"),
-                    SecureMenuItem.Field(label: "Field 3", value: "value3")
-                ]
-
-                let moved = fields.remove(at: 0)
-                let targetIndex = 3 > 0 ? 3 - 1 : 3
-                fields.insert(moved, at: targetIndex)
-
-                expect(fields[0].label) == "Field 2"
-                expect(fields[1].label) == "Field 3"
-                expect(fields[2].label) == "Field 1"
             }
         }
     }
