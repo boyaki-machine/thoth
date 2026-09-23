@@ -1,3 +1,4 @@
+strict: true
 included:
   - Thoth/Sources
   - ThothTests
