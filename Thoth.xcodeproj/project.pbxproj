@@ -1687,7 +1687,7 @@
 			repositoryURL = "https://github.com/Clipy/KeyHolder.git";
 			requirement = {
 				kind = exactVersion;
-				version = 4.2.0;
+				version = 4.3.0;
 			};
 		};
 		6D57A459121F702B133EE9C7 /* XCRemoteSwiftPackageReference "Magnet" */ = {
@@ -1695,7 +1695,7 @@
 			repositoryURL = "https://github.com/Clipy/Magnet.git";
 			requirement = {
 				kind = exactVersion;
-				version = 3.4.0;
+				version = 3.5.0;
 			};
 		};
 		9563D2CD389CB249B22DD1F4 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
@@ -1711,7 +1711,7 @@
 			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
 			requirement = {
 				kind = exactVersion;
-				version = 6.9.0;
+				version = 6.10.2;
 			};
 		};
 		FC8AF9990CEB6F6C25063D18 /* XCRemoteSwiftPackageReference "Sauce" */ = {
@@ -1719,7 +1719,7 @@
 			repositoryURL = "https://github.com/Clipy/Sauce.git";
 			requirement = {
 				kind = exactVersion;
-				version = 2.4.1;
+				version = 2.5.2;
 			};
 		};
 		852CB67CCB2841A8EF42F75C /* XCRemoteSwiftPackageReference "SwiftHEXColors" */ = {
