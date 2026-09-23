@@ -344,8 +344,8 @@ internal enum L10n {
   internal static let updatesOriginalRepositoryLink = L10n.tr("Localizable", "Updates Original Repository Link", fallback: "Link to the original Clipy repository")
   /// This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.
   internal static let updatesRespectMessage = L10n.tr("Localizable", "Updates Respect Message", fallback: "This application is a fork of Clipy, the open-source clipboard extension for macOS. Deep respect and gratitude go to the developers of the original Clipy, and to naotaka, the author of its predecessor ClipMenu. This project stands on their great work.")
-  /// Third-Party Licenses...
-  internal static let updatesThirdPartyLicensesButton = L10n.tr("Localizable", "Updates Third Party Licenses Button", fallback: "Third-Party Licenses...")
+  /// Third-Party Licenses
+  internal static let updatesThirdPartyLicensesButton = L10n.tr("Localizable", "Updates Third Party Licenses Button", fallback: "Third-Party Licenses")
   /// Value history
   internal static let valueHistory = L10n.tr("Localizable", "Value History", fallback: "Value history")
   /// Release date: %@

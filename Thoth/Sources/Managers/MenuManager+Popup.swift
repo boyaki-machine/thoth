@@ -175,9 +175,7 @@ extension MenuManager {
             guard window.isVisible else { return false }
             return window.contentViewController is CPYSecureInfoSplitViewController
         }) {
-            #if DEBUG
-            NSLog("[MenuManager] popUpSecureMenu: editing window visible, activating it instead")
-            #endif
+            Diagnostics.secureMenu.info("secure info window is visible; activating it instead of the picker")
             NSApp.activate(ignoringOtherApps: true)
             visibleWindow.makeKeyAndOrderFront(nil)
             return
@@ -186,24 +184,23 @@ extension MenuManager {
         if isSecureMenuActive {
             if let existing = securePickerPanel, existing.isVisible {
                 // パネルが既に表示中 → 前面に出して再アクティブ化して終了
-                #if DEBUG
-                NSLog("[MenuManager] popUpSecureMenu: panel already visible, re-activating")
-                #endif
+                Diagnostics.secureMenu.info("picker already visible; re-activating it")
                 NSApp.activate(ignoringOtherApps: true)
                 existing.makeKeyAndOrderFront(nil)
                 return
             } else {
                 // パネルが消えているのにフラグが残っている → 強制リセット
-                #if DEBUG
-                NSLog("[MenuManager] popUpSecureMenu: stale active flag, resetting")
-                #endif
+                Diagnostics.secureMenu.info("stale active flag (picker not visible); resetting")
                 if let observer = secureCloseObserver { NotificationCenter.default.removeObserver(observer) }
                 isSecureMenuActive  = false
                 securePickerPanel   = nil
                 secureCloseObserver = nil
             }
         }
-        guard !isSecureMenuActive else { return }
+        guard !isSecureMenuActive else {
+            Diagnostics.secureMenu.info("ignored: authentication is in progress")
+            return
+        }
         isSecureMenuActive = true
         // 貼り付け先はホットキーを押した時点で覚えておく。認証ダイアログを挟むと、
         // パネルを出す時点の最前面は元のアプリではなくなっていることがある
@@ -211,6 +208,7 @@ extension MenuManager {
         let reason = L10n.secureMenuAuthenticationReason
         AppEnvironment.current.secureMenuService.authenticate(reason: reason) { [weak self] success in
             guard let self = self else { return }
+            Diagnostics.secureMenu.info("authentication finished: success=\(success, privacy: .public)")
             guard success else {
                 self.isSecureMenuActive = false
                 return

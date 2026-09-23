@@ -26,6 +26,39 @@ class CallerAppActivatorSpec: QuickSpec {
             }
         }
 
+        describe("送ってよいかの判定") {
+            let caller: pid_t = 4242
+            let minimum = CallerAppActivator.minimumDelay
+
+            it("前面化を要求した直後は、最前面が相手を指していても送らない（frontmostApplication は要求直後に切り替わる）") {
+                expect(CallerAppActivator.isReadyToSend(elapsed: 0.01, frontmostProcessIdentifier: caller,
+                                                        focusedProcessIdentifier: caller, callerProcessIdentifier: caller)) == false
+                expect(CallerAppActivator.isReadyToSend(elapsed: minimum - 0.01, frontmostProcessIdentifier: caller,
+                                                        focusedProcessIdentifier: nil, callerProcessIdentifier: caller)) == false
+            }
+
+            it("最低の待ち時間を過ぎ、最前面とキーボードフォーカスが相手なら送る") {
+                expect(CallerAppActivator.isReadyToSend(elapsed: minimum, frontmostProcessIdentifier: caller,
+                                                        focusedProcessIdentifier: caller, callerProcessIdentifier: caller)) == true
+            }
+
+            it("キーボードフォーカスがまだ別のアプリ（Thoth 自身など）なら送らない") {
+                expect(CallerAppActivator.isReadyToSend(elapsed: minimum + 0.3, frontmostProcessIdentifier: caller,
+                                                        focusedProcessIdentifier: ownPID, callerProcessIdentifier: caller)) == false
+            }
+
+            it("キーボードフォーカスを調べられないときは、最前面と待ち時間で判断する") {
+                expect(CallerAppActivator.isReadyToSend(elapsed: minimum, frontmostProcessIdentifier: caller,
+                                                        focusedProcessIdentifier: nil, callerProcessIdentifier: caller)) == true
+                expect(CallerAppActivator.isReadyToSend(elapsed: minimum, frontmostProcessIdentifier: ownPID,
+                                                        focusedProcessIdentifier: nil, callerProcessIdentifier: caller)) == false
+            }
+
+            it("最低の待ち時間は、従来の固定の待ち時間（0.15 秒）以上") {
+                expect(minimum) >= 0.15
+            }
+        }
+
         describe("貼り付け先として覚えておくアプリ") {
             it("ホットキーを押した時点のアプリを、パネルを出す時点の最前面より優先する（認証ダイアログを挟んでも元のアプリへ戻す）") {
                 guard let otherApp = otherApp else { fail("Dock が見つからない"); return }

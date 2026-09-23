@@ -89,6 +89,7 @@
 		AA00051800000000ABCDEF01 /* SnippetEditorNodes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */; };
 		AA00051A00000000ABCDEF01 /* DataCleanServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */; };
 		AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052100000000ABCDEF01 /* FieldCipher.swift */; };
+		AA00660200000000ABCDEF01 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00660100000000ABCDEF01 /* Diagnostics.swift */; };
 		AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */; };
 		AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */; };
 		AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */; };
@@ -348,6 +349,7 @@
 		AA00051700000000ABCDEF01 /* SnippetEditorNodes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnippetEditorNodes.swift; sourceTree = "<group>"; };
 		AA00051900000000ABCDEF01 /* DataCleanServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataCleanServiceSpec.swift; sourceTree = "<group>"; };
 		AA00052100000000ABCDEF01 /* FieldCipher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCipher.swift; sourceTree = "<group>"; };
+		AA00660100000000ABCDEF01 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FieldCipherSpec.swift; sourceTree = "<group>"; };
 		AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStoreSchema.swift; sourceTree = "<group>"; };
 		AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLibraryStore.swift; sourceTree = "<group>"; };
@@ -688,6 +690,7 @@
 				AA00053300000000ABCDEF01 /* SwiftDataLibraryStore.swift */,
 				AA00053100000000ABCDEF01 /* LibraryStoreSchema.swift */,
 				AA00052100000000ABCDEF01 /* FieldCipher.swift */,
+				AA00660100000000ABCDEF01 /* Diagnostics.swift */,
 				AA00051500000000ABCDEF01 /* RealmLibraryStore.swift */,
 				AA00051300000000ABCDEF01 /* LibraryStore.swift */,
 				AA10CAFE0000000000000012 /* LegacyMigration.swift */,
@@ -1139,6 +1142,7 @@
 				AA00053400000000ABCDEF01 /* SwiftDataLibraryStore.swift in Sources */,
 				AA00053200000000ABCDEF01 /* LibraryStoreSchema.swift in Sources */,
 				AA00052200000000ABCDEF01 /* FieldCipher.swift in Sources */,
+				AA00660200000000ABCDEF01 /* Diagnostics.swift in Sources */,
 				AA00051600000000ABCDEF01 /* RealmLibraryStore.swift in Sources */,
 				AA00051400000000ABCDEF01 /* LibraryStore.swift in Sources */,
 				AA10CAFE0000000000000011 /* LegacyMigration.swift in Sources */,

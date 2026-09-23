@@ -297,9 +297,13 @@ extension PasteService {
     /// - Returns: Cmd+V を送出した（送出を予約した）場合 true。設定が無効・権限が無い場合 false
     @discardableResult
     func paste() -> Bool {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else { return false }
+        guard AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.inputPasteCommand) else {
+            Diagnostics.paste.info("paste: ⌘V input is turned off in Preferences")
+            return false
+        }
         // Check Accessibility Permission
         guard AppEnvironment.current.accessibilityService.isAccessibilityEnabled(isPrompt: false) else {
+            Diagnostics.paste.error("paste: accessibility permission is missing")
             // バックグラウンドスレッドから呼ばれる場合があるため、アラート表示はメインスレッドで行う
             DispatchQueue.main.async {
                 AppEnvironment.current.accessibilityService.showAccessibilityAuthenticationAlert()
@@ -321,6 +325,7 @@ extension PasteService {
             // Post Paste Command
             keyVDown?.post(tap: .cgAnnotatedSessionEventTap)
             keyVUp?.post(tap: .cgAnnotatedSessionEventTap)
+            Diagnostics.paste.info("paste: posted ⌘V (keyCode \(vKeyCode, privacy: .public)) frontmost=\(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "nil", privacy: .public) thothActive=\(NSApp.isActive, privacy: .public)")
         }
         return true
     }
