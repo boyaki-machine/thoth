@@ -10,18 +10,25 @@ import CryptoKit
 
 /// 起動時に保存層（履歴・スニペット）を用意する。
 ///
-/// - 移行済みのストアがあれば開く
-/// - 無ければ Realm から移行する（LibraryMigrator。Realm のファイルには書き込まない）
-/// - Realm も無ければ（新規インストール）空のストアを作る
+/// - 完成したストア（完了の印あり）があれば開く
+/// - 無ければ（新規インストール）空のストアを作る
+///
+/// ## Realm（v1.4.x までの保存先）について
+/// v1.5.x〜v1.6.2 は初回起動で Realm から移行していた。v1.6.3 で Realm を外したので:
+/// - 移行済み（ストアを開けて読めた）なら、残っている旧 Realm のファイルを消す（`removeLegacyRealmFiles`）。
+///   移行した時点の履歴・スニペットの暗号化された写しが、消した後もディスクに残り続けないようにする
+/// - 移行していない（旧 Realm のファイルだけがある）なら、読めないので、その起動中は
+///   メモリ上だけで動き、旧ファイルもそのまま残す（`.legacyDataNotMigrated`）。空のストアを作ると、
+///   次の起動で「移行済み」と判断して旧ファイルを消してしまうため作らない。v1.6.2 を一度起動すれば移行できる
 ///
 /// ## 使えないとき
-/// 暗号鍵が無い・合わない、移行に失敗した、のいずれかのときは、その起動中は
+/// 暗号鍵が無い・合わない、旧 Realm のデータが移行されていない、のいずれかのときは、その起動中は
 /// メモリ上だけの保存層で動き、**ディスクには何も書かない**。ストアの削除も、
 /// 新しい鍵での上書きもしない（原因が解消すれば次の起動で元どおり読める）。
 ///
 /// ## ストアの片付け（どちらも開く前に行う。開いたファイルを動かすと SQLite が壊れる）
 /// - 完了の印（LibraryMigrator.completionMarkerURL）があるのに開けないストアは、削除せず別名へ退避する
-/// - 完了の印が無いストアは移行の途中で止まったもので、利用者のデータは入っていないので消す
+/// - 完了の印が無いストアは作成の途中で止まったもので、利用者のデータは入っていないので消す
 enum LibraryProvider {
 
     enum Availability: Equatable {
@@ -30,8 +37,10 @@ enum LibraryProvider {
         case keyUnavailable
         /// 鍵は読めたが、保存済みのデータを復号できない
         case keyMismatch
-        /// Realm からの移行に失敗した（次回起動時にやり直す）
+        /// ストアを作れなかった（次回起動時にやり直す）
         case migrationFailed
+        /// v1.4.x までの Realm のデータが移行されていない（v1.6.3 は Realm を読めない）
+        case legacyDataNotMigrated
     }
 
     struct Prepared {
@@ -43,7 +52,10 @@ enum LibraryProvider {
     }
 
     static let storeFileName = "Thoth.store"
+    /// v1.4.x までの保存先（Realm）。移行済みなら消し、未移行なら残す
     static let realmFileName = "default.realm"
+    /// v1.5.x が Realm 20 で開く前に取った、旧 Realm のバックアップ
+    static let realmBackupFileName = "default.v20.backup.realm"
 
     /// 保存層の準備が済んだか（済むまでメニュー等は保存層に触れない）。メインスレッドからのみ使う
     private(set) static var isReady = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
@@ -66,8 +78,7 @@ enum LibraryProvider {
         DispatchQueue.global(qos: .userInitiated).async {
             let prepared = autoreleasepool {
                 makePrepared(directory: defaultDirectory,
-                             rootKey: RealmProvider.appEncryptionKey(for: .clipData),
-                             realmKey: { RealmProvider.appEncryptionKey(for: .realmDatabase) })
+                             rootKey: AppKeyStore.appEncryptionKey(for: .clipData))
             }
             DispatchQueue.main.async {
                 availability = prepared.availability
@@ -78,10 +89,8 @@ enum LibraryProvider {
     }
 
     /// 起動時の判断の本体（場所と鍵を引数で受け取るので、テストから直接呼べる）
-    /// - Parameters:
-    ///   - rootKey: `.data` 用の鍵（FieldCipher の導出元）。読めなければ nil
-    ///   - realmKey: Realm の鍵。移行するときだけ呼ぶ
-    static func makePrepared(directory: URL, rootKey: Data?, realmKey: () -> Data?) -> Prepared {
+    /// - Parameter rootKey: `.data` 用の鍵（FieldCipher の導出元）。読めなければ nil
+    static func makePrepared(directory: URL, rootKey: Data?) -> Prepared {
         guard let rootKey = rootKey, let cipher = FieldCipher(rootKey: rootKey) else {
             NSLog("[LibraryProvider] encryption key unavailable; running in memory for this launch")
             return makeEphemeral(availability: .keyUnavailable)
@@ -102,6 +111,8 @@ enum LibraryProvider {
                         NSLog("[LibraryProvider] stored data cannot be decrypted with the current key; running in memory")
                         return makeEphemeral(availability: .keyMismatch)
                     }
+                    // 移行済みで、いまのストアを読めることを確かめたので、旧 Realm のファイルを消す
+                    removeLegacyRealmFiles(in: directory)
                     return Prepared(historyStore: SwiftDataHistoryStore(library: library),
                                     snippetStore: SwiftDataSnippetStore(library: library),
                                     availability: .ready, migrationReport: nil)
@@ -110,24 +121,26 @@ enum LibraryProvider {
                 quarantine(storeURL)
                 try? fileManager.removeItem(at: markerURL)
             } else {
-                // 完了の印が無い＝移行が途中で止まったストア。利用者のデータは入っていないので消してやり直す
-                NSLog("[LibraryProvider] removing an incomplete store left by an interrupted migration")
+                // 完了の印が無い＝作成が途中で止まったストア。利用者のデータは入っていないので消してやり直す
+                NSLog("[LibraryProvider] removing an incomplete store left by an interrupted creation")
                 LibraryMigrator.removeStoreFiles(at: storeURL)
             }
         }
 
+        if fileManager.fileExists(atPath: realmURL.path) {
+            // 旧 Realm のデータが移行されていない。読めないので、空のストアも作らずメモリ上だけで動く
+            NSLog("[LibraryProvider] legacy Realm data has not been migrated; run v1.6.2 once to migrate it")
+            return makeEphemeral(availability: .legacyDataNotMigrated)
+        }
         do {
-            let snapshot = fileManager.fileExists(atPath: realmURL.path)
-                ? try LibraryMigrator.readRealm(at: realmURL, encryptionKey: realmKey())
-                : LibraryMigrator.Snapshot.empty
-            let migrated = try LibraryMigrator.migrate(snapshot, to: storeURL, cipher: cipher)
+            let migrated = try LibraryMigrator.migrate(.empty, to: storeURL, cipher: cipher)
             let report = migrated.report
             NSLog("[LibraryProvider] prepared store (clips: \(report.clipCount), folders: \(report.folderCount), snippets: \(report.snippetCount), missing .data: \(report.missingDataFiles))")
             return Prepared(historyStore: SwiftDataHistoryStore(library: migrated.library),
                             snippetStore: SwiftDataSnippetStore(library: migrated.library),
                             availability: .ready, migrationReport: report)
         } catch {
-            NSLog("[LibraryProvider] migration failed: \(error); running in memory for this launch")
+            NSLog("[LibraryProvider] could not create the store: \(error); running in memory for this launch")
             return makeEphemeral(availability: .migrationFailed)
         }
     }
@@ -142,6 +155,26 @@ enum LibraryProvider {
         return Prepared(historyStore: SwiftDataHistoryStore(library: library),
                         snippetStore: SwiftDataSnippetStore(library: library),
                         availability: availability, migrationReport: nil)
+    }
+
+    /// 旧 Realm のファイル一式（本体・.lock・.note・.management・バックアップ）。
+    /// 名前が `default.realm` で始まるものと、v1.5.x が取ったバックアップ
+    static func legacyRealmFiles(in directory: URL) -> [URL] {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
+        return names
+            .filter { $0.hasPrefix(realmFileName) || $0.hasPrefix(realmBackupFileName) }
+            .sorted()
+            .map { directory.appendingPathComponent($0) }
+    }
+
+    /// 旧 Realm のファイルを消す。**移行済みのストアを読めた後にだけ呼ぶこと**
+    static func removeLegacyRealmFiles(in directory: URL) {
+        let files = legacyRealmFiles(in: directory)
+        guard !files.isEmpty else { return }
+        for file in files {
+            try? FileManager.default.removeItem(at: file)
+        }
+        NSLog("[LibraryProvider] removed \(files.count) legacy Realm file(s) after confirming the migrated store")
     }
 
     /// 開けないストアを、削除せず別名へ退避する

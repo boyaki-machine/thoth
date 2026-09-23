@@ -204,7 +204,7 @@ The information this app stores in the Keychain is consolidated into **two entri
 | Classification | Keychain entry | Content (JSON schema) | Export | Cross-device |
 |---|---|---|---|---|
 | **User-configured** | service: `io.github.boyaki-machine.Thoth.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | Included | Possible |
-| **App-generated** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | Excluded | Not possible (device-specific) |
+| **App-generated** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}`<br>(realmEncryptionKey was for Realm up to v1.6.2; unused now, but kept when the entry is rewritten) | Excluded | Not possible (device-specific) |
 
 In addition, a self-signed certificate for code-signature stabilization (`kSecClassIdentity`, CN: `Thoth Local Signing`) is stored in the Keychain (see "Code Signing" in [DEVELOPMENT.md](DEVELOPMENT.md)).
 
@@ -228,7 +228,7 @@ This section summarizes the overall design policy that speeds up understanding b
 The launch process is split into phases, prioritizing display of the menu-bar icon (see the sequence diagram comment in `AppDelegate.swift` for details).
 
 - **Lightweight synchronous work** (DI, icon display) is done first so the menu-bar icon appears immediately.
-- **Heavy initialization** (reading the key, opening the store, and on the first launch migrating from Realm) runs in the background (`LibraryProvider.prepare`). Completion is tracked by the `LibraryProvider.isReady` flag, guarding against menu rebuilds and the like touching the storage layer before it is ready.
+- **Heavy initialization** (reading the key, opening the store, and creating it on a fresh install) runs in the background (`LibraryProvider.prepare`). Completion is tracked by the `LibraryProvider.isReady` flag, guarding against menu rebuilds and the like touching the storage layer before it is ready.
 - **Self re-signing** (external commands like `codesign --deep` that take seconds) runs in the background and falls back to normal launch only on failure.
 - **The login-item confirmation dialog** (modal) is shown deferred, after service startup completes.
 
@@ -436,16 +436,24 @@ The third follows from `mergeFieldHistories` taking the incoming `field.history`
 
 Since the delete button only appears on hover, the fact that deletions *are* reversible has to be visible somewhere. The menu item is titled from `undoAction` (e.g. "Undo Delete Item") so it also says what will come back.
 
-### 5-7. Migration from Realm to SwiftData (v1.5)
+### 5-7. Migration from Realm to SwiftData (v1.5–v1.6.2) and Removal of Realm (v1.6.3)
 
-Storage moved from Realm to SwiftData. The migration runs **once, on the first launch of v1.5.x**.
+Storage moved from Realm to SwiftData. The migration ran **once, on the first launch of v1.5.x–v1.6.2**. **v1.6.3 removed the Realm library and the migration.** Steps 1–4 below are the migration as done up to v1.6.2; today only steps 2–4 run, to create an empty store on a fresh install.
+
+At launch since v1.6.3:
+
+- **Migrated** (a store with the completion marker opened and its contents could be read): the leftover old Realm files (everything starting with `default.realm`, and `default.v20.backup.realm`) are deleted, so an encrypted copy of the history and snippets as of the migration does not stay on disk after the user deletes them. Rolling back to v1.4.x is no longer possible (rolling back to v1.5.x or later still is)
+- **Not migrated** (only the old Realm files exist): they cannot be read, so for that launch the app runs in memory only and leaves the old files untouched (`legacyDataNotMigrated`). It does not create an empty store, because the next launch would then treat the data as migrated and delete the old files. Launching v1.6.2 once migrates them
+- When the key is unavailable or does not match, the store cannot be confirmed readable, so the old Realm files are not deleted either
+
+The migration steps up to v1.6.2:
 
 1. Open Realm **read-only** and read everything into value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`)
 2. Create the new store at its final location (`Thoth.store`) and write the data encrypted (clip ids are replaced with content keys)
 3. **Read it back with a fresh `ModelContext`** and verify counts, every field and the ordering
 4. Only when verification passes, write the **completion marker** (`Thoth.store.ready`) next to it
 
-- **The Realm file is never written to.** It is kept until v1.6.x, so rolling back to v1.4.x shows the data as of the migration (changes made in v1.5.x afterwards are not visible there, and changes made in the old version are not picked up later — a known limitation).
+- **The Realm file was never written to.** It was kept up to v1.6.2, so rolling back to v1.4.x showed the data as of the migration (v1.6.3 deletes it).
 - **A store without the completion marker is an interrupted migration.** The app only uses stores that have the marker, so such a store holds no user data; it is deleted before opening on the next launch and the migration is retried.
 - A store that has the marker but cannot be opened is moved aside as `Thoth.store.broken-<timestamp>` instead of being deleted.
 - The migration does not write to a temporary file and then move it: SwiftData has no way to close a store, and moving files that have been opened corrupts SQLite (`SQLITE_IOERR_VNODE`).

@@ -41,16 +41,6 @@
 
 "Snippet" = "片断";
 
-"General" = "通用";
-
-"Menu" = "菜单";
-
-"Type" = "类型";
-
-"Shortcuts" = "快捷键";
-
-"Updates" = "更新";
-
 "Delete Item" = "删除";
 
 "Are you sure want to delete this item?" = "确定要删除此项？";
@@ -64,8 +54,6 @@
 "To do this action please allow Accessibility in Security Privacy preferences located in System Preferences" = "要执行此操作，请在“系统偏好设置”的“安全性与隐私”中允许 Thoth 的辅助功能访问。";
 
 "Open System Preferences" = "打开“系统偏好设置”";
-
-"Secure Menu" = "安全菜单";
 
 "Secure Items" = "安全项目";
 
@@ -101,8 +89,6 @@
 
 "Secure Info Remove Field" = "删除字段";
 
-"Secure Info Remove Field Confirmation" = "确定要删除此字段吗？";
-
 "Secure Info Toggle Mask" = "切换值的遮蔽";
 
 "Secure Info External Change" = "已在其他窗口中修改。";
@@ -137,25 +123,11 @@
 
 "Add Secure Item" = "添加项目";
 
-"Edit Secure Item" = "编辑项目";
-
 "Delete Secure Item" = "删除项目";
 
 "Are you sure want to delete this secure item?" = "确定要删除此项目吗？";
 
 "Secure Item Title Placeholder" = "标题（例如 Gmail）";
-
-"Secure Field Label Placeholder" = "标签（例如 ID）";
-
-"Secure Field Value Placeholder" = "值";
-
-"Secure Column Title" = "标题";
-
-"Secure Column Fields" = "字段数";
-
-"Secure Column Label" = "标签";
-
-"Secure Column Value" = "值";
 
 "Import Secure Items" = "导入...";
 
@@ -163,11 +135,7 @@
 
 "Secure Items Export Warning" = "导出的文件将以明文形式包含所有值，请妥善保管。";
 
-"Secure Items Save Failed" = "保存到钥匙串失败。详情请见 Console.app（筛选: SecureMenuService）。";
-
 "Secure Items Import Overwrites Crypto Password" = "此文件包含与本机已注册的指纹密码不同的密码。导入将替换它，之前用当前密码加密的文件将无法再用已保存的密码打开。是否继续？";
-
-"Secure Item Title Required" = "保存前请输入标题。";
 
 "Imported Secure Items Format" = "已导入 %d 个项目。";
 
@@ -195,15 +163,9 @@
 
 "Value History" = "值的历史记录";
 
-"No Value History" = "无历史记录";
-
 "Generate Password" = "生成";
 
 "Copy Password" = "拷贝";
-
-"Add Field" = "添加字段";
-
-"Save" = "存储";
 
 "Close" = "关闭";
 
@@ -229,8 +191,6 @@
 
 "Crypto Decrypting" = "正在解密...";
 
-"Crypto Done" = "完成";
-
 "Crypto Error Empty Password" = "请输入密码。";
 
 "Crypto Error Empty Output Name" = "请输入输出文件名。";
@@ -254,9 +214,6 @@
 "Crypto Manage Fingerprint Password" = "管理指纹密码...";
 
 "Crypto Register Update" = "注册 / 更新";
-
-"Crypto Fingerprint Password Saved" = "指纹密码已保存。";
-
 
 "Add TOTP" = "添加 TOTP...";
 
@@ -307,5 +264,7 @@
 "Third Party Licenses Load Failed" = "无法加载第三方许可证列表。";
 "Library Unavailable Title" = "无法读取加密密钥";
 "Library Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行不会向磁盘写入任何内容：剪贴板历史仅保存在内存中，片段也无法显示或编辑。已保存的数据不会被改动。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";
+"Library Legacy Data Not Migrated Title" = "以前的数据尚未迁移";
+"Library Legacy Data Not Migrated Message" = "v1.4.x 或更早版本的剪贴板历史和片段尚未迁移，此版本已无法读取。本次运行期间不会向磁盘写入任何内容，旧数据保持原样。请先启动一次 Thoth v1.6.2 完成迁移，然后再更新到此版本。";
 "Snippets Unavailable" = "无法显示片段";
 "Snippets Unavailable Message" = "Thoth 无法读取其加密密钥，因此本次运行无法显示或编辑片段。没有任何内容被删除。请解锁登录钥匙串（或在提示时允许访问），然后重新启动 Thoth。";

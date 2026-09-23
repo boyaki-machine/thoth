@@ -91,7 +91,6 @@ class SecureMenuItemFieldSpec: QuickSpec {
             }
 
             it("Encodes and decodes field with history entries") {
-                let now = Date()
                 let entry1 = SecureMenuItem.FieldHistoryEntry(value: "old-value-1", replacedAt: Date(timeIntervalSince1970: 1000))
                 let entry2 = SecureMenuItem.FieldHistoryEntry(value: "old-value-2", replacedAt: Date(timeIntervalSince1970: 2000))
                 let field = SecureMenuItem.Field(label: "Test", value: "current-value",
@@ -150,7 +149,7 @@ class SecureMenuItemFieldSpec: QuickSpec {
 
         describe("Field CRUD operations") {
             it("Updates field label") {
-                var field = SecureMenuItem.Field(label: "Old Label", value: "value")
+                let field = SecureMenuItem.Field(label: "Old Label", value: "value")
                 let newField = SecureMenuItem.Field(fieldID: field.fieldID, label: "New Label",
                                                     value: field.value, isPassword: field.isPassword,
                                                     kind: field.kind, history: field.history, createdAt: field.createdAt)

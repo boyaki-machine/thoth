@@ -5,7 +5,7 @@ import Nimble
 
 // SwiftData 版の保存層（SwiftDataHistoryStore / SwiftDataSnippetStore）。
 //
-// 保存層の契約（LibraryStoreContract）を Realm 版と同じ内容で通したうえで、
+// 保存層の契約（LibraryStoreContract）を通したうえで、
 // SwiftData 版に固有の約束を確かめる:
 // - ディスクに置いたファイル一式に、タイトル・本文・フォルダ名が平文で現れないこと
 // - 閉じて開き直しても、同じ鍵なら元どおり読めること

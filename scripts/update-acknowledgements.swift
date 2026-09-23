@@ -79,12 +79,9 @@ func licenseText(in directory: URL) -> String? {
 let noticeFileNames = ["NOTICE", "NOTICE.txt", "NOTICE.md", "THIRD-PARTY-NOTICES"]
 
 /// パッケージが中に取り込んでいる第三者のコードのうち、上の通知ファイルに載っていないもののライセンス。
-/// realm-core は src/external/ のコードもビルドしてアプリに入る（v1.5.1 の SPM 化から、ソースからビルドしている）。
-/// Intel の十進数ライブラリ・JSON for Modern C++・MPark.Variant は THIRD-PARTY-NOTICES に載っているが、
-/// jsonsl は載っていないので個別に足す（s2・bson は realm-core 本体と同じ Apache-2.0）
-let vendoredLicenses: [String: [(title: String, path: String)]] = [
-    "realm-core": [("jsonsl", "src/external/jsonsl/LICENSE")],
-]
+/// 例: v1.6.2 までの realm-core は、THIRD-PARTY-NOTICES に載っていない jsonsl を取り込んでいた
+/// （`"realm-core": [("jsonsl", "src/external/jsonsl/LICENSE")]`）。v1.6.3 で Realm を外したので、いまは無い
+let vendoredLicenses: [String: [(title: String, path: String)]] = [:]
 
 /// 通知ファイルと、取り込まれている第三者コードのライセンスを、LICENSE の後ろに付ける本文にする
 func additionalNotices(in directory: URL, packageName: String) -> String {

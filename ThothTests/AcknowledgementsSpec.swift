@@ -58,17 +58,6 @@ class AcknowledgementsSpec: QuickSpec {
                 expect(text).to(contain("Copyright (c) 2015-2018 Clipy Project"))
                 expect(text).to(contain("Copyright (c) 2008-2014 Naotaka Morimoto"))
             }
-
-            // realm-core は src/external/ の第三者コードもソースからビルドしてアプリに入れる。
-            // Intel の BSD ライセンスなどはバイナリの配布物にも表示が要るので、一覧から落とさない
-            it("realm-core に取り込まれている第三者コードのライセンスも載っている") {
-                let text = bundledAcknowledgements() ?? ""
-                expect(text).to(contain("### THIRD-PARTY-NOTICES"))
-                expect(text).to(contain("Copyright (c) 2018, Intel Corp."))
-                expect(text).to(contain("JSON for Modern C++"))
-                expect(text).to(contain("MPark.Variant"))
-                expect(text).to(contain("### jsonsl (src/external/jsonsl/LICENSE)"))
-            }
         }
     }
 }
