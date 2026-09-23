@@ -6,6 +6,8 @@
 
 **Thoth（トート）** は macOS 向けのクリップボード拡張アプリです。オリジナルの [Clipy](https://github.com/Clipy/Clipy) から派生し、セキュアアイテム管理・パスワード生成・ファイル暗号化などの機能を追加した個人向けの拡張版です。
 
+**動作環境:** macOS 15.0（Sequoia）以降 · Apple Silicon（M シリーズ）の Mac 専用（Intel Mac では動作しません）
+
 > For English, see [README.md](README.md).
 
 ---
@@ -77,7 +79,7 @@ Thoth は古代エジプト神話に登場する**書記・記録・知恵の神
 
 ### 2-2. セキュアアイテム機能
 
-パスワードや TOTP などの機密情報を、**クリップボードに一度も置かずに**任意のアプリへ直接貼り付ける機能です。項目は macOS のキーチェーンに暗号化して保存され、メニューを開くたびに Touch ID / パスワード認証が行われます。
+パスワードや TOTP などの機密情報を、**コピー履歴に残さずに**任意のアプリへ直接貼り付ける機能です（TOTP はクリップボードも経由しません。それ以外の値もクリップボードに置くのは貼り付けの間だけで、すぐ元の内容に戻します）。項目は macOS のキーチェーンに暗号化して保存され、メニューを開くたびに Touch ID / パスワード認証が行われます。
 
 **使い方:**
 
@@ -243,7 +245,15 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 配布バイナリは提供していないため、ソースからビルドして使用します。ビルド手順の詳細は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md) を参照してください。
 
-**動作要件:** macOS 15.0 以降 · Apple Silicon (arm64)
+### 動作環境
+
+| 項目 | 要件 |
+|---|---|
+| **macOS** | **15.0（Sequoia）以降**（macOS 27 で動作を確認） |
+| **CPU** | **Apple Silicon（M1 以降の M シリーズ）専用**。arm64 だけでビルドしているため、Intel Mac では起動できません（Rosetta 2 は Intel 用のアプリを Apple Silicon で動かす仕組みで、その逆はできません） |
+| **ビルド環境** | Xcode 27 系（詳細は [docs/DEVELOPMENT_JP.md](docs/DEVELOPMENT_JP.md)） |
+
+> v1.4.0 で対応 OS を macOS 15.0 以降に引き上げました。v1.3.1 以前は macOS 11.0 以降が対象です（こちらも Apple Silicon 専用）。
 
 **概略:**
 

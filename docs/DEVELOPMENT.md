@@ -48,7 +48,7 @@ The development tools (SwiftLint / SwiftGen / BartyCrouch) are not packages: `sc
 v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec repository becomes read-only on 2026-12-02). Ruby and `pod install` are no longer needed.
 
 - **Versions are pinned exactly (Exact Version).** The pinned versions are recorded in `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, which is committed. Xcode fetches the packages when it opens the project and when it builds.
-- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script).
+- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script). The list starts with `LICENSE` and `LICENSE_CLIPMENU` of Clipy and ClipMenu, which Thoth is derived from; for each package it carries, besides `LICENSE`, any `NOTICE` / `THIRD-PARTY-NOTICES` and the licenses of third-party code the package includes (`vendoredLicenses`; currently jsonsl in realm-core).
 - **RealmSwift is a dynamic framework** (everything else is linked statically). It is registered in the app's "Embed Frameworks" phase so it ships inside the `.app`, and the test target only links it (the tests use Realm directly; embedding it there too would load two copies). Any other dynamic product needs the same treatment.
 - **Realm is 20.0.5.** Up to v1.5.0 (CocoaPods) it was 10.54.6, but the SPM package builds realm-core from source, so it was raised to 20.0.5, which compiles with Xcode 27. `LibraryMigrationSpec` confirms, using a fixed Realm file created with 10.54.6, that the migration source (Realm files written by 10.x) can be read and is not changed by a single byte.
 - **LetsMove does not support SPM upstream, so version 1.25 is vendored in `Packages/LetsMove`.** See `Packages/LetsMove/README.md` for the changes (such as which bundle the translations are read from).
@@ -90,7 +90,8 @@ v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec reposit
 ├── ThothTests/                      Unit tests (Quick + Nimble)
 ├── Packages/LetsMove/               Local package vendoring LetsMove
 ├── scripts/                         tool.sh (runs the development tools), update-acknowledgements.swift
-│                                    (generates the license list), make_dmg.sh (builds the distribution DMG)
+│                                    (generates the license list), make_dmg.sh (builds the distribution DMG),
+│                                    make-dmg-background.swift (draws the DMG window background)
 ├── NOTICE                           Third-party license list (same content as Acknowledgements.md)
 ├── .swiftlint.yml                   Code style configuration
 ├── README.md                        User-facing overview
@@ -106,7 +107,9 @@ Business logic is concentrated in the services layer. Stateful services are obta
 | Service | Responsibility |
 |---|---|
 | `ClipService` | Monitors the clipboard (100 ms polling) and saves/deletes history |
-| `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke) |
+| `PasteService` | Paste operations (three paths: regular copy / concealed copy / direct keystroke). After pasting a secret, puts the clipboard back to its previous content (`PasteboardSnapshot`) |
+| `CallerAppActivator` | Before pasting a value chosen in a panel, brings the target app (the frontmost app when the hotkey was pressed) back to the front and sends only once it is confirmed frontmost |
+| `ScreenshotWatcher` | The "Save screenshots in history" beta feature. Watches the screenshot folder with FSEvents and identifies screenshots by the `kMDItemIsScreenCapture` extended attribute (no Spotlight) |
 | `SecureMenuService` | Keychain management of secure items and the fingerprint password, plus biometric auth |
 | `SecureItemSearch` | Filtering of secure items (search rules shared by the Secure Info window and the picker panel) |
 | `SecureItemsTransfer` | JSON import / export of secure items |
@@ -158,7 +161,7 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 
 | Category | Specs |
 |---|---|
-| Clipboard | `DraggedDataSpec`, `ClipboardConcealSpec` |
+| Clipboard | `DraggedDataSpec` (safe decoding of drag data, reordering), `ClipboardConcealSpec`, `ConcealedPasteRestoreSpec` (restoring the clipboard after pasting a secret), `CallerAppActivatorSpec` (returning to the target app), `ScreenshotWatcherSpec` (screenshot detection) |
 | Models | `SecureMenuItemSpec` |
 | Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
 | Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
@@ -167,12 +170,12 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
 | History panel | `CPYHistoryPickerPanelSpec` (row structure / settings / sub-panel key handling), `ClipFullTextIndexerSpec` (full-text index and search filter) |
-| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants) |
+| Preferences window | `CPYPreferencesWindowControllerSpec` (Esc close decision), `CPYVersionPreferenceViewControllerSpec` (version tab layout invariants), `CPYUpdatesPreferenceViewControllerSpec` (the license button fits its title in every language) |
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
 | Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
-| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved` and is identical to `NOTICE`), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
+| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved`, is identical to `NOTICE`, and includes the notices of Clipy / ClipMenu and of the third-party code inside realm-core), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
 | Others | `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
@@ -205,7 +208,7 @@ How useful the output above is comes down almost entirely to how the spec is wri
   Avoid: "検索", "Save key combos" — names that only identify the subject.
 - **Fail loudly when a precondition breaks.** `guard let x = … else { return }` makes the test go **green without verifying anything**; use `fail(…)` before returning.
 - **Assert on contents, not booleans.** `expect(items.isEmpty) == true` prints only `expected to equal <true>, got <false>`; `expect(items).to(beEmpty())` prints the actual contents
-  (keep the boolean form when the subject is Optional — `beEmpty()` treats nil as "not empty").
+  (keep the boolean form, `expect(x?.isEmpty) == false`, when the subject is Optional — `beEmpty()` treats nil as "not empty").
 - **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
 - **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
 - **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
@@ -255,7 +258,7 @@ scripts/tool.sh swiftlint   # run from the project root
 It ends with `Done linting! Found <count> violations, <count> serious in <count> files.`
 
 - **`serious` (errors) must be 0.** Errors also make the build script phase fail.
-- **Existing warnings remain (70 as of v1.5.1).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
+- **Existing warnings remain (70 as of v1.6.0).** Don't add new ones with your change; any new warning shows up as a line in a file you changed.
 
 > **Note:** The Xcode build script phase runs the same SwiftLint (0.65.1, fetched by `scripts/tool.sh`). The build script phase can be skipped with the `SKIP_SWIFTLINT=1` environment variable (e.g. for faster builds).
 

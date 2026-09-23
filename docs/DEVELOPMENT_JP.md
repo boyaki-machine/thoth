@@ -48,7 +48,7 @@ macOS 15.0 を最低要件としているのは、Apple のセキュリティ更
 v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods のスペックリポジトリが 2026-12-02 に読み取り専用になるため）。Ruby・`pod install` は不要です。
 
 - **版は完全に固定する（Exact Version）。** 固定した版は `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` に記録され、コミット対象です。Xcode がプロジェクトを開いたとき・ビルド時に自動で取得します。
-- **パッケージを足したり版を変えたりしたら、`scripts/update-acknowledgements.swift` を実行して、サードパーティライセンス一覧（`Thoth/Resources/Acknowledgements.md` と `NOTICE`）を作り直してコミットする。** 忘れると `AcknowledgementsSpec` が落ちます。テストだけで使うパッケージは一覧に載せません（スクリプト冒頭の `testOnlyPackages`）。
+- **パッケージを足したり版を変えたりしたら、`scripts/update-acknowledgements.swift` を実行して、サードパーティライセンス一覧（`Thoth/Resources/Acknowledgements.md` と `NOTICE`）を作り直してコミットする。** 忘れると `AcknowledgementsSpec` が落ちます。テストだけで使うパッケージは一覧に載せません（スクリプト冒頭の `testOnlyPackages`）。一覧の先頭には元になった Clipy・ClipMenu の `LICENSE`・`LICENSE_CLIPMENU` を、各パッケージには `LICENSE` に加えて `NOTICE` / `THIRD-PARTY-NOTICES` と、パッケージが取り込んでいる第三者コードのライセンス（`vendoredLicenses`。いまは realm-core の jsonsl）を載せます。
 - **RealmSwift は動的フレームワーク**（他は静的リンク）。アプリの「Embed Frameworks」に登録して `.app` に同梱し、テストターゲットにはリンクだけします（テストが Realm を直接使うため。埋め込むとアプリの分と 2 つ読み込まれる）。動的な製品を足すときは同じ扱いが要ります。
 - **Realm は 20.0.5。** v1.5.0（CocoaPods）までは 10.54.6 でしたが、SPM 版は realm-core をソースからビルドするため、Xcode 27 でコンパイルできる 20.0.5 に上げました。移行元（10.x で書かれた Realm ファイル）を読めること・1 バイトも書き換えないことは、10.54.6 で作った固定の Realm ファイルを使う `LibraryMigrationSpec` で確かめています。
 - **LetsMove は本家が SPM に対応していないため、1.25 を `Packages/LetsMove` に取り込んでいます。** 変更点（翻訳を読むバンドルなど）は `Packages/LetsMove/README.md` を参照。
@@ -90,7 +90,8 @@ v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods
 ├── ThothTests/                      ユニットテスト（Quick + Nimble）
 ├── Packages/LetsMove/               LetsMove を取り込んだローカルパッケージ
 ├── scripts/                         tool.sh（開発ツールの実行）、update-acknowledgements.swift
-│                                    （ライセンス一覧の生成）、make_dmg.sh（配布用 DMG の作成）
+│                                    （ライセンス一覧の生成）、make_dmg.sh（配布用 DMG の作成）、
+│                                    make-dmg-background.swift（DMG のウィンドウ背景の描画）
 ├── NOTICE                           サードパーティライセンス一覧（Acknowledgements.md と同じ内容）
 ├── .swiftlint.yml                   コード規約設定
 ├── README_JP.md                     利用者向け説明
@@ -106,7 +107,9 @@ v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods
 | サービス | 責務 |
 |---|---|
 | `ClipService` | クリップボードの監視（100ms ポーリング）と履歴の保存・削除 |
-| `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路） |
+| `PasteService` | ペースト操作（通常コピー / 秘匿コピー / キー直接入力の3経路）。秘匿値を貼り付けた後、クリップボードを元の内容へ戻す（`PasteboardSnapshot`） |
+| `CallerAppActivator` | パネルで選んだ値を貼り付ける前に、貼り付け先のアプリ（ホットキーを押した時点の最前面）を前面へ戻し、前面に来たのを確かめてから送る |
+| `ScreenshotWatcher` | ベータ機能「スクリーンショットを履歴に保存」。保存先フォルダを FSEvents で見張り、拡張属性 `kMDItemIsScreenCapture` でスクリーンショットを判定する（Spotlight を使わない） |
 | `SecureMenuService` | セキュアアイテム・指紋パスワードのキーチェーン管理と生体認証 |
 | `SecureItemSearch` | セキュアアイテムの絞り込み（確認ウィンドウと選択パネルで共通の検索条件） |
 | `SecureItemsTransfer` | セキュアアイテムの JSON インポート／エクスポート |
@@ -158,7 +161,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 
 | 分類 | スペック |
 |---|---|
-| クリップボード | `DraggedDataSpec`、`ClipboardConcealSpec` |
+| クリップボード | `DraggedDataSpec`（ドラッグデータの安全な復元・並べ替え）、`ClipboardConcealSpec`、`ConcealedPasteRestoreSpec`（秘匿値の貼り付け後にクリップボードを元へ戻す）、`CallerAppActivatorSpec`（貼り付け先のアプリへ戻す）、`ScreenshotWatcherSpec`（スクリーンショットの検知） |
 | モデル | `SecureMenuItemSpec` |
 | 保存層 | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec`（共通の契約 `LibraryStoreContract` を両実装で確かめる。SwiftData 版はファイルに平文が現れないことも）、`DataCleanServiceSpec`（上限超過で消す範囲） |
 | 暗号化（保存層） | `FieldCipherSpec`（鍵の導出・暗号文の形式・改ざんと取り違えの検出。固定値は Swift の実装とは独立に計算） |
@@ -167,12 +170,12 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 | セキュアアイテム | `SecureMenuServiceSpec`、`SecureItemsTransferSpec`（インポート／エクスポート）、`SecureItemSearchSpec`（絞り込みの共通条件・確認ウィンドウと選択パネルの一致） |
 | セキュアアイテム選択パネル | `CPYSecurePickerPanelSpec`（絞り込み・行構成・サブパネル・ページング・`s` キーの導線） |
 | 履歴パネル | `CPYHistoryPickerPanelSpec`（行構造・設定連動・サブパネルのキー操作）、`ClipFullTextIndexerSpec`（全文検索インデックスと検索フィルタ） |
-| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件） |
+| 環境設定ウィンドウ | `CPYPreferencesWindowControllerSpec`（Esc の閉じる判定）、`CPYVersionPreferenceViewControllerSpec`（バージョンタブのレイアウト不変条件）、`CPYUpdatesPreferenceViewControllerSpec`（ライセンスボタンが全言語で見切れない） |
 | 履歴からの除外 | `ClipboardConcealSpec`（秘匿マーカー）、`ExcludeAppServiceSpec`（除外アプリ判定・永続化） |
 | セキュア情報ウィンドウ | `SecureInfoEditorSpec`（一覧の絞り込み・編集状態）、`SecureInfoViewSpec`（行の表示・編集可否）、`SecureInfoCommitFlowSpec`（実 Keychain を通した保存フロー）、`SecureInfoKeyActionSpec`（キー割り当て）、`SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec`（取り消し）、`SecureFieldRowInteractionSpec`（削除ボタンの分離・右クリックメニュー）、`SecureInfoDragReorderSpec`（ドラッグ&ドロップ並べ替え）、`SecureInfoActionMenuSpec`（⚙ メニュー・閉じるボタン）、`SecureInfoHistorySpec`（変更履歴の参照）、`SecureFieldRowLifecycleSpec`（捨てた行の書き戻し防止） |
 | TOTP | `TOTPServiceSpec`、`TOTPRegistrationFlowSpec`、`PasteServiceTOTPSpec` |
 | 暗号化 | `CryptoServiceSpec`、`RealmEncryptionSpec`、`ClipDataStoreSpec`、`CryptoPasswordQRCodecSpec`（指紋パスワードの QR 共有） |
-| 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
+| 依存ライブラリ | `AcknowledgementsSpec`（同梱するライセンス一覧が `Package.resolved` と食い違っていないこと・`NOTICE` と同じであること・Clipy / ClipMenu と realm-core 内の第三者コードの表示を含むこと）、`LetsMoveBundleSpec`（LetsMove が翻訳をモジュール用のバンドルから読むこと） |
 | その他 | `HotKeyServiceSpec`、`PasswordGenerateServiceSpec`、`LoginItemServiceSpec`（ログイン項目の同期判定） |
 
 特定スペックだけ実行する場合は `-only-testing:ThothTests/CryptoServiceSpec` のように指定できます。
@@ -256,7 +259,7 @@ scripts/tool.sh swiftlint   # プロジェクトのルートで実行
 最後に `Done linting! Found <件数> violations, <件数> serious in <ファイル数> files.` と表示されます。
 
 - **`serious`（エラー）が 0 件であること。** エラーがあるとビルドのスクリプトフェーズも失敗します。
-- **警告は既存のものが残っています（v1.5.1 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
+- **警告は既存のものが残っています（v1.6.0 時点で 70 件）。** 変更によって警告を増やさないようにします。増えた警告は、変更したファイルの行として一覧に出ます。
 
 > **補足:** Xcode ビルドのスクリプトフェーズでも、同じ SwiftLint（`scripts/tool.sh` が取得する 0.65.1）でリントが実行されます。ビルドを速くしたい場合など、スクリプトフェーズは環境変数 `SKIP_SWIFTLINT=1` でスキップできます。
 

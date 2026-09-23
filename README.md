@@ -6,6 +6,8 @@
 
 **Thoth** is a clipboard extension app for macOS. It is a personal, feature-extended fork of the original [Clipy](https://github.com/Clipy/Clipy), adding secure item management, password generation, and file encryption.
 
+**Requirements:** macOS 15.0 (Sequoia) or later · Macs with Apple silicon (M-series) only (does not run on Intel Macs)
+
 > 日本語版は [README_JP.md](README_JP.md) を参照してください。
 
 ---
@@ -77,7 +79,7 @@ Keeps a history of copied content that you can re-paste from a menu. Frequently 
 
 ### 2-2. Secure Items
 
-Paste passwords, TOTP, and other sensitive values directly into any app **without ever placing them on the clipboard**. Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
+Paste passwords, TOTP, and other sensitive values directly into any app **without leaving them in the copy history** (TOTP never touches the clipboard at all; other values are on the clipboard only for the moment of pasting, and the previous content is put back right after). Items are stored encrypted in the macOS Keychain and protected by Touch ID / password authentication every time the menu is opened.
 
 **How to use:**
 
@@ -243,7 +245,15 @@ openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
 
 No pre-built binary is provided; build from source. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed build steps.
 
-**Requirements:** macOS 15.0 or later · Apple Silicon (arm64)
+### Requirements
+
+| Item | Requirement |
+|---|---|
+| **macOS** | **15.0 (Sequoia) or later** (verified on macOS 27) |
+| **CPU** | **Apple silicon (M1 or later M-series) only.** The app is built for arm64 only, so it does not launch on Intel Macs (Rosetta 2 runs Intel apps on Apple silicon, not the other way round) |
+| **Build environment** | Xcode 27 (see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)) |
+
+> v1.4.0 raised the minimum to macOS 15.0. v1.3.1 and earlier support macOS 11.0 or later (also Apple silicon only).
 
 **Outline:**
 
