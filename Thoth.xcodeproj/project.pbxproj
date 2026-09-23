@@ -80,6 +80,12 @@
 		AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */; };
 		AA00050200000000ABCDEF01 /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050100000000ABCDEF01 /* LoginItemService.swift */; };
 		AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */; };
+		AA00740200000000ABCDEF01 /* CPYSecurePickerPanelSpec+SubPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00740100000000ABCDEF01 /* CPYSecurePickerPanelSpec+SubPanel.swift */; };
+		AA00730200000000ABCDEF01 /* SecureInfoViewSpec+Rows.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00730100000000ABCDEF01 /* SecureInfoViewSpec+Rows.swift */; };
+		AA00720200000000ABCDEF01 /* SecureInfoEditorSpec+Commit.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00720100000000ABCDEF01 /* SecureInfoEditorSpec+Commit.swift */; };
+		AA00710200000000ABCDEF01 /* SecureMenuServiceSpec+Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00710100000000ABCDEF01 /* SecureMenuServiceSpec+Storage.swift */; };
+		AA00700200000000ABCDEF01 /* SecureInfoCommitFlowSpec+EndToEnd.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00700100000000ABCDEF01 /* SecureInfoCommitFlowSpec+EndToEnd.swift */; };
+		AA00690200000000ABCDEF01 /* SecureMenuItemFieldSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00690100000000ABCDEF01 /* SecureMenuItemFieldSpec.swift */; };
 		AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */; };
 		AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00670100000000ABCDEF01 /* DebugLogSpec.swift */; };
 		AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */; };
@@ -342,6 +348,12 @@
 		AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SecureItemSearchSpec.swift; sourceTree = "<group>"; };
 		AA00050100000000ABCDEF01 /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
 		AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginItemServiceSpec.swift; sourceTree = "<group>"; };
+		AA00740100000000ABCDEF01 /* CPYSecurePickerPanelSpec+SubPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CPYSecurePickerPanelSpec+SubPanel.swift"; sourceTree = "<group>"; };
+		AA00730100000000ABCDEF01 /* SecureInfoViewSpec+Rows.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureInfoViewSpec+Rows.swift"; sourceTree = "<group>"; };
+		AA00720100000000ABCDEF01 /* SecureInfoEditorSpec+Commit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureInfoEditorSpec+Commit.swift"; sourceTree = "<group>"; };
+		AA00710100000000ABCDEF01 /* SecureMenuServiceSpec+Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureMenuServiceSpec+Storage.swift"; sourceTree = "<group>"; };
+		AA00700100000000ABCDEF01 /* SecureInfoCommitFlowSpec+EndToEnd.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SecureInfoCommitFlowSpec+EndToEnd.swift"; sourceTree = "<group>"; };
+		AA00690100000000ABCDEF01 /* SecureMenuItemFieldSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureMenuItemFieldSpec.swift; sourceTree = "<group>"; };
 		AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesLayoutSpec.swift; sourceTree = "<group>"; };
 		AA00670100000000ABCDEF01 /* DebugLogSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogSpec.swift; sourceTree = "<group>"; };
 		AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotWatcherSpec.swift; sourceTree = "<group>"; };
@@ -878,6 +890,12 @@
 				AA0000FD00000000ABCDEF01 /* SecureItemsTransferSpec.swift */,
 				AA0001A300000000ABCDEF01 /* SecureItemSearchSpec.swift */,
 				AA00050300000000ABCDEF01 /* LoginItemServiceSpec.swift */,
+				AA00740100000000ABCDEF01 /* CPYSecurePickerPanelSpec+SubPanel.swift */,
+				AA00730100000000ABCDEF01 /* SecureInfoViewSpec+Rows.swift */,
+				AA00720100000000ABCDEF01 /* SecureInfoEditorSpec+Commit.swift */,
+				AA00710100000000ABCDEF01 /* SecureMenuServiceSpec+Storage.swift */,
+				AA00700100000000ABCDEF01 /* SecureInfoCommitFlowSpec+EndToEnd.swift */,
+				AA00690100000000ABCDEF01 /* SecureMenuItemFieldSpec.swift */,
 				AA00680100000000ABCDEF01 /* PreferencesLayoutSpec.swift */,
 				AA00670100000000ABCDEF01 /* DebugLogSpec.swift */,
 				AA00650100000000ABCDEF01 /* ScreenshotWatcherSpec.swift */,
@@ -1271,6 +1289,12 @@
 				AA0000FE00000000ABCDEF01 /* SecureItemsTransferSpec.swift in Sources */,
 				AA0001A400000000ABCDEF01 /* SecureItemSearchSpec.swift in Sources */,
 				AA00050400000000ABCDEF01 /* LoginItemServiceSpec.swift in Sources */,
+				AA00740200000000ABCDEF01 /* CPYSecurePickerPanelSpec+SubPanel.swift in Sources */,
+				AA00730200000000ABCDEF01 /* SecureInfoViewSpec+Rows.swift in Sources */,
+				AA00720200000000ABCDEF01 /* SecureInfoEditorSpec+Commit.swift in Sources */,
+				AA00710200000000ABCDEF01 /* SecureMenuServiceSpec+Storage.swift in Sources */,
+				AA00700200000000ABCDEF01 /* SecureInfoCommitFlowSpec+EndToEnd.swift in Sources */,
+				AA00690200000000ABCDEF01 /* SecureMenuItemFieldSpec.swift in Sources */,
 				AA00680200000000ABCDEF01 /* PreferencesLayoutSpec.swift in Sources */,
 				AA00670200000000ABCDEF01 /* DebugLogSpec.swift in Sources */,
 				AA00650200000000ABCDEF01 /* ScreenshotWatcherSpec.swift in Sources */,

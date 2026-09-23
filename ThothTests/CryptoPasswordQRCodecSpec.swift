@@ -41,23 +41,23 @@ class CryptoPasswordQRCodecSpec: QuickSpec {
     private static func rejectionSpecs() {
         describe("不正ペイロードの拒否") {
             it("otpauth URI（TOTP の QR）は拒否する") {
-                expect(CryptoPasswordQRCodec.decode("otpauth://totp/Example:user?secret=ABCDEF")).to(beNil())
+                expect(CryptoPasswordQRCodec.decode("otpauth://totp/Example:user?secret=ABCDEF")) == nil
             }
 
             it("接頭辞のない生の文字列は拒否する") {
-                expect(CryptoPasswordQRCodec.decode("plainPassword")).to(beNil())
+                expect(CryptoPasswordQRCodec.decode("plainPassword")) == nil
             }
 
             it("バージョンの異なる接頭辞は拒否する") {
-                expect(CryptoPasswordQRCodec.decode("thoth-cpw:v2:abc")).to(beNil())
+                expect(CryptoPasswordQRCodec.decode("thoth-cpw:v2:abc")) == nil
             }
 
             it("接頭辞は大文字小文字を区別する") {
-                expect(CryptoPasswordQRCodec.decode("THOTH-CPW:V1:abc")).to(beNil())
+                expect(CryptoPasswordQRCodec.decode("THOTH-CPW:V1:abc")) == nil
             }
 
             it("接頭辞のみで空パスワードの場合は拒否する") {
-                expect(CryptoPasswordQRCodec.decode("thoth-cpw:v1:")).to(beNil())
+                expect(CryptoPasswordQRCodec.decode("thoth-cpw:v1:")) == nil
             }
         }
     }
@@ -97,12 +97,12 @@ class CryptoPasswordQRCodecSpec: QuickSpec {
             }
 
             it("空パスワードでは QR を生成しない") {
-                expect(CryptoPasswordQRCodec.generateQRImage(for: "")).to(beNil())
+                expect(CryptoPasswordQRCodec.generateQRImage(for: "")) == nil
             }
 
             it("QR の容量を超えるペイロードでは nil を返す") {
                 let oversized = String(repeating: "x", count: 3000)
-                expect(CryptoPasswordQRCodec.generateQRImage(for: oversized)).to(beNil())
+                expect(CryptoPasswordQRCodec.generateQRImage(for: oversized)) == nil
             }
         }
     }
