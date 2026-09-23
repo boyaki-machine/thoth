@@ -32,7 +32,6 @@ macOS 15.0 is the minimum requirement so that the app only runs on macOS version
 
 | Library | Purpose |
 |---|---|
-| RealmSwift | Where history and snippets were stored up to v1.4.x. In v1.5 it is only read as the migration source (to be removed in v1.6.x) |
 | RxSwift / RxCocoa | Reactive event handling and settings observation |
 | Magnet / KeyHolder | Global hotkey registration and display |
 | Sauce | Keyboard-layout-independent key code resolution |
@@ -48,9 +47,8 @@ The development tools (SwiftLint / SwiftGen / BartyCrouch) are not packages: `sc
 v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec repository becomes read-only on 2026-12-02). Ruby and `pod install` are no longer needed.
 
 - **Versions are pinned exactly (Exact Version).** The pinned versions are recorded in `Thoth.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`, which is committed. Xcode fetches the packages when it opens the project and when it builds.
-- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script). The list starts with `LICENSE` and `LICENSE_CLIPMENU` of Clipy and ClipMenu, which Thoth is derived from; for each package it carries, besides `LICENSE`, any `NOTICE` / `THIRD-PARTY-NOTICES` and the licenses of third-party code the package includes (`vendoredLicenses`; currently jsonsl in realm-core).
-- **RealmSwift is a dynamic framework** (everything else is linked statically). It is registered in the app's "Embed Frameworks" phase so it ships inside the `.app`, and the test target only links it (the tests use Realm directly; embedding it there too would load two copies). Any other dynamic product needs the same treatment.
-- **Realm is 20.0.5.** Up to v1.5.0 (CocoaPods) it was 10.54.6, but the SPM package builds realm-core from source, so it was raised to 20.0.5, which compiles with Xcode 27. `LibraryMigrationSpec` confirms, using a fixed Realm file created with 10.54.6, that the migration source (Realm files written by 10.x) can be read and is not changed by a single byte.
+- **After adding a package or changing a version, run `scripts/update-acknowledgements.swift` to regenerate the third-party license list (`Thoth/Resources/Acknowledgements.md` and `NOTICE`) and commit it.** If you forget, `AcknowledgementsSpec` fails. Packages used only by tests are left out of the list (`testOnlyPackages` at the top of the script). The list starts with `LICENSE` and `LICENSE_CLIPMENU` of Clipy and ClipMenu, which Thoth is derived from; for each package it carries, besides `LICENSE`, any `NOTICE` / `THIRD-PARTY-NOTICES` and the licenses of third-party code the package includes (`vendoredLicenses`; jsonsl in realm-core up to v1.6.2, none now).
+- **There are no dynamic frameworks** (everything is linked statically). Up to v1.6.2 only RealmSwift was dynamic, registered in the app's "Embed Frameworks" phase so that it shipped inside the `.app`. Adding a dynamic product needs the same registration (without it the product is missing from the `.app` and the distributed build crashes at launch).
 - **LetsMove does not support SPM upstream, so version 1.25 is vendored in `Packages/LetsMove`.** See `Packages/LetsMove/README.md` for the changes (such as which bundle the translations are read from).
 - CocoaPods frameworks implicitly pulled in AppKit and friends, so some files from that era were missing `import Cocoa` / `import Foundation`. SPM does not do this, so import the frameworks each file uses explicitly.
 
@@ -73,8 +71,8 @@ v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec reposit
 │   │   ├── Environments/            DI container (Environment / AppEnvironment)
 │   │   ├── Extensions/              Swift/Cocoa extensions (NSAlert+Thoth, etc.)
 │   │   ├── Managers/                MenuManager (split into +MenuBuilding / +Popup)
-│   │   ├── Models/                  Realm models (CPYClip/CPYSnippet/CPYFolder),
-│   │   │                            CPYClipData, SecureMenuItem
+│   │   ├── Models/                  Storage-layer record types (LibraryRecords), CPYClipData,
+│   │   │                            SecureMenuItem, SecureUserData
 │   │   ├── Preferences/             Preferences window and its panels
 │   │   ├── Services/                Business logic (see table below)
 │   │   ├── Snippets/                Snippet editor (legacy NIB-based)
@@ -131,11 +129,10 @@ Auxiliary persistence utilities (`Thoth/Sources/Utility/`):
 - `LibraryStore` — Protocols of the storage layer for history and snippets (`HistoryStore` / `SnippetStore`). UI and services only handle value types (`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`) and never touch the backing store directly. Obtained from `AppEnvironment.current.historyStore` / `snippetStore`
 - `SwiftDataLibraryStore` / `LibraryStoreSchema` — The production implementation (SwiftData) and its schema. The `ModelContext` is used only inside a dedicated serial queue
 - `FieldCipher` — Per-field encryption (AES-256-GCM) and the content key (HMAC) for the storage layer; keys are derived from the `.data` key with HKDF
-- `LibraryProvider` — Prepares the storage layer at launch (runs the migration, handles an unavailable key)
-- `LibraryMigrator` — Migration from Realm to SwiftData (reads read-only, verifies, then writes the completion marker)
+- `LibraryProvider` — Prepares the storage layer at launch (creates the store on a fresh install, handles an unavailable key, deletes the old Realm files once migrated)
+- `LibraryMigrator` — Creates the store (verifies what was written, then writes the completion marker). Up to v1.6.2 it also migrated from Realm
 - `ClipThumbnail` — Thumbnail generation (downscaled PNG), display, and regeneration after migration
-- `RealmLibraryStore` — Realm implementation of the storage layer; unused in production in v1.5 and kept as the comparison target for the contract tests (removed in v1.6.x)
-- `RealmProvider` — App-generated key (app-keys) management and the configuration used to read the Realm migration source
+- `AppKeyStore` — App-generated key (app-keys) management. Reads the `.data` key (from which the storage-layer keys are derived); do not change the Keychain format
 - `ClipDataStore` — Encrypted read/write of clip payloads (`.data` files)
 
 ---
@@ -153,9 +150,9 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 
 ### Test Assumptions
 
-- Tests use an in-memory Realm DB, UserDefaults, and the Keychain (a test-only service `io.github.boyaki-machine.ThothTests.SecureMenu` that never touches production data), so no extra setup is required.
+- Tests use an in-memory storage layer (SwiftData), UserDefaults, and the Keychain (a test-only service `io.github.boyaki-machine.ThothTests.SecureMenu` that never touches production data), so no extra setup is required.
 - `ThothTests` uses `@testable import Thoth`, so `ENABLE_TESTABILITY=YES` is required when running outside the Test action (Debug configuration).
-- The encryption and clip-data encryption tests skip Keychain key generation while testing (when the `XCTestConfigurationFilePath` environment variable is present), so they can coexist with the in-memory Realm.
+- The encryption and clip-data encryption tests skip Keychain key generation while testing (when the `XCTestConfigurationFilePath` environment variable is present).
 
 ### Main Test Specs (`ThothTests/`)
 
@@ -163,9 +160,9 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 |---|---|
 | Clipboard | `DraggedDataSpec` (safe decoding of drag data, reordering), `ClipboardConcealSpec`, `ConcealedPasteRestoreSpec` (restoring the clipboard after pasting a secret), `CallerAppActivatorSpec` (returning to the target app), `ScreenshotWatcherSpec` (screenshot detection) |
 | Models | `SecureMenuItemSpec` |
-| Storage layer | `SwiftDataLibraryStoreSpec` / `RealmLibraryStoreSpec` (run the shared contract `LibraryStoreContract` against both implementations; the SwiftData one also checks that no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
+| Storage layer | `SwiftDataLibraryStoreSpec` (the storage contract `LibraryStoreContract`; no plaintext appears in the files), `DataCleanServiceSpec` (which clips are removed when over the limit) |
 | Encryption (storage layer) | `FieldCipherSpec` (key derivation, ciphertext format, tamper and mix-up detection; pinned against values computed independently of the Swift implementation) |
-| Migration (Realm → SwiftData) | `LibraryMigrationSpec` (migration from a fixed Realm file, the Realm file staying untouched, verification failure, startup decisions), `LibraryUnavailableSpec` (behavior when the encryption key is unavailable) |
+| Startup decisions | `LibraryMigrationSpec` (store creation and verification, startup decisions, deleting the old Realm files once migrated and keeping them otherwise), `LibraryUnavailableSpec` (behavior when the encryption key is unavailable) |
 | Thumbnails | `ClipThumbnailSpec` (actual downscaling, round-trip through the storage layer, regeneration after migration) |
 | Secure items | `SecureMenuServiceSpec`, `SecureItemsTransferSpec` (import / export), `SecureItemSearchSpec` (shared filtering rules; both screens agree) |
 | Secure picker panel | `CPYSecurePickerPanelSpec` (filtering, row composition, sub-panel, paging, the `s` shortcut) |
@@ -174,8 +171,8 @@ Success is indicated by `** TEST SUCCEEDED **` at the end (or **Product → Test
 | History exclusion | `ClipboardConcealSpec` (concealed markers), `ExcludeAppServiceSpec` (excluded-app detection / persistence) |
 | Secure Info window | `SecureInfoEditorSpec` (list filtering / editing state), `SecureInfoViewSpec` (row rendering / editability), `SecureInfoCommitFlowSpec` (save flow through the real Keychain), `SecureInfoKeyActionSpec` (key mapping), `SecureInfoUndoSpec` / `SecureInfoUndoFlowSpec` (undo), `SecureFieldRowInteractionSpec` (delete-button separation / context menu), `SecureInfoDragReorderSpec` (drag-and-drop reordering), `SecureInfoActionMenuSpec` (⚙ menu / close button), `SecureInfoHistorySpec` (value history), `SecureFieldRowLifecycleSpec` (stale-row write-back guard) |
 | TOTP | `TOTPServiceSpec`, `TOTPRegistrationFlowSpec`, `PasteServiceTOTPSpec` |
-| Encryption | `CryptoServiceSpec`, `RealmEncryptionSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
-| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved`, is identical to `NOTICE`, and includes the notices of Clipy / ClipMenu and of the third-party code inside realm-core), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
+| Encryption | `CryptoServiceSpec`, `ClipDataStoreSpec`, `CryptoPasswordQRCodecSpec` (fingerprint-password QR sharing) |
+| Dependencies | `AcknowledgementsSpec` (the bundled license list matches `Package.resolved`, is identical to `NOTICE`, and includes the notices of Clipy / ClipMenu), `LetsMoveBundleSpec` (LetsMove reads its translations from the module bundle) |
 | Others | `DebugLogSpec` (debug information is recorded only when turned on, only as string-free events; permissions; deletion), `HotKeyServiceSpec`, `PasswordGenerateServiceSpec`, `LoginItemServiceSpec` (login item sync decision) |
 
 To run a single spec, use e.g. `-only-testing:ThothTests/CryptoServiceSpec`.
@@ -221,7 +218,7 @@ How useful the output above is comes down almost entirely to how the spec is wri
 - **Assert on contents, not booleans.** `expect(items.isEmpty) == true` prints only `expected to equal <true>, got <false>`; `expect(items).to(beEmpty())` prints the actual contents
   (keep the boolean form, `expect(x?.isEmpty) == false`, when the subject is Optional — `beEmpty()` treats nil as "not empty").
 - **Inside loops, pass `description:`** so the failing input is named (see "画面間で条件が揃っていること" in `SecureItemSearchSpec`).
-- **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, Realm), state the cleanup contract there too.
+- **Put a header comment on every spec file**: what it pins down and under what assumptions. If it touches shared state (UserDefaults, keychain, temporary folders), state the cleanup contract there too.
 - **Before committing a new test, revert the implementation and confirm it fails.** This is what keeps tests that detect nothing out of the suite.
 - **Check screen layout with invariants, not literal coordinates.** For the Preferences tabs, `PreferencesLayoutSpec` checks "nothing sticks out, nothing overlaps, text fits" all at once. A new tab is covered as soon as it is added to `CPYPreferencesWindowController.makeTabViewControllers()`. After translating Xib text, this also tells you whether it fits in that language (if not, widen the frame or shorten the translation).
 
@@ -312,7 +309,7 @@ SKIP_SWIFTLINT=1 xcodebuild -project Thoth.xcodeproj -scheme Thoth \
 # → produced at build/DerivedData/Build/Products/Release/Thoth.app
 ```
 
-Passed on the command line, `ARCHS=arm64` also applies to the Swift package targets, so the bundled `RealmSwift.framework` is arm64 only too (it works without it, but then x86_64 is included and the app is larger; `make_dmg.sh` passes the same setting).
+Passed on the command line, `ARCHS=arm64` also applies to the Swift package targets, so the packages are built for arm64 only too (the project's `ARCHS` is not inherited by packages; same as `make_dmg.sh`).
 
 Launch / install the built app:
 

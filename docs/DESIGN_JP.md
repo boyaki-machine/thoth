@@ -204,7 +204,7 @@ Base32 デコードは、実在サービスが発行するランダムな secret
 | 分類 | キーチェーンエントリ | 内容（JSON スキーマ） | Export | 端末間共有 |
 |---|---|---|---|---|
 | **ユーザー設定情報** | service: `io.github.boyaki-machine.Thoth.SecureMenu`<br>account: `user-data` | `SecureUserData`<br>`{version, items, cryptoPassword}` | 対象 | 可能 |
-| **アプリ生成情報** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}` | 対象外 | 不可（端末固有） |
+| **アプリ生成情報** | service: `io.github.boyaki-machine.Thoth.Database`<br>account: `app-keys` | `AppGeneratedKeys`<br>`{version, realmEncryptionKey, clipDataEncryptionKey}`<br>（realmEncryptionKey は v1.6.2 までの Realm 用。いまは使わないが、書き直すときも保持する） | 対象外 | 不可（端末固有） |
 
 このほか、コード署名の安定化に使う自己署名証明書（`kSecClassIdentity`、CN: `Thoth Local Signing`）がキーチェーンに保存されます（[DEVELOPMENT_JP.md](DEVELOPMENT_JP.md) の「コード署名」参照）。
 
@@ -228,7 +228,7 @@ Base32 デコードは、実在サービスが発行するランダムな secret
 起動処理はフェーズ分割され、メニューバーアイコンの表示を最優先にしています（詳細なシーケンス図は `AppDelegate.swift` のコメントを参照）。
 
 - **軽量な同期処理**（DI・アイコン表示）を先に行い、メニューバーアイコンを即座に表示する。
-- **重い初期化**（鍵の取得・ストアを開く・初回は Realm からの移行）はバックグラウンド（`LibraryProvider.prepare`）で行う。完了は `LibraryProvider.isReady` フラグで管理し、完了前にメニュー再構築などが保存層に触れないようガードする。
+- **重い初期化**（鍵の取得・ストアを開く・新規インストールならストアを作る）はバックグラウンド（`LibraryProvider.prepare`）で行う。完了は `LibraryProvider.isReady` フラグで管理し、完了前にメニュー再構築などが保存層に触れないようガードする。
 - **自己再署名**（`codesign --deep` 等、数秒かかる外部コマンド）はバックグラウンドで実行し、失敗時のみ通常起動にフォールバックする。
 - **ログイン項目の確認ダイアログ**（modal）はサービス起動完了後に遅延表示する。
 
@@ -436,16 +436,24 @@ v1.2.1 では確認ダイアログを廃止し、🗑 を**ボタンスタック
 
 削除ボタンがホバーでしか出ないぶん、「戻せる」ことは目に見えている必要があります。項目名には `undoAction` から組み立てた操作名（「"削除" を取り消す」など）を出し、何が戻るのかを示します。
 
-### 5-7. Realm から SwiftData への移行（v1.5）
+### 5-7. Realm から SwiftData への移行（v1.5〜v1.6.2）と Realm の削除（v1.6.3）
 
-保存先を Realm から SwiftData へ移しました。移行は **v1.5.x を初めて起動したときに 1 回だけ**行います。
+保存先を Realm から SwiftData へ移しました。移行は **v1.5.x〜v1.6.2 を初めて起動したときに 1 回だけ**行っていました。**v1.6.3 で Realm のライブラリと移行処理を外しました。** 以下の 1〜4 は v1.6.2 までの移行の手順で、いまは新規インストールで空のストアを作るときに 2〜4 だけを行います。
+
+v1.6.3 以降の起動時の扱い:
+
+- **移行済み**（完了の印があるストアを開けて、中身を読めた）なら、残っている旧 Realm のファイル（`default.realm` で始まるもの一式と `default.v20.backup.realm`）を削除します。移行した時点の履歴・スニペットの暗号化された写しが、利用者が消した後もディスクに残り続けないようにするためです。v1.4.x へは戻せなくなります（v1.5.x 以降へは戻せます）
+- **未移行**（旧 Realm のファイルだけがある）なら、読めないので、その起動中はメモリ上だけで動き、旧ファイルもそのまま残します（`legacyDataNotMigrated`）。空のストアを作ると、次の起動で「移行済み」と判断して旧ファイルを消してしまうため作りません。v1.6.2 を一度起動すれば移行できます
+- 鍵が使えない・合わないときは、ストアを読めたことを確かめられないので、旧 Realm のファイルも消しません
+
+v1.6.2 までの移行の手順:
 
 1. Realm を**読み取り専用**で開き、全件を値型（`ClipRecord` / `SnippetFolderRecord` / `SnippetRecord`）に読み出す
 2. 本番の場所（`Thoth.store`）に新しいストアを作り、暗号化して書き込む（履歴の id は内容キーに置き換える）
 3. **新しい `ModelContext` で読み直し**、件数・全項目・並び順を照合する
 4. 照合に通ったときだけ、隣に**完了の印**（`Thoth.store.ready`）を書く
 
-- **Realm のファイルには一切書き込みません。** v1.6.x まで残すので、v1.4.x に戻せば移行した時点のデータが見えます（移行後に v1.5.x で行った変更は旧版には見えず、旧版で行った変更も v1.5.x には反映されません。既知の制限）。
+- **Realm のファイルには一切書き込みませんでした。** v1.6.2 までは残していたので、v1.4.x に戻せば移行した時点のデータが見えました（v1.6.3 で削除するようにした）。
 - **完了の印が無いストアは、移行が途中で止まったもの**です。アプリは印のあるストアしか使わないため、利用者のデータは入っていません。次の起動時に、開く前に消してやり直します。
 - 印があるのに開けないストアは、削除せず `Thoth.store.broken-<日時>` へ退避します。
 - 一時ファイルに書いてから移す方式は採っていません。SwiftData にはストアを閉じる手段が無く、開いたことのあるファイルを動かすと SQLite が壊れる（`SQLITE_IOERR_VNODE`）ためです。
