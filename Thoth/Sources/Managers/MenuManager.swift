@@ -276,12 +276,13 @@ extension MenuManager {
         var titleString = (lineEnd == theString.length) ? theString as String : theString.substring(to: contentsEnd)
 
         var maxMenuItemTitleLength = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxMenuItemTitleLength)
-        if maxMenuItemTitleLength < shortenSymbol.count {
-            maxMenuItemTitleLength = shortenSymbol.count
+        // NSString の位置で切るので、長さはすべて UTF-16 単位でそろえる
+        if maxMenuItemTitleLength < shortenSymbol.utf16.count {
+            maxMenuItemTitleLength = shortenSymbol.utf16.count
         }
 
         if titleString.utf16.count > maxMenuItemTitleLength {
-            titleString = (titleString as NSString).substring(to: maxMenuItemTitleLength - shortenSymbol.count) + shortenSymbol
+            titleString = (titleString as NSString).substring(to: maxMenuItemTitleLength - shortenSymbol.utf16.count) + shortenSymbol
         }
 
         return titleString as String

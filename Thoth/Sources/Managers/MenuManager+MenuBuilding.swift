@@ -120,7 +120,8 @@ extension MenuManager {
         menuItem.representedObject = clip.id
 
         if settings.isShowToolTip {
-            let toIndex = min(clipString.count, settings.maxLengthOfToolTip)
+            // NSString の位置で切るので、長さは UTF-16 単位で数える
+            let toIndex = min(clipString.utf16.count, settings.maxLengthOfToolTip)
             menuItem.toolTip = (clipString as NSString).substring(to: toIndex)
         }
 
