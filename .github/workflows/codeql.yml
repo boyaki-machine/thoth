@@ -38,13 +38,16 @@ jobs:
           build-mode: manual
 
       # SwiftLint は解析に関係しないので省く（SKIP_SWIFTLINT はビルドフェーズ側で見ている）
+      # CodeQL のトレーサー下では xcodebuild が x86_64 として動き、「My Mac」が x86_64 扱いになる。
+      # アプリは ARCHS = arm64 のみなので 'platform=macOS' だと一致する宛先がなく失敗する。
+      # 実機を選ばない generic の宛先（Any Mac）にして、プロジェクトの ARCHS でビルドさせる。
       - name: Build
         run: |
           xcodebuild build \
             -project Thoth.xcodeproj \
             -scheme Thoth \
             -configuration Debug \
-            -destination 'platform=macOS' \
+            -destination 'generic/platform=macOS' \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             COMPILATION_CACHE_ENABLE_CACHING=NO \
