@@ -248,7 +248,8 @@ final class CodeSignService {
         guard process.terminationStatus == 0 else {
             let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: outputData, encoding: .utf8) ?? ""
-            NSLog("[CodeSignService] \(executablePath) \(arguments.first ?? "") failed (status \(process.terminationStatus)): \(output)")
+            // 引数にはパスフレーズが含まれることがあるので、ログには出さない
+            NSLog("[CodeSignService] \(executablePath) failed (status \(process.terminationStatus)): \(output)")
             return false
         }
         return true
