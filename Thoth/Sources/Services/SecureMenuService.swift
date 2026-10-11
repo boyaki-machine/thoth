@@ -198,12 +198,13 @@ final class SecureMenuService {
     /// （検証前に消すと、書き込み失敗時にデータを失うため）
     private func migrateLegacyUserData() -> (status: OSStatus, userData: SecureUserData?) {
         let (itemsStatus, itemsData) = readEntry(account: Self.legacyItemsKey)
-        let (passwordStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey)
+        // 結果コードはログに出るので、変数名に password を含めない（CodeQL が機密情報のログ出力とみなすため）
+        let (keyEntryStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey)
         // どちらかがアクセス拒否なら移行しない（読めないデータを上書き・削除しないため）
         if itemsStatus != errSecSuccess && itemsStatus != errSecItemNotFound { return (itemsStatus, nil) }
-        if passwordStatus != errSecSuccess && passwordStatus != errSecItemNotFound { return (passwordStatus, nil) }
+        if keyEntryStatus != errSecSuccess && keyEntryStatus != errSecItemNotFound { return (keyEntryStatus, nil) }
         // 旧エントリも無い場合は、Clipy 時代の旧サービス名からの移行を試みる
-        if itemsStatus == errSecItemNotFound && passwordStatus == errSecItemNotFound {
+        if itemsStatus == errSecItemNotFound && keyEntryStatus == errSecItemNotFound {
             return migrateFromLegacyService()
         }
 
@@ -262,11 +263,12 @@ final class SecureMenuService {
         if status != errSecItemNotFound { return (status, nil) }
 
         let (itemsStatus, itemsData) = readEntry(account: Self.legacyItemsKey, service: Self.legacyKeychainService)
-        let (passwordStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey, service: Self.legacyKeychainService)
+        // 結果コードはログに出るので、変数名に password を含めない（CodeQL が機密情報のログ出力とみなすため）
+        let (keyEntryStatus, passwordData) = readEntry(account: Self.legacyCryptoPasswordKey, service: Self.legacyKeychainService)
         if itemsStatus != errSecSuccess && itemsStatus != errSecItemNotFound { return (itemsStatus, nil) }
-        if passwordStatus != errSecSuccess && passwordStatus != errSecItemNotFound { return (passwordStatus, nil) }
+        if keyEntryStatus != errSecSuccess && keyEntryStatus != errSecItemNotFound { return (keyEntryStatus, nil) }
         // 旧サービスにも無い = 新規インストール
-        if itemsStatus == errSecItemNotFound && passwordStatus == errSecItemNotFound {
+        if itemsStatus == errSecItemNotFound && keyEntryStatus == errSecItemNotFound {
             return (errSecItemNotFound, nil)
         }
 
