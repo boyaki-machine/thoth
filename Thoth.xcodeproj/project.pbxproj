@@ -1686,7 +1686,7 @@
 			repositoryURL = "https://github.com/tadija/AEXML.git";
 			requirement = {
 				kind = exactVersion;
-				version = 4.7.0;
+				version = 4.7.3;
 			};
 		};
 		F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */ = {
