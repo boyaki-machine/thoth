@@ -14,8 +14,7 @@ import Cocoa
 import RxCocoa
 import RxSwift
 
-/// ステータスバーメニュー（履歴・スニペット・ツール）とセキュアメニューの
-/// 表示・構築を統括するマネージャ。
+/// メニュー（スニペット）と各パネル（履歴・セキュアアイテム）の表示を統括するマネージャ。
 ///
 /// ## 遅延再構築の設計
 /// メニューは NSMenu インスタンスを固定し、内容だけを表示直前に再構築する。
@@ -32,8 +31,6 @@ final class MenuManager: NSObject {
     // Menus
     // インスタンスは固定し、内容だけを表示直前に再構築する（遅延構築）
     // 拡張ファイル (MenuManager+MenuBuilding / MenuManager+Popup) から参照するため internal
-    let clipMenu = NSMenu(title: Constants.Application.name)
-    let historyMenu = NSMenu(title: Constants.Menu.history)
     let snippetMenu = NSMenu(title: Constants.Menu.snippet)
     // 履歴・スニペット・設定が変わるたびにインクリメントされる世代カウンター。
     // メニュー表示直前に各メニューの構築済み世代と比較し、古い場合のみ再構築する。
@@ -48,7 +45,6 @@ final class MenuManager: NSObject {
     // Other
     fileprivate let disposeBag = DisposeBag()
     fileprivate let notificationCenter = NotificationCenter.default
-    let kMaxKeyEquivalents = 10
     fileprivate let shortenSymbol = "..."
     // 保存層（履歴・スニペット）の変更通知のオブザーバー
     fileprivate var libraryObserver: NSObjectProtocol?
@@ -61,6 +57,8 @@ final class MenuManager: NSObject {
     var openMenuCount = 0
     // 認証〜パネル表示の間の再入を防ぐフラグ
     var isSecureMenuActive = false
+    // 認証の結果を待っている間 true。パネルがまだ無いこの間を「フラグの取り残し」と誤判定しないために持つ
+    var isSecureAuthenticationInProgress = false
     // セキュアアイテム選択パネル
     var securePickerPanel: CPYSecurePickerPanel?
     // willCloseNotification オブザーバートークン（解放するまで通知を受け取るために保持が必須）
@@ -86,8 +84,6 @@ final class MenuManager: NSObject {
     /// ステータスアイコンの表示と設定の監視を開始する（保存層には触れない軽量処理）。
     /// 起動直後に呼んでメニューバーへのアイコン表示を最速にする
     func setup() {
-        clipMenu.delegate = self
-        historyMenu.delegate = self
         snippetMenu.delegate = self
         bind()
         setupVimKeyEventTap()
@@ -182,71 +178,14 @@ extension MenuManager {
         guard LibraryProvider.isReady else { return }
         guard builtGenerations[type] != menuGeneration else { return }
         builtGenerations[type] = menuGeneration
-        switch type {
-        case .main:
-            rebuildClipMenu()
-        case .history:
-            historyMenu.removeAllItems()
-            addHistoryItems(historyMenu)
-        case .snippet:
-            snippetMenu.removeAllItems()
-            addSnippetItems(snippetMenu, separateMenu: false)
-        case .secure:
-            break
-        }
-    }
-
-    fileprivate func rebuildClipMenu() {
-        clipMenu.removeAllItems()
-
-        addHistoryItems(clipMenu)
-        addSnippetItems(clipMenu, separateMenu: true)
-
-        // ツールセクション（スニペットセクションの直後）
-        clipMenu.addItem(NSMenuItem.separator())
-        let toolsLabelItem = NSMenuItem(title: L10n.tools, action: nil)
-        toolsLabelItem.isEnabled = false
-        clipMenu.addItem(toolsLabelItem)
-        let generatePasswordItem = NSMenuItem(title: "\(L10n.generateNewPassword) (&p)", action: #selector(AppDelegate.showPasswordGeneratorWindow))
-        // メニュー表示中に p キーで起動できるようにする
-        generatePasswordItem.keyEquivalent = "p"
-        generatePasswordItem.keyEquivalentModifierMask = []
-        clipMenu.addItem(generatePasswordItem)
-
-        let cryptoItem = NSMenuItem(title: "\(L10n.encryptDecrypt) (&E)", action: #selector(AppDelegate.showCryptoWindow))
-        // メニュー表示中に e キーで起動できるようにする
-        cryptoItem.keyEquivalent = "e"
-        cryptoItem.keyEquivalentModifierMask = []
-        clipMenu.addItem(cryptoItem)
-
-        clipMenu.addItem(NSMenuItem.separator())
-
-        if AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.addClearHistoryMenuItem) {
-            clipMenu.addItem(NSMenuItem(title: L10n.clearHistory, action: #selector(AppDelegate.clearAllHistory)))
-        }
-
-        clipMenu.addItem(NSMenuItem(title: L10n.editSnippets, action: #selector(AppDelegate.showSnippetEditorWindow)))
-        clipMenu.addItem(NSMenuItem(title: L10n.preferences, action: #selector(AppDelegate.showPreferenceWindow)))
-
-        clipMenu.addItem(NSMenuItem.separator())
-        clipMenu.addItem(NSMenuItem(title: L10n.quitThoth, action: #selector(AppDelegate.terminate)))
+        // メイン・履歴・セキュアは NSMenu ではなくパネルで表示するので、構築するものは無い
+        guard type == .snippet else { return }
+        snippetMenu.removeAllItems()
+        addSnippetItems(snippetMenu, separateMenu: false)
     }
 
     func menuItemTitle(_ title: String, listNumber: NSInteger, isMarkWithNumber: Bool) -> String {
         return (isMarkWithNumber) ? "\(listNumber). \(title)" : title
-    }
-
-    func makeSubmenuItem(_ count: Int, start: Int, end: Int, numberOfItems: Int) -> NSMenuItem {
-        var count = count
-        if start == 0 {
-            count -= 1
-        }
-        var lastNumber = count + numberOfItems
-        if end < lastNumber {
-            lastNumber = end
-        }
-        let menuItemTitle = "\(count + 1) - \(lastNumber)"
-        return makeSubmenuItem(menuItemTitle)
     }
 
     func makeSubmenuItem(_ title: String) -> NSMenuItem {
@@ -255,14 +194,6 @@ extension MenuManager {
         subMenuItem.submenu = subMenu
         subMenuItem.image = (AppEnvironment.current.defaults.bool(forKey: Constants.UserDefaults.showIconInTheMenu)) ? folderIcon : nil
         return subMenuItem
-    }
-
-    func incrementListNumber(_ listNumber: NSInteger, max: NSInteger, start: NSInteger) -> NSInteger {
-        var listNumber = listNumber + 1
-        if listNumber == max && max == 10 && start == 1 {
-            listNumber = 0
-        }
-        return listNumber
     }
 
     func trimTitle(_ title: String?) -> String {
@@ -282,7 +213,10 @@ extension MenuManager {
         }
 
         if titleString.utf16.count > maxMenuItemTitleLength {
-            titleString = (titleString as NSString).substring(to: maxMenuItemTitleLength - shortenSymbol.utf16.count) + shortenSymbol
+            let nsTitle = titleString as NSString
+            // 絵文字などの途中で切らないよう、文字の境界まで戻す
+            let cut = nsTitle.rangeOfComposedCharacterSequence(at: maxMenuItemTitleLength - shortenSymbol.utf16.count).location
+            titleString = nsTitle.substring(to: cut) + shortenSymbol
         }
 
         return titleString as String

@@ -55,10 +55,10 @@ extension MenuManager {
         secureCloseObserver = nil
     }
 
-    /// 表示中のコピー選択メニュー（メイン・履歴・スニペット）を閉じる。
+    /// 表示中のスニペットメニューを閉じる。
     /// セキュアメニュー表示時の排他制御に使用する。
     func dismissClipMenus() {
-        [clipMenu, historyMenu, snippetMenu].forEach { $0.cancelTrackingWithoutAnimation() }
+        snippetMenu.cancelTrackingWithoutAnimation()
     }
 
     /// 環境設定ウィンドウが表示中なら、フォーカスを設定ウィンドウへ戻す。
@@ -161,6 +161,24 @@ extension MenuManager {
         panel.show(near: NSEvent.mouseLocation)
     }
 
+    /// セキュアメニューのホットキーが押されたときの動作
+    enum SecureHotKeyAction: Equatable {
+        /// 認証の結果待ち（重ねて認証すると、確認ダイアログとパネルが二重になる）
+        case ignore
+        /// パネルが表示中なので前面に戻す
+        case reactivatePanel
+        /// パネルが消えているのに状態が残っている。片付けてから認証する
+        case resetStaleState
+        case authenticate
+    }
+
+    /// ホットキーが押されたときの動作を決める（純粋関数のためユニットテスト可能）
+    static func secureHotKeyAction(isActive: Bool, isPanelVisible: Bool, isAuthenticating: Bool) -> SecureHotKeyAction {
+        if isAuthenticating { return .ignore }
+        guard isActive else { return .authenticate }
+        return isPanelVisible ? .reactivatePanel : .resetStaleState
+    }
+
     func popUpSecureMenu() {
         // コピー選択メニュー・履歴検索パネルとは排他表示: 表示中のものを閉じる
         dismissClipMenus()
@@ -181,28 +199,28 @@ extension MenuManager {
             visibleWindow.makeKeyAndOrderFront(nil)
             return
         }
-        // 認証中・表示中の場合は既存パネルを前面に戻す（または強制リセット）
-        if isSecureMenuActive {
-            if let existing = securePickerPanel, existing.isVisible {
-                // パネルが既に表示中 → 前面に出して再アクティブ化して終了
-                DebugLog.shared.record(.securePickerAlreadyVisible)
-                NSApp.activate(ignoringOtherApps: true)
-                existing.makeKeyAndOrderFront(nil)
-                return
-            } else {
-                // パネルが消えているのにフラグが残っている → 強制リセット
-                DebugLog.shared.record(.secureStaleFlagReset)
-                if let observer = secureCloseObserver { NotificationCenter.default.removeObserver(observer) }
-                isSecureMenuActive  = false
-                securePickerPanel   = nil
-                secureCloseObserver = nil
-            }
-        }
-        guard !isSecureMenuActive else {
+        // 認証中は無視し、表示中は既存パネルを前面に戻す（パネルが消えていれば強制リセット）
+        switch Self.secureHotKeyAction(isActive: isSecureMenuActive,
+                                       isPanelVisible: securePickerPanel?.isVisible ?? false,
+                                       isAuthenticating: isSecureAuthenticationInProgress) {
+        case .ignore:
             DebugLog.shared.record(.secureIgnoredWhileAuthenticating)
             return
+        case .reactivatePanel:
+            DebugLog.shared.record(.securePickerAlreadyVisible)
+            NSApp.activate(ignoringOtherApps: true)
+            securePickerPanel?.makeKeyAndOrderFront(nil)
+            return
+        case .resetStaleState:
+            DebugLog.shared.record(.secureStaleFlagReset)
+            if let observer = secureCloseObserver { NotificationCenter.default.removeObserver(observer) }
+            securePickerPanel   = nil
+            secureCloseObserver = nil
+        case .authenticate:
+            break
         }
         isSecureMenuActive = true
+        isSecureAuthenticationInProgress = true
         // 貼り付け先はホットキーを押した時点で覚えておく。認証ダイアログを挟むと、
         // パネルを出す時点の最前面は元のアプリではなくなっていることがある
         let hotKeyApp = NSWorkspace.shared.frontmostApplication
@@ -210,10 +228,13 @@ extension MenuManager {
         AppEnvironment.current.secureMenuService.authenticate(reason: reason) { [weak self] success in
             guard let self = self else { return }
             DebugLog.shared.record(.secureAuthenticationFinished(success: success))
+            self.isSecureAuthenticationInProgress = false
             guard success else {
                 self.isSecureMenuActive = false
                 return
             }
+            // 認証の間に他のメニューが開かれて閉じられたときは、パネルを重ねて出さない
+            guard self.isSecureMenuActive else { return }
             let items   = AppEnvironment.current.secureMenuService.loadAllItems()
             let context = AppEnvironment.current.secureSelectionContext
             let panel   = CPYSecurePickerPanel(items: items, context: context)
@@ -292,9 +313,10 @@ extension MenuManager {
             }
         } else {
             let pasteboard = NSPasteboard.general
-            let snapshot = PasteboardSnapshot(pasteboard: pasteboard)
+            let snapshot = pasteService.snapshotBeforeConcealedWrite(of: pasteboard)
             pasteService.copyConcealedToPasteboard(with: selection.fieldValue)
             let writtenChangeCount = pasteboard.changeCount
+            pasteService.noteConcealedWrite(snapshot: snapshot, writtenChangeCount: writtenChangeCount)
             CallerAppActivator.activate(callerApp) {
                 if pasteService.paste() {
                     pasteService.restorePasteboard(snapshot, ifUnchangedSince: writtenChangeCount)

@@ -59,30 +59,11 @@ extension CPYSecurePickerPanel {
 
         sub.setFields(fields)
 
-        let mainFrame = frame
-        let screen  = NSScreen.screens.first { $0.frame.intersects(mainFrame) } ?? NSScreen.main
-        let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
-
-        // 右側を優先し、画面右端に収まらない場合はメインパネルに被せず左側へ配置する。
-        // 左側にも収まらない場合のみ右側でクランプ（被りは許容する最終手段）
-        let rightX = mainFrame.maxX + 4
-        let leftX  = mainFrame.minX - 4 - sub.frame.width
-        let subX: CGFloat
-        if rightX + sub.frame.width <= visible.maxX - 4 {
-            subX = rightX
-            subPanelOnLeft = false
-        } else if leftX >= visible.minX + 4 {
-            subX = leftX
-            subPanelOnLeft = true
-        } else {
-            subX = max(visible.minX + 4, min(rightX, visible.maxX - sub.frame.width - 4))
-            subPanelOnLeft = false
-        }
-
-        let targetTopY    = rowRectInScreen.maxY
-        let targetOriginY = targetTopY - sub.frame.height
-        let clampedY = max(visible.minY + 4, min(targetOriginY, visible.maxY - sub.frame.height - 4))
-        sub.setFrameOrigin(NSPoint(x: subX, y: clampedY))
+        let placement = PickerPanelSupport.subPanelPlacement(mainFrame: frame, subPanelSize: sub.frame.size,
+                                                             rowTopY: rowRectInScreen.maxY,
+                                                             visible: PickerPanelSupport.visibleFrame(intersecting: frame))
+        subPanelOnLeft = placement.isOnLeft
+        sub.setFrameOrigin(placement.origin)
         sub.orderFront(nil)
     }
 
@@ -280,18 +261,6 @@ extension CPYSecurePickerPanel {
 
     func makeTextCell(identifier: NSUserInterfaceItemIdentifier,
                       indent: CGFloat = 6) -> NSTableCellView {
-        let cell = NSTableCellView()
-        cell.identifier = identifier
-        let textField = NSTextField(labelWithString: "")
-        textField.lineBreakMode = .byTruncatingTail
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        cell.addSubview(textField)
-        cell.textField = textField
-        NSLayoutConstraint.activate([
-            textField.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: indent),
-            textField.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -6),
-            textField.centerYAnchor.constraint(equalTo: cell.centerYAnchor)
-        ])
-        return cell
+        return PickerPanelSupport.makeTextCell(identifier: identifier, indent: indent)
     }
 }

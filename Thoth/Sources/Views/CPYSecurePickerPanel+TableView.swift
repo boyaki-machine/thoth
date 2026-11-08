@@ -32,19 +32,8 @@ extension CPYSecurePickerPanel: NSTableViewDelegate {
             return cell
 
         case .separator:
-            if let existing = tableView.makeView(withIdentifier: CellID.sep, owner: nil) { return existing }
-            let sepView = NSView()
-            sepView.identifier = CellID.sep
-            let box = NSBox()
-            box.boxType = .separator
-            box.translatesAutoresizingMaskIntoConstraints = false
-            sepView.addSubview(box)
-            NSLayoutConstraint.activate([
-                box.leadingAnchor.constraint(equalTo: sepView.leadingAnchor),
-                box.trailingAnchor.constraint(equalTo: sepView.trailingAnchor),
-                box.centerYAnchor.constraint(equalTo: sepView.centerYAnchor)
-            ])
-            return sepView
+            return tableView.makeView(withIdentifier: CellID.sep, owner: nil)
+                ?? PickerPanelSupport.makeSeparatorView(identifier: CellID.sep)
 
         case .noResults:
             let cell = (tableView.makeView(withIdentifier: CellID.info, owner: nil) as? NSTableCellView)

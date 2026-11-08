@@ -121,40 +121,12 @@ class AppDelegate: NSObject, NSMenuItemValidation {
         AppEnvironment.current.clipService.clearAll()
     }
 
-    /// 履歴検索パネルを開く（履歴メニューの「検索...」項目 / メニュー表示中の "/" キー）。
-    /// メニュー項目のアクションはメニュー閉鎖後に発火するが、閉鎖に伴う
-    /// 元アプリへのアクティベーション返却と競合しないよう次のランループへ遅延する
-    /// （presentWindow と同じ理由）
-    @objc func showHistorySearchPanel() {
-        DispatchQueue.main.async {
-            AppEnvironment.current.menuManager.popUpHistorySearchPanel()
-        }
-    }
-
-    @objc func selectClipMenuItem(_ sender: NSMenuItem) {
-        guard let primaryKey = sender.representedObject as? String,
-              AppEnvironment.current.pasteService.pasteClip(withPrimaryKey: primaryKey) else {
-            NSSound.beep()
-            return
-        }
-    }
-
     @objc func selectSnippetMenuItem(_ sender: AnyObject) {
         guard let primaryKey = sender.representedObject as? String,
               AppEnvironment.current.pasteService.pasteSnippet(withPrimaryKey: primaryKey) else {
             NSSound.beep()
             return
         }
-    }
-
-    @objc func selectSecureMenuItem(_ sender: NSMenuItem) {
-        guard let selection = sender.representedObject as? SecureFieldSelection else {
-            NSSound.beep()
-            return
-        }
-        // 出力処理（TOTP 直接タイプ / 秘匿コピー+ペースト+遅延クリア）は
-        // MenuManager.outputSecureSelection に一本化されている
-        AppEnvironment.current.menuManager.outputSecureSelection(selection)
     }
 
     func terminateApplication() {
