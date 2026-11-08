@@ -16,6 +16,7 @@ class HotKeyServiceSpec: QuickSpec {
     override class func spec() {
         migrateHotKeySpecs()
         saveHotKeySpecs()
+        secureHotKeySpecs()
         keyCombosSpecs()
         clearHistoryHotKeySpecs()
         folderHotKeySpecs()
@@ -313,6 +314,68 @@ class HotKeyServiceSpec: QuickSpec {
                 let defaults = UserDefaults.standard
                 defaults.removeObject(forKey: Constants.HotKey.folderKeyCombos)
                 defaults.synchronize()
+            }
+        }
+    }
+}
+
+// MARK: - Secure Menu
+extension HotKeyServiceSpec {
+    private static func secureHotKeySpecs() {
+        describe("セキュアメニューのホットキーの保持") {
+            let defaults = UserDefaults.standard
+            func clearDefaults() {
+                defaults.removeObject(forKey: Constants.HotKey.secureKeyCombo)
+                defaults.removeObject(forKey: Constants.HotKey.secureKeyCodeMigrated)
+                defaults.removeObject(forKey: Constants.HotKey.migrateNewKeyCombo)
+            }
+            /// アプリの起動に相当する（サービスは起動のたびに作り直される）
+            func relaunch() -> HotKeyService {
+                let service = HotKeyService()
+                service.setupDefaultHotKeys()
+                return service
+            }
+
+            beforeEach { clearDefaults() }
+            afterEach { clearDefaults() }
+
+            it("初回起動では既定の ⌘⇧. が割り当てられ、次の起動でも同じ") {
+                expect(relaunch().secureKeyCombo?.QWERTYKeyCode) == 47
+                let second = relaunch()
+                expect(second.secureKeyCombo?.QWERTYKeyCode) == 47
+                expect(second.secureKeyCombo?.modifiers) == 768
+            }
+
+            it("別のキーに変更すると、次の起動でも変更後のキーのまま") {
+                let combo = KeyCombo(QWERTYKeyCode: 0, carbonModifiers: cmdKey)
+                relaunch().change(with: .secure, keyCombo: combo)
+                expect(relaunch().secureKeyCombo) == combo
+            }
+
+            it("解除すると、次の起動でも、その次の起動でも解除されたまま") {
+                relaunch().change(with: .secure, keyCombo: nil)
+                expect(relaunch().secureKeyCombo) == nil
+                expect(relaunch().secureKeyCombo) == nil
+            }
+
+            it("解除後に割り当て直すと、次の起動でそのキーが使われる") {
+                let service = relaunch()
+                service.change(with: .secure, keyCombo: nil)
+                let combo = KeyCombo(QWERTYKeyCode: 0, carbonModifiers: cmdKey)
+                relaunch().change(with: .secure, keyCombo: combo)
+                expect(relaunch().secureKeyCombo) == combo
+            }
+
+            it("旧デフォルト（keyCode 27）のままの版から上げると、一度だけ既定に置き換わる") {
+                defaults.setArchiveData(KeyCombo(QWERTYKeyCode: 27, carbonModifiers: 768)!,
+                                        forKey: Constants.HotKey.secureKeyCombo)
+                expect(relaunch().secureKeyCombo?.QWERTYKeyCode) == 47
+            }
+
+            it("保存値が壊れて読めないときは、解除扱いにせず既定に戻す") {
+                _ = relaunch()
+                defaults.set(Data("broken".utf8), forKey: Constants.HotKey.secureKeyCombo)
+                expect(relaunch().secureKeyCombo?.QWERTYKeyCode) == 47
             }
         }
     }
