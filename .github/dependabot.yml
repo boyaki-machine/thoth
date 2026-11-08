@@ -1,0 +1,16 @@
+# ワークフローのアクション（コミット SHA で固定）を新しい版へ上げる（Dependabot）。
+#
+# Swift Package は対象にできない。Dependabot の swift は Package.swift が前提で、
+# Xcode プロジェクトの Package.resolved を読まないため（依存グラフにも Swift の依存は出ない）。
+# Swift Package の既知の脆弱性は、GitHub Advisory Database（ecosystem: swift）と各リポジトリの
+# 公開アドバイザリを手で確かめる（docs/DEVELOPMENT_JP.md「依存の脆弱性の確認」）。
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns: ["*"]

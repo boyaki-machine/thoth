@@ -8,6 +8,9 @@
 # Default setup を無効にしておく（両方が有効だと結果のアップロードが拒否される）。
 name: CodeQL
 
+# アクションはタグではなくコミット SHA で固定する（タグの付け替えによる改ざんを防ぐ。
+# 2025 年の tj-actions/changed-files の事件を受けた GitHub の推奨）。
+# 版上げは .github/dependabot.yml の Dependabot が SHA とコメントの版をまとめて更新する。
 on:
   push:
     branches: [main, develop]
@@ -16,6 +19,9 @@ on:
   schedule:
     - cron: "17 3 * * 1"
   workflow_dispatch:
+
+# 既定ではトークンに権限を与えず、ジョブごとに必要なものだけを付ける
+permissions: {}
 
 jobs:
   analyze:
@@ -29,10 +35,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # 後続のステップで push などをしないので、認証情報をディスクに残さない
+          persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           languages: swift
           build-mode: manual
@@ -56,6 +65,6 @@ jobs:
             SKIP_SWIFTLINT=1
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: "/language:swift"
