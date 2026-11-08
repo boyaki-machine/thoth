@@ -18,3 +18,6 @@ dedicated to the public domain."）。作者は Andy Kim（Potion Factory LLC）
   変えた。CocoaPods ではフレームワークの中に翻訳が入っていたため `bundleForClass:` で
   見つかったが、Swift Package では別のバンドルに入るため
 - 本家の Podspec と同じく ARC を使わずにコンパイルする（`-fno-objc-arc`）
+- アプリを旧い場所からゴミ箱へ移す最後の手段（AppleScript）で、パスの `\` と `"` を
+  エスケープしてから埋め込むようにした。本家はそのまま埋め込んでおり、フォルダ名に `"` が
+  入っていると、残りが AppleScript として実行される余地があった

@@ -132,9 +132,9 @@ class HotKeyServiceSpec: QuickSpec {
                 expect(service.snippetKeyCombo) == nil
 
                 let defautls = UserDefaults.standard
-                expect(defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.mainKeyCombo)) == nil
-                expect(defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.historyKeyCombo)) == nil
-                expect(defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.snippetKeyCombo)) == nil
+                expect(defautls.savedKeyCombo(forKey: Constants.HotKey.mainKeyCombo)) == nil
+                expect(defautls.savedKeyCombo(forKey: Constants.HotKey.historyKeyCombo)) == nil
+                expect(defautls.savedKeyCombo(forKey: Constants.HotKey.snippetKeyCombo)) == nil
 
                 service.setupDefaultHotKeys()
                 expect(service.mainKeyCombo) == nil
@@ -149,9 +149,9 @@ class HotKeyServiceSpec: QuickSpec {
                 service.change(with: .history, keyCombo: historyKeyCombo)
                 service.change(with: .snippet, keyCombo: snippetKeyCombo)
 
-                let savedMainKeyCombo = defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.mainKeyCombo)
-                let savedHistoryKeyCombo = defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.historyKeyCombo)
-                let savedSnippetKeyCombo = defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.snippetKeyCombo)
+                let savedMainKeyCombo = defautls.savedKeyCombo(forKey: Constants.HotKey.mainKeyCombo)
+                let savedHistoryKeyCombo = defautls.savedKeyCombo(forKey: Constants.HotKey.historyKeyCombo)
+                let savedSnippetKeyCombo = defautls.savedKeyCombo(forKey: Constants.HotKey.snippetKeyCombo)
 
                 expect(savedMainKeyCombo) != nil
                 expect(savedMainKeyCombo?.QWERTYKeyCode) == 9
@@ -173,7 +173,7 @@ class HotKeyServiceSpec: QuickSpec {
 
                 service.change(with: .main, keyCombo: nil)
                 expect(service.mainKeyCombo) == nil
-                expect(defautls.archiveDataForKey(KeyCombo.self, key: Constants.HotKey.mainKeyCombo)) == nil
+                expect(defautls.savedKeyCombo(forKey: Constants.HotKey.mainKeyCombo)) == nil
             }
 
             it("保存済みのアーカイブがあれば、起動時（setupDefaultHotKeys）にそれを読み戻す") {
@@ -314,6 +314,20 @@ class HotKeyServiceSpec: QuickSpec {
                 defaults.removeObject(forKey: Constants.HotKey.folderKeyCombos)
                 defaults.synchronize()
             }
+        }
+    }
+}
+
+private extension UserDefaults {
+    /// HotKeyService が保存した KeyCombo を、アプリと同じ許可クラス検査を通して読む
+    func savedKeyCombo(forKey key: String) -> KeyCombo? {
+        return unarchivedObject(forKey: key, allowedClasses: [KeyCombo.self]) as? KeyCombo
+    }
+
+    /// 旧版と同じ形（旧式 NSCoding の NSKeyedArchiver）で保存する
+    func setArchiveData<T: NSCoding>(_ object: T, forKey key: String) {
+        if let data = try? NSKeyedArchiver.archivedData(withRootObject: object, requiringSecureCoding: false) {
+            set(data, forKey: key)
         }
     }
 }

@@ -118,14 +118,23 @@ final class CryptoService {
     ///   - encryptedPath: 暗号化ファイルのパス
     ///   - outputName: 復号後のファイル名
     ///   - isFolder: フォルダ由来の場合 true（tar 展開の手順を付け加える）
+    ///
+    /// パス・ファイル名は `shellQuoted` で引用する。ファイル名に `'` が入っていると、
+    /// そのまま `'…'` で囲んだだけでは引用が閉じてしまい、コピーして実行したときに
+    /// 名前の残りがシェルのコマンドとして実行されるため
     static func opensslDecryptCommand(encryptedPath: String, outputName: String, isFolder: Bool) -> String {
-        let output = isFolder ? "\(outputName).tar" : outputName
-        var command = "tail -c +\(bodyOffset + 1) '\(encryptedPath)' | "
-            + "openssl enc -d -aes-256-cbc -pbkdf2 -iter \(iterationCount) -pass pass:PASSWORD -out '\(output)'"
+        let output = shellQuoted(isFolder ? "\(outputName).tar" : outputName)
+        var command = "tail -c +\(bodyOffset + 1) \(shellQuoted(encryptedPath)) | "
+            + "openssl enc -d -aes-256-cbc -pbkdf2 -iter \(iterationCount) -pass pass:PASSWORD -out \(output)"
         if isFolder {
-            command += " && tar -xf '\(output)'"
+            command += " && tar -xf \(output)"
         }
         return command
+    }
+
+    /// POSIX シェルの 1 語として解釈されるように単一引用符で囲む。中の `'` は `'\''` にする
+    static func shellQuoted(_ value: String) -> String {
+        return "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 
     /// ファイル／フォルダを暗号化する。完了ハンドラはメインスレッドで呼ばれる。
