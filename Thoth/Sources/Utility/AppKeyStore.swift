@@ -97,6 +97,8 @@ enum AppKeyStore {
     /// app-keys の解決を直列化するロック（LibraryProvider.prepare はバックグラウンド、
     /// ClipDataStore.shared の初期化は保存キューから呼ばれ得るため）
     private static let appKeysLock = NSLock()
+    /// この起動で読めた鍵（`appKeysLock` の中でだけ触る）
+    private static var resolvedKeys = [AppKeyRole: Data]()
 
     /// 指定用途のアプリ生成鍵を返す。
     ///
@@ -109,9 +111,18 @@ enum AppKeyStore {
     /// フェイルセーフ: `errSecItemNotFound` 以外の読み出し失敗時は nil を返し、
     /// 鍵は絶対に作成しない（既存の暗号化データを永久に開けなくする事故の防止）。
     /// 新規作成時は読み戻し検証に成功するまで鍵を使用しない。
+    ///
+    /// 読めた鍵は覚えておく。保存層と `.data` は別々の時点でこれを呼ぶので、キーチェーンの
+    /// 一時的な失敗で片方だけ鍵が無い状態にならないようにする
     static func appEncryptionKey(for role: AppKeyRole) -> Data? {
         appKeysLock.lock(); defer { appKeysLock.unlock() }
+        if let resolved = resolvedKeys[role] { return resolved }
+        let key = resolveKey(for: role)
+        resolvedKeys[role] = key
+        return key
+    }
 
+    private static func resolveKey(for role: AppKeyRole) -> Data? {
         // 1. 集約エントリから読む
         let (status, raw) = readKeychainData(account: Self.appKeysAccount)
         var appKeys: AppGeneratedKeys

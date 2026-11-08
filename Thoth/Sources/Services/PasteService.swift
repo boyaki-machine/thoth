@@ -29,38 +29,30 @@ final class PasteService {
 
     // MARK: - Properties
     fileprivate let lock = NSRecursiveLock(name: "io.github.boyaki-machine.Thoth.Pastable")
-    fileprivate var isPastePlainText: Bool {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.Beta.pastePlainText) else { return false }
+    /// 秘匿値の貼り付けのうち、まだ元の内容へ戻していないもの（メインスレッドでのみ触る）
+    private var pendingConcealedRestore: (snapshot: PasteboardSnapshot, writtenChangeCount: Int)?
 
-        let modifierSetting = AppEnvironment.current.defaults.integer(forKey: Constants.Beta.pastePlainTextModifier)
-        return isPressedModifier(modifierSetting)
+    fileprivate var isPastePlainText: Bool {
+        return isModifierActionActive(Constants.Beta.pastePlainText, modifierKey: Constants.Beta.pastePlainTextModifier)
     }
     fileprivate var isDeleteHistory: Bool {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.Beta.deleteHistory) else { return false }
-
-        let modifierSetting = AppEnvironment.current.defaults.integer(forKey: Constants.Beta.deleteHistoryModifier)
-        return isPressedModifier(modifierSetting)
+        return isModifierActionActive(Constants.Beta.deleteHistory, modifierKey: Constants.Beta.deleteHistoryModifier)
     }
     fileprivate var isPasteAndDeleteHistory: Bool {
-        guard AppEnvironment.current.defaults.bool(forKey: Constants.Beta.pasteAndDeleteHistory) else { return false }
-
-        let modifierSetting = AppEnvironment.current.defaults.integer(forKey: Constants.Beta.pasteAndDeleteHistoryModifier)
-        return isPressedModifier(modifierSetting)
+        return isModifierActionActive(Constants.Beta.pasteAndDeleteHistory, modifierKey: Constants.Beta.pasteAndDeleteHistoryModifier)
     }
 
     // MARK: - Modifiers
+    /// 修飾キーで切り替える動作（ベータ機能）が有効で、いま修飾キーが押されているか
+    private func isModifierActionActive(_ enabledKey: String, modifierKey: String) -> Bool {
+        let defaults = AppEnvironment.current.defaults
+        guard defaults.bool(forKey: enabledKey) else { return false }
+        return isPressedModifier(defaults.integer(forKey: modifierKey))
+    }
+
     private func isPressedModifier(_ flag: Int) -> Bool {
-        let flags = NSEvent.modifierFlags
-        if flag == 0 && flags.contains(.command) {
-            return true
-        } else if flag == 1 && flags.contains(.shift) {
-            return true
-        } else if flag == 2 && flags.contains(.control) {
-            return true
-        } else if flag == 3 && flags.contains(.option) {
-            return true
-        }
-        return false
+        let modifiers: [NSEvent.ModifierFlags] = [.command, .shift, .control, .option]
+        return modifiers.indices.contains(flag) && NSEvent.modifierFlags.contains(modifiers[flag])
     }
 }
 
@@ -89,28 +81,24 @@ extension PasteService {
 
 // MARK: - Copy
 extension PasteService {
-    private static func unarchiveClipData(atPath path: String) -> CPYClipData? {
-        // ClipDataStore が暗号化形式（CLPYDAT）と旧平文形式を自動判別して読み込む
-        guard let fileData = ClipDataStore.shared.read(fromPath: path) else { return nil }
-        return CPYClipData.unarchived(from: fileData)
+    /// 修飾キーで切り替わる貼り付け時の動作
+    struct PasteActions: Equatable {
+        var plainText = false
+        var delete = false
+        var pasteAndDelete = false
     }
 
     /// クリップをクリップボードへ書き込んでペーストする。
     /// アンアーカイブ（画像等は数 MB 規模）はバックグラウンドで行い UI をブロックしない。
     /// 修飾キーの押下状態に応じてプレーンテキスト化・履歴削除も行う
-    func paste(with clip: ClipRecord) {
+    /// - Parameter actions: 省略時はいまの修飾キーの状態から決める（テストでは直接指定する）
+    func paste(with clip: ClipRecord, actions: PasteActions? = nil) {
         let dataPath = clip.dataPath
         let clipID = clip.id
 
         // Handling modifier actions（NSEvent.modifierFlags は呼び出し元スレッドで評価する）
-        let isPastePlainText = self.isPastePlainText
-        let isPasteAndDeleteHistory = self.isPasteAndDeleteHistory
-        let isDeleteHistory = self.isDeleteHistory
-
-        // Increment change count for don't copy paste item
-        if isPasteAndDeleteHistory {
-            AppEnvironment.current.clipService.incrementChangeCount()
-        }
+        let actions = actions ?? PasteActions(plainText: isPastePlainText, delete: isDeleteHistory,
+                                              pasteAndDelete: isPasteAndDeleteHistory)
 
         // 大きなクリップ（画像・RTF 等）のファイル読み込みとアンアーカイブは
         // 時間がかかるため、バックグラウンドで実行してメニュー選択直後の UI ブロックを避ける
@@ -118,9 +106,15 @@ extension PasteService {
             guard let self = self else { return }
 
             // Paste history
-            if isPastePlainText || !isDeleteHistory || isPasteAndDeleteHistory {
-                guard let data = Self.unarchiveClipData(atPath: dataPath) else { return }
-                if isPastePlainText {
+            if actions.plainText || !actions.delete || actions.pasteAndDelete {
+                guard let data = ClipDataStore.shared.readClip(fromPath: dataPath) else { return }
+                // 履歴へ再取り込みしないための印。**書き込みの直前に**付ける。読み込みの前に付けると、
+                // 読み込みの間（100ms 以上）に監視が食い違いを検知して印が消え、削除したはずのクリップが戻る。
+                // 読み込みに失敗したときも、次の本物のコピーを取りこぼさない
+                if actions.pasteAndDelete {
+                    AppEnvironment.current.clipService.incrementChangeCount()
+                }
+                if actions.plainText {
                     self.copyToPasteboard(with: data.stringValue)
                 } else {
                     self.copyToPasteboard(with: data)
@@ -128,7 +122,7 @@ extension PasteService {
                 self.paste()
             }
             // Delete clip
-            if isDeleteHistory || isPasteAndDeleteHistory {
+            if actions.delete || actions.pasteAndDelete {
                 DispatchQueue.main.async {
                     AppEnvironment.current.clipService.delete(clipID: clipID)
                 }
@@ -181,6 +175,23 @@ extension PasteService {
     /// （短すぎると、遅いアプリでは戻した後の内容が貼り付けられてしまう）
     static let concealedPasteRestoreDelay: TimeInterval = 2.0
 
+    /// 秘匿値を書き込む前に控える内容を返す（メインスレッドから呼ぶ）。
+    ///
+    /// **前の秘匿値の貼り付けを戻す前に次を始めたときは、前回の控えをそのまま使う。**
+    /// いまのクリップボード（前の秘匿値）を控えると、最後に秘匿値が「元の内容」として書き戻され、
+    /// 消されないまま残る。継続ペーストで ID → パスワードと続けて選ぶと起きる
+    func snapshotBeforeConcealedWrite(of pasteboard: NSPasteboard = .general) -> PasteboardSnapshot {
+        if let pending = pendingConcealedRestore, pending.writtenChangeCount == pasteboard.changeCount {
+            return pending.snapshot
+        }
+        return PasteboardSnapshot(pasteboard: pasteboard).removingConcealedItems()
+    }
+
+    /// 秘匿値を書き込んだことを記録する。`snapshotBeforeConcealedWrite` が次の貼り付けで使う
+    func noteConcealedWrite(snapshot: PasteboardSnapshot, writtenChangeCount: Int) {
+        pendingConcealedRestore = (snapshot, writtenChangeCount)
+    }
+
     /// 秘匿値の貼り付けの後始末として、`snapshot`（書き込む前の内容）へクリップボードを戻す。
     /// その間に別のコピーがあった（changeCount が `writtenChangeCount` から変わった）場合は何もしない。
     ///
@@ -191,7 +202,10 @@ extension PasteService {
                            ifUnchangedSince writtenChangeCount: Int,
                            after delay: TimeInterval = PasteService.concealedPasteRestoreDelay,
                            completion: ((Bool) -> Void)? = nil) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            if self?.pendingConcealedRestore?.writtenChangeCount == writtenChangeCount {
+                self?.pendingConcealedRestore = nil
+            }
             guard pasteboard.changeCount == writtenChangeCount else {
                 completion?(false)
                 return
@@ -209,7 +223,7 @@ extension PasteService {
     func copyToPasteboard(with clip: ClipRecord) {
         lock.lock(); defer { lock.unlock() }
 
-        guard let data = Self.unarchiveClipData(atPath: clip.dataPath) else { return }
+        guard let data = ClipDataStore.shared.readClip(fromPath: clip.dataPath) else { return }
 
         if isPastePlainText {
             copyToPasteboard(with: data.stringValue)
@@ -236,7 +250,7 @@ extension PasteService {
                 guard let rtfData = data.RTFData else { return }
                 pasteboard.setData(rtfData, forType: .deprecatedRTFD)
             case .deprecatedRTF:
-                guard let rtfData = data.RTFData else { return }
+                guard let rtfData = data.rtfDataForPasteboard else { return }
                 pasteboard.setData(rtfData, forType: .deprecatedRTF)
             case .deprecatedPDF:
                 guard let pdfData = data.PDF, let pdfRep = NSPDFImageRep(data: pdfData) else { return }
@@ -347,7 +361,18 @@ struct PasteboardSnapshot {
         .filter { !$0.isEmpty }
     }
 
+    private init(items: [[(type: NSPasteboard.PasteboardType, data: Data)]]) {
+        self.items = items
+    }
+
     var isEmpty: Bool { items.isEmpty }
+
+    /// 秘匿・一時のマーカーが付いたアイテムを除いた控えを返す。
+    /// 他のパスワードマネージャーがコピーした値を、その期限切れの消去のあとまで書き戻さない
+    func removingConcealedItems() -> PasteboardSnapshot {
+        let markers: Set<NSPasteboard.PasteboardType> = [Constants.Pasteboard.concealedType, Constants.Pasteboard.transientType]
+        return PasteboardSnapshot(items: items.filter { entries in !entries.contains { markers.contains($0.type) } })
+    }
 
     /// 控えた内容でクリップボードを置き換える。控えが空ならクリアだけ行う
     func restore(to pasteboard: NSPasteboard) {

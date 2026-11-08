@@ -36,8 +36,18 @@ final class DataCleanService {
     }
 
     // MARK: - Delete Data
-    /// 上限超過クリップの削除と孤児ファイルの掃除を即時実行する
+    /// 上限超過クリップの削除と孤児ファイルの掃除を、保存待ちを終えてから行う。
+    ///
+    /// **保存と同じ直列キューで走らせる。** 保存は「.data を書く → 履歴に載せる」の順なので、
+    /// その間に掃除が走ると、書いたばかりの .data を孤児と判断して消してしまう
     func cleanDatas() {
+        AppEnvironment.current.clipService.performAfterPendingSaves { [weak self] in
+            self?.cleanDatasNow()
+        }
+    }
+
+    /// 掃除の本体。保存キューの外から直接呼ばないこと（テストは除く）
+    func cleanDatasNow(directory: String = CPYUtilities.applicationSupportFolder()) {
         let historyStore = AppEnvironment.current.historyStore
         let maxHistorySize = AppEnvironment.current.defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
         let clips = historyStore.clips(ascending: false)
@@ -45,7 +55,13 @@ final class DataCleanService {
             // サムネイルは履歴と一緒に消える
             historyStore.deleteClips(olderThan: cutoff)
         }
-        cleanFiles(referencedPaths: historyStore.clips(ascending: false).map(\.dataPath))
+        // 保存層が使えない起動中（鍵が読めない等）の履歴はメモリ上だけなので、ディスクの .data は
+        // どれも「参照されていない」ように見える。ここで消すと、原因が解消しても履歴を貼り付けられなくなる
+        guard AppEnvironment.current.isLibraryUsable,
+              let fileNames = try? FileManager.default.contentsOfDirectory(atPath: directory) else { return }
+        let referencedPaths = historyStore.clips(ascending: false).map(\.dataPath)
+        Self.orphanDataFileNames(fileNames: fileNames, referencedPaths: referencedPaths)
+            .forEach { CPYUtilities.deleteData(at: (directory as NSString).appendingPathComponent($0)) }
     }
 
     /// 最大履歴数を超えたときに削除する境界の時刻を返す（これより古い履歴を消す）。
@@ -59,18 +75,10 @@ final class DataCleanService {
         return updateTimesNewestFirst[maxHistorySize - 1]
     }
 
-    /// どの履歴からも参照されていない .data ファイルを削除する
-    private func cleanFiles(referencedPaths: [String]) {
-        let fileManager = FileManager.default
-        guard let paths = try? fileManager.contentsOfDirectory(atPath: CPYUtilities.applicationSupportFolder()) else { return }
-
-        let allClipPaths = Set(referencedPaths.compactMap { $0.components(separatedBy: "/").last })
-
-        // Delete diff datas on background thread
-        DispatchQueue.global(qos: .utility).async {
-            allClipPaths.symmetricDifference(paths)
-                .map { CPYUtilities.applicationSupportFolder() + "/" + "\($0)" }
-                .forEach { CPYUtilities.deleteData(at: $0) }
-        }
+    /// どの履歴からも参照されていない .data ファイルの名前を返す（純粋関数）。
+    /// フォルダには .data 以外のファイルも置かれうるので、それらは対象にしない
+    static func orphanDataFileNames(fileNames: [String], referencedPaths: [String]) -> [String] {
+        let referenced = Set(referencedPaths.map { ($0 as NSString).lastPathComponent })
+        return fileNames.filter { $0.hasSuffix(".data") && !referenced.contains($0) }
     }
 }

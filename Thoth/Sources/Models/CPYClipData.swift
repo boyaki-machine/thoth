@@ -11,6 +11,7 @@
 //
 
 import Cocoa
+import CryptoKit
 import SwiftHEXColors
 
 /// クリップの実データ（全ペーストボード型の内容）を保持するシリアライズ用モデル。
@@ -46,8 +47,10 @@ final class CPYClipData: NSObject {
     override var hash: Int {
         if let cachedHash = cachedHash { return cachedHash }
         var hash = types.map { $0.rawValue }.joined().hash
+        // 画像・PDF・RTF は長さではなく中身で見分ける。無圧縮の TIFF は寸法だけで長さが決まるので、
+        // 長さを使うと同じ寸法の別の画像（全画面のスクリーンショットなど）が同じ履歴として上書きされる
         if let image = self.image, let imageData = image.tiffRepresentation {
-            hash ^= imageData.count
+            hash ^= Self.pixelHash(ofTIFF: imageData)
         } else if let image = self.image {
             hash ^= image.hash
         }
@@ -56,20 +59,44 @@ final class CPYClipData: NSObject {
         } else if !self.URLs.isEmpty {
             URLs.forEach { hash ^= $0.hash }
         } else if let pdf = PDF {
-            hash ^= pdf.count
+            hash ^= Self.contentHash(of: pdf)
         } else if !stringValue.isEmpty {
             hash ^= stringValue.hash
         }
         if let data = RTFData {
-            hash ^= data.count
+            hash ^= Self.contentHash(of: data)
         }
         cachedHash = hash
         return hash
     }
+
+    /// 起動をまたいでも同じ値になる、中身全体のハッシュ（`Data.hashValue` は起動ごとに変わる）
+    private static func contentHash(of data: Data) -> Int {
+        return SHA256.hash(data: data).withUnsafeBytes { $0.loadUnaligned(as: Int.self) }
+    }
+
+    /// 画像の画素から決まるハッシュ。
+    /// TIFF はタグの違いで、書き戻して読み直すとバイト列が変わる。バイト列のままハッシュすると、
+    /// 貼り付けで書き戻した画像を別の内容と判断して、貼り付けのたびに履歴が増えてしまう
+    private static func pixelHash(ofTIFF tiff: Data) -> Int {
+        guard let bitmap = NSBitmapImageRep(data: tiff), let samples = bitmap.bitmapData else { return contentHash(of: tiff) }
+        return withExtendedLifetime(bitmap) {
+            let pixels = Data(bytesNoCopy: samples, count: bitmap.bytesPerRow * bitmap.pixelsHigh, deallocator: .none)
+            return contentHash(of: pixels) ^ (bitmap.pixelsWide &* 31 &+ bitmap.pixelsHigh)
+        }
+    }
+
+    /// `.data` に含まれてよいクラス（`KeyedArchiveGuard` の許可リスト）。
+    /// CPYClipData 自身と、保持するデータ・画像（NSImage の表現）のクラスだけ
+    static var archiveClassNames: Set<String> {
+        return [NSStringFromClass(CPYClipData.self), "NSData", "NSMutableData", "NSImage", "NSImageRep",
+                "NSBitmapImageRep", "NSPDFImageRep", "NSCGImageSnapshotRep", "NSColor", "NSColorSpace", "NSValue", "NSNull"]
+    }
+
     /// .data ファイルの中身（復号済みのアーカイブ）から読み戻す。
     /// requiresSecureCoding=false は、CPYClipData が旧式 NSCoding（NSImage 等を含む）で、
     /// SecureCoding 化すると既存の全履歴が読めなくなるため据え置き。
-    /// 改竄検知は ClipDataStore の GCM 認証タグが担う
+    /// **認証タグの無いデータをここへ直接渡さないこと**（`ClipDataStore.readClip` を通す）
     static func unarchived(from fileData: Data) -> CPYClipData? {
         guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
         unarchiver.requiresSecureCoding = false
@@ -90,16 +117,26 @@ final class CPYClipData: NSObject {
         if let image = image, fileNames.isEmpty {
             // Image only data
             return image.resizeImage(CGFloat(width), CGFloat(height))
-        } else if let fileName = fileNames.first, let path = fileName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed), let url = URL(string: path) {
+        } else if let fileName = fileNames.first {
              // In the case of the local file correct data is not included in the image variable
              // Judge the image from the path and create a thumbnail
-            switch url.pathExtension.lowercased() {
+            switch (fileName as NSString).pathExtension.lowercased() {
             case "jpg", "jpeg", "png", "bmp", "tiff":
                 return NSImage(contentsOfFile: fileName)?.resizeImage(CGFloat(width), CGFloat(height))
             default: break
             }
         }
         return nil
+    }
+    /// RTF の型へ書き込むデータ。
+    ///
+    /// `RTFData` はコピー時に RTFD があれば RTFD のバイト列を持つ。それをそのまま RTF の型へ書くと、
+    /// RTF しか読めないアプリには壊れたデータが渡るので、RTF に変換してから渡す
+    var rtfDataForPasteboard: Data? {
+        guard let data = RTFData else { return nil }
+        if data.starts(with: Data("{\\rtf".utf8)) { return data }
+        guard let attributed = NSAttributedString(rtfd: data, documentAttributes: nil) else { return nil }
+        return attributed.rtf(from: NSRange(location: 0, length: attributed.length), documentAttributes: [:])
     }
     var colorCodeImage: NSImage? {
         guard let color = NSColor(hexString: stringValue) else { return nil }

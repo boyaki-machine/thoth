@@ -262,24 +262,10 @@ final class CodeSignService {
 
     @discardableResult
     private func runCommand(_ executablePath: String, _ arguments: [String]) -> Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = outputPipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            NSLog("[CodeSignService] failed to run \(executablePath): \(error)")
-            return false
-        }
-        guard process.terminationStatus == 0 else {
-            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: outputData, encoding: .utf8) ?? ""
+        let result = CPYUtilities.runCommand(executablePath, arguments)
+        guard result.status == 0 else {
             // 引数にはパスフレーズが含まれることがあるので、ログには出さない
-            NSLog("[CodeSignService] \(executablePath) failed (status \(process.terminationStatus)): \(output)")
+            NSLog("[CodeSignService] \(executablePath) failed (status \(result.status)): \(result.output)")
             return false
         }
         return true

@@ -132,6 +132,10 @@ internal enum L10n {
   internal static let editSnippets = L10n.tr("Localizable", "Edit Snippets", fallback: "Edit Snippets...")
   /// Encrypt / Decrypt File
   internal static let encryptDecrypt = L10n.tr("Localizable", "Encrypt Decrypt", fallback: "Encrypt / Decrypt File")
+  /// Copy history cannot be recorded because there is no encryption key. Thoth will restart to generate the encryption key.
+  internal static let encryptionKeyMissingMessage = L10n.tr("Localizable", "Encryption Key Missing Message", fallback: "Copy history cannot be recorded because there is no encryption key. Thoth will restart to generate the encryption key.")
+  /// Restart
+  internal static let encryptionKeyMissingRestart = L10n.tr("Localizable", "Encryption Key Missing Restart", fallback: "Restart")
   /// Export...
   internal static let exportSecureItems = L10n.tr("Localizable", "Export Secure Items", fallback: "Export...")
   /// Generate New Password

@@ -21,20 +21,8 @@ enum QRDecodeService {
     /// CGImage から最初に見つかった QR コードのペイロード文字列を返す。
     /// `otpauth://` を優先し、無ければ最初の QR の内容を返す。
     static func decodeQRPayload(from cgImage: CGImage) -> String? {
-        let request = VNDetectBarcodesRequest()
-        request.symbologies = [.qr]
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            return nil
-        }
-        let observations = (request.results as [VNBarcodeObservation]?) ?? []
-        let payloads = observations.compactMap { $0.payloadStringValue }
-        if let otpauth = payloads.first(where: { $0.lowercased().hasPrefix("otpauth://") }) {
-            return otpauth
-        }
-        return payloads.first
+        let payloads = detectPayloads(with: VNImageRequestHandler(cgImage: cgImage, options: [:]))
+        return payloads.first { $0.lowercased().hasPrefix("otpauth://") } ?? payloads.first
     }
 
     /// NSImage から QR ペイロードを取り出す。
@@ -46,16 +34,15 @@ enum QRDecodeService {
     /// CVPixelBuffer（カメラフレーム）から QR ペイロードを取り出す。
     /// CGImage への変換コストを避けるため、フレームバッファを Vision に直接渡す
     static func decodeQRPayload(from pixelBuffer: CVPixelBuffer) -> String? {
+        return detectPayloads(with: VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])).first
+    }
+
+    /// 画像の中の QR コードのペイロードをすべて返す
+    private static func detectPayloads(with handler: VNImageRequestHandler) -> [String] {
         let request = VNDetectBarcodesRequest()
         request.symbologies = [.qr]
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-        do {
-            try handler.perform([request])
-        } catch {
-            return nil
-        }
-        let observations = (request.results as [VNBarcodeObservation]?) ?? []
-        return observations.compactMap { $0.payloadStringValue }.first
+        guard (try? handler.perform([request])) != nil else { return [] }
+        return (request.results ?? []).compactMap { $0.payloadStringValue }
     }
 
     // MARK: - Clipboard

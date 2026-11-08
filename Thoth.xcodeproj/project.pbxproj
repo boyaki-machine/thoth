@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA00090500000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */; };
+		AA00090100000000ABCDEF01 /* PickerPanelSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */; };
+		AA00090300000000ABCDEF01 /* ReliabilityFixesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */; };
 		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		6F92D636300240E900478ACF /* CPYTOTPImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */; };
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
@@ -233,6 +236,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ReliabilityFixesSpec+Panels.swift"; sourceTree = "<group>"; };
+		AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PickerPanelSupport.swift; sourceTree = "<group>"; };
+		AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReliabilityFixesSpec.swift; sourceTree = "<group>"; };
 		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
 		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
 		314B299D1EC49AD5004DD070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYSnippetsEditorWindowController.xib; sourceTree = "<group>"; };
@@ -714,6 +720,7 @@
 				AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */,
 				AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */,
 				AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */,
+				AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */,
 				AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */,
 				026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */,
 				AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */,
@@ -894,6 +901,8 @@
 				AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */,
 				AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */,
 				AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */,
+				AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */,
+				AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */,
 				AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */,
 				AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */,
 				AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */,
@@ -1202,6 +1211,7 @@
 				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
+				AA00090100000000ABCDEF01 /* PickerPanelSupport.swift in Sources */,
 				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
 				AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */,
 				AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */,
@@ -1283,6 +1293,8 @@
 				AA00059200000000ABCDEF01 /* AcknowledgementsSpec.swift in Sources */,
 				AA0005A200000000ABCDEF01 /* LetsMoveBundleSpec.swift in Sources */,
 				AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */,
+				AA00090300000000ABCDEF01 /* ReliabilityFixesSpec.swift in Sources */,
+				AA00090500000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift in Sources */,
 				AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */,
 				AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */,
 				AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */,
