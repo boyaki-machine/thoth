@@ -42,6 +42,37 @@ enum SecureItemsTransfer {
         return try encode(items: items, cryptoPassword: service.loadCryptoPassword())
     }
 
+    /// 書き出したファイルを本人だけが読み書きできる権限（0600）で保存する。
+    ///
+    /// 中身は平文のパスワード・TOTP secret なので、既定の 0644 で作ると共有フォルダや
+    /// 外部ディスクに置いたときに他のユーザーから読める。権限を付けた空のファイルに書いてから
+    /// 差し替えるので、内容が 0644 のまま見える瞬間も作らない。既にあるファイルを上書きする
+    /// ときも、元のファイルの権限は引き継がない
+    static func writeOwnerOnly(_ data: Data, to url: URL) throws {
+        let fileManager = FileManager.default
+        let temporary = url.deletingLastPathComponent()
+            .appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
+        guard fileManager.createFile(atPath: temporary.path, contents: nil,
+                                     attributes: [.posixPermissions: 0o600]) else {
+            throw CocoaError(.fileWriteUnknown, userInfo: [NSURLErrorKey: url])
+        }
+        do {
+            let handle = try FileHandle(forWritingTo: temporary)
+            defer { try? handle.close() }
+            try handle.write(contentsOf: data)
+            try handle.synchronize()
+            if fileManager.fileExists(atPath: url.path) {
+                _ = try fileManager.replaceItemAt(url, withItemAt: temporary, options: .usingNewMetadataOnly)
+            } else {
+                try fileManager.moveItem(at: temporary, to: url)
+            }
+            try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+        } catch {
+            try? fileManager.removeItem(at: temporary)
+            throw error
+        }
+    }
+
     /// 書き出す JSON を作る。
     /// 差分を見やすくするため整形して並びも固定する（バックアップの比較に使える）
     static func encode(items: [SecureMenuItem], cryptoPassword: String?) throws -> Data {
