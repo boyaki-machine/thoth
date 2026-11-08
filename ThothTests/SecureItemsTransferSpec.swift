@@ -241,7 +241,40 @@ class SecureItemsTransferSpec: QuickSpec {
             it("指紋パスワードが未登録でも書き出せる") {
                 expect(try? Transfer.encode(items: [], cryptoPassword: nil)) != nil
             }
+
+            // 平文の secret が入るので、他のユーザーから読めない権限で保存する
+            it("本人だけが読み書きできる権限（0600）で保存する") {
+                let directory = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("thoth-transfer-\(UUID().uuidString)", isDirectory: true)
+                try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: directory) }
+                let url = directory.appendingPathComponent(Transfer.defaultFileName)
+
+                expect { try Transfer.writeOwnerOnly(Data("first".utf8), to: url) }.notTo(throwError())
+                expect(try? Data(contentsOf: url)) == Data("first".utf8)
+                expect(permissions(of: url)) == 0o600
+            }
+
+            it("0644 の既存ファイルを上書きしても 0600 になり、作業用のファイルを残さない") {
+                let directory = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("thoth-transfer-\(UUID().uuidString)", isDirectory: true)
+                try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+                defer { try? FileManager.default.removeItem(at: directory) }
+                let url = directory.appendingPathComponent(Transfer.defaultFileName)
+                FileManager.default.createFile(atPath: url.path, contents: Data("old".utf8),
+                                               attributes: [.posixPermissions: 0o644])
+
+                expect { try Transfer.writeOwnerOnly(Data("second".utf8), to: url) }.notTo(throwError())
+                expect(try? Data(contentsOf: url)) == Data("second".utf8)
+                expect(permissions(of: url)) == 0o600
+                expect(try? FileManager.default.contentsOfDirectory(atPath: directory.path)) == [Transfer.defaultFileName]
+            }
         }
+    }
+
+    private static func permissions(of url: URL) -> Int? {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        return (attributes?[.posixPermissions] as? NSNumber)?.intValue
     }
 
     // MARK: - Round trip

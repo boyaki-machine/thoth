@@ -31,6 +31,7 @@ import RxCocoa
 /// - 秘匿マーカー（org.nspasteboard.ConcealedType 等）付きのコピー
 /// - 除外アプリが最前面のときのコピー
 /// - 保存対象外の型のみのコピー・空文字列
+/// - 暗号鍵が無い起動中のコピー（`blockRecording`。平文で残さない）
 final class ClipService {
 
     // MARK: - Properties
@@ -44,6 +45,27 @@ final class ClipService {
     // アーカイブ・サムネイル生成・ファイル書き込みをメインスレッドから逃すための直列キュー
     fileprivate let saveQueue = DispatchQueue(label: "io.github.boyaki-machine.Thoth.ClipSave", qos: .userInitiated)
 
+    /// 暗号鍵が無く、コピー履歴を記録できない起動か（`lock` の中で触る）
+    private var isRecordingBlocked = false
+    /// 記録できないコピーがあったときに、メインスレッドで呼ばれる
+    private var onRecordingBlocked: (() -> Void)?
+
+    /// この起動ではコピー履歴を記録しない。記録するはずだったコピーのたびに `handler` を呼ぶ
+    func blockRecording(notifying handler: @escaping () -> Void) {
+        lock.lock(); defer { lock.unlock() }
+        isRecordingBlocked = true
+        onRecordingBlocked = handler
+    }
+
+    /// 保存対象の型を設定する（テスト用。本番は startMonitoring が設定を監視する）
+    func setStoreTypesForTesting(_ types: [String: NSNumber]) {
+        lock.lock(); defer { lock.unlock() }
+        storeTypes = types
+    }
+
+    /// 監視が把握している changeCount（テスト用）
+    var cachedChangeCountForTesting: Int { cachedChangeCount.value }
+
     // MARK: - Clips
     /// クリップボードのポーリング監視と保存対象型の設定監視を開始する
     func startMonitoring() {
@@ -55,7 +77,7 @@ final class ClipService {
             .filter { $0 != $1 }
             .subscribe(onNext: { [weak self] changeCount, _ in
                 self?.cachedChangeCount.accept(changeCount)
-                self?.create()
+                self?.create(from: .general)
             })
             .disposed(by: disposeBag)
         // Store types
@@ -63,17 +85,28 @@ final class ClipService {
             .observe([String: NSNumber].self, Constants.UserDefaults.storeTypes)
             .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
-            .drive(onNext: { [weak self] in
-                self?.storeTypes = $0
+            .drive(onNext: { [weak self] types in
+                // create() はポーリングのスレッドで読むので、同じロックの中で書き換える
+                guard let self = self else { return }
+                self.lock.lock(); defer { self.lock.unlock() }
+                self.storeTypes = types
             })
             .disposed(by: disposeBag)
     }
 
     /// 全履歴を削除する（サムネイルは履歴と一緒に消える。.data ファイルも消す）
     func clearAll() {
-        AppEnvironment.current.historyStore.deleteAllClips()
-        // Delete writed datas
-        AppEnvironment.current.dataCleanService.cleanDatas()
+        // 保存待ちのクリップが消去の後に残らないよう、保存と同じキューで消す
+        performAfterPendingSaves {
+            AppEnvironment.current.historyStore.deleteAllClips()
+            // Delete writed datas
+            AppEnvironment.current.dataCleanService.cleanDatasNow()
+        }
+    }
+
+    /// 保存待ちをすべて終えてから、保存と同じ直列キューで `work` を実行する
+    func performAfterPendingSaves(_ work: @escaping () -> Void) {
+        saveQueue.async(execute: work)
     }
 
     /// 指定クリップを履歴から削除する（サムネイルも一緒に消える）
@@ -101,13 +134,13 @@ extension ClipService {
         return types.contains { excludedTypes.contains($0) }
     }
 
-    fileprivate func create() {
+    /// クリップボードの変化を履歴に取り込む（監視スレッドから呼ばれる）
+    func create(from pasteboard: NSPasteboard) {
         lock.lock(); defer { lock.unlock() }
 
         // Store types
         if !storeTypes.values.contains(NSNumber(value: true)) { return }
         // Pasteboard types
-        let pasteboard = NSPasteboard.general
         // 秘匿マーカー付きのコピーは履歴に残さない
         if Self.shouldExcludeFromHistory(types: pasteboard.types ?? []) { return }
         let types = self.types(with: pasteboard)
@@ -118,6 +151,12 @@ extension ClipService {
         // Special applications
         guard !AppEnvironment.current.excludeAppService.copiedProcessIsExcludedApplications(pasteboard: pasteboard) else { return }
 
+        // 本来なら記録するコピーだけを知らせる（秘匿値や除外アプリのコピーは、鍵があっても記録しない）
+        if isRecordingBlocked {
+            if let handler = onRecordingBlocked { DispatchQueue.main.async(execute: handler) }
+            return
+        }
+
         // Create data
         let data = CPYClipData(pasteboard: pasteboard, types: types)
         save(with: data)
@@ -126,6 +165,7 @@ extension ClipService {
     func create(with image: NSImage) {
         lock.lock(); defer { lock.unlock() }
 
+        if isRecordingBlocked { return }
         // Create only image data
         let data = CPYClipData(image: image)
         save(with: data)

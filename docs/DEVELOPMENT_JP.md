@@ -52,6 +52,21 @@ v1.5.1 で CocoaPods から Swift Package Manager へ移しました（CocoaPods
 - **LetsMove は本家が SPM に対応していないため、1.25 を `Packages/LetsMove` に取り込んでいます。** 変更点（翻訳を読むバンドルなど）は `Packages/LetsMove/README.md` を参照。
 - CocoaPods のフレームワークは AppKit などを暗黙に取り込んでいたため、その頃のファイルには `import Cocoa` / `import Foundation` が抜けているものがありました。SPM では暗黙には入らないので、使うフレームワークは各ファイルで明示的に import します。
 
+### 依存の脆弱性の確認
+
+**Swift Package の既知の脆弱性は GitHub が自動では知らせてくれません。** 依存グラフ（Dependabot アラートの元）は Xcode プロジェクトの `Package.resolved` を読まず、Dependabot の版上げも `Package.swift` が前提のためです。リリース前などに手で確かめます。
+
+```sh
+# GitHub Advisory Database の Swift のアドバイザリ（パッケージ名と影響する版）
+gh api "/advisories?ecosystem=swift&per_page=100" \
+  --jq '.[] | .ghsa_id+" "+(.vulnerabilities|map(.package.name+" "+(.vulnerable_version_range//""))|join("; "))'
+# 各依存のリポジトリの公開アドバイザリと最新の版（Package.resolved の location を順に）
+gh api repos/<owner>/<repo>/security-advisories --jq 'length'
+gh api repos/<owner>/<repo>/tags --jq '.[0].name'
+```
+
+GitHub Actions のアクションは `.github/dependabot.yml` により Dependabot が版上げします（ワークフローではコミット SHA で固定しています）。
+
 ### アーキテクチャの前提
 
 - **依存性注入**: `AppEnvironment.current` を通じてサービス群（`Environment`）へアクセスします。テストでは `AppEnvironment.push/popLast` でモック環境に差し替えられます。
@@ -383,9 +398,9 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 
 これを避けるため、アプリは起動時に自身の署名を確認し、デバイス固有の証明書「**Thoth Local Signing**」で自動的に再署名します。
 
-1. 起動時、自身がこの証明書で署名済みかを確認（署名済みなら何もしない）
+1. 起動時、自身がこの証明書で、Hardened Runtime 付きで署名済みかを確認（署名済みなら何もしない）
 2. 未署名（ad-hoc）なら、ログインキーチェーンから証明書を探す（過去に生成済みなら再利用、なければ自己署名証明書を生成して保存。デバイスごとに一度だけ）
-3. 自身の `.app` バンドルを再署名し、アプリを自動で再起動
+3. 自身の `.app` バンドルを再署名し（`--options runtime` で Hardened Runtime を付け、`--preserve-metadata=entitlements` でビルド時のエンタイトルメントを引き継ぐ）、アプリを自動で再起動
 
 同一デバイスでは常に同じ証明書で署名されるため、バージョンが変わってもキーチェーン ACL が一致します。
 
@@ -394,6 +409,7 @@ Release ビルドと DMG 化を 1 コマンドで行うスクリプトを用意�
 - デバイスで**初回のみ** macOS の確認ダイアログ（証明書の信頼・署名鍵の使用許可）が出ることがあります。「常に許可」を選択してください。
 - 署名変更に伴い、初回の再署名後は**アクセシビリティ権限の再付与**が必要です（以後のバージョンアップでは不要）。
 - 再署名を無効化するには `--thoth-skip-resign` 引数を付けて起動します。
+- **Hardened Runtime（v1.6.6〜）。** Hardened Runtime が無いと、同じユーザーの他のプロセスが `DYLD_INSERT_LIBRARIES` などで Thoth にコードを注入でき、注入されたコードは Thoth としてキーチェーンのセキュア情報を確認なしで読めてしまいます。そのためアプリのターゲットは `ENABLE_HARDENED_RUNTIME = YES`、Release は `CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO`（デバッガ接続を許す `get-task-allow` を入れない）にしています。エンタイトルメントは `Thoth/Supporting Files/Thoth.entitlements`（カメラだけ）。Hardened Runtime の下で新たに使う機能（Apple Events・マイクなど）を足すときは、ここに宣言を足します。v1.6.5 以前に再署名したアプリも、次の起動で付け直します。指定要件（識別子 + 証明書）は変わらないため、キーチェーンとアクセシビリティの許可はそのまま引き継がれます。
 - いずれかの手順が失敗した場合は ad-hoc 署名のまま起動を続けます（ログは Console.app で `CodeSignService` を検索）。この場合、データベース・クリップの暗号化鍵の生成は次回の安定署名時まで保留されます（詳細は [DESIGN_JP.md](DESIGN_JP.md)）。
 
 ### アクセシビリティ権限のエントリ増殖について

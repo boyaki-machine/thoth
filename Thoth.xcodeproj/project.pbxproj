@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AA00090500000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */; };
+		AA00090100000000ABCDEF01 /* PickerPanelSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */; };
+		AA00090300000000ABCDEF01 /* ReliabilityFixesSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */; };
 		35D78C27C842051B3BDE3E38 /* Acknowledgements.md in Resources */ = {isa = PBXBuildFile; fileRef = 03308123532CF61D6AECF462 /* Acknowledgements.md */; };
 		6F92D636300240E900478ACF /* CPYTOTPImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D635300240E900478ACF /* CPYTOTPImportViewController.swift */; };
 		6F92D6393002411700478ACF /* TOTPService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F92D6373002411700478ACF /* TOTPService.swift */; };
@@ -180,6 +183,8 @@
 		FA431F021E6718CE00ACFF56 /* Collection+Safe.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */; };
 		FA6167921D3ABEB10049FA14 /* LibraryStoreContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */; };
 		FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */; };
+		2ACAD5AB85EB46C7A8A57CB2 /* CodeSignServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */; };
+		54B750E7BA0D4F1EA412A3C0 /* KeyedArchiveGuardSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */; };
 		FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */; };
@@ -231,6 +236,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "ReliabilityFixesSpec+Panels.swift"; sourceTree = "<group>"; };
+		AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PickerPanelSupport.swift; sourceTree = "<group>"; };
+		AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReliabilityFixesSpec.swift; sourceTree = "<group>"; };
 		026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPYThirdPartyLicensesWindowController.swift; sourceTree = "<group>"; };
 		03308123532CF61D6AECF462 /* Acknowledgements.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Acknowledgements.md; sourceTree = "<group>"; };
 		314B299D1EC49AD5004DD070 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYSnippetsEditorWindowController.xib; sourceTree = "<group>"; };
@@ -406,6 +414,7 @@
 		FA1189321E4CD58C00244F12 /* ExcludeAppService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExcludeAppService.swift; sourceTree = "<group>"; };
 		FA1DB48F1DDCA5D9007F95C8 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		FA1DB4931DDCB22C007F95C8 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D7546F27D5974C648DA29585 /* Thoth.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Thoth.entitlements; sourceTree = "<group>"; };
 		FA1DB4971DDCB2CB007F95C8 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA1DB4991DDCB2D0007F95C8 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA1DB49E1DDCB417007F95C8 /* MainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
@@ -441,6 +450,8 @@
 		FA431F011E6718CE00ACFF56 /* Collection+Safe.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Collection+Safe.swift"; sourceTree = "<group>"; };
 		FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryStoreContract.swift; sourceTree = "<group>"; };
 		FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggedDataSpec.swift; sourceTree = "<group>"; };
+		F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeSignServiceSpec.swift; sourceTree = "<group>"; };
+		13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedArchiveGuardSpec.swift; sourceTree = "<group>"; };
 		FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		FAAA885C1E6853B80088FB34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYBetaPreferenceViewController.xib; sourceTree = "<group>"; };
 		FAAA88621E6858030088FB34 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -596,6 +607,7 @@
 			isa = PBXGroup;
 			children = (
 				FA1DB4931DDCB22C007F95C8 /* Info.plist */,
+				D7546F27D5974C648DA29585 /* Thoth.entitlements */,
 			);
 			path = "Supporting Files";
 			sourceTree = "<group>";
@@ -708,6 +720,7 @@
 				AA00003500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift */,
 				AA00003600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift */,
 				AA00003700000000ABCDEF01 /* CPYSecureSubPanel.swift */,
+				AA00090200000000ABCDEF01 /* PickerPanelSupport.swift */,
 				AA00003C00000000ABCDEF01 /* CPYPasswordGeneratorWindowController.swift */,
 				026AB29B431D59F603D1F87A /* CPYThirdPartyLicensesWindowController.swift */,
 				AA0000A200000000ABCDEF01 /* CPYCryptoWindowController.swift */,
@@ -857,6 +870,8 @@
 			children = (
 				FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */,
 				FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */,
+				F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */,
+				13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */,
 				FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */,
 				AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */,
 				AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */,
@@ -886,6 +901,8 @@
 				AA00059100000000ABCDEF01 /* AcknowledgementsSpec.swift */,
 				AA0005A100000000ABCDEF01 /* LetsMoveBundleSpec.swift */,
 				AA00056300000000ABCDEF01 /* ClipThumbnailSpec.swift */,
+				AA00090400000000ABCDEF01 /* ReliabilityFixesSpec.swift */,
+				AA00090600000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift */,
 				AA00054500000000ABCDEF01 /* LibraryMigrationSpec.swift */,
 				AA00053500000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift */,
 				AA00052300000000ABCDEF01 /* FieldCipherSpec.swift */,
@@ -1194,6 +1211,7 @@
 				AA00004500000000ABCDEF01 /* CPYSecurePickerPanel+Keyboard.swift in Sources */,
 				AA00004600000000ABCDEF01 /* CPYSecurePickerPanel+TableView.swift in Sources */,
 				AA00004700000000ABCDEF01 /* CPYSecureSubPanel.swift in Sources */,
+				AA00090100000000ABCDEF01 /* PickerPanelSupport.swift in Sources */,
 				AA0000D200000000ABCDEF01 /* SecureInfoEditor.swift in Sources */,
 				AA0000EE00000000ABCDEF01 /* SecureInfoUndoStack.swift in Sources */,
 				AA0000EE40000000ABCDEF01 /* SecureFieldDropView.swift in Sources */,
@@ -1275,6 +1293,8 @@
 				AA00059200000000ABCDEF01 /* AcknowledgementsSpec.swift in Sources */,
 				AA0005A200000000ABCDEF01 /* LetsMoveBundleSpec.swift in Sources */,
 				AA00056400000000ABCDEF01 /* ClipThumbnailSpec.swift in Sources */,
+				AA00090300000000ABCDEF01 /* ReliabilityFixesSpec.swift in Sources */,
+				AA00090500000000ABCDEF01 /* ReliabilityFixesSpec+Panels.swift in Sources */,
 				AA00054600000000ABCDEF01 /* LibraryMigrationSpec.swift in Sources */,
 				AA00053600000000ABCDEF01 /* SwiftDataLibraryStoreSpec.swift in Sources */,
 				AA00052400000000ABCDEF01 /* FieldCipherSpec.swift in Sources */,
@@ -1289,6 +1309,8 @@
 				AA0000C800000000ABCDEF01 /* TOTPRegistrationFlowSpec.swift in Sources */,
 				AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */,
 				FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */,
+				2ACAD5AB85EB46C7A8A57CB2 /* CodeSignServiceSpec.swift in Sources */,
+				54B750E7BA0D4F1EA412A3C0 /* KeyedArchiveGuardSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1555,9 +1577,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Thoth/Supporting Files/Thoth.entitlements";
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
@@ -1579,9 +1603,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Thoth/Supporting Files/Thoth.entitlements";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1686,7 +1713,7 @@
 			repositoryURL = "https://github.com/tadija/AEXML.git";
 			requirement = {
 				kind = exactVersion;
-				version = 4.7.0;
+				version = 4.7.3;
 			};
 		};
 		F5EE7925F52A3DA5F8FCEDE8 /* XCRemoteSwiftPackageReference "KeyHolder" */ = {

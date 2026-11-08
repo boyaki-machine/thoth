@@ -344,5 +344,47 @@ class CryptoServiceSpec: QuickSpec {
                 if case .success = result { fail("existing output should fail") }
             }
         }
+
+        // MARK: - Recovery command
+
+        describe("Recovery command (openssl)") {
+
+            /// 表示されるコマンド例のパスワード部分を差し替えて、/bin/sh でそのまま実行する
+            func runRecoveryCommand(_ command: String, password: String) -> Int32 {
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: "/bin/sh")
+                process.arguments = ["-c", command.replacingOccurrences(of: "pass:PASSWORD", with: "pass:\(password)")]
+                process.currentDirectoryURL = workDirectory
+                process.standardOutput = FileHandle.nullDevice
+                process.standardError = FileHandle.nullDevice
+                try? process.run()
+                process.waitUntilExit()
+                return process.terminationStatus
+            }
+
+            it("Quotes single quotes so the shell sees each path as one word") {
+                expect(CryptoService.shellQuoted("plain")) == "'plain'"
+                expect(CryptoService.shellQuoted("it's")) == "'it'\\''s'"
+                expect(CryptoService.shellQuoted("")) == "''"
+            }
+
+            // ファイル名に ' や $( ) が入っていても、名前の一部がコマンドとして実行されないこと
+            it("Restores a file whose name contains shell metacharacters without running any of it") {
+                let name = "a'b $(touch pwned) `touch pwned2`; c.txt"
+                let original = makeFile(named: name, contents: "secret body")
+                let output = workDirectory.appendingPathComponent("x'y.enc")
+                guard case .success = encryptSync(original, to: output, password: "pw") else {
+                    fail("encryption failed"); return
+                }
+                try? FileManager.default.removeItem(at: original)
+
+                let command = CryptoService.opensslDecryptCommand(encryptedPath: output.path,
+                                                                  outputName: name, isFolder: false)
+                expect(runRecoveryCommand(command, password: "pw")) == 0
+                expect(try? String(contentsOf: original, encoding: .utf8)) == "secret body"
+                expect(FileManager.default.fileExists(atPath: workDirectory.appendingPathComponent("pwned").path)) == false
+                expect(FileManager.default.fileExists(atPath: workDirectory.appendingPathComponent("pwned2").path)) == false
+            }
+        }
     }
 }

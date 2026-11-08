@@ -93,6 +93,27 @@ final class CPYUtilities {
         return true
     }
 
+    /// 外部コマンドを実行し、終了コードと出力（標準出力 + 標準エラー）を返す。起動できなければ状態は -1。
+    ///
+    /// **終了を待つ前に出力を読み切る。** 先に待つと、出力がパイプのバッファ（64KB）を超えたときに
+    /// 子プロセスが書き込みで止まり、終了待ちと互いに待ち続けて固まる
+    static func runCommand(_ executablePath: String, _ arguments: [String]) -> (status: Int32, output: String) {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: executablePath)
+        process.arguments = arguments
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+        process.standardError = outputPipe
+        do {
+            try process.run()
+        } catch {
+            return (-1, error.localizedDescription)
+        }
+        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        return (process.terminationStatus, String(data: data, encoding: .utf8) ?? "")
+    }
+
     static func deleteData(at path: String) {
         autoreleasepool {
             let fileManager = FileManager.default

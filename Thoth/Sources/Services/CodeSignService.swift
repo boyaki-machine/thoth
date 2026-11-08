@@ -19,10 +19,11 @@ import Security
 /// 既存アイテムを読み出せなくなる。起動時に以下を行うことで、
 /// 同じデバイス上ではバージョンによらず同一の署名を維持する。
 ///
-/// 1. 既に本サービスの証明書で署名済みなら何もしない
+/// 1. 既に本サービスの証明書で、Hardened Runtime 付きで署名済みなら何もしない
 /// 2. ログインキーチェーンに証明書（"Thoth Local Signing"）があれば再利用し、
 ///    なければ生成してキーチェーンに保存する（デバイス上で一度だけ生成される）
-/// 3. 自身の .app バンドルを再署名し、アプリを再起動する
+/// 3. 自身の .app バンドルを再署名し（Hardened Runtime を付け、エンタイトルメントは引き継ぐ）、
+///    アプリを再起動する
 ///
 /// 初回のみ macOS の確認ダイアログ（証明書の信頼設定・署名鍵の使用許可）が
 /// 表示されることがある。いずれかの手順が失敗した場合は ad-hoc 署名のまま起動を続ける。
@@ -62,8 +63,11 @@ final class CodeSignService {
         let arguments = processInfo.arguments
         // 再起動後は成否に関わらず再試行しない（ループ防止）
         guard !arguments.contains(Self.resignedArgument), !arguments.contains(Self.skipResignArgument) else { return false }
-        // 既に安定署名済みなら何もしない（SecCode API によるインプロセス確認・軽量）
-        guard currentSigningCommonName() != Self.certificateCommonName else { return false }
+        // 既に安定署名済み（Hardened Runtime 付き）なら何もしない（SecCode API によるインプロセス確認・軽量）
+        let signing = currentSigningState()
+        guard Self.needsResign(commonName: signing.commonName, hasHardenedRuntime: signing.hasHardenedRuntime) else {
+            return false
+        }
 
         let bundlePath = Bundle.main.bundlePath
         guard bundlePath.hasSuffix(".app"), FileManager.default.isWritableFile(atPath: bundlePath) else {
@@ -101,19 +105,38 @@ final class CodeSignService {
         return currentSigningCommonName() == Self.certificateCommonName
     }
 
+    /// 再署名が要るか（純粋関数のためユニットテスト可能）。
+    ///
+    /// 安定署名でも Hardened Runtime が付いていなければ付け直す。Hardened Runtime が無いと、
+    /// 同じユーザーの他のプロセスが `DYLD_INSERT_LIBRARIES` などで Thoth にコードを注入でき、
+    /// 注入されたコードは Thoth としてキーチェーンのセキュア情報を確認なしで読めてしまう。
+    /// 付け直しても指定要件（識別子 + 証明書）は変わらないので、キーチェーンの ACL と
+    /// アクセシビリティの許可はそのまま引き継がれる
+    static func needsResign(commonName: String?, hasHardenedRuntime: Bool) -> Bool {
+        return commonName != certificateCommonName || !hasHardenedRuntime
+    }
+
     /// 現在実行中のバイナリの署名証明書（リーフ）の Common Name を返す。ad-hoc 署名の場合は nil。
     private func currentSigningCommonName() -> String? {
+        return currentSigningState().commonName
+    }
+
+    /// 現在実行中のバイナリの署名（リーフ証明書の Common Name と Hardened Runtime の有無）
+    private func currentSigningState() -> (commonName: String?, hasHardenedRuntime: Bool) {
         var codeRef: SecCode?
-        guard SecCodeCopySelf([], &codeRef) == errSecSuccess, let code = codeRef else { return nil }
+        guard SecCodeCopySelf([], &codeRef) == errSecSuccess, let code = codeRef else { return (nil, false) }
         var staticCodeRef: SecStaticCode?
-        guard SecCodeCopyStaticCode(code, [], &staticCodeRef) == errSecSuccess, let staticCode = staticCodeRef else { return nil }
+        guard SecCodeCopyStaticCode(code, [], &staticCodeRef) == errSecSuccess,
+              let staticCode = staticCodeRef else { return (nil, false) }
         var infoRef: CFDictionary?
         let flags = SecCSFlags(rawValue: kSecCSSigningInformation)
         guard SecCodeCopySigningInformation(staticCode, flags, &infoRef) == errSecSuccess,
-              let info = infoRef as? [String: Any],
-              let certificates = info[kSecCodeInfoCertificates as String] as? [SecCertificate],
-              let leafCertificate = certificates.first else { return nil }
-        return SecCertificateCopySubjectSummary(leafCertificate) as String?
+              let info = infoRef as? [String: Any] else { return (nil, false) }
+        let codeFlags = (info[kSecCodeInfoFlags as String] as? NSNumber)?.uint32Value ?? 0
+        let hasHardenedRuntime = (codeFlags & SecCodeSignatureFlags.runtime.rawValue) != 0
+        guard let certificates = info[kSecCodeInfoCertificates as String] as? [SecCertificate],
+              let leafCertificate = certificates.first else { return (nil, hasHardenedRuntime) }
+        return (SecCertificateCopySubjectSummary(leafCertificate) as String?, hasHardenedRuntime)
     }
 
     // MARK: - Signing Identity
@@ -205,8 +228,15 @@ final class CodeSignService {
     // MARK: - Re-sign & Relaunch
 
     private func resignBundle(at bundlePath: String) -> Bool {
-        return runCommand("/usr/bin/codesign",
-                          ["--force", "--deep", "--sign", Self.certificateCommonName, bundlePath])
+        return runCommand("/usr/bin/codesign", Self.resignArguments(bundlePath: bundlePath))
+    }
+
+    /// 再署名の codesign 引数。Hardened Runtime（`--options runtime`）を付け、
+    /// ビルド時のエンタイトルメント（カメラなど）を引き継ぐ。
+    /// 引き継がないと、Hardened Runtime の下ではカメラが使えなくなる
+    static func resignArguments(bundlePath: String) -> [String] {
+        return ["--force", "--deep", "--options", "runtime", "--preserve-metadata=entitlements",
+                "--sign", certificateCommonName, bundlePath]
     }
 
     /// 自身を終了してバンドルを起動し直す（再署名後の再起動や言語切替の反映に使用）。
@@ -232,24 +262,10 @@ final class CodeSignService {
 
     @discardableResult
     private func runCommand(_ executablePath: String, _ arguments: [String]) -> Bool {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = outputPipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-        } catch {
-            NSLog("[CodeSignService] failed to run \(executablePath): \(error)")
-            return false
-        }
-        guard process.terminationStatus == 0 else {
-            let outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: outputData, encoding: .utf8) ?? ""
+        let result = CPYUtilities.runCommand(executablePath, arguments)
+        guard result.status == 0 else {
             // 引数にはパスフレーズが含まれることがあるので、ログには出さない
-            NSLog("[CodeSignService] \(executablePath) failed (status \(process.terminationStatus)): \(output)")
+            NSLog("[CodeSignService] \(executablePath) failed (status \(result.status)): \(result.output)")
             return false
         }
         return true

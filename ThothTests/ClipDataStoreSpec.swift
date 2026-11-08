@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 import Quick
 import Nimble
 @testable import Thoth
@@ -72,14 +72,16 @@ class ClipDataStoreSpec: QuickSpec {
                 expect(store.read(fromPath: path("legacy.data"))) == legacy
             }
 
-            it("Falls back to plaintext write when no key is available") {
+            it("Does not write anything when no key is available (never leaves plaintext)") {
                 let store = ClipDataStore(key: nil)
-                let original = Data("no key data".utf8)
-                expect(store.write(original, toPath: path("plain.data"))) == true
+                expect(store.write(Data("no key data".utf8), toPath: path("plain.data"))) == false
+                expect(FileManager.default.fileExists(atPath: path("plain.data"))) == false
+            }
 
-                let raw = try! Data(contentsOf: URL(fileURLWithPath: path("plain.data")))
-                expect(raw) == original
-                expect(store.read(fromPath: path("plain.data"))) == original
+            it("Still reads legacy plaintext when no key is available") {
+                let legacy = Data("legacy plaintext archive".utf8)
+                try! legacy.write(to: URL(fileURLWithPath: path("legacy.data")))
+                expect(ClipDataStore(key: nil).read(fromPath: path("legacy.data"))) == legacy
             }
         }
 
@@ -87,19 +89,30 @@ class ClipDataStoreSpec: QuickSpec {
 
             it("Encrypts existing plaintext .data files and skips encrypted ones") {
                 let store = ClipDataStore(key: testKey)
-                // 平文2つ + 暗号化済み1つ + 対象外拡張子1つ
-                try! Data("plain-1".utf8).write(to: URL(fileURLWithPath: path("a.data")))
-                try! Data("plain-2".utf8).write(to: URL(fileURLWithPath: path("b.data")))
-                _ = store.write(Data("already".utf8), toPath: path("c.data"))
+                // 平文2つ + 暗号化済み1つ + 対象外拡張子1つ。
+                // 平文は実際のクリップのアーカイブにする（クリップとして読めないものは暗号化しない）
+                func plainClip(_ text: String) -> Data {
+                    let clip = CPYClipData(image: NSImage(size: NSSize(width: 1, height: 1)))
+                    clip.image = nil
+                    clip.types = [.deprecatedString]
+                    clip.stringValue = text
+                    return try! NSKeyedArchiver.archivedData(withRootObject: clip, requiringSecureCoding: false)
+                }
+                let plain1 = plainClip("plain-1")
+                let plain2 = plainClip("plain-2")
+                let already = Data("already".utf8)
+                try! plain1.write(to: URL(fileURLWithPath: path("a.data")))
+                try! plain2.write(to: URL(fileURLWithPath: path("b.data")))
+                _ = store.write(already, toPath: path("c.data"))
                 try! Data("not-a-clip".utf8).write(to: URL(fileURLWithPath: path("d.txt")))
 
                 store.encryptPlaintextFiles(inDirectory: workDirectory.path)
 
                 // すべての .data が暗号化形式になり、内容は保持される
-                for (file, content) in [("a.data", "plain-1"), ("b.data", "plain-2"), ("c.data", "already")] {
+                for (file, content) in [("a.data", plain1), ("b.data", plain2), ("c.data", already)] {
                     let raw = try! Data(contentsOf: URL(fileURLWithPath: path(file)))
                     expect(raw.prefix(7)) == Data("CLPYDAT".utf8)
-                    expect(store.read(fromPath: path(file))) == Data(content.utf8)
+                    expect(store.read(fromPath: path(file))) == content
                 }
                 // .data 以外は触らない
                 let untouched = try! Data(contentsOf: URL(fileURLWithPath: path("d.txt")))

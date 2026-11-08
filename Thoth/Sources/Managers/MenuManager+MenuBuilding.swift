@@ -12,138 +12,6 @@ import Cocoa
 import RxCocoa
 import RxSwift
 
-// MARK: - Clips
-extension MenuManager {
-    /// メニューアイテム描画に必要な設定値をまとめた構造体。
-    /// ループ外で一度だけ UserDefaults を読み込み、N アイテム分の繰り返しアクセスを排除する。
-    fileprivate struct ClipMenuItemSettings {
-        let isMarkWithNumber: Bool
-        let isShowToolTip: Bool
-        let isShowImage: Bool
-        let isShowColorCode: Bool
-        let addNumericKeyEquivalents: Bool
-        let isStartFromZero: Bool
-        let maxLengthOfToolTip: Int
-
-        init(_ defaults: UserDefaults) {
-            isMarkWithNumber       = defaults.bool(forKey: Constants.UserDefaults.menuItemsAreMarkedWithNumbers)
-            isShowToolTip          = defaults.bool(forKey: Constants.UserDefaults.showToolTipOnMenuItem)
-            isShowImage            = defaults.bool(forKey: Constants.UserDefaults.showImageInTheMenu)
-            isShowColorCode        = defaults.bool(forKey: Constants.UserDefaults.showColorPreviewInTheMenu)
-            addNumericKeyEquivalents = defaults.bool(forKey: Constants.UserDefaults.addNumericKeyEquivalents)
-            isStartFromZero        = defaults.bool(forKey: Constants.UserDefaults.menuItemsTitleStartWithZero)
-            maxLengthOfToolTip     = defaults.integer(forKey: Constants.UserDefaults.maxLengthOfToolTip)
-        }
-    }
-
-    func addHistoryItems(_ menu: NSMenu) {
-        let defaults = AppEnvironment.current.defaults
-        let placeInLine = defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInline)
-        let placeInsideFolder = defaults.integer(forKey: Constants.UserDefaults.numberOfItemsPlaceInsideFolder)
-        let maxHistory = defaults.integer(forKey: Constants.UserDefaults.maxHistorySize)
-
-        // History title
-        let labelItem = NSMenuItem(title: L10n.history, action: nil)
-        labelItem.isEnabled = false
-        menu.addItem(labelItem)
-
-        // 履歴検索パネルを開く項目。keyEquivalent "/" によりメニュー表示中の
-        // "/" キー押下でも起動する（ツール項目の p / e と同じネイティブ機構）
-        let searchItem = NSMenuItem(title: "🔍 \(L10n.historySearch)",
-                                    action: #selector(AppDelegate.showHistorySearchPanel),
-                                    keyEquivalent: "/")
-        searchItem.keyEquivalentModifierMask = []
-        menu.addItem(searchItem)
-
-        // History
-        let firstIndex = firstIndexOfMenuItems()
-        var listNumber = firstIndex
-        var subMenuCount = placeInLine
-        // ラベル + 検索項目の 2 つ分を先頭に置くため、フォルダ項目の開始位置は 2 + placeInLine
-        var subMenuIndex = 2 + placeInLine
-
-        let ascending = !defaults.bool(forKey: Constants.UserDefaults.reorderClipsAfterPasting)
-        let clipRecords = AppEnvironment.current.historyStore.clips(ascending: ascending)
-        let currentSize = clipRecords.count
-        // 表示設定をループ外で一括取得（N アイテム × 6 回の UserDefaults アクセスを 6 回に削減）
-        let settings = ClipMenuItemSettings(defaults)
-        var i = 0
-        for clip in clipRecords {
-            if placeInLine < 1 || placeInLine - 1 < i {
-                // Folder
-                if i == subMenuCount {
-                    let subMenuItem = makeSubmenuItem(subMenuCount, start: firstIndex, end: currentSize, numberOfItems: placeInsideFolder)
-                    menu.addItem(subMenuItem)
-                    listNumber = firstIndex
-                }
-
-                // Clip
-                if let subMenu = menu.item(at: subMenuIndex)?.submenu {
-                    let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber, settings: settings)
-                    subMenu.addItem(menuItem)
-                    listNumber = incrementListNumber(listNumber, max: placeInsideFolder, start: firstIndex)
-                }
-            } else {
-                // Clip
-                let menuItem = makeClipMenuItem(clip, index: i, listNumber: listNumber, settings: settings)
-                menu.addItem(menuItem)
-                listNumber = incrementListNumber(listNumber, max: placeInLine, start: firstIndex)
-            }
-
-            i += 1
-            if i == subMenuCount + placeInsideFolder {
-                subMenuCount += placeInsideFolder
-                subMenuIndex += 1
-            }
-
-            if maxHistory <= i { break }
-        }
-    }
-
-    fileprivate func makeClipMenuItem(_ clip: ClipRecord, index: Int, listNumber: Int, settings: ClipMenuItemSettings) -> NSMenuItem {
-        var keyEquivalent = ""
-
-        if settings.addNumericKeyEquivalents && (index <= kMaxKeyEquivalents) {
-            var shortCutNumber = settings.isStartFromZero ? index : index + 1
-            if shortCutNumber == kMaxKeyEquivalents {
-                shortCutNumber = 0
-            }
-            keyEquivalent = "\(shortCutNumber)"
-        }
-
-        let primaryPboardType = NSPasteboard.PasteboardType(rawValue: clip.primaryType)
-        let clipString = clip.title
-        let title = trimTitle(clipString)
-        let titleWithMark = menuItemTitle(title, listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
-
-        let menuItem = NSMenuItem(title: titleWithMark, action: #selector(AppDelegate.selectClipMenuItem(_:)), keyEquivalent: keyEquivalent)
-        menuItem.representedObject = clip.id
-
-        if settings.isShowToolTip {
-            // NSString の位置で切るので、長さは UTF-16 単位で数える
-            let toIndex = min(clipString.utf16.count, settings.maxLengthOfToolTip)
-            menuItem.toolTip = (clipString as NSString).substring(to: toIndex)
-        }
-
-        if primaryPboardType == .deprecatedTIFF {
-            menuItem.title = menuItemTitle("(Image)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
-        } else if primaryPboardType == .deprecatedPDF {
-            menuItem.title = menuItemTitle("(PDF)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
-        } else if primaryPboardType == .deprecatedFilenames && title.isEmpty {
-            menuItem.title = menuItemTitle("(Filenames)", listNumber: listNumber, isMarkWithNumber: settings.isMarkWithNumber)
-        }
-
-        // 画像はサムネイル表示、カラーコードはカラープレビュー表示の設定に従う
-        if clip.hasThumbnail && (clip.isColorCode ? settings.isShowColorCode : settings.isShowImage) {
-            ClipThumbnail.load(clipID: clip.id) { [weak menuItem] image in
-                menuItem?.image = image
-            }
-        }
-
-        return menuItem
-    }
-}
-
 // MARK: - Snippets
 extension MenuManager {
     func addSnippetItems(_ menu: NSMenu, separateMenu: Bool) {
@@ -261,17 +129,9 @@ extension MenuManager {
 // MARK: - NSMenuDelegate (StatusBar クリックからのメニュー表示用)
 extension MenuManager: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
-        // ステータスバークリックなど popUpMenu() を経由しない表示経路でも
-        // 表示直前に最新の内容へ再構築する
-        switch menu {
-        case clipMenu:
-            rebuildMenuIfNeeded(.main)
-        case historyMenu:
-            rebuildMenuIfNeeded(.history)
-        case snippetMenu:
+        // popUpMenu() を経由しない表示経路でも、表示直前に最新の内容へ再構築する
+        if menu === snippetMenu {
             rebuildMenuIfNeeded(.snippet)
-        default:
-            break
         }
     }
 
@@ -312,14 +172,15 @@ extension MenuManager {
             options: .defaultTap,
             eventsOfInterest: eventMask,
             callback: { _, type, event, _ -> Unmanaged<CGEvent>? in
-                guard type == .keyDown else { return Unmanaged.passRetained(event) }
-                guard MenuManager.menuIsOpen else { return Unmanaged.passRetained(event) }
+                // 受け取ったイベントをそのまま返すときは所有権を増やさない（passRetained だと毎回リークする）
+                guard type == .keyDown else { return Unmanaged.passUnretained(event) }
+                guard MenuManager.menuIsOpen else { return Unmanaged.passUnretained(event) }
                 let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
                 let flags = event.flags
                 // Cmd / Alt / Ctrl が押されている場合は hjkl リマッピング不要。
                 // Shift は HJKL をサポートするため修飾キーとして扱わない。
                 let hasModifiers = !flags.isDisjoint(with: [.maskCommand, .maskAlternate, .maskControl])
-                guard !hasModifiers else { return Unmanaged.passRetained(event) }
+                guard !hasModifiers else { return Unmanaged.passUnretained(event) }
                 // h=4, j=38, k=40, l=37 / H=4+Shift, J=38+Shift, K=40+Shift, L=37+Shift
                 // NSMenu は characters フィールドでナビゲーションを判断するため
                 // keyCode・unicode 文字列・フラグの 3 つを矢印キーに変換する必要がある
@@ -330,14 +191,14 @@ extension MenuManager {
                 case 38: arrowKeyCode = 125; arrowCharacter = 0xF701  // j/J → Down
                 case 40: arrowKeyCode = 126; arrowCharacter = 0xF700  // k/K → Up
                 case 37: arrowKeyCode = 124; arrowCharacter = 0xF703  // l/L → Right
-                default: return Unmanaged.passRetained(event)
+                default: return Unmanaged.passUnretained(event)
                 }
                 event.setIntegerValueField(.keyboardEventKeycode, value: arrowKeyCode)
                 // Shift フラグを除去して純粋な矢印キーとして送出する
                 event.flags = flags.subtracting(.maskShift)
                 var chars: [UniChar] = [arrowCharacter]
                 event.keyboardSetUnicodeString(stringLength: 1, unicodeString: &chars)
-                return Unmanaged.passRetained(event)
+                return Unmanaged.passUnretained(event)
             },
             userInfo: nil
         ) else {

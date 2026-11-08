@@ -250,10 +250,10 @@ final class CPYHistoryPickerPanel: NSPanel {
     /// サブパネルが左側に配置されているか（右側にスペースが無い場合のフォールバック）。
     /// ← → / h l の操作方向の入れ替えに使う
     var subPanelOnLeft = false
-    /// パネル外クリックで閉じるためのイベントモニタ（グローバル/ローカル）
-    private var dismissMonitors: [Any] = []
+    /// パネル外クリックで閉じるためのイベントモニタ
+    private let outsideClickMonitor = PanelOutsideClickMonitor()
     /// 登録中のモニタ数（テストでのライフサイクル検証用）
-    var dismissMonitorCount: Int { dismissMonitors.count }
+    var dismissMonitorCount: Int { outsideClickMonitor.count }
 
     // MARK: - Callbacks
 
@@ -321,7 +321,7 @@ final class CPYHistoryPickerPanel: NSPanel {
     // resignKey では何もしない。
 
     override func close() {
-        removeDismissMonitors()
+        outsideClickMonitor.remove()
         if let sub = subPanel {
             removeChildWindow(sub)
             sub.close()
@@ -341,21 +341,11 @@ final class CPYHistoryPickerPanel: NSPanel {
     /// 以外へのクリックで閉じる。パネル/サブパネルへのクリックでは閉じない。
     /// キー喪失では閉じないため、フォーカスを取れなくてもユーザー操作まで残る。
     func installDismissMonitors() {
-        removeDismissMonitors()
-        let global = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+        outsideClickMonitor.install(belongsToPanel: { [weak self] window in
+            self?.belongsToPanelGroup(window) ?? true
+        }, onOutsideClick: { [weak self] in
             self?.dismissByOutsideClick()
-        }
-        let local = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            guard let self = self else { return event }
-            if !self.belongsToPanelGroup(event.window) { self.dismissByOutsideClick() }
-            return event
-        }
-        dismissMonitors = [global, local].compactMap { $0 }
-    }
-
-    private func removeDismissMonitors() {
-        dismissMonitors.forEach { NSEvent.removeMonitor($0) }
-        dismissMonitors = []
+        })
     }
 
     func belongsToPanelGroup(_ window: NSWindow?) -> Bool {
@@ -397,12 +387,8 @@ extension CPYHistoryPickerPanel.DisplaySettings {
 extension CPYHistoryPickerPanel {
     func show(near point: NSPoint) {
         callerApp = NSWorkspace.shared.frontmostApplication
-        let screen  = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
-        let visible = screen?.visibleFrame ?? NSScreen.main!.visibleFrame
-        var origin = NSPoint(x: point.x + 15, y: point.y - frame.height + 15)
-        origin.x = max(visible.minX + 4, min(origin.x, visible.maxX - frame.width - 4))
-        origin.y = max(visible.minY + 4, min(origin.y, visible.maxY - frame.height - 4))
-        setFrameOrigin(origin)
+        setFrameOrigin(PickerPanelSupport.panelOrigin(near: point, panelSize: frame.size,
+                                                      visible: PickerPanelSupport.visibleFrame(containing: point)))
         isBeingShown = true
         // メニューが閉じた直後の空白を作らないよう、まず即座に表示だけ行う
         // （キーウィンドウ化はアクティベーションが落ち着いてから行う）

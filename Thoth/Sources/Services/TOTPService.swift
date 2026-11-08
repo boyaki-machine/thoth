@@ -57,7 +57,7 @@ struct TOTPParameters: Equatable {
 // MARK: - TOTPService
 
 /// TOTP（時間ベースのワンタイムパスワード）の生成と、`otpauth://` / Base32 secret のパースを行う。
-/// HMAC は CommonCrypto の `CCHmac` を用いる（CryptoKit は macOS 10.15+ で本アプリの 10.13 対応では使えないため）。
+/// HMAC は CommonCrypto の `CCHmac` を用いる。
 final class TOTPService {
 
     // MARK: - Parse
@@ -101,8 +101,8 @@ final class TOTPService {
         let algorithm = value("algorithm").flatMap { TOTPParameters.Algorithm(rawValue: $0.uppercased()) } ?? .sha1
 
         // ラベルは "Issuer:Account" 形式のことがある。issuer クエリを優先する
-        let label = components.path.hasPrefix("/") ? String(components.path.dropFirst()) : components.path
-        let decodedLabel = label.removingPercentEncoding ?? label
+        // URLComponents.path はパーセントデコード済み（もう一度デコードすると "%25" を含む名前が変わる）
+        let decodedLabel = components.path.hasPrefix("/") ? String(components.path.dropFirst()) : components.path
         var issuer = value("issuer")
         var account: String? = decodedLabel.isEmpty ? nil : decodedLabel
         if let colonIndex = decodedLabel.firstIndex(of: ":") {
@@ -168,9 +168,10 @@ final class TOTPService {
                    | (UInt32(hmac[offset + 2]) << 8)
                    | (UInt32(hmac[offset + 3]))
 
-        let modulo = UInt32(pow(10.0, Double(digits)))
-        let otp = binary % modulo
-        return String(format: "%0\(digits)u", otp)
+        // 10 桁の法（10^10）は UInt32 に入らない（変換でクラッシュする）ので UInt64 で計算する
+        let modulo = (0..<digits).reduce(UInt64(1)) { result, _ in result * 10 }
+        let otp = UInt64(binary) % modulo
+        return String(format: "%0\(digits)llu", otp)
     }
 
     // MARK: - Base32 (RFC 4648)

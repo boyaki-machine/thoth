@@ -53,7 +53,7 @@ extension CPYSecureInfoSplitViewController {
         // パネルを開いている間に読めなくなった場合に備え、exportData 側で確かめ直す
         do {
             let data = try SecureItemsTransfer.exportData(using: AppEnvironment.current.secureMenuService)
-            try data.write(to: url, options: .atomic)
+            try SecureItemsTransfer.writeOwnerOnly(data, to: url)
         } catch {
             showTransferError(error)
         }

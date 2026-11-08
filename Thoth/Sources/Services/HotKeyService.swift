@@ -83,16 +83,8 @@ extension HotKeyService {
         change(with: .history, keyCombo: savedKeyCombo(forKey: Constants.HotKey.historyKeyCombo))
         // Snippet menu
         change(with: .snippet, keyCombo: savedKeyCombo(forKey: Constants.HotKey.snippetKeyCombo))
-        // Secure menu:
-        // 旧デフォルト (keyCode 27 / Minus) は JIS キーボードで動作しないため一度だけリセット
-        let secureKeyResetDone = "kCPYHotKeySecureKeyCodeV47Migrated"
-        if !AppEnvironment.current.defaults.bool(forKey: secureKeyResetDone) {
-            AppEnvironment.current.defaults.removeObject(forKey: Constants.HotKey.secureKeyCombo)
-            AppEnvironment.current.defaults.set(true, forKey: secureKeyResetDone)
-        }
-        let savedSecure = savedKeyCombo(forKey: Constants.HotKey.secureKeyCombo)
-        let secureCombo = savedSecure ?? KeyCombo(QWERTYKeyCode: 47, carbonModifiers: 768)
-        change(with: .secure, keyCombo: secureCombo)
+        // Secure menu
+        setupSecureHotKey()
         // Clear History
         changeClearHistoryKeyCombo(savedKeyCombo(forKey: Constants.HotKey.clearHistoryKeyCombo))
     }
@@ -122,11 +114,27 @@ extension HotKeyService {
         hotkey.register()
     }
 
+    /// セキュアメニューのホットキーを起動時の状態に戻す。
+    /// 既定値を入れるのは初回だけで、以後は保存が無ければ本人が解除したものとして扱う
+    private func setupSecureHotKey() {
+        let defaults = AppEnvironment.current.defaults
+        let defaultCombo = KeyCombo(QWERTYKeyCode: 47, carbonModifiers: 768)
+        // 旧デフォルト (keyCode 27 / Minus) は JIS キーボードで動作しないため一度だけリセットする
+        if !defaults.bool(forKey: Constants.HotKey.secureKeyCodeMigrated) {
+            defaults.set(true, forKey: Constants.HotKey.secureKeyCodeMigrated)
+            change(with: .secure, keyCombo: defaultCombo)
+            return
+        }
+        guard defaults.object(forKey: Constants.HotKey.secureKeyCombo) != nil else {
+            change(with: .secure, keyCombo: nil)
+            return
+        }
+        // 保存値が壊れていて読めないときは、解除とは違うので既定に戻す
+        change(with: .secure, keyCombo: savedKeyCombo(forKey: Constants.HotKey.secureKeyCombo) ?? defaultCombo)
+    }
+
     private func savedKeyCombo(forKey key: String) -> KeyCombo? {
-        guard let data = AppEnvironment.current.defaults.object(forKey: key) as? Data else { return nil }
-        guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
-        unarchiver.requiresSecureCoding = false
-        return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? KeyCombo
+        return AppEnvironment.current.defaults.unarchivedObject(forKey: key, allowedClasses: [KeyCombo.self]) as? KeyCombo
     }
 }
 
@@ -187,10 +195,8 @@ private extension HotKeyService {
 extension HotKeyService {
     private var folderKeyCombos: [String: KeyCombo]? {
         get {
-            guard let data = AppEnvironment.current.defaults.object(forKey: Constants.HotKey.folderKeyCombos) as? Data else { return nil }
-            guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else { return nil }
-            unarchiver.requiresSecureCoding = false
-            return unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? [String: KeyCombo]
+            return AppEnvironment.current.defaults.unarchivedObject(forKey: Constants.HotKey.folderKeyCombos,
+                                                                    allowedClasses: [KeyCombo.self]) as? [String: KeyCombo]
         }
         set {
             if let value = newValue,
