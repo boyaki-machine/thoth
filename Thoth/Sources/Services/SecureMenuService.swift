@@ -435,11 +435,15 @@ final class SecureMenuService {
     /// フィールドの対応付けは fieldID（安定 ID）で行うため、Label を変更しても履歴は追従する。
     /// fieldID を持たない旧形式データから移行する場合のみ label で対応付ける。
     /// 履歴は渡されたフィールドのものを正とする（ポップアップからの削除を反映するため）。
+    ///
+    /// label で対応付けるのは、新しいフィールドのどれとも fieldID が一致しない旧フィールドだけにする。
+    /// そうしないと、既存と同じ Label のフィールドを追加したときに、別のフィールドの旧値が履歴に入る
     private func mergeFieldHistories(oldItem: SecureMenuItem, newItem: SecureMenuItem) -> SecureMenuItem {
         var merged = newItem
+        let newFieldIDs = Set(newItem.fields.map(\.fieldID))
         merged.fields = newItem.fields.map { field in
             let oldField = oldItem.fields.first { $0.fieldID == field.fieldID }
-                ?? oldItem.fields.first { $0.label == field.label }
+                ?? oldItem.fields.first { !newFieldIDs.contains($0.fieldID) && $0.label == field.label }
             guard let old = oldField else { return field }
             var history = field.history
             // 履歴を残す種別（plain / url）のみ旧値を追記する。

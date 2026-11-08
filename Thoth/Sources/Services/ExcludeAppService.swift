@@ -22,13 +22,19 @@ import RxCocoa
 final class ExcludeAppService {
 
     // MARK: - Properties
-    fileprivate(set) var applications = [CPYAppInfo]()
+    private let applicationsLock = NSLock()
+    private var storedApplications = [CPYAppInfo]()
+    /// 環境設定（メインスレッド）で書き換え、クリップボードの監視スレッドで読むのでロックで守る
+    fileprivate(set) var applications: [CPYAppInfo] {
+        get { applicationsLock.withLock { storedApplications } }
+        set { applicationsLock.withLock { storedApplications = newValue } }
+    }
     fileprivate var frontApplication = BehaviorRelay<NSRunningApplication?>(value: nil)
     fileprivate var disposeBag = DisposeBag()
 
     // MARK: - Initialize
     init(applications: [CPYAppInfo]) {
-        self.applications = applications
+        storedApplications = applications
     }
 
 }
@@ -38,6 +44,9 @@ extension ExcludeAppService {
     /// 最前面アプリケーションの追跡を開始する（除外判定に使用）
     func startMonitoring() {
         disposeBag = DisposeBag()
+        // 通知は次にアプリが切り替わるまで来ない。起動時点の最前面を入れておかないと、
+        // 除外アプリを前面にしたまま Thoth を起動したときのコピーが履歴に残る
+        frontApplication.accept(NSWorkspace.shared.frontmostApplication)
         // Monitoring top active application
         NSWorkspace.shared.notificationCenter.rx.notification(NSWorkspace.didActivateApplicationNotification)
             .map { $0.userInfo?["NSWorkspaceApplicationKey"] as? NSRunningApplication }

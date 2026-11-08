@@ -92,8 +92,7 @@ enum ClipThumbnail {
         for id in clipIDs {
             autoreleasepool {
                 guard let clip = store.clip(id: id),
-                      let fileData = dataStore.read(fromPath: clip.dataPath),
-                      let data = CPYClipData.unarchived(from: fileData),
+                      let data = dataStore.readClip(fromPath: clip.dataPath),
                       let png = pngData(for: data) else { return }
                 store.upsert(clip, thumbnail: png)
                 regenerated += 1

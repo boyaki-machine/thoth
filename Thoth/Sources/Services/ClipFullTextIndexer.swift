@@ -18,11 +18,10 @@ import AppKit
 /// 平文はメモリ上にのみ保持し、パネルを閉じたら `cancel()` とともに破棄される
 /// （保存時暗号化の方針を崩さないためのプライバシー配慮）。
 ///
-/// Realm オブジェクトはスレッドを跨げないため、呼び出し側がメインスレッドで
-/// `ClipRef`（値型スナップショット）を作ってから渡す（PasteService と同じ流儀）。
+/// 呼び出し側が `ClipRef`（値型スナップショット）を作ってから渡す。
 final class ClipFullTextIndexer {
 
-    /// インデックス対象クリップへの参照（Realm 非依存の値型スナップショット）
+    /// インデックス対象クリップへの参照（値型スナップショット）
     struct ClipRef {
         let dataHash: String
         let dataPath: String
@@ -100,12 +99,7 @@ final class ClipFullTextIndexer {
     func extractIndexableText(from ref: ClipRef) -> String? {
         let type = NSPasteboard.PasteboardType(rawValue: ref.primaryType)
         guard type != .deprecatedTIFF, type != .deprecatedPDF else { return nil }
-        // requiresSecureCoding=false の理由は PasteService.unarchiveClipData と同じ
-        // （旧式 NSCoding のため。改竄検知は ClipDataStore の GCM 認証タグが担う）
-        guard let fileData = store.read(fromPath: ref.dataPath),
-              let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: fileData) else { return nil }
-        unarchiver.requiresSecureCoding = false
-        guard let clipData = unarchiver.decodeObject(forKey: NSKeyedArchiveRootObjectKey) as? CPYClipData else { return nil }
+        guard let clipData = store.readClip(fromPath: ref.dataPath) else { return nil }
         let text = clipData.stringValue
         guard !text.isEmpty else { return nil }
         return String(text.prefix(maxIndexedCharacters)).lowercased()
@@ -115,10 +109,7 @@ final class ClipFullTextIndexer {
 
     /// クエリを検索語に分解する（トリム → 小文字化 → 空白区切り）
     static func terms(from query: String) -> [String] {
-        return query.trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-            .components(separatedBy: .whitespaces)
-            .filter { !$0.isEmpty }
+        return SecureItemSearch.terms(from: query)
     }
 
     /// すべての検索語が部分一致するか（AND 条件）。検索語が空なら常に true

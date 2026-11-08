@@ -132,6 +132,12 @@ final class CryptoService {
         return command
     }
 
+    /// 出力ファイル名として使えるか（純粋関数）。
+    /// 名前は入力ファイルと同じフォルダに付けるので、`/` を含む名前や `..` で別の場所に書き出させない
+    static func isValidOutputName(_ name: String) -> Bool {
+        return !name.isEmpty && name != "." && name != ".." && !name.contains("/") && !name.contains("\0")
+    }
+
     /// POSIX シェルの 1 語として解釈されるように単一引用符で囲む。中の `'` は `'\''` にする
     static func shellQuoted(_ value: String) -> String {
         return "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
@@ -431,12 +437,12 @@ final class CryptoService {
         let name = folderURL.lastPathComponent
         // "--" でオプションの終わりを示す。無いと、"-" で始まるフォルダ名（例: "--use-compress-program=…"）が
         // tar のオプションとして解釈され、失敗したり意図しないコマンドを実行したりする
-        let result = runCommand("/usr/bin/tar", ["-cf", tarURL.path, "-C", parent, "--", name])
+        let result = CPYUtilities.runCommand("/usr/bin/tar", ["-cf", tarURL.path, "-C", parent, "--", name])
         guard result.status == 0 else { throw CryptoError.tarFailed(result.output) }
     }
 
     private func runTarExtract(tarURL: URL, destinationURL: URL) throws {
-        let result = runCommand("/usr/bin/tar", ["-xf", tarURL.path, "-C", destinationURL.path])
+        let result = CPYUtilities.runCommand("/usr/bin/tar", ["-xf", tarURL.path, "-C", destinationURL.path])
         guard result.status == 0 else { throw CryptoError.tarFailed(result.output) }
     }
 
@@ -461,22 +467,5 @@ final class CryptoService {
             }
             DispatchQueue.main.async { completion(result) }
         }
-    }
-
-    private func runCommand(_ executablePath: String, _ arguments: [String]) -> (status: Int32, output: String) {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: executablePath)
-        process.arguments = arguments
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-        process.standardError = outputPipe
-        do {
-            try process.run()
-        } catch {
-            return (-1, error.localizedDescription)
-        }
-        let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
-        return (process.terminationStatus, String(data: data, encoding: .utf8) ?? "")
     }
 }

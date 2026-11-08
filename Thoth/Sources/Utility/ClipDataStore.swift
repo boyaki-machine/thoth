@@ -85,12 +85,34 @@ final class ClipDataStore {
     func read(fromPath path: String) -> Data? {
         guard let raw = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
         guard raw.starts(with: Self.magic) else { return raw }  // 旧平文アーカイブ
+        return open(raw)
+    }
+
+    /// クリップ本体を読み戻す。**.data からクリップを作るときは必ずこれを使う。**
+    ///
+    /// CLPYDAT 形式は GCM の認証タグで改ざんを検知できるが、旧形式（平文）には検知の手段が無い。
+    /// 同じユーザーの他のプロセスが置いた細工済みのファイルを `requiresSecureCoding = false` で読むと
+    /// 任意のクラスが Thoth の中で生成されるので、参照するクラスを検査してから読む
+    func readClip(fromPath path: String) -> CPYClipData? {
+        guard let raw = try? Data(contentsOf: URL(fileURLWithPath: path)) else { return nil }
+        if raw.starts(with: Self.magic) {
+            return open(raw).flatMap(CPYClipData.unarchived(from:))
+        }
+        guard Self.isAllowedLegacyArchive(raw) else { return nil }
+        return CPYClipData.unarchived(from: raw)
+    }
+
+    private func open(_ raw: Data) -> Data? {
         guard raw.count > Self.headerLength, raw[Self.magic.count] == Self.formatVersion,
               let key = key else { return nil }
         let combined = raw.subdata(in: Self.headerLength..<raw.count)
         guard let box = try? AES.GCM.SealedBox(combined: combined),
               let plain = try? AES.GCM.open(box, using: key) else { return nil }
         return plain
+    }
+
+    private static func isAllowedLegacyArchive(_ raw: Data) -> Bool {
+        return KeyedArchiveGuard.referencesOnlyAllowedClasses(raw, allowedClassNames: CPYClipData.archiveClassNames)
     }
 
     // MARK: - Migration Sweep
@@ -105,7 +127,9 @@ final class ClipDataStore {
         for fileName in fileNames where fileName.hasSuffix(".data") {
             let path = (directory as NSString).appendingPathComponent(fileName)
             guard let raw = try? Data(contentsOf: URL(fileURLWithPath: path)),
-                  !raw.starts(with: Self.magic) else { continue }  // 暗号化済みはスキップ
+                  !raw.starts(with: Self.magic),  // 暗号化済みはスキップ
+                  // 検査に通らないファイルを暗号化すると、認証タグ付きの正規のデータになってしまう
+                  Self.isAllowedLegacyArchive(raw) else { continue }
             write(raw, toPath: path)
         }
     }

@@ -54,7 +54,7 @@ final class PasswordGenerateService {
 
     // MARK: - Random Byte Stream
 
-    /// openssl から取得した乱数バイト列を先頭から消費するストリーム
+    /// OS の CSPRNG から取得した乱数バイト列を先頭から消費するストリーム
     private struct RandomByteStream {
         private let data: Data
         private var offset = 0
@@ -84,7 +84,7 @@ final class PasswordGenerateService {
     // MARK: - Public Interface
 
     /// バックグラウンドでパスワードを生成し、メインスレッドで結果を返す。
-    /// 生成に失敗した場合（openssl の実行失敗・条件不正など）は nil を返す。
+    /// 生成に失敗した場合（乱数の取得失敗・条件不正など）は nil を返す。
     func generate(conditions: Conditions, completion: @escaping (String?) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let password = self?.generatePassword(conditions: conditions)

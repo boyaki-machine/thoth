@@ -44,6 +44,9 @@ final class ClipService {
     // アーカイブ・サムネイル生成・ファイル書き込みをメインスレッドから逃すための直列キュー
     fileprivate let saveQueue = DispatchQueue(label: "io.github.boyaki-machine.Thoth.ClipSave", qos: .userInitiated)
 
+    /// 監視が把握している changeCount（テスト用）
+    var cachedChangeCountForTesting: Int { cachedChangeCount.value }
+
     // MARK: - Clips
     /// クリップボードのポーリング監視と保存対象型の設定監視を開始する
     func startMonitoring() {
@@ -63,17 +66,28 @@ final class ClipService {
             .observe([String: NSNumber].self, Constants.UserDefaults.storeTypes)
             .compactMap { $0 }
             .asDriver(onErrorDriveWith: .empty())
-            .drive(onNext: { [weak self] in
-                self?.storeTypes = $0
+            .drive(onNext: { [weak self] types in
+                // create() はポーリングのスレッドで読むので、同じロックの中で書き換える
+                guard let self = self else { return }
+                self.lock.lock(); defer { self.lock.unlock() }
+                self.storeTypes = types
             })
             .disposed(by: disposeBag)
     }
 
     /// 全履歴を削除する（サムネイルは履歴と一緒に消える。.data ファイルも消す）
     func clearAll() {
-        AppEnvironment.current.historyStore.deleteAllClips()
-        // Delete writed datas
-        AppEnvironment.current.dataCleanService.cleanDatas()
+        // 保存待ちのクリップが消去の後に残らないよう、保存と同じキューで消す
+        performAfterPendingSaves {
+            AppEnvironment.current.historyStore.deleteAllClips()
+            // Delete writed datas
+            AppEnvironment.current.dataCleanService.cleanDatasNow()
+        }
+    }
+
+    /// 保存待ちをすべて終えてから、保存と同じ直列キューで `work` を実行する
+    func performAfterPendingSaves(_ work: @escaping () -> Void) {
+        saveQueue.async(execute: work)
     }
 
     /// 指定クリップを履歴から削除する（サムネイルも一緒に消える）

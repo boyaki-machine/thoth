@@ -49,7 +49,7 @@ final class CPYCryptoWindowController: NSWindowController {
 ///                        [暗号化] [復号化] [閉じる]
 /// ```
 ///
-/// 暗号化は AES-256-CBC + PBKDF2（10 万回）で openssl をバックグラウンド実行する。
+/// 暗号化の中身は `CryptoService`（AES-256-CBC + PBKDF2 + HMAC。インプロセスで実行）を参照。
 final class CPYCryptoViewController: NSViewController {
 
     private let service = CryptoService()
@@ -122,6 +122,8 @@ final class CPYCryptoViewController: NSViewController {
             NSEvent.removeMonitor(monitor)
             keyEventMonitor = nil
         }
+        // シングルトンのウィンドウなので、閉じたあとまでパスワードを持ち越さない
+        passwordField.stringValue = ""
     }
 
     /// Tab / Shift+Tab でフォーカスを次（前）の要素へ循環させる
@@ -210,7 +212,7 @@ final class CPYCryptoViewController: NSViewController {
             return
         }
         let outputName = outputNameField.stringValue.trimmingCharacters(in: .whitespaces)
-        guard !outputName.isEmpty else {
+        guard CryptoService.isValidOutputName(outputName) else {
             showStatus(L10n.cryptoErrorEmptyOutputName, isError: true)
             return
         }
