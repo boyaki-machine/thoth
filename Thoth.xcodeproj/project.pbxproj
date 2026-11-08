@@ -181,6 +181,7 @@
 		FA6167921D3ABEB10049FA14 /* LibraryStoreContract.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */; };
 		FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */; };
 		2ACAD5AB85EB46C7A8A57CB2 /* CodeSignServiceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */; };
+		54B750E7BA0D4F1EA412A3C0 /* KeyedArchiveGuardSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */; };
 		FA6DD5141C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FA6DD5151C7DEDB600317E73 /* BuildFile in Resources */ = {isa = PBXBuildFile; };
 		FAA4BCCC2163DC9100FF5D18 /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */; };
@@ -444,6 +445,7 @@
 		FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LibraryStoreContract.swift; sourceTree = "<group>"; };
 		FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DraggedDataSpec.swift; sourceTree = "<group>"; };
 		F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeSignServiceSpec.swift; sourceTree = "<group>"; };
+		13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyedArchiveGuardSpec.swift; sourceTree = "<group>"; };
 		FAA4BCCB2163DC9100FF5D18 /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		FAAA885C1E6853B80088FB34 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/CPYBetaPreferenceViewController.xib; sourceTree = "<group>"; };
 		FAAA88621E6858030088FB34 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/CPYBetaPreferenceViewController.strings; sourceTree = "<group>"; };
@@ -862,6 +864,7 @@
 				FA08EDF71D1FED7D000D1D13 /* HotKeyServiceSpec.swift */,
 				FA6167931D3ACCB90049FA14 /* DraggedDataSpec.swift */,
 				F2D83199DFBA4C9E93185D60 /* CodeSignServiceSpec.swift */,
+				13DA4C0F62E04EAFB122D9F3 /* KeyedArchiveGuardSpec.swift */,
 				FA6167911D3ABEB10049FA14 /* LibraryStoreContract.swift */,
 				AA00003900000000ABCDEF01 /* SecureMenuItemSpec.swift */,
 				AA00003A00000000ABCDEF01 /* SecureMenuServiceSpec.swift */,
@@ -1295,6 +1298,7 @@
 				AA0000C400000000ABCDEF01 /* PasteServiceTOTPSpec.swift in Sources */,
 				FA6167941D3ACCB90049FA14 /* DraggedDataSpec.swift in Sources */,
 				2ACAD5AB85EB46C7A8A57CB2 /* CodeSignServiceSpec.swift in Sources */,
+				54B750E7BA0D4F1EA412A3C0 /* KeyedArchiveGuardSpec.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
