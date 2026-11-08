@@ -72,14 +72,16 @@ class ClipDataStoreSpec: QuickSpec {
                 expect(store.read(fromPath: path("legacy.data"))) == legacy
             }
 
-            it("Falls back to plaintext write when no key is available") {
+            it("Does not write anything when no key is available (never leaves plaintext)") {
                 let store = ClipDataStore(key: nil)
-                let original = Data("no key data".utf8)
-                expect(store.write(original, toPath: path("plain.data"))) == true
+                expect(store.write(Data("no key data".utf8), toPath: path("plain.data"))) == false
+                expect(FileManager.default.fileExists(atPath: path("plain.data"))) == false
+            }
 
-                let raw = try! Data(contentsOf: URL(fileURLWithPath: path("plain.data")))
-                expect(raw) == original
-                expect(store.read(fromPath: path("plain.data"))) == original
+            it("Still reads legacy plaintext when no key is available") {
+                let legacy = Data("legacy plaintext archive".utf8)
+                try! legacy.write(to: URL(fileURLWithPath: path("legacy.data")))
+                expect(ClipDataStore(key: nil).read(fromPath: path("legacy.data"))) == legacy
             }
         }
 

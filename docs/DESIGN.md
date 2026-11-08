@@ -213,7 +213,7 @@ In addition, a self-signed certificate for code-signature stabilization (`kSecCl
 The handling of app-generated keys (DB / `.data` encryption keys) includes safeguards to prevent data loss.
 
 - If a Keychain read fails with anything **other than** `errSecItemNotFound`, the key is **not** created anew (creating a new key while an existing one is present-but-unreadable would make existing encrypted data permanently unopenable).
-- A new key is created **only while running stably-signed (Thoth Local Signing)** (creating it while ad-hoc-signed would make it unreadable after re-signing). Otherwise, encryption is deferred and the app runs in plaintext, retrying on a later launch.
+- A new key is created **only while running stably-signed (Thoth Local Signing)** (creating it while ad-hoc-signed would make it unreadable after re-signing). Otherwise, copy history is not recorded (`.data` is never written in plaintext), and a dialog says so at launch and on every copy that cannot be recorded. Choosing Restart retries re-signing and key creation.
 - A newly created key is used only after being **read back and verified** to match.
 - Migration from a legacy format (separate entries) deletes the legacy entry only after a successful write and read-back verification of the new entry.
 

@@ -108,6 +108,59 @@ extension ReliabilityFixesSpec {
         }
     }
 
+    // MARK: - Encryption key missing
+
+    static func recordingBlockedSpecs() {
+        describe("暗号鍵が無い起動中のコピー") {
+            var pasteboard: NSPasteboard!
+            var clipService: ClipService!
+            var notified = 0
+
+            beforeEach {
+                notified = 0
+                pasteboard = NSPasteboard(name: NSPasteboard.Name("io.github.boyaki-machine.ThothTests.\(UUID().uuidString)"))
+                clipService = ClipService()
+                clipService.setStoreTypesForTesting(["String": NSNumber(value: true)])
+                AppEnvironment.push(clipService: clipService)
+            }
+            afterEach {
+                AppEnvironment.popLast()
+                pasteboard.releaseGlobally()
+            }
+
+            func copy(_ types: [NSPasteboard.PasteboardType]) {
+                pasteboard.declareTypes(types, owner: nil)
+                types.forEach { pasteboard.setString("value", forType: $0) }
+            }
+
+            it("コピーのたびに知らせる") {
+                clipService.blockRecording { notified += 1 }
+                copy([.deprecatedString])
+                clipService.create(from: pasteboard)
+                expect(notified).toEventually(equal(1))
+                copy([.deprecatedString])
+                clipService.create(from: pasteboard)
+                expect(notified).toEventually(equal(2))
+            }
+
+            it("秘匿値のコピーでは知らせない（鍵があっても記録しないもの）") {
+                clipService.blockRecording { notified += 1 }
+                copy([.deprecatedString, Constants.Pasteboard.concealedType])
+                clipService.create(from: pasteboard)
+                expect(notified).toNever(beGreaterThan(0), until: .milliseconds(200))
+            }
+
+            it("鍵があるときは知らせない") {
+                var saved = false
+                copy([.deprecatedString])
+                clipService.create(from: pasteboard)
+                clipService.performAfterPendingSaves { saved = true }
+                expect(saved).toEventually(beTrue())
+                expect(notified) == 0
+            }
+        }
+    }
+
     // MARK: - Misc
 
     static func miscSpecs() {

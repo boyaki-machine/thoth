@@ -30,6 +30,7 @@ class ReliabilityFixesSpec: QuickSpec {
         secureHotKeySpecs()
         pickerPanelSpecs()
         pickerGeometrySpecs()
+        recordingBlockedSpecs()
         miscSpecs()
     }
 

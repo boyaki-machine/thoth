@@ -30,6 +30,8 @@ class AppDelegate: NSObject, NSMenuItemValidation {
     fileprivate var isRelaunchPendingForResign = false
     // startApplication() の二重実行防止フラグ
     fileprivate var hasStartedApplication = false
+    // 暗号鍵が無い旨のダイアログを表示中か（コピーが続いても重ねて出さない）
+    fileprivate var isShowingEncryptionKeyAlert = false
 
     // MARK: - Init
     // 注意: 保存層の準備はここ（awakeFromNib）では行わない。
@@ -208,6 +210,12 @@ extension AppDelegate: NSApplicationDelegate {
         LibraryProvider.prepare { [weak self] prepared in
             AppEnvironment.replaceLibrary(historyStore: prepared.historyStore, snippetStore: prepared.snippetStore,
                                           isUsable: prepared.availability == .ready)
+            // 監視を始める前に止めておく（鍵が無い間のコピーを 1 件も書かない）
+            if prepared.availability == .keyUnavailable {
+                AppEnvironment.current.clipService.blockRecording { [weak self] in
+                    self?.showEncryptionKeyMissingAlert()
+                }
+            }
             self?.startServices()
             self?.finishLibraryMigration(prepared)
             self?.notifyIfLibraryUnavailable(prepared)
@@ -257,20 +265,44 @@ extension AppDelegate: NSApplicationDelegate {
         }
     }
 
-    /// 暗号鍵が使えないときに、その起動中の制限を一度だけ知らせる。
-    /// 履歴はメモリ上だけになり、スニペットは表示も編集もできない（データは消していない）
+    /// 暗号鍵が無い・保存層を読めないときに、その起動中の制限を知らせる（データは消していない）
     private func notifyIfLibraryUnavailable(_ prepared: LibraryProvider.Prepared) {
         guard prepared.availability != .ready else { return }
         NSLog("[AppDelegate] library unavailable: \(prepared.availability)")
-        let isLegacyData = prepared.availability == .legacyDataNotMigrated
-        DispatchQueue.main.async {
-            NSApp.activate(ignoringOtherApps: true)
-            if isLegacyData {
+        let availability = prepared.availability
+        DispatchQueue.main.async { [weak self] in
+            switch availability {
+            case .keyUnavailable:
+                self?.showEncryptionKeyMissingAlert()
+            case .legacyDataNotMigrated:
+                NSApp.activate(ignoringOtherApps: true)
                 NSAlert.showNotice(message: L10n.libraryLegacyDataNotMigratedTitle,
                                    informative: L10n.libraryLegacyDataNotMigratedMessage)
-            } else {
+            default:
+                NSApp.activate(ignoringOtherApps: true)
                 NSAlert.showNotice(message: L10n.libraryUnavailableTitle, informative: L10n.libraryUnavailableMessage)
             }
+        }
+    }
+
+    /// 暗号鍵が無く、コピー履歴を記録できないことを知らせる（起動時と、記録できないコピーのたび）。
+    /// 再起動すると、自己署名と暗号鍵の生成をやり直す（`--thoth-resigned` を付けないので再署名も再試行される）。
+    /// 「閉じる」のあとは元のアプリへフォーカスを返す（コピーのたびに作業が止まったままにならないように）
+    private func showEncryptionKeyMissingAlert() {
+        guard !isShowingEncryptionKeyAlert else { return }
+        isShowingEncryptionKeyAlert = true
+        defer { isShowingEncryptionKeyAlert = false }
+        let previousApp = NSWorkspace.shared.frontmostApplication
+        let alert = NSAlert()
+        alert.messageText = L10n.encryptionKeyMissingMessage
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.encryptionKeyMissingRestart)
+        alert.addButton(withTitle: L10n.close)
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            CodeSignService.relaunch()
+        } else {
+            CallerAppActivator.activate(previousApp) {}
         }
     }
 
