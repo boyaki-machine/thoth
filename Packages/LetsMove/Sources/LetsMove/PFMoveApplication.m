@@ -414,12 +414,17 @@ static BOOL Trash(NSString *path) {
 	// This allows us to trash the app in macOS Sierra even when the app is running inside
 	// an app translocation image.
 	if (!result) {
+		// Thoth: パスを AppleScript の文字列リテラルに埋め込む前に \ と " をエスケープする。
+		// 本家はそのまま埋め込んでおり、フォルダ名に " が入っていると文字列が閉じて、
+		// 残りが AppleScript（do shell script など）として実行されてしまう
+		NSString *escapedPath = [[path stringByReplacingOccurrencesOfString:@"\\" withString:@"\\\\"]
+								 stringByReplacingOccurrencesOfString:@"\"" withString:@"\\\""];
 		NSAppleScript *appleScript = [[[NSAppleScript alloc] initWithSource:
 									   [NSString stringWithFormat:@"\
 										set theFile to POSIX file \"%@\" \n\
 									   	tell application \"Finder\" \n\
 									  		move theFile to trash \n\
-									  	end tell", path]] autorelease];
+									  	end tell", escapedPath]] autorelease];
 		NSDictionary *errorDict = nil;
 		NSAppleEventDescriptor *scriptResult = [appleScript executeAndReturnError:&errorDict];
 		if (scriptResult == nil) {
