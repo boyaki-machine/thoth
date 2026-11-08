@@ -52,6 +52,21 @@ v1.5.1 moved from CocoaPods to Swift Package Manager (the CocoaPods spec reposit
 - **LetsMove does not support SPM upstream, so version 1.25 is vendored in `Packages/LetsMove`.** See `Packages/LetsMove/README.md` for the changes (such as which bundle the translations are read from).
 - CocoaPods frameworks implicitly pulled in AppKit and friends, so some files from that era were missing `import Cocoa` / `import Foundation`. SPM does not do this, so import the frameworks each file uses explicitly.
 
+### Checking Dependencies for Vulnerabilities
+
+**GitHub does not alert on known vulnerabilities in the Swift packages.** The dependency graph (which Dependabot alerts are based on) does not read an Xcode project's `Package.resolved`, and Dependabot version updates require a `Package.swift`. Check by hand, for example before a release.
+
+```sh
+# Swift advisories in the GitHub Advisory Database (package names and affected versions)
+gh api "/advisories?ecosystem=swift&per_page=100" \
+  --jq '.[] | .ghsa_id+" "+(.vulnerabilities|map(.package.name+" "+(.vulnerable_version_range//""))|join("; "))'
+# Published advisories and the latest version of each dependency (each location in Package.resolved)
+gh api repos/<owner>/<repo>/security-advisories --jq 'length'
+gh api repos/<owner>/<repo>/tags --jq '.[0].name'
+```
+
+The GitHub Actions used by the workflows are pinned to commit SHAs and updated by Dependabot (`.github/dependabot.yml`).
+
 ### Architectural Assumptions
 
 - **Dependency injection**: services (`Environment`) are accessed via `AppEnvironment.current`. In tests, `AppEnvironment.push/popLast` swap in a mock environment.
@@ -382,9 +397,9 @@ Secure items are stored in the macOS login keychain, and a keychain item's ACL i
 
 To avoid this, the app checks its own signature at launch and automatically re-signs itself with a device-specific certificate named **Thoth Local Signing**.
 
-1. On launch, checks whether it is already signed with this certificate (does nothing if so)
+1. On launch, checks whether it is already signed with this certificate, with the Hardened Runtime (does nothing if so)
 2. If unsigned (ad-hoc), looks for the certificate in the login keychain (reuses it if generated in a past launch; otherwise generates a self-signed code-signing certificate and stores it — once per device)
-3. Re-signs its own `.app` bundle and relaunches automatically
+3. Re-signs its own `.app` bundle (adding the Hardened Runtime with `--options runtime` and keeping the build's entitlements with `--preserve-metadata=entitlements`) and relaunches automatically
 
 Because the same device always signs with the same certificate, the keychain ACL matches even across versions.
 
@@ -393,6 +408,7 @@ Notes:
 - A macOS confirmation dialog (certificate trust, signing-key usage) may appear on the **first launch only** on a device. Choose "Always Allow".
 - Because the signature changes, you must **re-grant Accessibility permission** after the first re-signing (not needed on later version updates).
 - To disable re-signing, launch with the `--thoth-skip-resign` argument.
+- **Hardened Runtime (v1.6.6 and later).** Without the Hardened Runtime, any other process running as the same user can inject code into Thoth (for example with `DYLD_INSERT_LIBRARIES`), and the injected code can read the secure items from the keychain as Thoth without any prompt. The app target therefore sets `ENABLE_HARDENED_RUNTIME = YES`, and Release sets `CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO` (so `get-task-allow`, which allows a debugger to attach, is not included). The entitlements are in `Thoth/Supporting Files/Thoth.entitlements` (camera only); declare there any new capability needed under the Hardened Runtime (Apple Events, microphone, and so on). Apps re-signed by v1.6.5 or earlier get the Hardened Runtime on their next launch. The designated requirement (identifier + certificate) does not change, so keychain access and the Accessibility permission carry over.
 - If any step fails, the app continues to run ad-hoc-signed (search `CodeSignService` in Console.app for logs). In that case, generation of the database / clip encryption keys is deferred until the next stably-signed launch (see [DESIGN.md](DESIGN.md)).
 
 ### About Accessibility Entry Duplication
